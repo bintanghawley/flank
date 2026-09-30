@@ -21,11 +21,11 @@ func _ready():
 	play_idle_animation()
 
 
-func _physics_process(delta):
+# =========================================================
+# MOVEMENT
+# =========================================================
 
-	# =========================
-	# SEDANG BERGERAK
-	# =========================
+func _physics_process(delta):
 
 	if is_moving:
 
@@ -38,11 +38,10 @@ func _physics_process(delta):
 		# Arah menuju target
 		var direction := global_position.direction_to(target_position)
 
-		# Gerakkan karakter
-		global_position = global_position.move_toward(
-			target_position,
-			current_speed * delta
-		)
+		# Gerakkan CharacterBody2D menggunakan physics
+		velocity = direction * current_speed
+
+		move_and_slide()
 
 		# Update arah animasi
 		update_direction_animation(direction)
@@ -51,11 +50,25 @@ func _physics_process(delta):
 		if global_position.distance_to(target_position) < 2.0:
 
 			global_position = target_position
+			velocity = Vector2.ZERO
+
+			is_moving = false
+
+			play_idle_animation()
+
+		# Menabrak sesuatu
+		elif get_slide_collision_count() > 0:
+
+			velocity = Vector2.ZERO
+
 			is_moving = false
 
 			play_idle_animation()
 
 		return
+
+	# Pastikan velocity berhenti ketika tidak bergerak
+	velocity = Vector2.ZERO
 
 
 # =========================================================
@@ -103,37 +116,36 @@ func get_8_direction(direction: Vector2) -> Vector2:
 
 	var angle := direction.angle()
 
-	# 8 arah
+	# KANAN
 	if angle >= -PI / 8 and angle < PI / 8:
-		# KANAN
 		return Vector2.RIGHT
 
+	# KANAN BAWAH ↘
 	elif angle >= PI / 8 and angle < 3 * PI / 8:
-		# KANAN BAWAH ↘
 		return Vector2(1, 1)
 
+	# BAWAH
 	elif angle >= 3 * PI / 8 and angle < 5 * PI / 8:
-		# BAWAH
 		return Vector2.DOWN
 
+	# KIRI BAWAH ↙
 	elif angle >= 5 * PI / 8 and angle < 7 * PI / 8:
-		# KIRI BAWAH ↙
 		return Vector2(-1, 1)
 
+	# KIRI
 	elif angle >= 7 * PI / 8 or angle < -7 * PI / 8:
-		# KIRI
 		return Vector2.LEFT
 
+	# KIRI ATAS ↖
 	elif angle >= -7 * PI / 8 and angle < -5 * PI / 8:
-		# KIRI ATAS ↖
 		return Vector2(-1, -1)
 
+	# ATAS
 	elif angle >= -5 * PI / 8 and angle < -3 * PI / 8:
-		# ATAS
 		return Vector2.UP
 
+	# KANAN ATAS ↗
 	else:
-		# KANAN ATAS ↗
 		return Vector2(1, -1)
 
 
@@ -147,78 +159,54 @@ func play_walk_animation():
 	animated_sprite.flip_h = false
 
 
-	# =========================
 	# ATAS
-	# =========================
-
 	if last_direction == Vector2.UP:
 
 		animated_sprite.play("walk_n")
 
 
-	# =========================
 	# BAWAH
-	# =========================
-
 	elif last_direction == Vector2.DOWN:
 
 		animated_sprite.play("walk_s")
 
 
-	# =========================
 	# KIRI
-	# =========================
-
 	elif last_direction == Vector2.LEFT:
 
 		animated_sprite.play("walk_nw")
 		animated_sprite.flip_h = false
 
 
-	# =========================
 	# KANAN
-	# =========================
-
 	elif last_direction == Vector2.RIGHT:
 
 		animated_sprite.play("walk_se")
 		animated_sprite.flip_h = false
 
 
-	# =========================
 	# DIAGONAL ↖
-	# =========================
-
 	elif last_direction == Vector2(-1, -1):
 
 		animated_sprite.play("walk_nw")
 		animated_sprite.flip_h = false
 
 
-	# =========================
 	# DIAGONAL ↗
-	# =========================
-
 	elif last_direction == Vector2(1, -1):
 
 		animated_sprite.play("walk_nw")
 		animated_sprite.flip_h = true
 
 
-	# =========================
 	# DIAGONAL ↙
-	# =========================
-
 	elif last_direction == Vector2(-1, 1):
 
 		animated_sprite.play("walk_se")
 		animated_sprite.flip_h = true
 
 
-	# =========================
 	# DIAGONAL ↘
-	# =========================
-
 	elif last_direction == Vector2(1, 1):
 
 		animated_sprite.play("walk_se")
@@ -235,78 +223,54 @@ func play_idle_animation():
 	animated_sprite.flip_h = false
 
 
-	# =========================
 	# ATAS
-	# =========================
-
 	if last_direction == Vector2.UP:
 
 		animated_sprite.play("idle_n")
 
 
-	# =========================
 	# BAWAH
-	# =========================
-
 	elif last_direction == Vector2.DOWN:
 
 		animated_sprite.play("idle_s")
 
 
-	# =========================
 	# KIRI
-	# =========================
-
 	elif last_direction == Vector2.LEFT:
 
 		animated_sprite.play("idle_nw")
 		animated_sprite.flip_h = false
 
 
-	# =========================
 	# KANAN
-	# =========================
-
 	elif last_direction == Vector2.RIGHT:
 
 		animated_sprite.play("idle_se")
 		animated_sprite.flip_h = false
 
 
-	# =========================
 	# DIAGONAL ↖
-	# =========================
-
 	elif last_direction == Vector2(-1, -1):
 
 		animated_sprite.play("idle_nw")
 		animated_sprite.flip_h = false
 
 
-	# =========================
 	# DIAGONAL ↗
-	# =========================
-
 	elif last_direction == Vector2(1, -1):
 
 		animated_sprite.play("idle_nw")
 		animated_sprite.flip_h = true
 
 
-	# =========================
 	# DIAGONAL ↙
-	# =========================
-
 	elif last_direction == Vector2(-1, 1):
 
 		animated_sprite.play("idle_se")
 		animated_sprite.flip_h = true
 
 
-	# =========================
 	# DIAGONAL ↘
-	# =========================
-
 	elif last_direction == Vector2(1, 1):
 
 		animated_sprite.play("idle_se")
