@@ -15,17 +15,43 @@ var is_moving := false
 # Arah terakhir karakter
 var last_direction := Vector2.DOWN
 
+# =========================
+# COMBAT / AUTO-ATTACK
+# =========================
+
+const ARROW_SCENE = preload("res://scene/projectile/arrow.tscn")
+
+@export var attack_range: float = 300.0    # Jarak jangkauan tembak otomatis (pixel)
+@export var attack_cooldown: float = 0.8   # Jeda tembakan (0.8 detik)
+var attack_timer: float = 0.0
+var is_attacking: bool = false
+
+# =========================
+# HEALTH / DARAH PEMANAH
+# =========================
+@export var max_health: int = 10
+var current_health: int = 10
+
 
 func _ready():
+	add_to_group("player")
+	current_health = max_health
 	target_position = global_position
 	play_idle_animation()
 
 
 # =========================================================
-# MOVEMENT
+# MOVEMENT & AUTO-ATTACK
 # =========================================================
 
-func _physics_process(_delta):
+func _physics_process(delta):
+
+	# =====================================================
+	# AUTO ATTACK COOLDOWN & TARGETING
+	# =====================================================
+	attack_timer -= delta
+	if attack_timer <= 0.0:
+		check_and_attack_nearest_enemy()
 
 	# =====================================================
 	# HOLD RIGHT CLICK
@@ -39,6 +65,7 @@ func _physics_process(_delta):
 
 		if global_position.distance_to(target_position) > 2.0:
 			is_moving = true
+			is_attacking = false
 
 
 	# =====================================================
@@ -46,6 +73,8 @@ func _physics_process(_delta):
 	# =====================================================
 
 	if is_moving:
+
+		is_attacking = false
 
 		# Tentukan kecepatan
 		var current_speed := NORMAL_SPEED
@@ -79,7 +108,8 @@ func _physics_process(_delta):
 			velocity = Vector2.ZERO
 			is_moving = false
 
-			play_idle_animation()
+			if not is_attacking:
+				play_idle_animation()
 
 
 		# =================================================
@@ -91,7 +121,8 @@ func _physics_process(_delta):
 			velocity = Vector2.ZERO
 			is_moving = false
 
-			play_idle_animation()
+			if not is_attacking:
+				play_idle_animation()
 
 
 		return
@@ -115,6 +146,7 @@ func _unhandled_input(event):
 			target_position = get_global_mouse_position()
 
 			is_moving = true
+			is_attacking = false
 
 
 			# Tentukan arah awal
@@ -324,3 +356,117 @@ func play_idle_animation():
 
 		animated_sprite.play("idle_se")
 		animated_sprite.flip_h = false
+
+
+# =========================================================
+# ATTACK ANIMATION
+# =========================================================
+
+func play_attack_animation():
+
+	# Reset flip
+	animated_sprite.flip_h = false
+
+	# ATAS
+	if last_direction == Vector2.UP:
+		animated_sprite.play("atk_n")
+
+	# BAWAH
+	elif last_direction == Vector2.DOWN:
+		animated_sprite.play("atk_s")
+
+	# KIRI
+	elif last_direction == Vector2.LEFT:
+		animated_sprite.play("atk_nw")
+		animated_sprite.flip_h = false
+
+	# KANAN
+	elif last_direction == Vector2.RIGHT:
+		animated_sprite.play("atk_se")
+		animated_sprite.flip_h = false
+
+	# DIAGONAL ↖
+	elif last_direction == Vector2(-1, -1):
+		animated_sprite.play("atk_nw")
+		animated_sprite.flip_h = false
+
+	# DIAGONAL ↗
+	elif last_direction == Vector2(1, -1):
+		animated_sprite.play("atk_nw")
+		animated_sprite.flip_h = true
+
+	# DIAGONAL ↙
+	elif last_direction == Vector2(-1, 1):
+		animated_sprite.play("atk_se")
+		animated_sprite.flip_h = true
+
+	# DIAGONAL ↘
+	elif last_direction == Vector2(1, 1):
+		animated_sprite.play("atk_se")
+		animated_sprite.flip_h = false
+
+
+# =========================================================
+# AUTO-ATTACK & SHOOT LOGIC
+# =========================================================
+
+func check_and_attack_nearest_enemy():
+	var enemies = get_tree().get_nodes_in_group("enemy")
+	var nearest_enemy: Node2D = null
+	var min_distance := attack_range
+
+	for enemy in enemies:
+		if is_instance_valid(enemy):
+			var dist = global_position.distance_to(enemy.global_position)
+			if dist <= min_distance:
+				min_distance = dist
+				nearest_enemy = enemy
+
+	# Jika ada musuh di dalam radius tembak
+	if nearest_enemy != null:
+		shoot_at(nearest_enemy)
+		attack_timer = attack_cooldown
+
+
+func shoot_at(target: Node2D):
+	var dir = global_position.direction_to(target.global_position)
+
+	# Jika sedang diam, hadap ke musuh dan mainkan animasi serang
+	if not is_moving:
+		last_direction = get_8_direction(dir)
+		is_attacking = true
+		play_attack_animation()
+		reset_attack_state()
+
+	# Munculkan anak panah
+	var arrow = ARROW_SCENE.instantiate()
+	arrow.global_position = global_position
+	arrow.direction = dir
+	arrow.rotation = dir.angle()
+
+	# Tambahkan panah ke scene (parent player / root map)
+	get_parent().add_child(arrow)
+
+
+func reset_attack_state():
+	await get_tree().create_timer(0.35).timeout
+	is_attacking = false
+	if not is_moving:
+		play_idle_animation()
+
+
+# =========================================================
+# MENERIMA DAMAGE DARI MUSUH
+# =========================================================
+
+func take_damage(amount: int):
+	current_health -= amount
+	print("Archer terkena kontak musuh! Sisa HP: ", current_health)
+
+	# Efek kedip merah saat terkena serangan
+	modulate = Color(2.5, 0.3, 0.3)
+	await get_tree().create_timer(0.12).timeout
+	modulate = Color.WHITE
+
+	if current_health <= 0:
+		print("Archer Kalah!")

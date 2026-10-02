@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://dol0jnt4w2mn7"]
+
+[ext_resource type="Script" path="res://scene/enemy/enemy.gd" id="1_nytjq"]
+[ext_resource type="Texture2D" uid="uid://cj21xh838eex7" path="res://assets/characters/archer/idle-s.png" id="2_archer_idle"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 7.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_detect"]
+radius = 45.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hitbox"]
+radius = 8.0
+
+[node name="Enemy" type="CharacterBody2D" unique_id=2043332253]
+scale = Vector2(5, 5)
+script = ExtResource("1_nytjq")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=911658075]
+modulate = Color(1.3, 0.4, 0.4, 1)
+texture_filter = 1
+texture = ExtResource("2_archer_idle")
+hframes = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1839664243]
+shape = SubResource("CircleShape2D_body")
+
+[node name="DetectionArea" type="Area2D" parent="." unique_id=1720448183]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=1095036589]
+shape = SubResource("CircleShape2D_detect")
+
+[node name="Hitbox" type="Area2D" parent="." unique_id=1720448184]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox" unique_id=1095036590]
+shape = SubResource("CircleShape2D_hitbox")
+
+[node name="ProgressBar" type="ProgressBar" parent="." unique_id=1720448185]
+offset_left = -10.0
+offset_top = -18.0
+offset_right = 10.0
+offset_bottom = -15.0
+max_value = 5.0
+value = 5.0
+show_percentage = false
