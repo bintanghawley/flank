@@ -15,8 +15,6 @@ extends CharacterBody2D
 # RANGED ATTACK / TEMBAKAN MUSUH
 # =========================
 const ARROW_SCENE = preload("res://scene/projectile/arrow.tscn")
-const ATK_TEXTURE = preload("res://assets/characters/archer/atk-s.png")
-const IDLE_TEXTURE = preload("res://assets/characters/archer/idle-s.png")
 
 @export var shoot_range: float = 320.0       # Jarak tembak musuh (pixel)
 @export var shoot_cooldown: float = 1.6     # Cooldown tembakan musuh (detik)
@@ -29,6 +27,9 @@ var is_shooting: bool = false
 var current_health: int
 var player: CharacterBody2D = null
 var is_dead: bool = false
+
+# Arah terakhir musuh (8 arah)
+var last_direction := Vector2.DOWN
 
 # State AI Musuh
 enum State { IDLE_PATROL, CHASE }
@@ -44,13 +45,11 @@ var damage_timer: float = 0.0
 var is_touching_player: bool = false
 
 # Node references
-@onready var sprite: Sprite2D = $Sprite2D
+@onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var health_bar: ProgressBar = $ProgressBar
 @onready var detection_area: Area2D = $DetectionArea
 @onready var hitbox: Area2D = $Hitbox
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
-
-var anim_timer: float = 0.0
 
 
 func _ready():
@@ -61,6 +60,7 @@ func _ready():
 	shoot_timer = randf_range(0.5, shoot_cooldown)
 
 	setup_health_bar()
+	play_idle_animation()
 
 	# Hubungkan sinyal deteksi & hitbox secara otomatis
 	if detection_area and not detection_area.body_entered.is_connected(_on_detection_area_body_entered):
@@ -93,16 +93,6 @@ func setup_health_bar():
 	health_bar.add_theme_stylebox_override("fill", style_fill)
 
 
-func _process(delta):
-	if is_dead:
-		return
-	# Animasi frame sprite jika spritesheet (seperti archer hframes = 4 atau 8)
-	if sprite and sprite.hframes > 1:
-		var speed_mult := 12.0 if is_shooting else 6.0
-		anim_timer += delta * speed_mult
-		sprite.frame = int(anim_timer) % sprite.hframes
-
-
 func _physics_process(delta):
 	if is_dead:
 		return
@@ -128,13 +118,12 @@ func _physics_process(delta):
 			# Jika masih jauh dari jangkauan tembak ideal, dekati player
 			if dist > 180.0:
 				velocity = dir * chase_speed
+				update_direction_animation(dir)
 			else:
-				# Berhenti di jarak tembak yang pas
+				# Berhenti di jarak tembak yang pas dan hadap player
 				velocity = Vector2.ZERO
-
-			# Balik sprite sesuai arah horizontal
-			if sprite and dir.x != 0:
-				sprite.flip_h = dir.x < 0
+				last_direction = get_8_direction(dir)
+				play_idle_animation()
 
 	else:
 		# Patroli mutar-mutar santai di area
@@ -169,11 +158,12 @@ func handle_idle_patrol(delta):
 	if global_position.distance_to(wander_target) > 8.0:
 		var dir = global_position.direction_to(wander_target)
 		velocity = dir * wander_speed
-		if sprite and dir.x != 0:
-			sprite.flip_h = dir.x < 0
+		update_direction_animation(dir)
 	else:
 		# Berhenti sejenak jika sudah sampai
 		velocity = Vector2.ZERO
+		if not is_shooting:
+			play_idle_animation()
 
 
 # =========================================================
@@ -187,16 +177,9 @@ func shoot_at_player():
 	is_shooting = true
 	var dir = global_position.direction_to(player.global_position)
 
-	# Arah hadap sprite ke player
-	if sprite and dir.x != 0:
-		sprite.flip_h = dir.x < 0
-
-	# Mainkan animasi menembak
-	if sprite:
-		sprite.texture = ATK_TEXTURE
-		sprite.hframes = 8
-		sprite.frame = 0
-		anim_timer = 0.0
+	# Arah hadap ke player dan mainkan animasi serang sesuai arah
+	last_direction = get_8_direction(dir)
+	play_attack_animation()
 
 	# Munculkan panah musuh
 	var arrow = ARROW_SCENE.instantiate()
@@ -215,11 +198,153 @@ func shoot_at_player():
 	await get_tree().create_timer(0.35).timeout
 	if is_instance_valid(self) and not is_dead:
 		is_shooting = false
-		if sprite:
-			sprite.texture = IDLE_TEXTURE
-			sprite.hframes = 4
-			sprite.frame = 0
-			anim_timer = 0.0
+		if current_state == State.CHASE and player != null and is_instance_valid(player):
+			var chase_dir = global_position.direction_to(player.global_position)
+			last_direction = get_8_direction(chase_dir)
+		play_idle_animation()
+
+
+# =========================================================
+# UPDATE ARAH ANIMASI
+# =========================================================
+
+func update_direction_animation(direction: Vector2):
+	if direction == Vector2.ZERO:
+		return
+	last_direction = get_8_direction(direction)
+	play_walk_animation()
+
+
+# =========================================================
+# KONVERSI ARAH MENJADI 8 ARAH
+# =========================================================
+
+func get_8_direction(direction: Vector2) -> Vector2:
+	var angle := direction.angle()
+
+	# KANAN
+	if angle >= -PI / 8 and angle < PI / 8:
+		return Vector2.RIGHT
+	# KANAN BAWAH ↘
+	elif angle >= PI / 8 and angle < 3 * PI / 8:
+		return Vector2(1, 1)
+	# BAWAH
+	elif angle >= 3 * PI / 8 and angle < 5 * PI / 8:
+		return Vector2.DOWN
+	# KIRI BAWAH ↙
+	elif angle >= 5 * PI / 8 and angle < 7 * PI / 8:
+		return Vector2(-1, 1)
+	# KIRI
+	elif angle >= 7 * PI / 8 or angle < -7 * PI / 8:
+		return Vector2.LEFT
+	# KIRI ATAS ↖
+	elif angle >= -7 * PI / 8 and angle < -5 * PI / 8:
+		return Vector2(-1, -1)
+	# ATAS
+	elif angle >= -5 * PI / 8 and angle < -3 * PI / 8:
+		return Vector2.UP
+	# KANAN ATAS ↗
+	else:
+		return Vector2(1, -1)
+
+
+# =========================================================
+# WALK ANIMATION (8 ARAH)
+# =========================================================
+
+func play_walk_animation():
+	if not animated_sprite:
+		return
+	animated_sprite.flip_h = false
+
+	if last_direction == Vector2.UP:
+		animated_sprite.play("walk_n")
+	elif last_direction == Vector2.DOWN:
+		animated_sprite.play("walk_s")
+	elif last_direction == Vector2.LEFT:
+		animated_sprite.play("walk_nw")
+		animated_sprite.flip_h = false
+	elif last_direction == Vector2.RIGHT:
+		animated_sprite.play("walk_se")
+		animated_sprite.flip_h = false
+	elif last_direction == Vector2(-1, -1):
+		animated_sprite.play("walk_nw")
+		animated_sprite.flip_h = false
+	elif last_direction == Vector2(1, -1):
+		animated_sprite.play("walk_nw")
+		animated_sprite.flip_h = true
+	elif last_direction == Vector2(-1, 1):
+		animated_sprite.play("walk_se")
+		animated_sprite.flip_h = true
+	elif last_direction == Vector2(1, 1):
+		animated_sprite.play("walk_se")
+		animated_sprite.flip_h = false
+
+
+# =========================================================
+# IDLE ANIMATION (8 ARAH)
+# =========================================================
+
+func play_idle_animation():
+	if not animated_sprite:
+		return
+	animated_sprite.flip_h = false
+
+	if last_direction == Vector2.UP:
+		animated_sprite.play("idle_n")
+	elif last_direction == Vector2.DOWN:
+		animated_sprite.play("idle_s")
+	elif last_direction == Vector2.LEFT:
+		animated_sprite.play("idle_nw")
+		animated_sprite.flip_h = false
+	elif last_direction == Vector2.RIGHT:
+		animated_sprite.play("idle_se")
+		animated_sprite.flip_h = false
+	elif last_direction == Vector2(-1, -1):
+		animated_sprite.play("idle_nw")
+		animated_sprite.flip_h = false
+	elif last_direction == Vector2(1, -1):
+		animated_sprite.play("idle_nw")
+		animated_sprite.flip_h = true
+	elif last_direction == Vector2(-1, 1):
+		animated_sprite.play("idle_se")
+		animated_sprite.flip_h = true
+	elif last_direction == Vector2(1, 1):
+		animated_sprite.play("idle_se")
+		animated_sprite.flip_h = false
+
+
+# =========================================================
+# ATTACK ANIMATION (8 ARAH)
+# =========================================================
+
+func play_attack_animation():
+	if not animated_sprite:
+		return
+	animated_sprite.flip_h = false
+
+	if last_direction == Vector2.UP:
+		animated_sprite.play("atk_n")
+	elif last_direction == Vector2.DOWN:
+		animated_sprite.play("atk_s")
+	elif last_direction == Vector2.LEFT:
+		animated_sprite.play("atk_nw")
+		animated_sprite.flip_h = false
+	elif last_direction == Vector2.RIGHT:
+		animated_sprite.play("atk_se")
+		animated_sprite.flip_h = false
+	elif last_direction == Vector2(-1, -1):
+		animated_sprite.play("atk_nw")
+		animated_sprite.flip_h = false
+	elif last_direction == Vector2(1, -1):
+		animated_sprite.play("atk_nw")
+		animated_sprite.flip_h = true
+	elif last_direction == Vector2(-1, 1):
+		animated_sprite.play("atk_se")
+		animated_sprite.flip_h = true
+	elif last_direction == Vector2(1, 1):
+		animated_sprite.play("atk_se")
+		animated_sprite.flip_h = false
 
 
 # =========================================================
@@ -237,11 +362,11 @@ func take_damage(amount: int):
 		health_bar.value = current_health
 
 	# Efek kedip putih saat kena hit
-	if sprite:
-		sprite.modulate = Color(3.0, 3.0, 3.0)
+	if animated_sprite:
+		animated_sprite.modulate = Color(3.0, 3.0, 3.0)
 		await get_tree().create_timer(0.1).timeout
-		if is_instance_valid(sprite) and not is_dead:
-			sprite.modulate = Color(1.3, 0.4, 0.4) # Kembali ke warna merah musuh
+		if is_instance_valid(animated_sprite) and not is_dead:
+			animated_sprite.modulate = Color(1.3, 0.4, 0.4) # Kembali ke warna merah musuh
 
 	# Musuh kaget dan langsung mengejar player
 	var player_node = get_tree().get_first_node_in_group("player")
@@ -297,18 +422,16 @@ func respawn():
 	damage_timer = 0.0
 	shoot_timer = randf_range(0.5, shoot_cooldown)
 	is_shooting = false
+	last_direction = Vector2.DOWN
 
 	# Reset Bar HP
 	if health_bar:
 		health_bar.value = current_health
 
-	# Reset warna normal & tekstur
-	if sprite:
-		sprite.texture = IDLE_TEXTURE
-		sprite.hframes = 4
-		sprite.frame = 0
-		anim_timer = 0.0
-		sprite.modulate = Color(1.3, 0.4, 0.4)
+	# Reset warna normal
+	if animated_sprite:
+		animated_sprite.modulate = Color(1.3, 0.4, 0.4)
+		play_idle_animation()
 
 	# Nyalakan kembali tabrakan dan deteksi
 	if collision_shape:
