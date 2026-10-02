@@ -47,14 +47,17 @@ func _ready():
 func _physics_process(delta):
 
 	# =====================================================
-	# AUTO ATTACK COOLDOWN & TARGETING
+	# ATTACK COOLDOWN
 	# =====================================================
 	if attack_timer > 0.0:
 		attack_timer -= delta
 
-	# Pemanah hanya bisa menembak saat sedang diam (tidak bergerak dan tidak sedang menembak)
-	if not is_moving and not is_attacking and attack_timer <= 0.0:
-		check_and_attack_nearest_enemy()
+	# =====================================================
+	# SHOOT WITH LEFT CLICK (HOLD)
+	# =====================================================
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		if attack_timer <= 0.0 and not is_attacking:
+			shoot_towards(get_global_mouse_position())
 
 	# =====================================================
 	# HOLD RIGHT CLICK
@@ -144,20 +147,22 @@ func _physics_process(delta):
 
 func _unhandled_input(event):
 
-	# Klik kanan untuk bergerak
-	if event is InputEventMouseButton:
+	if event is InputEventMouseButton and event.pressed:
 
-		if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-
+		# Klik kanan untuk bergerak
+		if event.button_index == MOUSE_BUTTON_RIGHT:
 			target_position = get_global_mouse_position()
-
 			is_moving = true
 
 			# Tentukan arah awal
 			var direction := global_position.direction_to(target_position)
-
 			if not is_attacking:
 				update_direction_animation(direction)
+
+		# Klik kiri untuk menembak ke arah posisi mouse
+		elif event.button_index == MOUSE_BUTTON_LEFT:
+			if attack_timer <= 0.0 and not is_attacking:
+				shoot_towards(get_global_mouse_position())
 
 
 # =========================================================
@@ -412,39 +417,22 @@ func play_attack_animation():
 
 
 # =========================================================
-# AUTO-ATTACK & SHOOT LOGIC
+# COMBAT & SHOOT LOGIC (MANUAL KLIK KIRI)
 # =========================================================
 
-func check_and_attack_nearest_enemy():
-	# Jangan menembak jika sedang bergerak atau masih dalam animasi serang
-	if is_moving or is_attacking:
+func shoot_towards(target_pos: Vector2):
+	if attack_timer > 0.0 or is_attacking:
 		return
 
-	var enemies = get_tree().get_nodes_in_group("enemy")
-	var nearest_enemy: Node2D = null
-	var min_distance := attack_range
+	# Hentikan pergerakan agar pemanah tidak menembak sambil berjalan
+	is_moving = false
+	velocity = Vector2.ZERO
 
-	for enemy in enemies:
-		if is_instance_valid(enemy):
-			var dist = global_position.distance_to(enemy.global_position)
-			if dist <= min_distance:
-				min_distance = dist
-				nearest_enemy = enemy
+	var dir := global_position.direction_to(target_pos)
+	if dir == Vector2.ZERO:
+		dir = last_direction
 
-	# Jika ada musuh di dalam radius tembak
-	if nearest_enemy != null:
-		shoot_at(nearest_enemy)
-		attack_timer = attack_cooldown
-
-
-func shoot_at(target: Node2D):
-	# Validasi ganda: pastikan tidak bergerak
-	if is_moving or is_attacking:
-		return
-
-	var dir = global_position.direction_to(target.global_position)
-
-	# Hadap ke musuh dan mainkan animasi serang
+	# Hadap ke arah tembakan dan mainkan animasi serang
 	last_direction = get_8_direction(dir)
 	is_attacking = true
 	play_attack_animation()
@@ -458,7 +446,13 @@ func shoot_at(target: Node2D):
 	# Tambahkan panah ke scene (parent player / root map)
 	get_parent().add_child(arrow)
 
+	attack_timer = attack_cooldown
 	reset_attack_state()
+
+
+func shoot_at(target: Node2D):
+	if is_instance_valid(target):
+		shoot_towards(target.global_position)
 
 
 func reset_attack_state():
