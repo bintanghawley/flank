@@ -27,10 +27,16 @@ var attack_timer: float = 0.0
 var is_attacking: bool = false
 
 # =========================
-# HEALTH / DARAH PEMANAH
+# HEALTH & RESPAWN SETTINGS
 # =========================
 @export var max_health: int = 10
+@export var respawn_time: float = 3.0          # Waktu tunggu respawn setelah mati (detik)
 var current_health: int = 10
+var is_dead: bool = false
+var spawn_position: Vector2
+
+# Node references
+@onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 # =========================
 # KNOCKBACK SETTINGS
@@ -43,6 +49,7 @@ var knockback_decay: float = 1400.0           # Kecepatan redaman dorongan knock
 func _ready():
 	add_to_group("player")
 	current_health = max_health
+	spawn_position = global_position
 	target_position = global_position
 	play_idle_animation()
 
@@ -52,6 +59,8 @@ func _ready():
 # =========================================================
 
 func _physics_process(delta):
+	if is_dead:
+		return
 
 	# =====================================================
 	# ATTACK COOLDOWN
@@ -140,6 +149,8 @@ func _physics_process(delta):
 # =========================================================
 
 func _unhandled_input(event):
+	if is_dead:
+		return
 
 	if event is InputEventMouseButton and event.pressed:
 
@@ -451,6 +462,8 @@ func shoot_at(target: Node2D):
 
 func reset_attack_state():
 	await get_tree().create_timer(0.35).timeout
+	if is_dead:
+		return
 	is_attacking = false
 	if is_moving:
 		var direction := global_position.direction_to(target_position)
@@ -464,6 +477,9 @@ func reset_attack_state():
 # =========================================================
 
 func take_damage(amount: int, source_position: Vector2 = Vector2.ZERO):
+	if is_dead:
+		return
+
 	current_health -= amount
 	print("Archer terkena serangan! Sisa HP: ", current_health)
 
@@ -481,11 +497,79 @@ func take_damage(amount: int, source_position: Vector2 = Vector2.ZERO):
 	# Efek kedip merah saat terkena serangan
 	modulate = Color(2.5, 0.3, 0.3)
 	await get_tree().create_timer(0.12).timeout
-	if is_instance_valid(self):
+	if is_instance_valid(self) and not is_dead:
 		modulate = Color.WHITE
 
-	if current_health <= 0:
-		print("Archer Kalah!")
+	# Cek kematian jika darah habis
+	if current_health <= 0 and not is_dead:
+		current_health = 0
+		die()
+
+
+# =========================================================
+# KEMATIAN & RESPAWN ARCHER
+# =========================================================
+
+func die():
+	if is_dead:
+		return
+
+	is_dead = true
+	is_moving = false
+	is_attacking = false
+	velocity = Vector2.ZERO
+	knockback_velocity = Vector2.ZERO
+	print("Archer Kalah! Menunggu respawn...")
+
+	# Matikan tabrakan dan keluarkan sementara dari grup player
+	if collision_shape:
+		collision_shape.set_deferred("disabled", true)
+	remove_from_group("player")
+
+	# Efek visual kekalahan: karakter memudar (fade-out)
+	var death_tween = create_tween()
+	death_tween.tween_property(self, "modulate", Color(0.8, 0.2, 0.2, 0.0), 0.5)
+	await death_tween.finished
+
+	visible = false
+
+	# Tunggu waktu respawn
+	await get_tree().create_timer(respawn_time).timeout
+
+	# Bangkitkan kembali archer
+	respawn()
+
+
+func respawn():
+	# Kembalikan ke posisi awal saat game dimulai
+	global_position = spawn_position
+	target_position = spawn_position
+	current_health = max_health
+	is_moving = false
+	is_attacking = false
+	velocity = Vector2.ZERO
+	knockback_velocity = Vector2.ZERO
+
+	# Reset pergerakan kamera agar langsung fokus tanpa lag panning
+	if has_node("Camera2D"):
+		$Camera2D.reset_smoothing()
+
+	# Nyalakan kembali tabrakan dan masukkan kembali ke grup player
+	if collision_shape:
+		collision_shape.set_deferred("disabled", false)
+	add_to_group("player")
+
+	# Tampilkan kembali karakter
+	visible = true
+	is_dead = false
+	play_idle_animation()
+
+	# Efek fade-in halus saat bangkit kembali
+	modulate = Color(1.0, 1.0, 1.0, 0.2)
+	var respawn_tween = create_tween()
+	respawn_tween.tween_property(self, "modulate:a", 1.0, 0.4)
+
+	print("Archer berhasil respawn di titik awal! HP penuh: ", current_health)
 
 
 func apply_knockback(force: Vector2):

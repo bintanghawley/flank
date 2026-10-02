@@ -120,6 +120,12 @@ func _physics_process(delta):
 	# 1. LOGIKA GERAKAN & SERANGAN TEMBAK
 	# ---------------------------------------------------------
 	if current_state == State.CHASE and player != null and is_instance_valid(player):
+		# Jika player mati atau keluar dari grup player, musuh berhenti mengejar
+		if ("is_dead" in player and player.is_dead) or not player.is_in_group("player"):
+			player = null
+			current_state = State.IDLE_PATROL
+			return
+
 		var dist = global_position.distance_to(player.global_position)
 		var dir = global_position.direction_to(player.global_position)
 
@@ -155,7 +161,9 @@ func _physics_process(delta):
 	# ---------------------------------------------------------
 	damage_timer -= delta
 	if is_touching_player and player != null and is_instance_valid(player):
-		if damage_timer <= 0.0:
+		if ("is_dead" in player and player.is_dead) or not player.is_in_group("player"):
+			is_touching_player = false
+		elif damage_timer <= 0.0:
 			if player.has_method("take_damage"):
 				player.take_damage(contact_damage, global_position)
 			damage_timer = attack_cooldown
@@ -400,9 +408,9 @@ func take_damage(amount: int):
 		if is_instance_valid(animated_sprite) and not is_dead:
 			animated_sprite.modulate = Color(1.3, 0.4, 0.4) # Kembali ke warna merah musuh
 
-	# Musuh kaget dan langsung mengejar player
+	# Musuh kaget dan langsung mengejar player jika player masih hidup
 	var player_node = get_tree().get_first_node_in_group("player")
-	if player_node:
+	if player_node and not ("is_dead" in player_node and player_node.is_dead):
 		player = player_node
 		current_state = State.CHASE
 
@@ -498,7 +506,7 @@ func respawn():
 func _on_detection_area_body_entered(body):
 	if is_dead:
 		return
-	if body.is_in_group("player") or body.name == "Player_Archer":
+	if (body.is_in_group("player") or body.name == "Player_Archer") and not ("is_dead" in body and body.is_dead):
 		player = body
 		current_state = State.CHASE
 
@@ -518,7 +526,7 @@ func _on_detection_area_body_exited(body):
 func _on_hitbox_body_entered(body):
 	if is_dead:
 		return
-	if body.is_in_group("player") or body.name == "Player_Archer":
+	if (body.is_in_group("player") or body.name == "Player_Archer") and not ("is_dead" in body and body.is_dead):
 		is_touching_player = true
 		player = body
 		# Langsung berikan damage jika cooldown siap
