@@ -725,6 +725,15 @@ shape = SubResource("CircleShape2D_detect")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox" unique_id=1095036590]
 shape = SubResource("CircleShape2D_hitbox")
 
+[node name="DamageBar" type="ProgressBar" parent="." unique_id=1720448186]
+offset_left = -10.0
+offset_top = -18.0
+offset_right = 10.0
+offset_bottom = -15.0
+max_value = 5.0
+value = 5.0
+show_percentage = false
+
 [node name="ProgressBar" type="ProgressBar" parent="." unique_id=1720448185]
 offset_left = -10.0
 offset_top = -18.0

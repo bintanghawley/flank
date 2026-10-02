@@ -47,9 +47,12 @@ var is_touching_player: bool = false
 # Node references
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var health_bar: ProgressBar = $ProgressBar
+@onready var damage_bar: ProgressBar = $DamageBar
 @onready var detection_area: Area2D = $DetectionArea
 @onready var hitbox: Area2D = $Hitbox
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
+
+var damage_tween: Tween = null
 
 
 func _ready():
@@ -73,24 +76,40 @@ func _ready():
 
 
 func setup_health_bar():
-	if not health_bar:
-		return
-	health_bar.max_value = max_health
-	health_bar.value = current_health
-	health_bar.show_percentage = false
+	# Konfigurasi Bar Belakang (Damage Bar / Buffer yang menunjukkan darah yang hilang)
+	if damage_bar:
+		damage_bar.max_value = max_health
+		damage_bar.value = current_health
+		damage_bar.show_percentage = false
 
-	# Background bar warna gelap
-	var style_bg = StyleBoxFlat.new()
-	style_bg.bg_color = Color(0.1, 0.1, 0.1, 0.8)
-	style_bg.set_corner_radius_all(1)
+		# Background bar warna gelap
+		var style_bg = StyleBoxFlat.new()
+		style_bg.bg_color = Color(0.1, 0.1, 0.1, 0.85)
+		style_bg.set_corner_radius_all(1)
 
-	# Isi bar warna merah terang
-	var style_fill = StyleBoxFlat.new()
-	style_fill.bg_color = Color(0.9, 0.2, 0.2, 0.95)
-	style_fill.set_corner_radius_all(1)
+		# Warna isi damage bar (kuning keemasan terang untuk indikator damage)
+		var style_damage_fill = StyleBoxFlat.new()
+		style_damage_fill.bg_color = Color(1.0, 0.85, 0.3, 0.95)
+		style_damage_fill.set_corner_radius_all(1)
 
-	health_bar.add_theme_stylebox_override("background", style_bg)
-	health_bar.add_theme_stylebox_override("fill", style_fill)
+		damage_bar.add_theme_stylebox_override("background", style_bg)
+		damage_bar.add_theme_stylebox_override("fill", style_damage_fill)
+
+	# Konfigurasi Bar Depan (Health Bar utama warna merah)
+	if health_bar:
+		health_bar.max_value = max_health
+		health_bar.value = current_health
+		health_bar.show_percentage = false
+
+		# Background transparan agar damage bar di belakangnya kelihatan saat darah berkurang
+		health_bar.add_theme_stylebox_override("background", StyleBoxEmpty.new())
+
+		# Isi bar warna merah terang
+		var style_fill = StyleBoxFlat.new()
+		style_fill.bg_color = Color(0.9, 0.2, 0.2, 0.95)
+		style_fill.set_corner_radius_all(1)
+
+		health_bar.add_theme_stylebox_override("fill", style_fill)
 
 
 func _physics_process(delta):
@@ -357,9 +376,22 @@ func take_damage(amount: int):
 
 	current_health -= amount
 
-	# Update Bar HP
+	# Update Bar HP utama (merah) langsung turun ke HP sekarang
 	if health_bar:
 		health_bar.value = current_health
+
+	# Animasi Catch-up Bar (Kuning) menunjukkan potongan darah yang baru saja berkurang
+	if damage_bar:
+		if damage_tween and damage_tween.is_valid():
+			damage_tween.kill()
+
+		damage_tween = create_tween()
+		# Tahan sesaat (0.35s) agar terlihat jelas darah awalnya berkurang seberapa banyak
+		damage_tween.tween_interval(0.35)
+		# Lalu susutkan secara halus mengejar sisa darah merah
+		damage_tween.tween_property(damage_bar, "value", float(current_health), 0.4)\
+			.set_trans(Tween.TRANS_QUAD)\
+			.set_ease(Tween.EASE_OUT)
 
 	# Efek kedip putih saat kena hit
 	if animated_sprite:
@@ -425,6 +457,10 @@ func respawn():
 	last_direction = Vector2.DOWN
 
 	# Reset Bar HP
+	if damage_tween and damage_tween.is_valid():
+		damage_tween.kill()
+	if damage_bar:
+		damage_bar.value = current_health
 	if health_bar:
 		health_bar.value = current_health
 
