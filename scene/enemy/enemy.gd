@@ -11,6 +11,21 @@ extends CharacterBody2D
 @export var attack_cooldown: float = 1.0  # Jeda memberi damage saat menyentuh player
 @export var respawn_time: float = 4.0     # Waktu tunggu respawn setelah mati (detik)
 
+# =========================
+# RANGED ATTACK / TEMBAKAN MUSUH
+# =========================
+const ARROW_SCENE = preload("res://scene/projectile/arrow.tscn")
+const ATK_TEXTURE = preload("res://assets/characters/archer/atk-s.png")
+const IDLE_TEXTURE = preload("res://assets/characters/archer/idle-s.png")
+
+@export var shoot_range: float = 320.0       # Jarak tembak musuh (pixel)
+@export var shoot_cooldown: float = 1.6     # Cooldown tembakan musuh (detik)
+@export var projectile_damage: int = 1      # Damage panah musuh
+@export var projectile_speed: float = 380.0 # Kecepatan panah musuh
+
+var shoot_timer: float = 0.0
+var is_shooting: bool = false
+
 var current_health: int
 var player: CharacterBody2D = null
 var is_dead: bool = false
@@ -43,6 +58,7 @@ func _ready():
 	current_health = max_health
 	spawn_position = global_position
 	wander_target = spawn_position
+	shoot_timer = randf_range(0.5, shoot_cooldown)
 
 	setup_health_bar()
 
@@ -80,9 +96,10 @@ func setup_health_bar():
 func _process(delta):
 	if is_dead:
 		return
-	# Animasi frame sprite jika spritesheet (seperti archer hframes = 4)
+	# Animasi frame sprite jika spritesheet (seperti archer hframes = 4 atau 8)
 	if sprite and sprite.hframes > 1:
-		anim_timer += delta * 6.0
+		var speed_mult := 12.0 if is_shooting else 6.0
+		anim_timer += delta * speed_mult
 		sprite.frame = int(anim_timer) % sprite.hframes
 
 
@@ -91,16 +108,33 @@ func _physics_process(delta):
 		return
 
 	# ---------------------------------------------------------
-	# 1. LOGIKA GERAKAN (PATROLI MUTAR RANDOM vs MENGEJAR)
+	# 1. LOGIKA GERAKAN & SERANGAN TEMBAK
 	# ---------------------------------------------------------
-	if current_state == State.CHASE and player != null:
-		# Kejar player
+	if current_state == State.CHASE and player != null and is_instance_valid(player):
+		var dist = global_position.distance_to(player.global_position)
 		var dir = global_position.direction_to(player.global_position)
-		velocity = dir * chase_speed
 
-		# Balik sprite sesuai arah horizontal
-		if sprite and dir.x != 0:
-			sprite.flip_h = dir.x < 0
+		# Hitung mundur cooldown tembak
+		shoot_timer -= delta
+
+		# Jika dalam jangkauan tembak dan cooldown siap, tembak player!
+		if dist <= shoot_range and shoot_timer <= 0.0 and not is_shooting:
+			shoot_at_player()
+
+		# Saat animasi menembak, musuh berhenti melangkah (seperti archer pemain)
+		if is_shooting:
+			velocity = Vector2.ZERO
+		else:
+			# Jika masih jauh dari jangkauan tembak ideal, dekati player
+			if dist > 180.0:
+				velocity = dir * chase_speed
+			else:
+				# Berhenti di jarak tembak yang pas
+				velocity = Vector2.ZERO
+
+			# Balik sprite sesuai arah horizontal
+			if sprite and dir.x != 0:
+				sprite.flip_h = dir.x < 0
 
 	else:
 		# Patroli mutar-mutar santai di area
@@ -112,7 +146,7 @@ func _physics_process(delta):
 	# 2. LOGIKA DAMAGE SAAT MENYENTUH ARCHER
 	# ---------------------------------------------------------
 	damage_timer -= delta
-	if is_touching_player and player != null:
+	if is_touching_player and player != null and is_instance_valid(player):
 		if damage_timer <= 0.0:
 			if player.has_method("take_damage"):
 				player.take_damage(contact_damage)
@@ -140,6 +174,52 @@ func handle_idle_patrol(delta):
 	else:
 		# Berhenti sejenak jika sudah sampai
 		velocity = Vector2.ZERO
+
+
+# =========================================================
+# RANGED ATTACK LOGIC (MENEMBAK PLAYER)
+# =========================================================
+
+func shoot_at_player():
+	if player == null or not is_instance_valid(player) or is_dead or is_shooting:
+		return
+
+	is_shooting = true
+	var dir = global_position.direction_to(player.global_position)
+
+	# Arah hadap sprite ke player
+	if sprite and dir.x != 0:
+		sprite.flip_h = dir.x < 0
+
+	# Mainkan animasi menembak
+	if sprite:
+		sprite.texture = ATK_TEXTURE
+		sprite.hframes = 8
+		sprite.frame = 0
+		anim_timer = 0.0
+
+	# Munculkan panah musuh
+	var arrow = ARROW_SCENE.instantiate()
+	arrow.global_position = global_position
+	arrow.direction = dir
+	arrow.rotation = dir.angle()
+	arrow.shooter_group = "enemy"
+	arrow.speed = projectile_speed
+	arrow.damage = projectile_damage
+	arrow.modulate = Color(1.8, 0.4, 0.4) # Warna kemerahan agar jelas panah musuh
+	get_parent().add_child(arrow)
+
+	shoot_timer = shoot_cooldown
+
+	# Tunggu durasi animasi menembak selesai (~0.35 detik), lalu kembali ke idle
+	await get_tree().create_timer(0.35).timeout
+	if is_instance_valid(self) and not is_dead:
+		is_shooting = false
+		if sprite:
+			sprite.texture = IDLE_TEXTURE
+			sprite.hframes = 4
+			sprite.frame = 0
+			anim_timer = 0.0
 
 
 # =========================================================
@@ -180,6 +260,7 @@ func take_damage(amount: int):
 
 func die():
 	is_dead = true
+	is_shooting = false
 	velocity = Vector2.ZERO
 
 	# Sembunyikan visual dan matikan proses
@@ -214,13 +295,19 @@ func respawn():
 	wander_target = spawn_position
 	wander_timer = 0.0
 	damage_timer = 0.0
+	shoot_timer = randf_range(0.5, shoot_cooldown)
+	is_shooting = false
 
 	# Reset Bar HP
 	if health_bar:
 		health_bar.value = current_health
 
-	# Reset warna normal
+	# Reset warna normal & tekstur
 	if sprite:
+		sprite.texture = IDLE_TEXTURE
+		sprite.hframes = 4
+		sprite.frame = 0
+		anim_timer = 0.0
 		sprite.modulate = Color(1.3, 0.4, 0.4)
 
 	# Nyalakan kembali tabrakan dan deteksi
