@@ -138,7 +138,7 @@ func _physics_process(delta):
 	if is_touching_player and player != null and is_instance_valid(player):
 		if damage_timer <= 0.0:
 			if player.has_method("take_damage"):
-				player.take_damage(contact_damage)
+				player.take_damage(contact_damage, global_position)
 			damage_timer = attack_cooldown
 
 
@@ -488,7 +488,7 @@ func _on_hitbox_body_entered(body):
 		# Langsung berikan damage jika cooldown siap
 		if damage_timer <= 0.0:
 			if player.has_method("take_damage"):
-				player.take_damage(contact_damage)
+				player.take_damage(contact_damage, global_position)
 			damage_timer = attack_cooldown
 
 

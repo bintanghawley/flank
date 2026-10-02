@@ -32,6 +32,13 @@ var is_attacking: bool = false
 @export var max_health: int = 10
 var current_health: int = 10
 
+# =========================
+# KNOCKBACK SETTINGS
+# =========================
+@export var knockback_strength: float = 380.0 # Kekuatan dorongan saat terkena hit
+var knockback_velocity: Vector2 = Vector2.ZERO
+var knockback_decay: float = 1400.0           # Kecepatan redaman dorongan knockback
+
 
 func _ready():
 	add_to_group("player")
@@ -74,71 +81,58 @@ func _physics_process(delta):
 
 
 	# =====================================================
+	# KNOCKBACK DECAY
+	# =====================================================
+	if knockback_velocity != Vector2.ZERO:
+		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, knockback_decay * delta)
+
+	# =====================================================
 	# MOVEMENT
 	# =====================================================
+
+	var move_velocity := Vector2.ZERO
 
 	if is_moving:
 
 		# Jangan bergerak jika sedang dalam animasi menembak
 		if is_attacking:
-			velocity = Vector2.ZERO
-			move_and_slide()
-			return
+			move_velocity = Vector2.ZERO
+		else:
+			# Tentukan kecepatan
+			var current_speed := NORMAL_SPEED
 
-		# Tentukan kecepatan
-		var current_speed := NORMAL_SPEED
+			if Input.is_key_pressed(KEY_SHIFT):
+				current_speed = SPRINT_SPEED
 
-		if Input.is_key_pressed(KEY_SHIFT):
-			current_speed = SPRINT_SPEED
+			# Arah menuju target
+			var direction := global_position.direction_to(target_position)
 
+			# Kecepatan jalan
+			move_velocity = direction * current_speed
 
-		# Arah menuju target
-		var direction := global_position.direction_to(target_position)
+			# Update arah animasi
+			update_direction_animation(direction)
 
+			# =================================================
+			# SUDAH SAMPAI TUJUAN
+			# =================================================
+			if global_position.distance_to(target_position) < 2.0:
+				global_position = target_position
+				is_moving = false
+				if not is_attacking:
+					play_idle_animation()
 
-		# Gerakkan CharacterBody2D
-		velocity = direction * current_speed
+			# =================================================
+			# MENABRAK SESUATU
+			# =================================================
+			elif get_slide_collision_count() > 0:
+				is_moving = false
+				if not is_attacking:
+					play_idle_animation()
 
-		move_and_slide()
-
-
-		# Update arah animasi
-		update_direction_animation(direction)
-
-
-		# =================================================
-		# SUDAH SAMPAI TUJUAN
-		# =================================================
-
-		if global_position.distance_to(target_position) < 2.0:
-
-			global_position = target_position
-
-			velocity = Vector2.ZERO
-			is_moving = false
-
-			if not is_attacking:
-				play_idle_animation()
-
-
-		# =================================================
-		# MENABRAK SESUATU
-		# =================================================
-
-		elif get_slide_collision_count() > 0:
-
-			velocity = Vector2.ZERO
-			is_moving = false
-
-			if not is_attacking:
-				play_idle_animation()
-
-
-		return
-
-
-	# Pastikan velocity berhenti ketika tidak bergerak
-	velocity = Vector2.ZERO
+	# Gabungkan kecepatan gerakan pemain dan gaya dorong knockback
+	velocity = move_velocity + knockback_velocity
+	move_and_slide()
 
 
 # =========================================================
@@ -466,17 +460,36 @@ func reset_attack_state():
 
 
 # =========================================================
-# MENERIMA DAMAGE DARI MUSUH
+# MENERIMA DAMAGE DARI MUSUH & KNOCKBACK
 # =========================================================
 
-func take_damage(amount: int):
+func take_damage(amount: int, source_position: Vector2 = Vector2.ZERO):
 	current_health -= amount
-	print("Archer terkena kontak musuh! Sisa HP: ", current_health)
+	print("Archer terkena serangan! Sisa HP: ", current_health)
+
+	# Tentukan arah dorongan knockback (menjauh dari sumber serangan)
+	var knockback_dir := Vector2.ZERO
+	if source_position != Vector2.ZERO and source_position != global_position:
+		knockback_dir = source_position.direction_to(global_position)
+	else:
+		# Jika posisi sumber tidak diketahui, dorong ke belakang arah hadap
+		knockback_dir = -last_direction
+
+	# Terapkan gaya dorong knockback
+	apply_knockback(knockback_dir * knockback_strength)
 
 	# Efek kedip merah saat terkena serangan
 	modulate = Color(2.5, 0.3, 0.3)
 	await get_tree().create_timer(0.12).timeout
-	modulate = Color.WHITE
+	if is_instance_valid(self):
+		modulate = Color.WHITE
 
 	if current_health <= 0:
 		print("Archer Kalah!")
+
+
+func apply_knockback(force: Vector2):
+	knockback_velocity = force
+	# Batalkan pergerakan mouse klik satu kali agar dorongan terasa nyata
+	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+		is_moving = false

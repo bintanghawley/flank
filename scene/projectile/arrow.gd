@@ -39,5 +39,5 @@ func _on_body_entered(body):
 
 		if target.is_in_group("player") or target.name == "Player_Archer":
 			if target.has_method("take_damage"):
-				target.take_damage(damage)
+				target.take_damage(damage, global_position)
 			queue_free()
