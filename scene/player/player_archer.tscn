@@ -4271,7 +4271,7 @@ position = Vector2(750, 480)
 
 [node name="Enemy2" parent="." unique_id=110304381 instance=ExtResource("15_13hap")]
 z_index = 3
-position = Vector2(250, 680)
+position = Vector2(250, 780)
 
 [node name="Enemy3" parent="." unique_id=110304382 instance=ExtResource("15_13hap")]
 z_index = 3
@@ -4284,6 +4284,17 @@ position = Vector2(150, 220)
 [node name="Enemy5" parent="." unique_id=110304384 instance=ExtResource("15_13hap")]
 z_index = 3
 position = Vector2(600, 820)
+
+[node name="WaterBoundary" type="StaticBody2D" parent="." unique_id=987654321]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="WaterBoundary" unique_id=987654322]
+polygon = PackedVector2Array(0, 400, 80, 400, 320, 640, 320, 720, 0, 720)
+
+[node name="BuildingBoundary" type="StaticBody2D" parent="." unique_id=987654323]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="BuildingBoundary" unique_id=987654324]
+polygon = PackedVector2Array(1680, 80, 2960, 80, 2960, 320, 1680, 320)
+
 
 
 
