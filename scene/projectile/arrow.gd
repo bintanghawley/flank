@@ -6,6 +6,7 @@ extends Area2D
 
 var direction: Vector2 = Vector2.RIGHT
 
+
 func _ready():
 	# Sambungkan deteksi tabrakan
 	body_entered.connect(_on_body_entered)

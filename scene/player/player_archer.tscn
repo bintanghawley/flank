@@ -419,7 +419,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_k7i3r")
 }],
-"loop": 1,
+"loop": 0,
 "name": &"atk_n",
 "speed": 12.0
 }, {
@@ -448,7 +448,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_u6gqh")
 }],
-"loop": 1,
+"loop": 0,
 "name": &"atk_nw",
 "speed": 12.0
 }, {
@@ -477,7 +477,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_3kfsn")
 }],
-"loop": 1,
+"loop": 0,
 "name": &"atk_s",
 "speed": 12.0
 }, {
@@ -506,7 +506,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_hik4n")
 }],
-"loop": 1,
+"loop": 0,
 "name": &"atk_se",
 "speed": 12.0
 }, {
@@ -4216,7 +4216,7 @@ script = ExtResource("1_04l4p")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Player_Archer" unique_id=1336906991]
 texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_84mjf")
-animation = &"atk_n"
+animation = &"atk_se"
 metadata/_aseprite_wizard_interface_config_ = {
 "animation_section": false,
 "pending_changes": {

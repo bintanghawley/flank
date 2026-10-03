@@ -25,6 +25,7 @@ const ARROW_SCENE = preload("res://scene/projectile/arrow.tscn")
 @export var attack_cooldown: float = 0.8   # Jeda tembakan (0.8 detik)
 var attack_timer: float = 0.0
 var is_attacking: bool = false
+var attack_direction: Vector2 = Vector2.RIGHT
 
 # =========================
 # HEALTH & RESPAWN SETTINGS
@@ -438,31 +439,29 @@ func shoot_towards(target_pos: Vector2):
 	if attack_timer > 0.0 or is_attacking:
 		return
 
-	# Hentikan pergerakan agar pemanah tidak menembak sambil berjalan
+	# Hentikan pergerakan
 	is_moving = false
 	velocity = Vector2.ZERO
 
+	# Tentukan arah tembakan saat klik
 	var dir := global_position.direction_to(target_pos)
+
 	if dir == Vector2.ZERO:
 		dir = last_direction
 
-	# Hadap ke arah tembakan dan mainkan animasi serang
+	# Simpan arah tembakan
+	attack_direction = dir
+
+	# Hadap ke arah tembakan
 	last_direction = get_8_direction(dir)
+
+	# Mulai animasi attack
 	is_attacking = true
 	play_attack_animation()
 
-	# Munculkan anak panah
-	var arrow = ARROW_SCENE.instantiate()
-	arrow.global_position = global_position
-	arrow.direction = dir
-	arrow.rotation = dir.angle()
-
-	# Tambahkan panah ke scene (parent player / root map)
-	get_parent().add_child(arrow)
-
 	attack_timer = attack_cooldown
-	reset_attack_state()
 
+	reset_attack_state()
 
 func shoot_at(target: Node2D):
 	if is_instance_valid(target):
@@ -470,17 +469,32 @@ func shoot_at(target: Node2D):
 
 
 func reset_attack_state():
-	await get_tree().create_timer(0.35).timeout
+	# Tunggu sampai sekitar frame 3-4 dari animasi attack
+	await get_tree().create_timer(0.22).timeout
+
 	if is_dead:
 		return
+
+	# Arrow keluar saat Archer melepas busur
+	var arrow = ARROW_SCENE.instantiate()
+	arrow.global_position = global_position
+	arrow.direction = attack_direction
+	arrow.rotation = attack_direction.angle()
+	get_parent().add_child(arrow)
+
+	# Tunggu sampai animasi attack selesai
+	await animated_sprite.animation_finished
+
+	if is_dead:
+		return
+
 	is_attacking = false
+
 	if is_moving:
 		var direction := global_position.direction_to(target_position)
 		update_direction_animation(direction)
 	else:
 		play_idle_animation()
-
-
 # =========================================================
 # MENERIMA DAMAGE DARI MUSUH & KNOCKBACK
 # =========================================================
