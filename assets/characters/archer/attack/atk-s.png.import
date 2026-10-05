@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c6fruk0usfaf2"
-path="res://.godot/imported/walk-n.png-9baa19c76481eae2342044d1efdb6ccb.ctex"
+uid="uid://d25ke7meuu1fe"
+path="res://.godot/imported/atk-s.png-6cfe7077a16a7a806d7e275143166dac.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/archer/walk-n.png"
-dest_files=["res://.godot/imported/walk-n.png-9baa19c76481eae2342044d1efdb6ccb.ctex"]
+source_file="res://assets/characters/archer/attack/atk-s.png"
+dest_files=["res://.godot/imported/atk-s.png-6cfe7077a16a7a806d7e275143166dac.ctex"]
 
 [params]
 

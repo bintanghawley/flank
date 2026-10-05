@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://criaekw817cot"
-path="res://.godot/imported/atk-n.png-617fdca3ad4ccfd125fa0c5e8548d773.ctex"
+uid="uid://ldsyrk5pbqxy"
+path="res://.godot/imported/skill-release-s.png-999818defaae981d34f656159398c10f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/archer/atk-n.png"
-dest_files=["res://.godot/imported/atk-n.png-617fdca3ad4ccfd125fa0c5e8548d773.ctex"]
+source_file="res://assets/characters/archer/skill/release/skill-release-s.png"
+dest_files=["res://.godot/imported/skill-release-s.png-999818defaae981d34f656159398c10f.ctex"]
 
 [params]
 

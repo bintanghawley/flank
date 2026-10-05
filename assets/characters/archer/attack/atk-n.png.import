@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cj21xh838eex7"
-path="res://.godot/imported/idle-s.png-92e6ac103b40a8298fad2821417e1110.ctex"
+uid="uid://criaekw817cot"
+path="res://.godot/imported/atk-n.png-f56ff9939b51833b7dd61454f6cd6729.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/archer/idle-s.png"
-dest_files=["res://.godot/imported/idle-s.png-92e6ac103b40a8298fad2821417e1110.ctex"]
+source_file="res://assets/characters/archer/attack/atk-n.png"
+dest_files=["res://.godot/imported/atk-n.png-f56ff9939b51833b7dd61454f6cd6729.ctex"]
 
 [params]
 

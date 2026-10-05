@@ -8,15 +8,14 @@
 position = Vector2(-1, 2)
 
 [node name="Player_Archer" parent="." unique_id=1380897880 instance=ExtResource("1_33cqm")]
+y_sort_enabled = true
 position = Vector2(1680, 1120)
 
 [node name="Enemy1" parent="." unique_id=110304380 instance=ExtResource("2_xwcet")]
-visible = false
 z_index = 3
 position = Vector2(2800, 1280)
 
 [node name="Enemy2" parent="." unique_id=110304381 instance=ExtResource("2_xwcet")]
-visible = false
 z_index = 3
 position = Vector2(2557, 527.0001)
 

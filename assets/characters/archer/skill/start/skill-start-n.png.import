@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cgw7k1yo6ufep"
-path="res://.godot/imported/arrow-trace.png-b493d10218eb5099f194b2adb1777779.ctex"
+uid="uid://qyla6r146gbo"
+path="res://.godot/imported/skill-start-n.png-2225ce4549fad8c46d8389bf25f2e477.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/projectile/arrow-trace.png"
-dest_files=["res://.godot/imported/arrow-trace.png-b493d10218eb5099f194b2adb1777779.ctex"]
+source_file="res://assets/characters/archer/skill/start/skill-start-n.png"
+dest_files=["res://.godot/imported/skill-start-n.png-2225ce4549fad8c46d8389bf25f2e477.ctex"]
 
 [params]
 

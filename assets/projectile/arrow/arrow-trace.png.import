@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d25ke7meuu1fe"
-path="res://.godot/imported/atk-s.png-2fc4f49c07852bfd60c64c8bfbcd43eb.ctex"
+uid="uid://cgw7k1yo6ufep"
+path="res://.godot/imported/arrow-trace.png-d391ef4b4892fa5385b5456fc872f601.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/archer/atk-s.png"
-dest_files=["res://.godot/imported/atk-s.png-2fc4f49c07852bfd60c64c8bfbcd43eb.ctex"]
+source_file="res://assets/projectile/arrow/arrow-trace.png"
+dest_files=["res://.godot/imported/arrow-trace.png-d391ef4b4892fa5385b5456fc872f601.ctex"]
 
 [params]
 
