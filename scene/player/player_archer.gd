@@ -98,47 +98,62 @@ func _physics_process(delta):
 		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, knockback_decay * delta)
 
 	# =====================================================
-	# MOVEMENT
+	# MOVEMENT (WASD / ARROW KEYS / MOUSE)
 	# =====================================================
 
+	# Input keyboard (WASD / Tombol Panah)
+	var input_dir := Vector2.ZERO
+	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
+		input_dir.y -= 1.0
+	if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
+		input_dir.y += 1.0
+	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
+		input_dir.x -= 1.0
+	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
+		input_dir.x += 1.0
+	input_dir = input_dir.normalized()
+
 	var move_velocity := Vector2.ZERO
+	var current_speed := NORMAL_SPEED
+	if Input.is_key_pressed(KEY_SHIFT):
+		current_speed = SPRINT_SPEED
 
-	if is_moving:
+	if input_dir != Vector2.ZERO:
+		# Prioritas gerakan keyboard (WASD)
+		is_moving = false
+		target_position = global_position
 
-		# Jangan bergerak jika sedang dalam animasi menembak
 		if is_attacking:
 			move_velocity = Vector2.ZERO
 		else:
-			# Tentukan kecepatan
-			var current_speed := NORMAL_SPEED
+			move_velocity = input_dir * current_speed
+			update_direction_animation(input_dir)
 
-			if Input.is_key_pressed(KEY_SHIFT):
-				current_speed = SPRINT_SPEED
-
-			# Arah menuju target
+	elif is_moving:
+		# Gerakan navigasi mouse (klik kanan)
+		if is_attacking:
+			move_velocity = Vector2.ZERO
+		else:
 			var direction := global_position.direction_to(target_position)
-
-			# Kecepatan jalan
 			move_velocity = direction * current_speed
-
-			# Update arah animasi
 			update_direction_animation(direction)
 
-			# =================================================
-			# CEK SAMPAI TUJUAN (POSISI DEKAT)
-			# =================================================
 			if global_position.distance_to(target_position) < 4.0:
 				global_position = target_position
 				is_moving = false
 				if not is_attacking:
 					play_idle_animation()
+	else:
+		# Saat diam dan tidak ada input gerak
+		if not is_attacking and animated_sprite.animation.begins_with("walk_"):
+			play_idle_animation()
 
 	# Gabungkan kecepatan gerakan pemain dan gaya dorong knockback
 	velocity = move_velocity + knockback_velocity
 	move_and_slide()
 
 	# =====================================================
-	# RESPON SETELAH MELUNCUR / MENABRAK
+	# RESPON SETELAH MELUNCUR / MENABRAK (MOUSE)
 	# =====================================================
 	if is_moving:
 		if global_position.distance_to(target_position) < 4.0:
