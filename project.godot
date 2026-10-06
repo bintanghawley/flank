@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Flank"
-run/main_scene="uid://bwrcpv48t8r6w"
+run/main_scene="uid://80uy3wgwk1dw"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 

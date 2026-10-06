@@ -600,7 +600,14 @@ func respawn():
 # =========================================================
 
 func setup_map_boundaries():
+	if not get_parent():
+		return
+
 	var ground = get_parent().get_node_or_null("Ground") as TileMapLayer
+	if not ground:
+		ground = get_parent().get_node_or_null("map_region1/Ground") as TileMapLayer
+	if not ground:
+		ground = get_parent().find_child("Ground", true, false) as TileMapLayer
 	if not ground:
 		return
 
