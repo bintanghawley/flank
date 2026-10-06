@@ -3,6 +3,13 @@
 [ext_resource type="Script" uid="uid://dlxo8xdwftllw" path="res://scene/projectile/arrow.gd" id="1_4u37r"]
 [ext_resource type="Texture2D" uid="uid://vxnqpffgkg5s" path="res://assets/projectile/arrow/arrow.png" id="2_6mflx"]
 
+[sub_resource type="Curve" id="Curve_trail"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Gradient" id="Gradient_trail"]
+colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 0.85)
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8q1w8"]
 size = Vector2(14, 6)
 
@@ -10,9 +17,20 @@ size = Vector2(14, 6)
 scale = Vector2(4, 4)
 script = ExtResource("1_4u37r")
 
+[node name="TrailLine" type="Line2D" parent="." unique_id=576616280]
+top_level = true
+z_index = 1
+texture_filter = 1
+width = 4.0
+width_curve = SubResource("Curve_trail")
+gradient = SubResource("Gradient_trail")
+begin_cap_mode = 2
+end_cap_mode = 2
+
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1176712692]
 z_index = 2
 texture_filter = 1
+position = Vector2(0, -0.5)
 texture = ExtResource("2_6mflx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1162886958]

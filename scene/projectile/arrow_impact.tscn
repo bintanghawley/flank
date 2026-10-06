@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://baea842yb1niw"]
+
+[ext_resource type="Texture2D" uid="uid://bjusuim4gxyok" path="res://assets/projectile/arrow/arrow-explode.png" id="1_explode"]
+[ext_resource type="Script" path="res://scene/projectile/arrow_impact.gd" id="2_script"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ex0"]
+atlas = ExtResource("1_explode")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ex1"]
+atlas = ExtResource("1_explode")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ex2"]
+atlas = ExtResource("1_explode")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ex3"]
+atlas = ExtResource("1_explode")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ex4"]
+atlas = ExtResource("1_explode")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_explode"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ex0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ex1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ex2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ex3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ex4")
+}],
+"loop": false,
+"name": &"default",
+"speed": 20.0
+}]
+
+[node name="ArrowImpact" type="AnimatedSprite2D" unique_id=987654302]
+z_index = 3
+texture_filter = 1
+scale = Vector2(4, 4)
+sprite_frames = SubResource("SpriteFrames_explode")
+autoplay = "default"
+script = ExtResource("2_script")
