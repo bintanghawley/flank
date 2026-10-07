@@ -15,6 +15,7 @@ extends CharacterBody2D
 # RANGED ATTACK / TEMBAKAN MUSUH
 # =========================
 const ARROW_SCENE = preload("res://scene/projectile/arrow.tscn")
+const TRACE_SCENE = preload("res://scene/projectile/arrow_trace.tscn")
 
 @export var shoot_range: float = 320.0       # Jarak tembak musuh (pixel)
 @export var shoot_cooldown: float = 1.6     # Cooldown tembakan musuh (detik)
@@ -197,20 +198,32 @@ func handle_idle_patrol(delta):
 # RANGED ATTACK LOGIC (MENEMBAK PLAYER)
 # =========================================================
 
+func get_arrow_spawn_position(dir: Vector2) -> Vector2:
+	# Titik visual tengah tubuh archer (skala 5x, texture center 16.0, 16.0)
+	var center_pos := global_position + Vector2(2.5, 6.0)
+
+	# Posisi kemunculan panah tepat di depan busur keluar dari tubuh musuh
+	var forward_dist := 20.0
+	return center_pos + dir * forward_dist
+
+
 func shoot_at_player():
 	if player == null or not is_instance_valid(player) or is_dead or is_shooting:
 		return
 
 	is_shooting = true
-	var dir = global_position.direction_to(player.global_position)
+	var center_pos = global_position + Vector2(2.5, 6.0)
+	var dir = center_pos.direction_to(player.global_position)
 
 	# Arah hadap ke player dan mainkan animasi serang sesuai arah
 	last_direction = get_8_direction(dir)
 	play_attack_animation()
 
-	# Munculkan panah musuh
+	# Munculkan panah musuh dari posisi keluar yang presisi
+	var spawn_pos := get_arrow_spawn_position(dir)
+
 	var arrow = ARROW_SCENE.instantiate()
-	arrow.global_position = global_position
+	arrow.global_position = spawn_pos
 	arrow.direction = dir
 	arrow.rotation = dir.angle()
 	arrow.shooter_group = "enemy"
@@ -218,6 +231,16 @@ func shoot_at_player():
 	arrow.damage = projectile_damage
 	arrow.modulate = Color(1.8, 0.4, 0.4) # Warna kemerahan agar jelas panah musuh
 	get_parent().add_child(arrow)
+
+	# Munculkan trace indicator panah musuh tepat di titik lepas (dihilangkan jika menghadap North)
+	if last_direction != Vector2.UP and animated_sprite.animation != "atk_n":
+		var trace = TRACE_SCENE.instantiate()
+		trace.global_position = spawn_pos
+		trace.rotation = dir.angle()
+		trace.scale = Vector2(4, 4)
+		trace.z_index = 10
+		trace.modulate = Color(1.8, 0.4, 0.4)
+		get_parent().add_child(trace)
 
 	shoot_timer = shoot_cooldown
 

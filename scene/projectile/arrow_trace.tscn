@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://cx6y7u8jao0p1"]
+
+[ext_resource type="Texture2D" uid="uid://cgw7k1yo6ufep" path="res://assets/projectile/arrow/arrow-trace.png" id="1_trace"]
+[ext_resource type="Script" path="res://scene/projectile/arrow_trace.gd" id="2_script"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tr0"]
+atlas = ExtResource("1_trace")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tr1"]
+atlas = ExtResource("1_trace")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tr2"]
+atlas = ExtResource("1_trace")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tr3"]
+atlas = ExtResource("1_trace")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_trace"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tr0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tr1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tr2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tr3")
+}],
+"loop": false,
+"name": &"default",
+"speed": 18.0
+}]
+
+[node name="ArrowTrace" type="AnimatedSprite2D" unique_id=987654303]
+z_index = 10
+texture_filter = 1
+offset = Vector2(0, -0.5)
+scale = Vector2(4, 4)
+sprite_frames = SubResource("SpriteFrames_trace")
+autoplay = "default"
+script = ExtResource("2_script")

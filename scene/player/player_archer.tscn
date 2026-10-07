@@ -697,7 +697,7 @@ animations = [{
 size = Vector2(13.799984, 5.6000004)
 
 [node name="Player_Archer" type="CharacterBody2D" unique_id=1380897880]
-z_index = 3
+z_index = 4
 scale = Vector2(5, 5)
 script = ExtResource("1_04l4p")
 

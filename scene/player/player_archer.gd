@@ -20,6 +20,7 @@ var last_direction := Vector2.DOWN
 # =========================
 
 const ARROW_SCENE = preload("res://scene/projectile/arrow.tscn")
+const TRACE_SCENE = preload("res://scene/projectile/arrow_trace.tscn")
 
 @export var attack_range: float = 300.0    # Jarak jangkauan tembak otomatis (pixel)
 @export var attack_cooldown: float = 0.8   # Jeda tembakan (0.8 detik)
@@ -450,6 +451,16 @@ func play_attack_animation():
 # COMBAT & SHOOT LOGIC (MANUAL KLIK KIRI)
 # =========================================================
 
+func get_arrow_spawn_position() -> Vector2:
+	# Titik visual tengah tubuh archer (skala 5x, texture center 16.0, 16.0)
+	var center_pos := global_position + Vector2(2.5, 6.0)
+
+	# Posisi kemunculan panah dan trace tepat di depan busur keluar dari tubuh archer
+	var forward_dist := 20.0
+	var dir := attack_direction if attack_direction != Vector2.ZERO else last_direction
+	return center_pos + dir * forward_dist
+
+
 func shoot_towards(target_pos: Vector2):
 	if attack_timer > 0.0 or is_attacking:
 		return
@@ -458,8 +469,9 @@ func shoot_towards(target_pos: Vector2):
 	is_moving = false
 	velocity = Vector2.ZERO
 
-	# Tentukan arah tembakan saat klik
-	var dir := global_position.direction_to(target_pos)
+	# Tentukan arah tembakan saat klik (dihitung dari titik visual tengah karakter)
+	var center_pos := global_position + Vector2(2.5, 6.0)
+	var dir := center_pos.direction_to(target_pos)
 
 	if dir == Vector2.ZERO:
 		dir = last_direction
@@ -490,12 +502,23 @@ func reset_attack_state():
 	if is_dead:
 		return
 
-	# Arrow keluar saat Archer melepas busur
+	# Arrow keluar saat Archer melepas busur tepat dari posisi tengah yang presisi
+	var spawn_pos := get_arrow_spawn_position()
+
 	var arrow = ARROW_SCENE.instantiate()
-	arrow.global_position = global_position
+	arrow.global_position = spawn_pos
 	arrow.direction = attack_direction
 	arrow.rotation = attack_direction.angle()
 	get_parent().add_child(arrow)
+
+	# Spawn indicator trace arrow tepat di posisi spawn panah (dihilangkan jika menghadap North)
+	if last_direction != Vector2.UP and animated_sprite.animation != "atk_n":
+		var trace = TRACE_SCENE.instantiate()
+		trace.global_position = spawn_pos
+		trace.rotation = attack_direction.angle()
+		trace.scale = Vector2(4, 4)
+		trace.z_index = 10
+		get_parent().add_child(trace)
 
 	# Tunggu sampai animasi attack selesai
 	await animated_sprite.animation_finished

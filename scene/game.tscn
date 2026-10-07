@@ -12,11 +12,11 @@ y_sort_enabled = true
 position = Vector2(1680, 1120)
 
 [node name="Enemy1" parent="." unique_id=110304380 instance=ExtResource("2_xwcet")]
-z_index = 3
+z_index = 4
 position = Vector2(2800, 1280)
 
 [node name="Enemy2" parent="." unique_id=110304381 instance=ExtResource("2_xwcet")]
-z_index = 3
+z_index = 4
 position = Vector2(2557, 527.0001)
 
 [node name="map_region1" parent="." unique_id=1420594985 instance=ExtResource("3_p1ry8")]
