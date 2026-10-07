@@ -411,6 +411,11 @@ func take_damage(amount: int):
 
 	current_health -= amount
 
+	# Kamera bergetar (camera shake) saat player mengenai musuh
+	var player_node = get_tree().get_first_node_in_group("player")
+	if player_node and is_instance_valid(player_node) and player_node.has_method("apply_camera_shake"):
+		player_node.apply_camera_shake()
+
 	# Update Bar HP utama (merah) langsung turun ke HP sekarang
 	if health_bar:
 		health_bar.value = current_health
@@ -436,7 +441,6 @@ func take_damage(amount: int):
 			animated_sprite.modulate = Color(1.3, 0.4, 0.4) # Kembali ke warna merah musuh
 
 	# Musuh kaget dan langsung mengejar player jika player masih hidup
-	var player_node = get_tree().get_first_node_in_group("player")
 	if player_node and not ("is_dead" in player_node and player_node.is_dead):
 		player = player_node
 		current_state = State.CHASE

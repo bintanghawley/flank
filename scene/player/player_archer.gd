@@ -47,6 +47,13 @@ var spawn_position: Vector2
 var knockback_velocity: Vector2 = Vector2.ZERO
 var knockback_decay: float = 1400.0           # Kecepatan redaman dorongan knockback
 
+# =========================
+# CAMERA SHAKE SETTINGS
+# =========================
+@export var camera_shake_strength: float = 8.0 # Kekuatan getaran kamera saat mengenai lawan
+var shake_intensity: float = 0.0
+var shake_decay: float = 35.0
+
 
 func _ready():
 	add_to_group("player")
@@ -55,6 +62,29 @@ func _ready():
 	target_position = global_position
 	play_idle_animation()
 	setup_map_boundaries.call_deferred()
+
+
+func _process(delta: float):
+	handle_camera_shake(delta)
+
+
+func apply_camera_shake(intensity: float = -1.0):
+	var amount = intensity if intensity > 0.0 else camera_shake_strength
+	shake_intensity = max(shake_intensity, amount)
+
+
+func handle_camera_shake(delta: float):
+	if not has_node("Camera2D"):
+		return
+	var cam: Camera2D = $Camera2D
+	if shake_intensity > 0.0:
+		cam.offset = Vector2(
+			randf_range(-shake_intensity, shake_intensity),
+			randf_range(-shake_intensity, shake_intensity)
+		)
+		shake_intensity = move_toward(shake_intensity, 0.0, shake_decay * delta)
+	elif cam.offset != Vector2.ZERO:
+		cam.offset = Vector2.ZERO
 
 
 # =========================================================
@@ -584,6 +614,9 @@ func die():
 	is_attacking = false
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO
+	shake_intensity = 0.0
+	if has_node("Camera2D"):
+		$Camera2D.offset = Vector2.ZERO
 	print("Archer Kalah! Menunggu respawn...")
 
 	# Matikan tabrakan dan keluarkan sementara dari grup player

@@ -99,6 +99,12 @@ func _on_body_entered(body):
 		if target.is_in_group("enemy"):
 			if target.has_method("take_damage"):
 				target.take_damage(damage)
+
+			# Trigger getaran kamera (camera shake) saat panah mengenai lawan
+			var player_node = get_tree().get_first_node_in_group("player")
+			if player_node and is_instance_valid(player_node) and player_node.has_method("apply_camera_shake"):
+				player_node.apply_camera_shake()
+
 			destroy()
 
 	# Jika panah ditembakkan oleh musuh -> targetnya adalah player
