@@ -203,7 +203,7 @@ func get_arrow_spawn_position(dir: Vector2) -> Vector2:
 	var center_pos := global_position + Vector2(2.5, 6.0)
 
 	# Posisi kemunculan panah tepat di depan busur keluar dari tubuh musuh
-	var forward_dist := 20.0
+	var forward_dist := 28.0 if last_direction == Vector2.UP else 20.0
 	return center_pos + dir * forward_dist
 
 
@@ -230,6 +230,10 @@ func shoot_at_player():
 	arrow.speed = projectile_speed
 	arrow.damage = projectile_damage
 	arrow.modulate = Color(1.8, 0.4, 0.4) # Warna kemerahan agar jelas panah musuh
+	if last_direction == Vector2.UP or animated_sprite.animation == "atk_n":
+		arrow.get_node("Sprite2D").z_index = 3
+	else:
+		arrow.get_node("Sprite2D").z_index = 5
 	get_parent().add_child(arrow)
 
 	# Munculkan trace indicator panah musuh tepat di titik lepas (dihilangkan jika menghadap North)

@@ -19,7 +19,7 @@ script = ExtResource("1_4u37r")
 
 [node name="TrailLine" type="Line2D" parent="." unique_id=576616280]
 top_level = true
-z_index = 4
+z_index = 2
 texture_filter = 1
 width = 4.0
 width_curve = SubResource("Curve_trail")

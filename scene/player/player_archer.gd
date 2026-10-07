@@ -455,9 +455,9 @@ func get_arrow_spawn_position() -> Vector2:
 	# Titik visual tengah tubuh archer (skala 5x, texture center 16.0, 16.0)
 	var center_pos := global_position + Vector2(2.5, 6.0)
 
-	# Posisi kemunculan panah dan trace tepat di depan busur keluar dari tubuh archer
-	var forward_dist := 20.0
+	# Posisi kemunculan panah tepat di depan busur keluar dari tubuh archer
 	var dir := attack_direction if attack_direction != Vector2.ZERO else last_direction
+	var forward_dist := 28.0 if last_direction == Vector2.UP else 20.0
 	return center_pos + dir * forward_dist
 
 
@@ -509,6 +509,10 @@ func reset_attack_state():
 	arrow.global_position = spawn_pos
 	arrow.direction = attack_direction
 	arrow.rotation = attack_direction.angle()
+	if last_direction == Vector2.UP or animated_sprite.animation == "atk_n":
+		arrow.get_node("Sprite2D").z_index = 3
+	else:
+		arrow.get_node("Sprite2D").z_index = 5
 	get_parent().add_child(arrow)
 
 	# Spawn indicator trace arrow tepat di posisi spawn panah (dihilangkan jika menghadap North)

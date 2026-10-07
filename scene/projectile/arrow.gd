@@ -17,10 +17,18 @@ func _ready():
 	# Sambungkan deteksi tabrakan
 	body_entered.connect(_on_body_entered)
 
-	# Titik awal jejak ekor panah
+	# Titik awal jejak ekor panah (z_index 2 agar selalu berada di bawah karakter dan tidak menembus tubuh)
 	if trail_line:
+		trail_line.z_index = 2
 		trail_line.clear_points()
 		trail_line.add_point(global_position - direction * 16.0)
+
+	# Jika menembak ke arah North (ke atas), panah berada di bawah karakter (z_index 3 < 4)
+	# Untuk arah lainnya, panah berada di atas karakter (z_index 5 > 4)
+	if direction.y < -0.85:
+		$Sprite2D.z_index = 3
+	else:
+		$Sprite2D.z_index = 5
 
 	# Hapus otomatis jika tidak mengenai apa-apa dalam 3 detik agar game tetap lancar
 	await get_tree().create_timer(3.0).timeout
