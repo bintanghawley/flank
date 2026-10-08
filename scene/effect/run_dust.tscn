@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://cx6y7u8jao0d9"]
+
+[ext_resource type="Texture2D" uid="uid://bnro5c71ohujb" path="res://assets/particles/dust_puff.png" id="1_dust"]
+[ext_resource type="Script" path="res://scene/effect/run_dust.gd" id="2_script"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d0"]
+atlas = ExtResource("1_dust")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d1"]
+atlas = ExtResource("1_dust")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d2"]
+atlas = ExtResource("1_dust")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d3"]
+atlas = ExtResource("1_dust")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_dust"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d3")
+}],
+"loop": false,
+"name": &"default",
+"speed": 14.0
+}]
+
+[node name="RunDust" type="AnimatedSprite2D"]
+z_index = 2
+texture_filter = 1
+offset = Vector2(0, -4)
+scale = Vector2(4, 4)
+sprite_frames = SubResource("SpriteFrames_dust")
+autoplay = "default"
+script = ExtResource("2_script")

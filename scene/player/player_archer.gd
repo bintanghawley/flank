@@ -21,6 +21,13 @@ var last_direction := Vector2.DOWN
 
 const ARROW_SCENE = preload("res://scene/projectile/arrow.tscn")
 const TRACE_SCENE = preload("res://scene/projectile/arrow_trace.tscn")
+const DUST_SCENE = preload("res://scene/effect/run_dust.tscn")
+
+# =========================
+# SPRINT DUST SETTINGS
+# =========================
+var dust_timer: float = 0.0
+const DUST_INTERVAL: float = 0.13 # Jeda kemunculan kepulan debu saat sprint (detik)
 
 @export var attack_range: float = 300.0    # Jarak jangkauan tembak otomatis (pixel)
 @export var attack_cooldown: float = 0.8   # Jeda tembakan (0.8 detik)
@@ -184,6 +191,18 @@ func _physics_process(delta):
 	move_and_slide()
 
 	# =====================================================
+	# EFEK DEBU SAAT SPRINT (SHIFT)
+	# =====================================================
+	var is_sprinting := Input.is_key_pressed(KEY_SHIFT)
+	if is_sprinting and move_velocity != Vector2.ZERO and not is_attacking and not is_dead:
+		dust_timer -= delta
+		if dust_timer <= 0.0:
+			dust_timer = DUST_INTERVAL
+			spawn_run_dust(move_velocity.normalized())
+	else:
+		dust_timer = 0.0
+
+	# =====================================================
 	# RESPON SETELAH MELUNCUR / MENABRAK (MOUSE)
 	# =====================================================
 	if is_moving:
@@ -198,6 +217,42 @@ func _physics_process(delta):
 				is_moving = false
 				if not is_attacking:
 					play_idle_animation()
+
+
+func spawn_run_dust(move_dir: Vector2):
+	if not get_parent():
+		return
+
+	var dust = DUST_SCENE.instantiate()
+	# Titik pijakan kaki archer disesuaikan dengan arah gerak agar debu selalu menempel pas di kaki
+	var feet_y: float = 28.0
+	var lag_x: float = 5.0
+	var lag_y: float = 2.0
+
+	if move_dir.y < -0.3:
+		# Arah atas (North, Northwest, Northeast): kaki visual lebih tinggi
+		feet_y = 26.0
+		lag_y = 2.0
+	elif absf(move_dir.y) <= 0.3:
+		# Arah samping murni (West, East): sejajar kaki, trailing horizontal
+		feet_y = 28.0
+		lag_y = 0.0
+	else:
+		# Arah bawah (South, Southwest, Southeast)
+		feet_y = 32.0
+		lag_y = 4.0
+
+	var feet_pos := global_position + Vector2(1.5, feet_y)
+	var spawn_pos := feet_pos - Vector2(move_dir.x * lag_x, move_dir.y * lag_y)
+
+	# Sedikit variasi acak agar tampak natural
+	spawn_pos += Vector2(randf_range(-3.0, 3.0), randf_range(-1.5, 1.5))
+
+	dust.global_position = spawn_pos
+	dust.flip_h = randf() > 0.5
+	dust.scale = Vector2(randf_range(3.5, 4.5), randf_range(3.5, 4.5))
+	dust.z_index = 2 # Di bawah tubuh karakter (z_index 4)
+	get_parent().add_child(dust)
 
 
 # =========================================================
