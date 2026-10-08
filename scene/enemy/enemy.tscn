@@ -2,17 +2,17 @@
 
 [ext_resource type="Texture2D" uid="uid://do71v5w5p54ac" path="res://assets/characters/archer/idle/idle-n.png" id="1_iaxkd"]
 [ext_resource type="Script" uid="uid://bbwsma4oqqaac" path="res://scene/enemy/enemy.gd" id="1_nytjq"]
-[ext_resource type="Texture2D" uid="uid://yftayexeqq0c" path="res://assets/characters/archer/idle/idle-nw.png" id="2_04l4p"]
+[ext_resource type="Texture2D" uid="uid://yftayexeqq0c" path="res://assets/characters/archer/idle/idle-w.png" id="2_04l4p"]
 [ext_resource type="Texture2D" uid="uid://criaekw817cot" path="res://assets/characters/archer/attack/atk-n.png" id="2_f7y75"]
 [ext_resource type="Texture2D" uid="uid://d25ke7meuu1fe" path="res://assets/characters/archer/attack/atk-s.png" id="2_m2x1d"]
-[ext_resource type="Texture2D" uid="uid://k3l3kucggses" path="res://assets/characters/archer/attack/atk-nw.png" id="3_13hap"]
+[ext_resource type="Texture2D" uid="uid://k3l3kucggses" path="res://assets/characters/archer/attack/atk-w.png" id="3_13hap"]
 [ext_resource type="Texture2D" uid="uid://cj21xh838eex7" path="res://assets/characters/archer/idle/idle-s.png" id="3_bkha6"]
-[ext_resource type="Texture2D" uid="uid://cjm1oqfo0ghqi" path="res://assets/characters/archer/idle/idle-se.png" id="4_tvopb"]
+[ext_resource type="Texture2D" uid="uid://cjm1oqfo0ghqi" path="res://assets/characters/archer/idle/idle-e.png" id="4_tvopb"]
 [ext_resource type="Texture2D" uid="uid://c6fruk0usfaf2" path="res://assets/characters/archer/walk/walk-n.png" id="5_53wy6"]
-[ext_resource type="Texture2D" uid="uid://clu7as0h40dn4" path="res://assets/characters/archer/attack/atk-se.png" id="5_qgqwh"]
-[ext_resource type="Texture2D" uid="uid://cfmhxxlegrfwe" path="res://assets/characters/archer/walk/walk-nw.png" id="6_6l0jd"]
+[ext_resource type="Texture2D" uid="uid://clu7as0h40dn4" path="res://assets/characters/archer/attack/atk-e.png" id="5_qgqwh"]
+[ext_resource type="Texture2D" uid="uid://cfmhxxlegrfwe" path="res://assets/characters/archer/walk/walk-w.png" id="6_6l0jd"]
 [ext_resource type="Texture2D" uid="uid://bdyj61h46bqwa" path="res://assets/characters/archer/walk/walk-s.png" id="7_ivsn3"]
-[ext_resource type="Texture2D" uid="uid://dh2ewmiyiel0" path="res://assets/characters/archer/walk/walk-se.png" id="8_66tyk"]
+[ext_resource type="Texture2D" uid="uid://dh2ewmiyiel0" path="res://assets/characters/archer/walk/walk-e.png" id="8_66tyk"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_n6v11"]
 atlas = ExtResource("2_f7y75")
@@ -447,7 +447,7 @@ animations = [{
 "texture": SubResource("AtlasTexture_u6gqh")
 }],
 "loop": 1,
-"name": &"atk_nw",
+"name": &"atk_w",
 "speed": 12.0
 }, {
 "frames": [{
@@ -505,7 +505,7 @@ animations = [{
 "texture": SubResource("AtlasTexture_hik4n")
 }],
 "loop": 1,
-"name": &"atk_se",
+"name": &"atk_e",
 "speed": 12.0
 }, {
 "frames": [{
@@ -539,7 +539,7 @@ animations = [{
 "texture": SubResource("AtlasTexture_e8dv2")
 }],
 "loop": 1,
-"name": &"idle_nw",
+"name": &"idle_w",
 "speed": 6.0
 }, {
 "frames": [{
@@ -573,7 +573,7 @@ animations = [{
 "texture": SubResource("AtlasTexture_1fr6y")
 }],
 "loop": 1,
-"name": &"idle_se",
+"name": &"idle_e",
 "speed": 6.0
 }, {
 "frames": [{
@@ -631,7 +631,7 @@ animations = [{
 "texture": SubResource("AtlasTexture_fshgd")
 }],
 "loop": 1,
-"name": &"walk_nw",
+"name": &"walk_w",
 "speed": 16.0
 }, {
 "frames": [{
@@ -689,7 +689,7 @@ animations = [{
 "texture": SubResource("AtlasTexture_cjlbh")
 }],
 "loop": 1,
-"name": &"walk_se",
+"name": &"walk_e",
 "speed": 16.0
 }]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bwwea8hmogq1e"
-path="res://.godot/imported/skill-start-se.png-64c33ba269cc8d2e301f0413f45ce4d6.ctex"
+uid="uid://yftayexeqq0c"
+path="res://.godot/imported/idle-w.png-5cd28797fcfe1c971e1465dda9d5ce12.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/archer/skill/start/skill-start-se.png"
-dest_files=["res://.godot/imported/skill-start-se.png-64c33ba269cc8d2e301f0413f45ce4d6.ctex"]
+source_file="res://assets/characters/archer/idle/idle-w.png"
+dest_files=["res://.godot/imported/idle-w.png-5cd28797fcfe1c971e1465dda9d5ce12.ctex"]
 
 [params]
 

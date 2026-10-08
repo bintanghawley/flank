@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cfmhxxlegrfwe"
-path="res://.godot/imported/walk-nw.png-619f5b3c1fdc58291722493f46888624.ctex"
+uid="uid://c3dgwnoib8ug5"
+path="res://.godot/imported/skill-charge-e.png-c27cfa05f1c290424f0582b2fe7f5b4a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/archer/walk/walk-nw.png"
-dest_files=["res://.godot/imported/walk-nw.png-619f5b3c1fdc58291722493f46888624.ctex"]
+source_file="res://assets/characters/archer/skill/charge/skill-charge-e.png"
+dest_files=["res://.godot/imported/skill-charge-e.png-c27cfa05f1c290424f0582b2fe7f5b4a.ctex"]
 
 [params]
 

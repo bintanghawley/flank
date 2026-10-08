@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://clu7as0h40dn4"
-path="res://.godot/imported/atk-se.png-5a9ccbe23f1810bd8d3bd6ae2996e19c.ctex"
+uid="uid://botqpsntbovvf"
+path="res://.godot/imported/skill-release-e.png-9b01d710c0f83f12096c38ad90e8b73d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/archer/attack/atk-se.png"
-dest_files=["res://.godot/imported/atk-se.png-5a9ccbe23f1810bd8d3bd6ae2996e19c.ctex"]
+source_file="res://assets/characters/archer/skill/release/skill-release-e.png"
+dest_files=["res://.godot/imported/skill-release-e.png-9b01d710c0f83f12096c38ad90e8b73d.ctex"]
 
 [params]
 

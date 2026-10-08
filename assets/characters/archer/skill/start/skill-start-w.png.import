@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c3dgwnoib8ug5"
-path="res://.godot/imported/skill-charge-se.png-fd4a58ac3c068561181c886c46dda02b.ctex"
+uid="uid://td73hnxysovc"
+path="res://.godot/imported/skill-start-w.png-69858a3708e5e9d192fbdf393567c3a2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/archer/skill/charge/skill-charge-se.png"
-dest_files=["res://.godot/imported/skill-charge-se.png-fd4a58ac3c068561181c886c46dda02b.ctex"]
+source_file="res://assets/characters/archer/skill/start/skill-start-w.png"
+dest_files=["res://.godot/imported/skill-start-w.png-69858a3708e5e9d192fbdf393567c3a2.ctex"]
 
 [params]
 

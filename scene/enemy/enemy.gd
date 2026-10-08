@@ -316,22 +316,22 @@ func play_walk_animation():
 	elif last_direction == Vector2.DOWN:
 		animated_sprite.play("walk_s")
 	elif last_direction == Vector2.LEFT:
-		animated_sprite.play("walk_nw")
+		animated_sprite.play("walk_w")
 		animated_sprite.flip_h = false
 	elif last_direction == Vector2.RIGHT:
-		animated_sprite.play("walk_se")
+		animated_sprite.play("walk_e")
 		animated_sprite.flip_h = false
 	elif last_direction == Vector2(-1, -1):
-		animated_sprite.play("walk_nw")
+		animated_sprite.play("walk_w")
 		animated_sprite.flip_h = false
 	elif last_direction == Vector2(1, -1):
-		animated_sprite.play("walk_nw")
+		animated_sprite.play("walk_w")
 		animated_sprite.flip_h = true
 	elif last_direction == Vector2(-1, 1):
-		animated_sprite.play("walk_se")
+		animated_sprite.play("walk_e")
 		animated_sprite.flip_h = true
 	elif last_direction == Vector2(1, 1):
-		animated_sprite.play("walk_se")
+		animated_sprite.play("walk_e")
 		animated_sprite.flip_h = false
 
 
@@ -349,22 +349,22 @@ func play_idle_animation():
 	elif last_direction == Vector2.DOWN:
 		animated_sprite.play("idle_s")
 	elif last_direction == Vector2.LEFT:
-		animated_sprite.play("idle_nw")
+		animated_sprite.play("idle_w")
 		animated_sprite.flip_h = false
 	elif last_direction == Vector2.RIGHT:
-		animated_sprite.play("idle_se")
+		animated_sprite.play("idle_e")
 		animated_sprite.flip_h = false
 	elif last_direction == Vector2(-1, -1):
-		animated_sprite.play("idle_nw")
+		animated_sprite.play("idle_w")
 		animated_sprite.flip_h = false
 	elif last_direction == Vector2(1, -1):
-		animated_sprite.play("idle_nw")
+		animated_sprite.play("idle_w")
 		animated_sprite.flip_h = true
 	elif last_direction == Vector2(-1, 1):
-		animated_sprite.play("idle_se")
+		animated_sprite.play("idle_e")
 		animated_sprite.flip_h = true
 	elif last_direction == Vector2(1, 1):
-		animated_sprite.play("idle_se")
+		animated_sprite.play("idle_e")
 		animated_sprite.flip_h = false
 
 
@@ -382,22 +382,22 @@ func play_attack_animation():
 	elif last_direction == Vector2.DOWN:
 		animated_sprite.play("atk_s")
 	elif last_direction == Vector2.LEFT:
-		animated_sprite.play("atk_nw")
+		animated_sprite.play("atk_w")
 		animated_sprite.flip_h = false
 	elif last_direction == Vector2.RIGHT:
-		animated_sprite.play("atk_se")
+		animated_sprite.play("atk_e")
 		animated_sprite.flip_h = false
 	elif last_direction == Vector2(-1, -1):
-		animated_sprite.play("atk_nw")
+		animated_sprite.play("atk_w")
 		animated_sprite.flip_h = false
 	elif last_direction == Vector2(1, -1):
-		animated_sprite.play("atk_nw")
+		animated_sprite.play("atk_w")
 		animated_sprite.flip_h = true
 	elif last_direction == Vector2(-1, 1):
-		animated_sprite.play("atk_se")
+		animated_sprite.play("atk_e")
 		animated_sprite.flip_h = true
 	elif last_direction == Vector2(1, 1):
-		animated_sprite.play("atk_se")
+		animated_sprite.play("atk_e")
 		animated_sprite.flip_h = false
 
 
