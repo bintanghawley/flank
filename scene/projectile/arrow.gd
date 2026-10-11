@@ -9,6 +9,7 @@ const IMPACT_SCENE = preload("res://scene/projectile/arrow_impact.tscn")
 
 var direction: Vector2 = Vector2.RIGHT
 var is_destroyed: bool = false
+var has_been_on_screen: bool = false
 
 @onready var trail_line: Line2D = $TrailLine
 
@@ -16,6 +17,13 @@ var is_destroyed: bool = false
 func _ready():
 	# Sambungkan deteksi tabrakan
 	body_entered.connect(_on_body_entered)
+
+	# Cek apakah saat muncul sudah berada di layar pandangan kamera
+	var vp := get_viewport()
+	if vp:
+		var screen_pos: Vector2 = vp.get_canvas_transform() * global_position
+		if vp.get_visible_rect().has_point(screen_pos):
+			has_been_on_screen = true
 
 	# Titik awal jejak ekor panah (z_index 2 agar selalu berada di bawah karakter dan tidak menembus tubuh)
 	if trail_line:
@@ -50,6 +58,36 @@ func _physics_process(delta: float):
 		trail_line.add_point(tail_pos)
 		while trail_line.get_point_count() > max_trail_points:
 			trail_line.remove_point(0)
+
+	# Hancurkan panah jika mencapai/melewati batas pandangan kamera atau limit peta
+	if is_outside_camera_or_limits():
+		destroy()
+
+
+func is_outside_camera_or_limits() -> bool:
+	var vp := get_viewport()
+	if not vp:
+		return false
+
+	var tip_pos: Vector2 = global_position + direction * 24.0
+
+	# 1. Batas limit peta dari Camera2D (limit_left, limit_right, limit_top, limit_bottom)
+	var cam := vp.get_camera_2d()
+	if cam:
+		if cam.limit_left > -1000000 and cam.limit_right < 1000000:
+			if tip_pos.x <= cam.limit_left or tip_pos.x >= cam.limit_right or \
+			   tip_pos.y <= cam.limit_top or tip_pos.y >= cam.limit_bottom:
+				return true
+
+	# 2. Batas layar pandangan kamera (viewport yang sedang terlihat di layar)
+	var screen_rect: Rect2 = vp.get_visible_rect()
+	var screen_pos: Vector2 = vp.get_canvas_transform() * tip_pos
+	if screen_rect.has_point(screen_pos):
+		has_been_on_screen = true
+	elif has_been_on_screen:
+		return true
+
+	return false
 
 
 func destroy():
@@ -87,6 +125,11 @@ func spawn_impact():
 
 func _on_body_entered(body):
 	if is_destroyed:
+		return
+
+	# Jika menabrak pembatas fisik peta (WorldBorders) atau tembok / rintangan map
+	if body is StaticBody2D or body is TileMapLayer:
+		destroy()
 		return
 
 	var target = body
