@@ -41,7 +41,7 @@ func _ready():
 	# Hapus otomatis jika tidak mengenai apa-apa dalam 3 detik agar game tetap lancar
 	await get_tree().create_timer(3.0).timeout
 	if is_instance_valid(self) and not is_destroyed:
-		destroy()
+		destroy(false)
 
 
 func _physics_process(delta: float):
@@ -59,9 +59,9 @@ func _physics_process(delta: float):
 		while trail_line.get_point_count() > max_trail_points:
 			trail_line.remove_point(0)
 
-	# Hancurkan panah jika mencapai/melewati batas pandangan kamera atau limit peta
+	# Hancurkan panah jika mencapai/melewati batas pandangan kamera atau limit peta (tanpa ledakan)
 	if is_outside_camera_or_limits():
-		destroy()
+		destroy(false)
 
 
 func is_outside_camera_or_limits() -> bool:
@@ -90,13 +90,14 @@ func is_outside_camera_or_limits() -> bool:
 	return false
 
 
-func destroy():
+func destroy(with_impact: bool = false):
 	if is_destroyed:
 		return
 	is_destroyed = true
 
-	# Munculkan efek benturan bila ada
-	spawn_impact()
+	# Munculkan efek benturan bila mengenai musuh atau collision object
+	if with_impact:
+		spawn_impact()
 
 	# Nonaktifkan pergerakan dan tabrakan
 	set_physics_process(false)
@@ -129,7 +130,7 @@ func _on_body_entered(body):
 
 	# Jika menabrak pembatas fisik peta (WorldBorders) atau tembok / rintangan map
 	if body is StaticBody2D or body is TileMapLayer:
-		destroy()
+		destroy(true)
 		return
 
 	var target = body
@@ -148,7 +149,7 @@ func _on_body_entered(body):
 			if player_node and is_instance_valid(player_node) and player_node.has_method("apply_camera_shake"):
 				player_node.apply_camera_shake()
 
-			destroy()
+			destroy(true)
 
 	# Jika panah ditembakkan oleh musuh -> targetnya adalah player
 	elif shooter_group == "enemy":
@@ -160,4 +161,4 @@ func _on_body_entered(body):
 				return
 			if target.has_method("take_damage"):
 				target.take_damage(damage, global_position)
-			destroy()
+			destroy(true)
