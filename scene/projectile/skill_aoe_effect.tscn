@@ -1,0 +1,85 @@
+[gd_scene format=3 uid="uid://b82e14g8m6vyt"]
+
+[ext_resource type="Script" path="res://scene/projectile/skill_aoe_effect.gd" id="1_effect"]
+[ext_resource type="Texture2D" uid="uid://c1cx83pc3copm" path="res://assets/skills/archer/release/skill-effect.png" id="2_texture"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eff_0"]
+atlas = ExtResource("2_texture")
+region = Rect2(0, 0, 160, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eff_1"]
+atlas = ExtResource("2_texture")
+region = Rect2(160, 0, 160, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eff_2"]
+atlas = ExtResource("2_texture")
+region = Rect2(320, 0, 160, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eff_3"]
+atlas = ExtResource("2_texture")
+region = Rect2(480, 0, 160, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eff_4"]
+atlas = ExtResource("2_texture")
+region = Rect2(640, 0, 160, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eff_5"]
+atlas = ExtResource("2_texture")
+region = Rect2(800, 0, 160, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eff_6"]
+atlas = ExtResource("2_texture")
+region = Rect2(960, 0, 160, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eff_7"]
+atlas = ExtResource("2_texture")
+region = Rect2(1120, 0, 160, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_eff"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eff_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eff_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eff_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eff_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eff_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eff_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eff_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eff_7")
+}],
+"loop": 0,
+"name": &"default",
+"speed": 16.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_aoe"]
+size = Vector2(144, 26)
+
+[node name="SkillAoeEffect" type="Area2D"]
+z_index = 6
+scale = Vector2(3, 3)
+script = ExtResource("1_effect")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_eff")
+animation = &"default"
+autoplay = "default"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_aoe")

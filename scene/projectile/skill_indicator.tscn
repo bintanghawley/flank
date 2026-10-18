@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://cx6y8v2q9l3kp"]
+
+[ext_resource type="Script" path="res://scene/projectile/skill_indicator.gd" id="1_indicator"]
+[ext_resource type="Texture2D" uid="uid://pro0qfj8a30a" path="res://assets/skills/archer/release/skill-indicator.png" id="2_texture"]
+
+[node name="SkillIndicator" type="Node2D"]
+z_index = 6
+scale = Vector2(3, 3)
+script = ExtResource("1_indicator")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("2_texture")

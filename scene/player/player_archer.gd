@@ -29,6 +29,42 @@ const DUST_SCENE = preload("res://scene/effect/run_dust.tscn")
 var dust_timer: float = 0.0
 const DUST_INTERVAL: float = 0.13 # Jeda kemunculan kepulan debu saat sprint (detik)
 
+# =========================
+# SPECIAL SKILL MODE SETTINGS
+# =========================
+const SKILL_INDICATOR_SCENE = preload("res://scene/projectile/skill_indicator.tscn")
+const SKILL_AOE_SCENE = preload("res://scene/projectile/skill_aoe_effect.tscn")
+
+enum SkillState {
+	INACTIVE,
+	READY,
+	STARTING,
+	CHARGING,
+	RELEASING
+}
+
+var current_skill_state: SkillState = SkillState.INACTIVE
+
+@export var skill_mode_duration: float = 10.0      # Durasi mode skill (10 detik)
+@export var skill_cooldown_time: float = 5.0       # Cooldown tombol E (5 detik)
+@export var skill_max_charges: int = 3             # Kuota tembakan per mode skill (3 kali)
+@export var min_skill_range: float = 70.0          # Jarak minimum indikator di depan karakter
+@export var max_skill_range: float = 500.0         # Jarak maksimum indikator (dibatasi 1 viewport)
+@export var charge_speed: float = 320.0            # Kecepatan pertambahan jarak pengecasan (pixel/detik)
+@export var skill_shot_interval: float = 0.4       # Jeda internal antar tembakan skill (detik)
+
+var skill_mode_timer: float = 0.0
+var skill_cooldown_timer: float = 0.0
+var skill_charges: int = 0
+var skill_interval_timer: float = 0.0
+
+var skill_current_range: float = 0.0
+var skill_aim_dir: Vector2 = Vector2.RIGHT
+var skill_facing_dir: String = "e"
+var skill_target_pos: Vector2 = Vector2.ZERO
+var skill_indicator_instance: Node2D = null
+var skill_release_queued: bool = false
+
 @export var attack_range: float = 300.0    # Jarak jangkauan tembak otomatis (pixel)
 @export var attack_cooldown: float = 0.8   # Jeda tembakan (0.8 detik)
 var attack_timer: float = 0.0
@@ -70,6 +106,10 @@ func _ready():
 	play_idle_animation()
 	setup_map_boundaries.call_deferred()
 
+	# Sambungkan sinyal selesainya animasi untuk skill cycle
+	if animated_sprite:
+		animated_sprite.animation_finished.connect(_on_animated_sprite_animation_finished)
+
 
 func _process(delta: float):
 	handle_camera_shake(delta)
@@ -98,36 +138,97 @@ func handle_camera_shake(delta: float):
 # MOVEMENT & AUTO-ATTACK
 # =========================================================
 
-func _physics_process(delta):
+func _physics_process(delta: float):
 	if is_dead:
 		return
 
 	# =====================================================
-	# ATTACK COOLDOWN
+	# SKILL MODE TIMERS & STATE UPDATES
+	# =====================================================
+	if skill_cooldown_timer > 0.0:
+		skill_cooldown_timer -= delta
+
+	if skill_interval_timer > 0.0:
+		skill_interval_timer -= delta
+
+	if current_skill_state != SkillState.INACTIVE:
+		skill_mode_timer -= delta
+		if skill_mode_timer <= 0.0:
+			if current_skill_state == SkillState.READY:
+				deactivate_skill_mode()
+			elif current_skill_state == SkillState.STARTING or current_skill_state == SkillState.CHARGING:
+				execute_skill_release()
+
+	# Pembaruan saat sedang menahan pengecasan skill
+	if current_skill_state == SkillState.CHARGING or current_skill_state == SkillState.STARTING:
+		# Jika tombol mouse dilepas secara mendadak / di luar jendela
+		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			if current_skill_state == SkillState.CHARGING:
+				execute_skill_release()
+			elif current_skill_state == SkillState.STARTING:
+				skill_release_queued = true
+				skill_current_range = min_skill_range
+
+		# Update arah vektor tembakan mengikuti kursor mouse
+		var center_pos := global_position + Vector2(2.5, 6.0)
+		var mouse_pos := get_global_mouse_position()
+		var new_aim_dir := (mouse_pos - center_pos).normalized()
+		if new_aim_dir != Vector2.ZERO:
+			skill_aim_dir = new_aim_dir
+
+		# Perbarui arah animasi karakter jika berpindah kuadran
+		var new_facing := get_4_direction_str(skill_aim_dir)
+		if new_facing != skill_facing_dir:
+			skill_facing_dir = new_facing
+			last_direction = get_4_direction_vector(skill_facing_dir)
+			animated_sprite.flip_h = false
+			if current_skill_state == SkillState.CHARGING:
+				animated_sprite.play("skill_charge_" + skill_facing_dir)
+
+		# Pada fase CHARGING, jarak indikator bertambah secara gradual HANYA jika bukan quick-tap
+		if current_skill_state == SkillState.CHARGING and not skill_release_queued:
+			var max_allowed := get_max_allowed_range()
+			skill_current_range = move_toward(skill_current_range, max_allowed, charge_speed * delta)
+			if skill_current_range >= max_allowed:
+				execute_skill_release()
+
+		# Jika quick-tap ditandai saat STARTING, pastikan jarak tetap terkunci di min_skill_range
+		if skill_release_queued:
+			skill_current_range = min_skill_range
+
+		# Update posisi & rotasi indikator berdasarkan jarak aktual skill_current_range
+		if skill_indicator_instance and is_instance_valid(skill_indicator_instance):
+			skill_target_pos = center_pos + skill_aim_dir * skill_current_range
+			skill_indicator_instance.global_position = skill_target_pos
+			skill_indicator_instance.rotation = skill_aim_dir.angle()
+			if skill_indicator_instance.has_method("set_charge_progress"):
+				var max_allowed := get_max_allowed_range()
+				var prog: float = (skill_current_range - min_skill_range) / max(1.0, max_allowed - min_skill_range)
+				skill_indicator_instance.set_charge_progress(prog)
+
+	# =====================================================
+	# ATTACK COOLDOWN (NORMAL BASIC ATTACK)
 	# =====================================================
 	if attack_timer > 0.0:
 		attack_timer -= delta
 
 	# =====================================================
-	# SHOOT WITH LEFT CLICK (HOLD)
+	# SHOOT WITH LEFT CLICK (HOLD) - BASIC ATTACK
+	# Hanya aktif di luar Special Skill Mode
 	# =====================================================
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		if attack_timer <= 0.0 and not is_attacking:
-			shoot_towards(get_global_mouse_position())
+	if current_skill_state == SkillState.INACTIVE:
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			if attack_timer <= 0.0 and not is_attacking:
+				shoot_towards(get_global_mouse_position())
 
 	# =====================================================
 	# HOLD RIGHT CLICK
 	# =====================================================
-
-	# Selama klik kanan ditahan,
-	# target akan terus mengikuti posisi mouse
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
-
-		target_position = get_global_mouse_position()
-
-		if global_position.distance_to(target_position) > 2.0:
-			is_moving = true
-
+		if not is_skill_locked():
+			target_position = get_global_mouse_position()
+			if global_position.distance_to(target_position) > 2.0:
+				is_moving = true
 
 	# =====================================================
 	# KNOCKBACK DECAY
@@ -138,8 +239,6 @@ func _physics_process(delta):
 	# =====================================================
 	# MOVEMENT (WASD / ARROW KEYS / MOUSE)
 	# =====================================================
-
-	# Input keyboard (WASD / Tombol Panah)
 	var input_dir := Vector2.ZERO
 	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
 		input_dir.y -= 1.0
@@ -157,19 +256,17 @@ func _physics_process(delta):
 		current_speed = SPRINT_SPEED
 
 	if input_dir != Vector2.ZERO:
-		# Prioritas gerakan keyboard (WASD)
 		is_moving = false
 		target_position = global_position
 
-		if is_attacking:
+		if is_attacking or is_skill_locked():
 			move_velocity = Vector2.ZERO
 		else:
 			move_velocity = input_dir * current_speed
 			update_direction_animation(input_dir)
 
 	elif is_moving:
-		# Gerakan navigasi mouse (klik kanan)
-		if is_attacking:
+		if is_attacking or is_skill_locked():
 			move_velocity = Vector2.ZERO
 		else:
 			var direction := global_position.direction_to(target_position)
@@ -179,14 +276,12 @@ func _physics_process(delta):
 			if global_position.distance_to(target_position) < 4.0:
 				global_position = target_position
 				is_moving = false
-				if not is_attacking:
+				if not is_attacking and not is_skill_locked():
 					play_idle_animation()
 	else:
-		# Saat diam dan tidak ada input gerak
-		if not is_attacking and animated_sprite.animation.begins_with("walk_"):
+		if not is_attacking and not is_skill_locked() and animated_sprite.animation.begins_with("walk_"):
 			play_idle_animation()
 
-	# Gabungkan kecepatan gerakan pemain dan gaya dorong knockback
 	velocity = move_velocity + knockback_velocity
 	move_and_slide()
 
@@ -194,7 +289,7 @@ func _physics_process(delta):
 	# EFEK DEBU SAAT SPRINT (SHIFT)
 	# =====================================================
 	var is_sprinting := Input.is_key_pressed(KEY_SHIFT)
-	if is_sprinting and move_velocity != Vector2.ZERO and not is_attacking and not is_dead:
+	if is_sprinting and move_velocity != Vector2.ZERO and not is_attacking and not is_skill_locked() and not is_dead:
 		dust_timer -= delta
 		if dust_timer <= 0.0:
 			dust_timer = DUST_INTERVAL
@@ -209,13 +304,12 @@ func _physics_process(delta):
 		if global_position.distance_to(target_position) < 4.0:
 			global_position = target_position
 			is_moving = false
-			if not is_attacking:
+			if not is_attacking and not is_skill_locked():
 				play_idle_animation()
-		# Jika klik satu kali dan membentur rintangan (kecepatan gerak nyata tertahan)
 		elif not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and get_slide_collision_count() > 0:
 			if get_real_velocity().length() < 12.0:
 				is_moving = false
-				if not is_attacking:
+				if not is_attacking and not is_skill_locked():
 					play_idle_animation()
 
 
@@ -259,31 +353,51 @@ func spawn_run_dust(move_dir: Vector2):
 # INPUT MOUSE
 # =========================================================
 
-func _unhandled_input(event):
+func _unhandled_input(event: InputEvent):
 	if is_dead:
 		return
 
-	if event is InputEventMouseButton and event.pressed:
+	# Pemicu Aktivasi Skill Mode (Tombol E / ui_skill)
+	if is_skill_action_pressed(event):
+		if can_activate_skill():
+			activate_skill_mode()
+		return
 
-		# Klik kanan untuk bergerak
+	# Penanganan Input Selama Dalam Mode Skill
+	if current_skill_state != SkillState.INACTIVE:
+		if event is InputEventMouseButton:
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				if event.pressed:
+					if current_skill_state == SkillState.READY and skill_interval_timer <= 0.0 and skill_charges > 0:
+						start_skill_charge()
+				else:
+					if current_skill_state == SkillState.STARTING:
+						skill_release_queued = true
+						skill_current_range = min_skill_range
+					elif current_skill_state == SkillState.CHARGING:
+						execute_skill_release()
+
+			elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+				if not is_skill_locked():
+					target_position = get_global_mouse_position()
+					is_moving = true
+					var direction := global_position.direction_to(target_position)
+					update_direction_animation(direction)
+		return
+
+	# Penanganan Input Mode Biasa (Basic Attack & Walk)
+	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_RIGHT:
 			target_position = get_global_mouse_position()
 			is_moving = true
-
-			# Tentukan arah awal
 			var direction := global_position.direction_to(target_position)
 			if not is_attacking:
 				update_direction_animation(direction)
 
-		# Klik kiri untuk menembak ke arah posisi mouse
 		elif event.button_index == MOUSE_BUTTON_LEFT:
 			if attack_timer <= 0.0 and not is_attacking:
 				shoot_towards(get_global_mouse_position())
 
-
-# =========================================================
-# UPDATE ARAH ANIMASI
-# =========================================================
 
 func update_direction_animation(direction: Vector2):
 
@@ -664,6 +778,15 @@ func die():
 	if is_dead:
 		return
 
+	# Batalkan mode skill dan bersihkan indikator bila archer gugur
+	if current_skill_state != SkillState.INACTIVE:
+		current_skill_state = SkillState.INACTIVE
+		skill_charges = 0
+		skill_mode_timer = 0.0
+		if skill_indicator_instance and is_instance_valid(skill_indicator_instance):
+			skill_indicator_instance.queue_free()
+			skill_indicator_instance = null
+
 	is_dead = true
 	is_moving = false
 	is_attacking = false
@@ -794,3 +917,227 @@ func apply_knockback(force: Vector2):
 	# Batalkan pergerakan mouse klik satu kali agar dorongan terasa nyata
 	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
 		is_moving = false
+
+
+# =========================================================
+# ARCHER SPECIAL SKILL MODE METHODS
+# =========================================================
+
+func is_skill_action_pressed(event: InputEvent) -> bool:
+	if event.is_action_pressed("ui_skill"):
+		return true
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_E or event.physical_keycode == KEY_E:
+			return true
+	return false
+
+
+func can_activate_skill() -> bool:
+	return (not is_dead and 
+			not is_attacking and 
+			skill_cooldown_timer <= 0.0 and 
+			current_skill_state == SkillState.INACTIVE)
+
+
+func is_skill_locked() -> bool:
+	return (current_skill_state == SkillState.STARTING or 
+			current_skill_state == SkillState.CHARGING or 
+			current_skill_state == SkillState.RELEASING)
+
+
+func activate_skill_mode():
+	current_skill_state = SkillState.READY
+	skill_charges = skill_max_charges
+	skill_mode_timer = skill_mode_duration
+	skill_interval_timer = 0.0
+	skill_release_queued = false
+
+	# Buat/instansiasi node indikator namun sembunyikan sampai klik kiri ditekan
+	if skill_indicator_instance == null or not is_instance_valid(skill_indicator_instance):
+		skill_indicator_instance = SKILL_INDICATOR_SCENE.instantiate()
+		skill_indicator_instance.visible = false
+		get_parent().add_child(skill_indicator_instance)
+	else:
+		skill_indicator_instance.visible = false
+
+	print("Special Skill Mode Aktif! Kuota tembakan: ", skill_charges, " | Durasi: ", skill_mode_duration, " detik")
+
+
+func deactivate_skill_mode():
+	current_skill_state = SkillState.INACTIVE
+	skill_charges = 0
+	skill_mode_timer = 0.0
+	skill_release_queued = false
+
+	# Bersihkan node indikator jika masih ada di scene tree
+	if skill_indicator_instance and is_instance_valid(skill_indicator_instance):
+		skill_indicator_instance.queue_free()
+		skill_indicator_instance = null
+
+	# Mulai Cooldown Skill selama 5.0 detik
+	skill_cooldown_timer = skill_cooldown_time
+	print("Special Skill Mode Selesai! Cooldown: ", skill_cooldown_time, " detik")
+
+	# Kembalikan mode serangan ke panah biasa dan reset status animasi
+	if not is_dead and not is_attacking:
+		if is_moving:
+			play_walk_animation()
+		else:
+			play_idle_animation()
+
+
+func start_skill_charge():
+	current_skill_state = SkillState.STARTING
+	skill_release_queued = false
+
+	# Karakter langsung berhenti dan terkunci
+	is_moving = false
+	velocity = Vector2.ZERO
+	target_position = global_position
+
+	# Tentukan arah hadap berdasarkan sudut posisi kursor mouse
+	var center_pos := global_position + Vector2(2.5, 6.0)
+	var mouse_pos := get_global_mouse_position()
+	var dir := (mouse_pos - center_pos).normalized()
+	if dir != Vector2.ZERO:
+		skill_aim_dir = dir
+	else:
+		skill_aim_dir = last_direction
+
+	skill_facing_dir = get_4_direction_str(skill_aim_dir)
+	last_direction = get_4_direction_vector(skill_facing_dir)
+
+	# Jarak minimum indikator di depan karakter
+	skill_current_range = min_skill_range
+	skill_target_pos = center_pos + skill_aim_dir * skill_current_range
+
+	# Munculkan skill_indicator di depan karakter
+	if skill_indicator_instance and is_instance_valid(skill_indicator_instance):
+		skill_indicator_instance.global_position = skill_target_pos
+		skill_indicator_instance.rotation = skill_aim_dir.angle()
+		skill_indicator_instance.visible = true
+		if skill_indicator_instance.has_method("set_charge_progress"):
+			skill_indicator_instance.set_charge_progress(0.0)
+
+	# Putar animasi karakter: skill_start_{direction}
+	animated_sprite.flip_h = false
+	animated_sprite.play("skill_start_" + skill_facing_dir)
+
+
+func execute_skill_release():
+	if current_skill_state == SkillState.RELEASING or is_dead:
+		return
+
+	current_skill_state = SkillState.RELEASING
+
+	# Pastikan saat quick-tap, nilai skill_current_range benar-benar terkunci pada min_skill_range
+	if skill_release_queued:
+		skill_current_range = min_skill_range
+
+	# Kunci posisi target akhir dari indikator menggunakan jarak aktual skill_current_range
+	var center_pos := global_position + Vector2(2.5, 6.0)
+	var final_target_pos := center_pos + skill_aim_dir * skill_current_range
+	var final_aim_dir := skill_aim_dir
+	var final_facing := skill_facing_dir
+
+	# Sembunyikan indikator
+	if skill_indicator_instance and is_instance_valid(skill_indicator_instance):
+		skill_indicator_instance.visible = false
+
+	# 1. Putar animasi skill_release_{direction} pada karakter
+	animated_sprite.flip_h = false
+	animated_sprite.play("skill_release_" + final_facing)
+
+	# 2. Spawn skill_aoe_effect.tscn tepat di posisi target indikator yang terkunci
+	var aoe_effect = SKILL_AOE_SCENE.instantiate()
+	aoe_effect.global_position = final_target_pos
+	aoe_effect.rotation = final_aim_dir.angle()
+	get_parent().add_child(aoe_effect)
+
+	# Efek getaran kamera saat skill dilepaskan
+	apply_camera_shake(6.0)
+
+
+func on_skill_release_finished():
+	if is_dead:
+		return
+
+	skill_release_queued = false
+	skill_current_range = min_skill_range
+
+	# Kurangi kuota tembakan
+	skill_charges -= 1
+	print("Tembakan skill berhasil dilepas! Sisa kuota: ", skill_charges)
+
+	# Berikan jeda waktu / internal cooldown (0.4 detik) sebelum pemain bisa mulai klik kiri lagi
+	skill_interval_timer = skill_shot_interval
+
+	# Cek apakah kuota habis
+	if skill_charges <= 0:
+		deactivate_skill_mode()
+	else:
+		# Karakter kembali bisa bergerak bebas
+		current_skill_state = SkillState.READY
+		if is_moving:
+			play_walk_animation()
+		else:
+			play_idle_animation()
+
+
+func _on_animated_sprite_animation_finished():
+	if is_dead:
+		return
+
+	if current_skill_state == SkillState.STARTING:
+		if skill_release_queued or not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			# Jika klik cepat (tanpa tahan), kunci pada min_skill_range dan langsung release
+			skill_release_queued = true
+			skill_current_range = min_skill_range
+			execute_skill_release()
+		else:
+			# Transisi ke animasi loop: skill_charge_{direction}
+			current_skill_state = SkillState.CHARGING
+			animated_sprite.flip_h = false
+			animated_sprite.play("skill_charge_" + skill_facing_dir)
+
+	elif current_skill_state == SkillState.RELEASING:
+		on_skill_release_finished()
+
+
+func get_4_direction_str(direction: Vector2) -> String:
+	var angle := direction.angle()
+	# Kanan (East): [-45 deg, 45 deg]
+	if angle >= -PI / 4.0 and angle < PI / 4.0:
+		return "e"
+	# Bawah (South): [45 deg, 135 deg]
+	elif angle >= PI / 4.0 and angle < 3.0 * PI / 4.0:
+		return "s"
+	# Atas (North): [-135 deg, -45 deg]
+	elif angle >= -3.0 * PI / 4.0 and angle < -PI / 4.0:
+		return "n"
+	# Kiri (West): [135 deg, 180 deg] atau [-180 deg, -135 deg]
+	else:
+		return "w"
+
+
+func get_4_direction_vector(dir_str: String) -> Vector2:
+	match dir_str:
+		"n": return Vector2.UP
+		"s": return Vector2.DOWN
+		"w": return Vector2.LEFT
+		_: return Vector2.RIGHT
+
+
+func get_max_allowed_range() -> float:
+	var allowed := max_skill_range
+	var vp := get_viewport()
+	if vp:
+		var cam := vp.get_camera_2d()
+		var v_size: Vector2 = vp.get_visible_rect().size
+		var max_vp_dist: float = max(v_size.x, v_size.y)
+		if cam:
+			var cam_scale: Vector2 = cam.global_transform.get_scale()
+			if cam_scale.x > 0.0 and cam_scale.y > 0.0:
+				max_vp_dist = max(v_size.x / cam_scale.x, v_size.y / cam_scale.y)
+		allowed = min(allowed, max_vp_dist)
+	return allowed
