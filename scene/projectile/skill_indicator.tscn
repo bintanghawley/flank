@@ -5,9 +5,10 @@
 
 [node name="SkillIndicator" type="Node2D"]
 z_index = 6
-scale = Vector2(3, 3)
 script = ExtResource("1_indicator")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture_filter = 1
+centered = false
+offset = Vector2(-5, -16)
 texture = ExtResource("2_texture")

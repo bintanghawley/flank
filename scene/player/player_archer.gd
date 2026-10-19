@@ -48,9 +48,9 @@ var current_skill_state: SkillState = SkillState.INACTIVE
 @export var skill_mode_duration: float = 10.0      # Durasi mode skill (10 detik)
 @export var skill_cooldown_time: float = 5.0       # Cooldown tombol E (5 detik)
 @export var skill_max_charges: int = 3             # Kuota tembakan per mode skill (3 kali)
-@export var min_skill_range: float = 70.0          # Jarak minimum indikator di depan karakter
-@export var max_skill_range: float = 500.0         # Jarak maksimum indikator (dibatasi 1 viewport)
-@export var charge_speed: float = 320.0            # Kecepatan pertambahan jarak pengecasan (pixel/detik)
+@export var min_skill_range: float = 180.0         # Jarak minimum indikator di depan karakter
+@export var max_skill_range: float = 650.0         # Jarak maksimum indikator (dibatasi 1 viewport)
+@export var charge_speed: float = 680.0            # Kecepatan pertambahan jarak pengecasan (pixel/detik)
 @export var skill_shot_interval: float = 0.4       # Jeda internal antar tembakan skill (detik)
 
 var skill_mode_timer: float = 0.0
@@ -196,15 +196,16 @@ func _physics_process(delta: float):
 		if skill_release_queued:
 			skill_current_range = min_skill_range
 
-		# Update posisi & rotasi indikator berdasarkan jarak aktual skill_current_range
+		# Update indikator: pangkal selalu menempel di center_pos dan memanjang ke arah depan
 		if skill_indicator_instance and is_instance_valid(skill_indicator_instance):
 			skill_target_pos = center_pos + skill_aim_dir * skill_current_range
-			skill_indicator_instance.global_position = skill_target_pos
-			skill_indicator_instance.rotation = skill_aim_dir.angle()
-			if skill_indicator_instance.has_method("set_charge_progress"):
-				var max_allowed := get_max_allowed_range()
-				var prog: float = (skill_current_range - min_skill_range) / max(1.0, max_allowed - min_skill_range)
-				skill_indicator_instance.set_charge_progress(prog)
+			var max_allowed := get_max_allowed_range()
+			var prog: float = (skill_current_range - min_skill_range) / max(1.0, max_allowed - min_skill_range)
+			if skill_indicator_instance.has_method("update_indicator"):
+				skill_indicator_instance.update_indicator(center_pos, skill_aim_dir, skill_current_range, prog)
+			else:
+				skill_indicator_instance.global_position = center_pos
+				skill_indicator_instance.rotation = skill_aim_dir.angle()
 
 	# =====================================================
 	# ATTACK COOLDOWN (NORMAL BASIC ATTACK)
@@ -1011,13 +1012,14 @@ func start_skill_charge():
 	skill_current_range = min_skill_range
 	skill_target_pos = center_pos + skill_aim_dir * skill_current_range
 
-	# Munculkan skill_indicator di depan karakter
+	# Munculkan skill_indicator: pangkal menempel di center_pos dan memanjang ke arah depan
 	if skill_indicator_instance and is_instance_valid(skill_indicator_instance):
-		skill_indicator_instance.global_position = skill_target_pos
-		skill_indicator_instance.rotation = skill_aim_dir.angle()
+		if skill_indicator_instance.has_method("update_indicator"):
+			skill_indicator_instance.update_indicator(center_pos, skill_aim_dir, skill_current_range, 0.0)
+		else:
+			skill_indicator_instance.global_position = center_pos
+			skill_indicator_instance.rotation = skill_aim_dir.angle()
 		skill_indicator_instance.visible = true
-		if skill_indicator_instance.has_method("set_charge_progress"):
-			skill_indicator_instance.set_charge_progress(0.0)
 
 	# Putar animasi karakter: skill_start_{direction}
 	animated_sprite.flip_h = false
@@ -1034,9 +1036,20 @@ func execute_skill_release():
 	if skill_release_queued:
 		skill_current_range = min_skill_range
 
-	# Kunci posisi target akhir dari indikator menggunakan jarak aktual skill_current_range
 	var center_pos := global_position + Vector2(2.5, 6.0)
-	var final_target_pos := center_pos + skill_aim_dir * skill_current_range
+
+	# Pastikan indikator terupdate tepat pada posisi dan jarak rilis sebelum mengambil get_tip_position
+	if skill_indicator_instance and is_instance_valid(skill_indicator_instance) and skill_indicator_instance.has_method("update_indicator"):
+		var max_allowed := get_max_allowed_range()
+		var prog: float = (skill_current_range - min_skill_range) / max(1.0, max_allowed - min_skill_range)
+		skill_indicator_instance.update_indicator(center_pos, skill_aim_dir, skill_current_range, prog)
+
+	# Kunci posisi target akhir dari ujung panah indikator
+	var final_target_pos: Vector2
+	if skill_indicator_instance and is_instance_valid(skill_indicator_instance) and skill_indicator_instance.has_method("get_tip_position"):
+		final_target_pos = skill_indicator_instance.get_tip_position()
+	else:
+		final_target_pos = center_pos + skill_aim_dir * skill_current_range
 	var final_aim_dir := skill_aim_dir
 	var final_facing := skill_facing_dir
 
@@ -1048,10 +1061,13 @@ func execute_skill_release():
 	animated_sprite.flip_h = false
 	animated_sprite.play("skill_release_" + final_facing)
 
-	# 2. Spawn skill_aoe_effect.tscn tepat di posisi target indikator yang terkunci
+	# 2. Spawn skill_aoe_effect.tscn menutupi seluruh jalur serangan sampai ujung indikator
 	var aoe_effect = SKILL_AOE_SCENE.instantiate()
-	aoe_effect.global_position = final_target_pos
-	aoe_effect.rotation = final_aim_dir.angle()
+	if aoe_effect.has_method("setup"):
+		aoe_effect.setup(center_pos, final_aim_dir, skill_current_range)
+	else:
+		aoe_effect.global_position = final_target_pos
+		aoe_effect.rotation = final_aim_dir.angle()
 	get_parent().add_child(aoe_effect)
 
 	# Efek getaran kamera saat skill dilepaskan
@@ -1136,8 +1152,8 @@ func get_max_allowed_range() -> float:
 		var v_size: Vector2 = vp.get_visible_rect().size
 		var max_vp_dist: float = max(v_size.x, v_size.y)
 		if cam:
-			var cam_scale: Vector2 = cam.global_transform.get_scale()
-			if cam_scale.x > 0.0 and cam_scale.y > 0.0:
-				max_vp_dist = max(v_size.x / cam_scale.x, v_size.y / cam_scale.y)
+			var cam_zoom: Vector2 = cam.zoom
+			if cam_zoom.x > 0.0 and cam_zoom.y > 0.0:
+				max_vp_dist = max(v_size.x / cam_zoom.x, v_size.y / cam_zoom.y)
 		allowed = min(allowed, max_vp_dist)
 	return allowed

@@ -68,7 +68,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_aoe"]
-size = Vector2(144, 26)
+size = Vector2(154, 26)
 
 [node name="SkillAoeEffect" type="Area2D"]
 z_index = 6
@@ -80,6 +80,7 @@ texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_eff")
 animation = &"default"
 autoplay = "default"
+offset = Vector2(-2, 0)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_aoe")

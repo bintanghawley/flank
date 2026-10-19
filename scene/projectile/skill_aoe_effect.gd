@@ -9,7 +9,32 @@ var hit_targets: Array[Node] = []
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 
+var attack_origin: Vector2 = Vector2.ZERO
+var attack_dir: Vector2 = Vector2.RIGHT
+var attack_length: float = 0.0
+
+
+func setup(origin: Vector2, dir: Vector2, length: float):
+	attack_origin = origin
+	attack_dir = dir
+	attack_length = length
+
+	# Lebar aktif tekstur serangan adalah 154 pixel (frame 0..7)
+	var active_width: float = 154.0
+	scale.x = length / active_width
+	scale.y = 3.0
+	rotation = dir.angle()
+
+	# Posisikan pusat efek tepat di titik tengah antara pangkal karakter dan ujung serangan
+	global_position = origin + dir * (length / 2.0)
+
+
 func _ready():
+	if attack_length <= 0.0:
+		attack_length = 154.0 * scale.x
+		attack_dir = Vector2.RIGHT.rotated(rotation)
+		attack_origin = global_position - attack_dir * (attack_length / 2.0)
+
 	# Sambungkan deteksi musuh masuk ke area serangan
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
@@ -52,7 +77,12 @@ func _process_target(node: Node):
 		target = target.get_parent()
 
 	if target.is_in_group("enemy") and target not in hit_targets:
-		# Verifikasi posisi target benar-benar berada di dalam radius / batas CollisionShape2D efek ini
+		# Pastikan musuh tidak berada di belakang karakter pemain
+		var to_target: Vector2 = target.global_position - attack_origin
+		if to_target.dot(attack_dir) < 0.0:
+			return # Musuh berada di belakang karakter pemain, abaikan!
+
+		# Verifikasi posisi target benar-benar berada di dalam rentang jalur serangan ini
 		if target is Node2D and not _is_target_in_hitbox(target as Node2D):
 			return
 
@@ -67,26 +97,26 @@ func _process_target(node: Node):
 
 
 func _is_target_in_hitbox(target: Node2D) -> bool:
-	if not is_instance_valid(target) or not is_instance_valid(collision_shape):
+	if not is_instance_valid(target):
 		return false
 
-	# Konversi posisi global target ke posisi lokal node efek ini
-	var local_pos: Vector2 = to_local(target.global_position)
+	# Vektor dari titik awal serangan (karakter) ke posisi target
+	var diff: Vector2 = target.global_position - attack_origin
+	var forward_dist: float = diff.dot(attack_dir)
+	var lateral_dist: float = absf(diff.cross(attack_dir))
 
-	# Periksa apakah posisi lokal target berada dalam rentang collision shape milik efek ini
-	var shape = collision_shape.shape
-	if shape is RectangleShape2D:
-		var half_extents = shape.size / 2.0
-		# Berikan toleransi secukupnya untuk radius fisik tubuh musuh
-		var tolerance: float = 25.0
-		if absf(local_pos.x) <= (half_extents.x + tolerance) and absf(local_pos.y) <= (half_extents.y + tolerance):
-			return true
+	# Radius toleransi tubuh musuh (musuh berskala 5x dengan hitbox ~40px)
+	var tolerance: float = 40.0
+
+	# Target harus berada di antara pangkal serangan dan ujung terjauh serangan
+	if forward_dist < -tolerance or forward_dist > (attack_length + tolerance):
 		return false
-	elif shape is CircleShape2D:
-		return local_pos.length() <= (shape.radius + 25.0)
 
-	# Fallback jarak global jika shape lain (maksimal sepanjang rentang visual efek)
-	return global_position.distance_to(target.global_position) <= 220.0
+	# Dan berada di dalam batas lebar balok serangan (lebar visual 26 * 3 = 78px, half-width = 39px)
+	if lateral_dist > (39.0 + tolerance):
+		return false
+
+	return true
 
 
 func _on_animation_finished():
