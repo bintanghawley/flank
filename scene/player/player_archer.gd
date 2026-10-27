@@ -3,6 +3,29 @@ extends CharacterBody2D
 @onready var animated_sprite = $AnimatedSprite2D
 
 # =========================
+# PARTY / LEADER / FOLLOWER
+# =========================
+var is_leader: bool = true
+var leader_node: CharacterBody2D = null
+var follow_target_node: CharacterBody2D = null
+
+func set_as_leader(active: bool, new_leader: CharacterBody2D = null, new_follow_target: CharacterBody2D = null):
+	is_leader = active
+	leader_node = new_leader
+	follow_target_node = new_follow_target
+	target_position = global_position
+	is_moving = false
+	velocity = Vector2.ZERO
+
+	if is_leader:
+		print(name, " maju sebagai Leader!")
+	else:
+		if current_skill_state != SkillState.INACTIVE:
+			deactivate_skill_mode()
+		is_attacking = false
+		play_idle_animation()
+
+# =========================
 # MOVEMENT SETTINGS
 # =========================
 
@@ -49,7 +72,7 @@ var current_skill_state: SkillState = SkillState.INACTIVE
 @export var skill_cooldown_time: float = 5.0       # Cooldown tombol E (5 detik)
 @export var skill_max_charges: int = 3             # Kuota tembakan per mode skill (3 kali)
 @export var min_skill_range: float = 180.0         # Jarak minimum indikator di depan karakter
-@export var max_skill_range: float = 650.0         # Jarak maksimum indikator (dibatasi 1 viewport)
+@export var max_skill_range: float = 1050.0        # Jarak maksimum indikator (dibatasi 1 viewport zoom 0.65x)
 @export var charge_speed: float = 680.0            # Kecepatan pertambahan jarak pengecasan (pixel/detik)
 @export var skill_shot_interval: float = 0.4       # Jeda internal antar tembakan skill (detik)
 
@@ -115,15 +138,25 @@ func _process(delta: float):
 	handle_camera_shake(delta)
 
 
+func get_camera() -> Camera2D:
+	if has_node("Camera2D"):
+		return $Camera2D
+	return get_viewport().get_camera_2d()
+
+
 func apply_camera_shake(intensity: float = -1.0):
 	var amount = intensity if intensity > 0.0 else camera_shake_strength
 	shake_intensity = max(shake_intensity, amount)
+	if get_parent() and get_parent().has_method("apply_camera_shake"):
+		get_parent().apply_camera_shake(amount)
 
 
 func handle_camera_shake(delta: float):
-	if not has_node("Camera2D"):
+	if get_parent() and get_parent().has_method("apply_camera_shake"):
 		return
-	var cam: Camera2D = $Camera2D
+	var cam: Camera2D = get_camera()
+	if not cam:
+		return
 	if shake_intensity > 0.0:
 		cam.offset = Vector2(
 			randf_range(-shake_intensity, shake_intensity),
@@ -140,6 +173,10 @@ func handle_camera_shake(delta: float):
 
 func _physics_process(delta: float):
 	if is_dead:
+		return
+
+	if not is_leader:
+		process_follower_logic(delta)
 		return
 
 	# =====================================================
@@ -355,7 +392,7 @@ func spawn_run_dust(move_dir: Vector2):
 # =========================================================
 
 func _unhandled_input(event: InputEvent):
-	if is_dead:
+	if not is_leader or is_dead:
 		return
 
 	# Pemicu Aktivasi Skill Mode (Tombol E / ui_skill)
@@ -398,6 +435,91 @@ func _unhandled_input(event: InputEvent):
 		elif event.button_index == MOUSE_BUTTON_LEFT:
 			if attack_timer <= 0.0 and not is_attacking:
 				shoot_towards(get_global_mouse_position())
+
+
+# =========================================================
+# FOLLOWER LOGIC (MENGIKUTI LEADER DI BELAKANG)
+# =========================================================
+
+func process_follower_logic(delta: float):
+	if not leader_node or not is_instance_valid(leader_node) or ("is_dead" in leader_node and leader_node.is_dead):
+		velocity = knockback_velocity
+		move_and_slide()
+		if not is_attacking:
+			play_idle_animation()
+		return
+
+	# 1. POSISI BERTEMPUR (COMBAT STANCE)
+	# Mendeteksi jika Leader sedang menyerang (baik basic attack maupun skill)
+	var leader_in_combat: bool = false
+	if "is_attacking" in leader_node and leader_node.is_attacking:
+		leader_in_combat = true
+	elif "is_skill_locked" in leader_node and leader_node.is_skill_locked():
+		leader_in_combat = true
+
+	if leader_in_combat:
+		velocity = knockback_velocity
+		is_moving = false
+
+		# Hadap ke arah serangan Leader atau arah musuh
+		var combat_dir: Vector2 = Vector2.ZERO
+		if "attack_direction" in leader_node and leader_node.attack_direction != Vector2.ZERO:
+			combat_dir = leader_node.attack_direction
+		elif "skill_aim_dir" in leader_node and leader_node.skill_aim_dir != Vector2.ZERO:
+			combat_dir = leader_node.skill_aim_dir
+		elif "last_direction" in leader_node and leader_node.last_direction != Vector2.ZERO:
+			combat_dir = leader_node.last_direction
+		else:
+			combat_dir = last_direction
+
+		last_direction = get_8_direction(combat_dir)
+		play_attack_animation()
+		move_and_slide()
+		return
+
+	# Jika sebelumnya memutar animasi attack karena stance tempur, kembali ke idle
+	if animated_sprite.animation.begins_with("atk_"):
+		play_idle_animation()
+
+	# 2. POSISI BERJALAN & MENJAGA JARAK ANTREAN BERANTAI (90 - 100 PX)
+	var target: CharacterBody2D = follow_target_node if (follow_target_node and is_instance_valid(follow_target_node)) else leader_node
+	var target_dir: Vector2 = Vector2.DOWN
+	if "last_direction" in target and target.last_direction != Vector2.ZERO:
+		target_dir = target.last_direction.normalized()
+	elif "velocity" in target and target.velocity != Vector2.ZERO:
+		target_dir = target.velocity.normalized()
+
+	# Jarak antrean 95 piksel di belakang karakter yang diikuti
+	const FOLLOW_DISTANCE := 95.0
+	const STOP_DEADZONE := 14.0
+
+	var follow_slot: Vector2 = target.global_position - target_dir * FOLLOW_DISTANCE
+	var dist_to_slot: float = global_position.distance_to(follow_slot)
+
+	# Deadzone 14 piksel untuk mencegah getaran (jittering)
+	if dist_to_slot <= STOP_DEADZONE:
+		velocity = knockback_velocity
+		is_moving = false
+		if target_dir != Vector2.ZERO:
+			last_direction = get_8_direction(target_dir)
+		play_idle_animation()
+		move_and_slide()
+	else:
+		var move_dir := global_position.direction_to(follow_slot)
+
+		# Kecepatan mengikuti menyesuaikan jarak agar tidak tertinggal
+		var follow_speed := NORMAL_SPEED
+		if Input.is_key_pressed(KEY_SHIFT):
+			follow_speed = SPRINT_SPEED
+		elif dist_to_slot > 180.0:
+			follow_speed = SPRINT_SPEED * 1.2
+		elif dist_to_slot > 120.0:
+			follow_speed = NORMAL_SPEED * 1.45
+
+		velocity = move_dir * follow_speed + knockback_velocity
+		move_and_slide()
+		is_moving = true
+		update_direction_animation(move_dir)
 
 
 func update_direction_animation(direction: Vector2):
@@ -794,8 +916,9 @@ func die():
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO
 	shake_intensity = 0.0
-	if has_node("Camera2D"):
-		$Camera2D.offset = Vector2.ZERO
+	var cam: Camera2D = get_camera()
+	if cam:
+		cam.offset = Vector2.ZERO
 	print("Archer Kalah! Menunggu respawn...")
 
 	# Matikan tabrakan dan keluarkan sementara dari grup player
@@ -828,8 +951,9 @@ func respawn():
 	knockback_velocity = Vector2.ZERO
 
 	# Reset pergerakan kamera agar langsung fokus tanpa lag panning
-	if has_node("Camera2D"):
-		$Camera2D.reset_smoothing()
+	var cam: Camera2D = get_camera()
+	if cam:
+		cam.reset_smoothing()
 
 	# Nyalakan kembali tabrakan dan masukkan kembali ke grup player
 	if collision_shape:
@@ -874,8 +998,8 @@ func setup_map_boundaries():
 	var map_max: Vector2 = ground.to_global(Vector2((rect.position.x + rect.size.x) * 16.0, (rect.position.y + rect.size.y) * 16.0))
 
 	# 1. Sesuaikan batasan Camera2D persis ke tepi map
-	if has_node("Camera2D"):
-		var cam: Camera2D = $Camera2D
+	var cam: Camera2D = get_camera()
+	if cam:
 		cam.limit_left = int(map_min.x)
 		cam.limit_top = int(map_min.y)
 		cam.limit_right = int(map_max.x)

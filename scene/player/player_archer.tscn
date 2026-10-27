@@ -1139,8 +1139,3 @@ visible = false
 position = Vector2(0.3000183, 5.6000023)
 scale = Vector2(0.99999976, 0.99999976)
 shape = SubResource("RectangleShape2D_iggao")
-
-[node name="Camera2D" type="Camera2D" parent="." unique_id=243320470]
-limit_left = 0
-limit_top = 0
-position_smoothing_enabled = true

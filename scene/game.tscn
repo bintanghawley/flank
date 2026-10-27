@@ -1,15 +1,40 @@
 [gd_scene format=3 uid="uid://80uy3wgwk1dw"]
 
+[ext_resource type="Script" path="res://scene/game.gd" id="1_game_script"]
 [ext_resource type="PackedScene" uid="uid://bwrcpv48t8r6w" path="res://scene/player/player_archer.tscn" id="1_33cqm"]
 [ext_resource type="PackedScene" uid="uid://dol0jnt4w2mn7" path="res://scene/enemy/enemy.tscn" id="2_xwcet"]
 [ext_resource type="PackedScene" uid="uid://dohfp8llv3rfc" path="res://scene/world/map_region_1.tscn" id="3_p1ry8"]
+[ext_resource type="PackedScene" path="res://scene/player/player_mage.tscn" id="4_mage"]
 
 [node name="Game" type="Node2D" unique_id=1512194323]
 position = Vector2(-1, 2)
+script = ExtResource("1_game_script")
 
-[node name="Player_Archer" parent="." unique_id=1380897880 instance=ExtResource("1_33cqm")]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=243320470]
+position = Vector2(1680, 1165)
+zoom = Vector2(0.65, 0.65)
+limit_left = -80
+limit_top = -80
+limit_right = 3360
+limit_bottom = 3360
+position_smoothing_enabled = true
+position_smoothing_speed = 7.0
+
+[node name="Archer_1" parent="." unique_id=1380897880 instance=ExtResource("1_33cqm")]
 y_sort_enabled = true
 position = Vector2(1680, 1120)
+
+[node name="Mage_1" parent="." unique_id=1480987112 instance=ExtResource("4_mage")]
+y_sort_enabled = true
+position = Vector2(1585, 1120)
+
+[node name="Archer_2" parent="." unique_id=1380897882 instance=ExtResource("1_33cqm")]
+y_sort_enabled = true
+position = Vector2(1490, 1120)
+
+[node name="Mage_2" parent="." unique_id=1480987114 instance=ExtResource("4_mage")]
+y_sort_enabled = true
+position = Vector2(1395, 1120)
 
 [node name="Enemy1" parent="." unique_id=110304380 instance=ExtResource("2_xwcet")]
 z_index = 4
