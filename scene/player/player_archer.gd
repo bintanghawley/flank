@@ -10,8 +10,7 @@ var leader_node: CharacterBody2D = null
 var queue_slot_index: int = 0
 var in_party_combat: bool = false
 var ai_attack_timer: float = 0.0
-var strafe_timer: float = 0.0
-var strafe_direction: Vector2 = Vector2.ZERO
+const COMBAT_ATTACK_RANGE: float = 480.0
 
 func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: int = 0) -> void:
 	is_leader = active
@@ -21,7 +20,6 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 	is_moving = false
 	velocity = Vector2.ZERO
 
-	strafe_timer = 0.0
 	attack_stuck_timer = 0.0
 
 	if is_leader:
@@ -50,10 +48,8 @@ func set_party_combat_mode(active: bool) -> void:
 	in_party_combat = active
 	if in_party_combat:
 		ai_attack_timer = randf_range(0.3, 0.7)
-		strafe_timer = 0.0
 	else:
 		ai_attack_timer = 0.0
-		strafe_timer = 0.0
 		if not is_leader and leader_node and is_instance_valid(leader_node) and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
 			play_idle_animation()
@@ -215,6 +211,10 @@ func _physics_process(delta: float):
 		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, knockback_decay * delta)
 		if knockback_velocity.length() < 8.0:
 			knockback_velocity = Vector2.ZERO
+
+	# Cooldown timer serangan dasar untuk SEMUA karakter
+	if attack_timer > 0.0:
+		attack_timer -= delta
 
 	# Watchdog anti-stuck is_attacking (maksimal 0.6 detik)
 	if is_attacking:
@@ -586,106 +586,67 @@ func process_follower_combat(delta: float) -> void:
 		move_and_slide()
 		return
 
-	# 1. Prioritas Target Bersama (Focus fire terkoordinasi berbasis posisi Leader)
-	var focus_origin: Vector2 = leader_node.global_position if (leader_node and is_instance_valid(leader_node)) else global_position
+	# Leash Ekstrem: Follower HANYA ditarik jika Leader melarikan diri sangat jauh keluar layar (> 750 px)
+	if leader_node and is_instance_valid(leader_node):
+		var dist_to_leader: float = global_position.distance_to(leader_node.global_position)
+		if dist_to_leader > 750.0:
+			var move_dir: Vector2 = global_position.direction_to(leader_node.global_position)
+			velocity = (move_dir * SPRINT_SPEED) + knockback_velocity
+			move_and_slide()
+			is_moving = true
+			last_movement_direction = move_dir
+			update_direction_animation(move_dir)
+			return
+
+	# 1. Cari Target Musuh Hidup Terdekat dari posisi follower saat itu
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	var target_enemy: Node2D = null
 	var min_dist := INF
 
 	for e in enemies:
 		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
-			var d := focus_origin.distance_to(e.global_position)
+			var d := global_position.distance_to(e.global_position)
 			if d < min_dist:
 				min_dist = d
 				target_enemy = e
 
 	if not target_enemy:
-		# Tidak ada musuh hidup di area
+		# Tidak ada musuh hidup di area, follower diam siaga
 		velocity = knockback_velocity
+		is_moving = false
 		move_and_slide()
 		if not is_attacking:
 			play_idle_animation()
 		return
 
-	var dist_to_enemy := global_position.distance_to(target_enemy.global_position)
-	var enemy_dir := global_position.direction_to(target_enemy.global_position)
+	var dist_to_enemy: float = global_position.distance_to(target_enemy.global_position)
 
-	# 2. Siklus Serang & Strafe Step (Hit-and-Run khas Guardian Tales)
-	ai_attack_timer -= delta
-	if ai_attack_timer <= 0.0 and dist_to_enemy <= attack_range and not is_attacking:
-		ai_attack_timer = randf_range(1.2, 1.6)
-
-		# Tentukan arah strafe reposisi menyamping (45° - 90°)
-		var perp := Vector2(-enemy_dir.y, enemy_dir.x)
-		if randf() > 0.5:
-			perp = -perp
-		strafe_direction = (perp + (enemy_dir * randf_range(-0.25, 0.25))).normalized()
-		strafe_timer = randf_range(0.4, 0.6)
-
-		# Arah tembak dan orientasi visual tepat ke tubuh musuh
-		last_direction = get_8_direction(enemy_dir)
-		shoot_towards(target_enemy.global_position)
-		return
-
-	# 3. Tethering Ketat ke Leader (Maksimal 240 piksel)
-	var move_vector := Vector2.ZERO
-	var dist_to_leader: float = 0.0
-	var is_tether_broken: bool = false
-	if leader_node and is_instance_valid(leader_node):
-		dist_to_leader = global_position.distance_to(leader_node.global_position)
-		if dist_to_leader > 240.0:
-			is_tether_broken = true
-
-	if is_tether_broken:
-		# Wajib batalkan kiting dan strafe, langsung berlari mendekat ke arah Leader
-		strafe_timer = 0.0
-		move_vector = global_position.direction_to(leader_node.global_position)
+	# 2. Evaluasi Jarak ke Target (Stand & Shoot ala Guardian Tales)
+	if dist_to_enemy > COMBAT_ATTACK_RANGE:
+		# Jika di luar jangkauan tembak: berjalan lurus mendekati musuh
+		var move_dir: Vector2 = global_position.direction_to(target_enemy.global_position)
+		velocity = (move_dir * NORMAL_SPEED) + knockback_velocity
+		move_and_slide()
+		is_moving = true
+		last_movement_direction = move_dir
+		update_direction_animation(move_dir)
 	else:
-		# 4. Dynamic Kiting & Strafe Step
-		if dist_to_enemy < 280.0:
-			# Terlalu dekat -> Kiting mundur perlahan menjauhi musuh
-			move_vector = target_enemy.global_position.direction_to(global_position)
-		elif dist_to_enemy > 460.0:
-			# Terlalu jauh -> Dekati musuh hingga masuk jarak tembak
-			move_vector = enemy_dir
-		else:
-			# Zona Tembak Ideal (280px - 460px): Reposisi menyamping atau diam membidik
-			if strafe_timer > 0.0:
-				strafe_timer -= delta
-				move_vector = strafe_direction
-			else:
-				move_vector = Vector2.ZERO
-				if not is_attacking:
-					last_direction = get_8_direction(enemy_dir)
-					play_idle_animation()
+		# Jika sudah masuk jangkauan tembak: BERHENTI TOTAL (STAND GROUND)
+		velocity = knockback_velocity
+		is_moving = false
+		move_and_slide()
 
-	# 5. Soft Separation dari rekan satu party agar tidak saling menumpuk
-	var separation := Vector2.ZERO
-	var party_nodes := get_tree().get_nodes_in_group("player")
-	for ally in party_nodes:
-		if ally != self and is_instance_valid(ally):
-			var dist_ally := global_position.distance_to(ally.global_position)
-			if dist_ally < 48.0 and dist_ally > 0.1:
-				separation += (global_position - ally.global_position).normalized() * (48.0 - dist_ally)
+		# Arahkan pandangan tepat ke musuh
+		last_direction = get_8_direction(global_position.direction_to(target_enemy.global_position))
+		if not is_attacking:
+			play_idle_animation()
 
-	var move_speed := NORMAL_SPEED
-	if is_tether_broken:
-		if dist_to_leader > 280.0:
-			move_speed = SPRINT_SPEED
-		else:
-			move_speed = NORMAL_SPEED * 1.15
-	elif move_vector != Vector2.ZERO:
-		move_speed = NORMAL_SPEED * 0.95
-
-	var desired_velocity := (move_vector.normalized() * move_speed) + (separation * 2.5)
-	velocity = desired_velocity + knockback_velocity
-	move_and_slide()
-
-	if move_vector != Vector2.ZERO and not is_attacking:
-		last_movement_direction = move_vector
-		update_direction_animation(move_vector)
-
-
+		# Eksekusi Tembakan Berkala
+		ai_attack_timer -= delta
+		if ai_attack_timer <= 0.0 and not is_attacking:
+			ai_attack_timer = randf_range(1.2, 1.5)
+			attack_timer = 0.0
+			shoot_towards(target_enemy.global_position)
 func update_direction_animation(direction: Vector2):
 
 	if direction == Vector2.ZERO:
@@ -1081,7 +1042,6 @@ func die():
 	is_attacking = false
 	in_party_combat = false
 	ai_attack_timer = 0.0
-	strafe_timer = 0.0
 	attack_stuck_timer = 0.0
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO
@@ -1135,7 +1095,6 @@ func respawn():
 	is_dead = false
 	in_party_combat = false
 	ai_attack_timer = 0.0
-	strafe_timer = 0.0
 	attack_stuck_timer = 0.0
 	last_movement_direction = Vector2.DOWN
 	last_direction = Vector2.DOWN
