@@ -27,6 +27,8 @@ var is_shooting: bool = false
 
 var current_health: int
 var player: CharacterBody2D = null
+var threat_target: CharacterBody2D = null
+var threat_timer: float = 0.0
 var is_dead: bool = false
 
 # Arah terakhir musuh (8 arah)
@@ -76,6 +78,40 @@ func _ready():
 		hitbox.body_exited.connect(_on_hitbox_body_exited)
 
 
+func alert_to_combat(target: CharacterBody2D = null) -> void:
+	if is_dead:
+		return
+	if current_state != State.CHASE:
+		current_state = State.CHASE
+	var chosen: CharacterBody2D = target if target else get_best_target()
+	if chosen:
+		player = chosen
+
+func get_best_target() -> CharacterBody2D:
+	# 1. Prioritaskan karakter yang baru saja memberi damage (threat/aggro priority)
+	if threat_timer > 0.0 and threat_target != null and is_instance_valid(threat_target):
+		if not ("is_dead" in threat_target and threat_target.is_dead) and threat_target.is_in_group("player"):
+			return threat_target
+		else:
+			threat_target = null
+			threat_timer = 0.0
+
+	# 2. Karakter terdekat di seluruh anggota party (4 karakter)
+	return get_closest_target()
+
+func get_closest_target() -> CharacterBody2D:
+	var party := get_tree().get_nodes_in_group("player")
+	var closest: CharacterBody2D = null
+	var min_d := INF
+	for p in party:
+		if p is CharacterBody2D and is_instance_valid(p) and not ("is_dead" in p and p.is_dead):
+			var d := global_position.distance_to(p.global_position)
+			if d < min_d:
+				min_d = d
+				closest = p
+	return closest
+
+
 func setup_health_bar():
 	# Konfigurasi Bar Belakang (Damage Bar / Buffer yang menunjukkan darah yang hilang)
 	if damage_bar:
@@ -120,14 +156,25 @@ func _physics_process(delta):
 	# ---------------------------------------------------------
 	# 1. LOGIKA GERAKAN & SERANGAN TEMBAK
 	# ---------------------------------------------------------
-	if current_state == State.CHASE and player != null and is_instance_valid(player):
-		# Jika player mati atau keluar dari grup player, musuh berhenti mengejar
-		if ("is_dead" in player and player.is_dead) or not player.is_in_group("player"):
+	if threat_timer > 0.0:
+		threat_timer -= delta
+
+	if current_state == State.CHASE:
+		# Evaluasi target terbaik dari seluruh 4 anggota party
+		var target := get_best_target()
+		if target == null:
+			player = null
+			current_state = State.IDLE_PATROL
+			return
+		player = target
+
+		var dist = global_position.distance_to(player.global_position)
+		# Jika pemain kabur terlalu jauh di luar layar (leash limit), musuh kembali patroli
+		if dist > 850.0:
 			player = null
 			current_state = State.IDLE_PATROL
 			return
 
-		var dist = global_position.distance_to(player.global_position)
 		var dir = global_position.direction_to(player.global_position)
 
 		# Hitung mundur cooldown tembak
@@ -405,7 +452,7 @@ func play_attack_animation():
 # MENERIMA DAMAGE DARI PANAH ARCHER
 # =========================================================
 
-func take_damage(amount: int):
+func take_damage(amount: int, attacker: CharacterBody2D = null):
 	if is_dead:
 		return
 
@@ -440,10 +487,17 @@ func take_damage(amount: int):
 		if is_instance_valid(animated_sprite) and not is_dead:
 			animated_sprite.modulate = Color(1.3, 0.4, 0.4) # Kembali ke warna merah musuh
 
-	# Musuh kaget dan langsung mengejar player jika player masih hidup
-	if player_node and not ("is_dead" in player_node and player_node.is_dead):
-		player = player_node
+	# Multi-Target Aggro: Prioritaskan penyerang yang baru memberi damage
+	if attacker != null and is_instance_valid(attacker) and attacker.is_in_group("player") and not ("is_dead" in attacker and attacker.is_dead):
+		threat_target = attacker
+		threat_timer = 3.0
+		player = attacker
 		current_state = State.CHASE
+	else:
+		var best := get_best_target()
+		if best:
+			player = best
+			current_state = State.CHASE
 
 	# Cek kematian
 	if current_health <= 0:
@@ -491,6 +545,8 @@ func respawn():
 	wander_target = spawn_position
 	wander_timer = 0.0
 	damage_timer = 0.0
+	threat_target = null
+	threat_timer = 0.0
 	shoot_timer = randf_range(0.5, shoot_cooldown)
 	is_shooting = false
 	last_direction = Vector2.DOWN
@@ -538,7 +594,8 @@ func _on_detection_area_body_entered(body):
 	if is_dead:
 		return
 	if (body.is_in_group("player") or body.name == "Player_Archer") and not ("is_dead" in body and body.is_dead):
-		player = body
+		var target := get_closest_target()
+		player = target if target else body
 		current_state = State.CHASE
 
 
@@ -546,8 +603,12 @@ func _on_detection_area_body_exited(body):
 	if is_dead:
 		return
 	if body == player:
-		player = null
-		current_state = State.IDLE_PATROL
+		var next_target := get_closest_target()
+		if next_target and global_position.distance_to(next_target.global_position) <= 550.0:
+			player = next_target
+		else:
+			player = null
+			current_state = State.IDLE_PATROL
 
 
 # =========================================================

@@ -641,7 +641,7 @@ animations = [{
 radius = 7.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_detect"]
-radius = 65.0
+radius = 240.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hitbox"]
 radius = 8.0

@@ -7,6 +7,7 @@ extends Area2D
 @export var speed: float = 520.0
 @export var damage: int = 2
 @export var shooter_group: String = "player"
+var shooter_node: CharacterBody2D = null
 
 var direction: Vector2 = Vector2.RIGHT
 var is_destroyed: bool = false
@@ -86,7 +87,7 @@ func _on_body_entered(body: Node2D):
 
 		if target.is_in_group("enemy"):
 			if target.has_method("take_damage"):
-				target.take_damage(damage)
+				target.take_damage(damage, shooter_node)
 
 			# Trigger getaran kamera saat magic bolt mengenai musuh
 			var leader = get_tree().get_first_node_in_group("player")

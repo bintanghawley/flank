@@ -5,6 +5,7 @@ const IMPACT_SCENE = preload("res://scene/projectile/arrow_impact.tscn")
 @export var speed: float = 500.0
 @export var damage: int = 1
 @export var shooter_group: String = "player" # "player" atau "enemy"
+var shooter_node: CharacterBody2D = null
 @export var max_trail_points: int = 16       # Panjang garis trail lurus
 
 var direction: Vector2 = Vector2.RIGHT
@@ -142,7 +143,7 @@ func _on_body_entered(body):
 
 		if target.is_in_group("enemy"):
 			if target.has_method("take_damage"):
-				target.take_damage(damage)
+				target.take_damage(damage, shooter_node)
 
 			# Trigger getaran kamera (camera shake) saat panah mengenai lawan
 			var player_node = get_tree().get_first_node_in_group("player")
