@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://dm0y8w3t7qlae"]
+
+[ext_resource type="Texture2D" uid="uid://jf1ku0ycymvu" path="res://assets/skills/mage/fireball/meteor-explode.png" id="1_texture"]
+[ext_resource type="Script" path="res://scene/projectile/meteor_impact.gd" id="2_script"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_me0"]
+atlas = ExtResource("1_texture")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_me1"]
+atlas = ExtResource("1_texture")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_me2"]
+atlas = ExtResource("1_texture")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_me3"]
+atlas = ExtResource("1_texture")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_meteor_explode"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_me0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_me1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_me2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_me3")
+}],
+"loop": false,
+"name": &"default",
+"speed": 14.0
+}]
+
+[node name="MeteorImpact" type="AnimatedSprite2D"]
+z_index = 6
+texture_filter = 1
+scale = Vector2(5.6, 5.6)
+sprite_frames = SubResource("SpriteFrames_meteor_explode")
+autoplay = "default"
+script = ExtResource("2_script")
+

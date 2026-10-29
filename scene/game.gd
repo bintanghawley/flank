@@ -18,6 +18,10 @@ const AGGRO_CHECK_INTERVAL: float = 0.15
 var combat_winddown_timer: float = 0.0
 const COMBAT_WINDDOWN_DELAY: float = 0.4
 
+# Command Party Input (Tombol 'C' untuk Follow & 'V' untuk Attack)
+enum PartyCommand { ATTACK, FOLLOW }
+var current_party_command: PartyCommand = PartyCommand.ATTACK
+
 # Pengaturan Camera Shake
 var shake_intensity: float = 0.0
 var shake_decay: float = 35.0
@@ -69,7 +73,30 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_4:
 			switch_to_character(3)
 			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_C:
+			set_party_command(PartyCommand.FOLLOW)
+			if get_viewport():
+				get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_V:
+			set_party_command(PartyCommand.ATTACK)
+			if get_viewport():
+				get_viewport().set_input_as_handled()
 
+
+func set_party_command(cmd: PartyCommand) -> void:
+	current_party_command = cmd
+	for member in party_members:
+		if is_instance_valid(member) and member.has_method("set_party_command"):
+			member.set_party_command(cmd)
+
+	if cmd == PartyCommand.ATTACK:
+		if not active_combat_targets.is_empty():
+			current_combat_state = PartyCombatState.COMBAT
+			notify_party_combat_state(true)
+	elif cmd == PartyCommand.FOLLOW:
+		notify_party_combat_state(false)
+
+	print("Party Command -> ", "FOLLOW (Tombol C)" if cmd == PartyCommand.FOLLOW else "ATTACK (Tombol V)")
 
 func switch_to_next_character() -> void:
 	if party_members.is_empty():
@@ -92,6 +119,7 @@ func set_active_leader(idx: int) -> void:
 	var leader := party_members[active_leader_index]
 
 	# Berikan status Leader langsung ke karakter terpilih
+	breadcrumbs.clear()
 	leader.set_as_leader(true, null, 0)
 
 	# Berikan referensi langsung ke Leader dan nomor urutan slot tetap (1, 2, 3)
@@ -100,6 +128,8 @@ func set_active_leader(idx: int) -> void:
 		var follower_idx := (active_leader_index + step) % party_members.size()
 		var follower := party_members[follower_idx]
 		follower.set_as_leader(false, leader, slot_order)
+		if follower.has_method("set_party_command"):
+			follower.set_party_command(current_party_command)
 		slot_order += 1
 
 	# Sinkronkan state combat jika pergantian karakter terjadi saat bertempur
@@ -115,6 +145,7 @@ func _process(delta: float) -> void:
 	handle_camera_shake(delta)
 	update_camera_target()
 	handle_viewport_aggro_detection(delta)
+	update_breadcrumbs()
 
 
 # =========================================================
@@ -150,9 +181,22 @@ func handle_viewport_aggro_detection(delta: float) -> void:
 
 	if should_be_combat:
 		combat_winddown_timer = COMBAT_WINDDOWN_DELAY
-		if current_combat_state == PartyCombatState.EXPLORING:
+		if current_party_command == PartyCommand.FOLLOW:
+			# Saat pemain mengaktifkan PartyCommand.FOLLOW, jangan paksa anggota party masuk mode tempur
+			pass
+		elif current_combat_state == PartyCombatState.EXPLORING:
 			current_combat_state = PartyCombatState.COMBAT
 			notify_party_combat_state(true)
+		else:
+			# Pastikan seluruh anggota party yang valid dan hidup selalu dipastikan bernilai in_party_combat = true
+			# jika tidak dalam mode FOLLOW
+			for member in party_members:
+				if is_instance_valid(member) and not ("is_dead" in member and member.is_dead):
+					if "in_party_combat" in member and not member.in_party_combat:
+						if member.has_method("set_party_combat_mode"):
+							member.set_party_combat_mode(true)
+						else:
+							member.in_party_combat = true
 
 		# [BUG 2 FIX]: Alert seluruh musuh di dalam viewport ke mode tempur
 		for enemy in found_enemies:
@@ -177,50 +221,13 @@ func notify_party_combat_state(in_combat: bool) -> void:
 func update_camera_target() -> void:
 	if not camera or party_members.is_empty():
 		return
-
 	var leader := party_members[active_leader_index]
 	if not is_instance_valid(leader):
 		return
 
-	# 1. Hitung titik tengah dari seluruh anggota party yang masih hidup
-	var total_pos := Vector2.ZERO
-	var valid_count: int = 0
-	for member in party_members:
-		if is_instance_valid(member) and not ("is_dead" in member and member.is_dead):
-			total_pos += member.global_position
-			valid_count += 1
-
-	var party_centroid: Vector2 = leader.global_position
-	if valid_count > 0:
-		party_centroid = total_pos / float(valid_count)
-
-	# 2. Posisi dasar kamera: 60% berpusat pada Leader, 40% pada rata-rata formasi tim
-	var base_target: Vector2 = leader.global_position.lerp(party_centroid, 0.4)
-
-	# 3. Dynamic Lookahead & Downward Bias
-	var lookahead_offset := Vector2(0.0, 45.0)
-
-	var leader_dir := Vector2.DOWN
-	var leader_is_moving: bool = false
-	if "velocity" in leader and leader.velocity.length() > 10.0:
-		leader_is_moving = true
-
-	if leader_is_moving and "last_movement_direction" in leader and leader.last_movement_direction != Vector2.ZERO:
-		leader_dir = leader.last_movement_direction.normalized()
-	elif "last_direction" in leader and leader.last_direction != Vector2.ZERO:
-		leader_dir = leader.last_direction.normalized()
-	elif "last_movement_direction" in leader and leader.last_movement_direction != Vector2.ZERO:
-		leader_dir = leader.last_movement_direction.normalized()
-
-	if leader_dir.y > 0.3:
-		lookahead_offset.y += 70.0
-	elif leader_dir.y < -0.3:
-		lookahead_offset.y -= 25.0
-
-	lookahead_offset.x += leader_dir.x * 40.0
-
-	camera.global_position = base_target + lookahead_offset
-
+	# Fokus 100% pada posisi Leader dengan sedikit offset vertikal ke bawah (+45 px)
+	var camera_target: Vector2 = leader.global_position + Vector2(0.0, 45.0)
+	camera.global_position = camera_target
 
 func apply_camera_shake(intensity: float = 8.0) -> void:
 	shake_intensity = max(shake_intensity, intensity)
@@ -292,3 +299,100 @@ func _create_wall_shape(parent: Node2D, pos: Vector2, size: Vector2) -> void:
 	col.shape = rect_shape
 	col.position = pos
 	parent.add_child(col)
+
+
+# =========================================================
+# BREADCRUMB HISTORY & SNAKE FORMATION (CASCADE SWAP 180°)
+# =========================================================
+
+var breadcrumbs: Array[Dictionary] = []
+const BREADCRUMB_INTERVAL: float = 8.0
+const QUEUE_DIST: float = 85.0
+
+func update_breadcrumbs() -> void:
+	if party_members.is_empty() or active_leader_index >= party_members.size():
+		return
+	var leader := party_members[active_leader_index]
+	if not is_instance_valid(leader) or ("is_dead" in leader and leader.is_dead):
+		return
+
+	var leader_pos: Vector2 = leader.global_position
+	var leader_dir: Vector2 = Vector2.DOWN
+	if "last_movement_direction" in leader and leader.last_movement_direction != Vector2.ZERO:
+		leader_dir = leader.last_movement_direction
+	elif "last_direction" in leader and leader.last_direction != Vector2.ZERO:
+		leader_dir = leader.last_direction
+
+	if breadcrumbs.is_empty():
+		breadcrumbs.append({"pos": leader_pos, "dir": leader_dir})
+		for i in range(1, 45):
+			breadcrumbs.append({
+				"pos": leader_pos - leader_dir * (i * BREADCRUMB_INTERVAL),
+				"dir": leader_dir
+			})
+		return
+
+	var head_pos: Vector2 = breadcrumbs[0]["pos"]
+	var dist_from_head := leader_pos.distance_to(head_pos)
+
+	if dist_from_head >= BREADCRUMB_INTERVAL:
+		var step_dir := (leader_pos - head_pos).normalized()
+		var last_trail_dir := leader_dir
+		if breadcrumbs.size() >= 2:
+			last_trail_dir = (breadcrumbs[0]["pos"] - breadcrumbs[1]["pos"]).normalized()
+
+		# Deteksi putar balik 180° (Cascade Swap)
+		if last_trail_dir != Vector2.ZERO and step_dir.dot(last_trail_dir) < -0.7:
+			# Leader berbalik 180° melewati barisannya sendiri!
+			# Balikkan jalur antrean ke belakang titik belok secara estafet
+			var turn_pt := head_pos
+			breadcrumbs.clear()
+			breadcrumbs.append({"pos": leader_pos, "dir": step_dir})
+			breadcrumbs.append({"pos": turn_pt, "dir": step_dir})
+			for k in range(1, 50):
+				breadcrumbs.append({
+					"pos": turn_pt - step_dir * (k * BREADCRUMB_INTERVAL),
+					"dir": step_dir
+				})
+		else:
+			# Gerakan biasa atau belok 90° (Snake Corner Turn)
+			breadcrumbs.push_front({"pos": leader_pos, "dir": step_dir})
+			if breadcrumbs.size() > 65:
+				breadcrumbs.pop_back()
+
+
+func get_follower_trail_slot(slot_index: int) -> Dictionary:
+	if party_members.is_empty() or active_leader_index >= party_members.size():
+		return {}
+	var leader := party_members[active_leader_index]
+	if not is_instance_valid(leader):
+		return {}
+
+	var target_dist: float = slot_index * QUEUE_DIST
+	if breadcrumbs.is_empty():
+		return {"pos": leader.global_position - Vector2.DOWN * target_dist, "dir": Vector2.DOWN}
+
+	var accumulated_dist: float = 0.0
+	var prev_pt: Vector2 = leader.global_position
+
+	for i in range(breadcrumbs.size()):
+		var cur_pt: Vector2 = breadcrumbs[i]["pos"]
+		var seg_len: float = prev_pt.distance_to(cur_pt)
+		if accumulated_dist + seg_len >= target_dist:
+			var remain := target_dist - accumulated_dist
+			var t := remain / maxf(seg_len, 0.001)
+			var interp_pos := prev_pt.lerp(cur_pt, t)
+			var seg_dir: Vector2 = cur_pt.direction_to(prev_pt)
+			if seg_dir == Vector2.ZERO:
+				seg_dir = breadcrumbs[i]["dir"]
+			return {"pos": interp_pos, "dir": seg_dir}
+		accumulated_dist += seg_len
+		prev_pt = cur_pt
+
+	var last_bc: Dictionary = breadcrumbs.back()
+	var fallback_dir: Vector2 = last_bc.get("dir", Vector2.DOWN)
+	var needed: float = target_dist - accumulated_dist
+	return {
+		"pos": prev_pt - fallback_dir * needed,
+		"dir": fallback_dir
+	}

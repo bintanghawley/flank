@@ -34,6 +34,17 @@ var is_dead: bool = false
 # Arah terakhir musuh (8 arah)
 var last_direction := Vector2.DOWN
 
+var is_flanking: bool = false
+var flank_wp1: Vector2 = Vector2.ZERO
+var flank_wp2: Vector2 = Vector2.ZERO
+var flank_stage: int = 1
+var flank_timeout: float = 0.0
+var facing_debounce_timer: float = 0.0
+
+# Knockback
+var knockback_velocity: Vector2 = Vector2.ZERO
+var knockback_decay: float = 1400.0
+
 # State AI Musuh
 enum State { IDLE_PATROL, CHASE }
 var current_state = State.IDLE_PATROL
@@ -153,6 +164,15 @@ func _physics_process(delta):
 	if is_dead:
 		return
 
+	# Reduksi knockback saat terkena dampak ledakan/serangan kuat
+	if knockback_velocity != Vector2.ZERO:
+		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, knockback_decay * delta)
+		velocity = knockback_velocity
+		move_and_slide()
+		if knockback_velocity.length() < 8.0:
+			knockback_velocity = Vector2.ZERO
+		return
+
 	# ---------------------------------------------------------
 	# 1. LOGIKA GERAKAN & SERANGAN TEMBAK
 	# ---------------------------------------------------------
@@ -172,37 +192,77 @@ func _physics_process(delta):
 		# Jika pemain kabur terlalu jauh di luar layar (leash limit), musuh kembali patroli
 		if dist > 850.0:
 			player = null
+			is_flanking = false
+			flank_wp1 = Vector2.ZERO
+			flank_wp2 = Vector2.ZERO
+			flank_stage = 1
+			flank_timeout = 0.0
+			facing_debounce_timer = 0.0
 			current_state = State.IDLE_PATROL
 			return
 
-		var dir = global_position.direction_to(player.global_position)
+		var dir: Vector2 = global_position.direction_to(player.global_position)
 
 		# Hitung mundur cooldown tembak
 		shoot_timer -= delta
 
-		# Jika dalam jangkauan tembak dan cooldown siap, tembak player!
-		if dist <= shoot_range and shoot_timer <= 0.0 and not is_shooting:
-			shoot_at_player()
+		var has_los := has_clear_projectile_los_to(player, 12.0)
+		var dist_to_player: float = global_position.distance_to(player.global_position)
 
-		# Saat animasi menembak, musuh berhenti melangkah (seperti archer pemain)
-		if is_shooting:
-			velocity = Vector2.ZERO
-		else:
-			# Jika masih jauh dari jangkauan tembak ideal, dekati player
-			if dist > 180.0:
-				velocity = dir * chase_speed
-				update_direction_animation(dir)
-			else:
-				# Berhenti di jarak tembak yang pas dan hadap player
+		if has_los:
+			is_flanking = false
+			if dist_to_player <= shoot_range:
 				velocity = Vector2.ZERO
-				last_direction = get_8_direction(dir)
-				play_idle_animation()
+				move_and_slide()
+				var look_dir := global_position.direction_to(player.global_position)
+				update_direction_animation(look_dir)
 
+				# Eksekusi tembakan musuh sesuai timer shoot_cooldown
+				if shoot_timer <= 0.0 and not is_shooting:
+					shoot_at_player()
+				if not is_shooting:
+					last_direction = get_8_direction(look_dir)
+					play_idle_animation()
+			else:
+				# Belum masuk shoot_range: dekati player secara langsung
+				if is_shooting:
+					velocity = Vector2.ZERO
+					move_and_slide()
+				else:
+					var move_dir: Vector2 = dir
+					velocity = move_dir * chase_speed
+					move_and_slide()
+					apply_smoothed_facing(move_dir, delta)
+		else:
+			# Terhalang pagar: navigasi 2-waypoint
+			if is_shooting:
+				velocity = Vector2.ZERO
+				move_and_slide()
+			else:
+				flank_timeout -= delta
+				if not is_flanking or flank_timeout <= 0.0:
+					calculate_flank_waypoints(player)
+
+				var active_wp := flank_wp1
+				if flank_stage == 1:
+					if global_position.distance_to(flank_wp1) <= 28.0:
+						flank_stage = 2
+						active_wp = flank_wp2
+				else:
+					active_wp = flank_wp2
+					if global_position.distance_to(flank_wp2) <= 28.0:
+						is_flanking = false
+
+				var move_dir := global_position.direction_to(active_wp)
+				if move_dir == Vector2.ZERO:
+					move_dir = last_direction
+				velocity = move_dir * chase_speed
+				move_and_slide()
+				apply_smoothed_facing(move_dir, delta)
 	else:
 		# Patroli mutar-mutar santai di area
 		handle_idle_patrol(delta)
-
-	move_and_slide()
+		move_and_slide()
 
 	# ---------------------------------------------------------
 	# 2. LOGIKA DAMAGE SAAT MENYENTUH ARCHER
@@ -252,6 +312,153 @@ func get_arrow_spawn_position(dir: Vector2) -> Vector2:
 	# Posisi kemunculan panah tepat di depan busur keluar dari tubuh musuh
 	var forward_dist := 28.0 if last_direction == Vector2.UP else 20.0
 	return center_pos + dir * forward_dist
+
+
+func calculate_flank_waypoints(target_node: Node2D) -> bool:
+	if not target_node or not is_instance_valid(target_node):
+		return false
+	var space_state := get_world_2d().direct_space_state
+	var my_pos: Vector2 = global_position
+	var target_pos: Vector2 = target_node.global_position
+	
+	# Raycast langsung ke target untuk mendeteksi titik benturan rintangan
+	var ray := PhysicsRayQueryParameters2D.create(my_pos, target_pos)
+	ray.collision_mask = 1 # Layer 1: dinding / pagar / rintangan fisik
+	ray.exclude = [self, target_node]
+	var hit := space_state.intersect_ray(ray)
+	if hit.is_empty():
+		return false
+		
+	var hit_pos: Vector2 = hit.position
+	var to_target: Vector2 = (target_pos - my_pos).normalized()
+	if to_target == Vector2.ZERO:
+		to_target = Vector2.UP
+		
+	# Arah tegak lurus melintang terhadap garis bidik target (kiri & kanan murni)
+	var dir_left: Vector2 = Vector2(-to_target.y, to_target.x).normalized()
+	var dir_right: Vector2 = -dir_left
+	
+	var probe_distances: Array[float] = [24.0, 48.0, 72.0, 96.0, 128.0, 160.0, 200.0, 260.0, 340.0, 440.0, 560.0, 720.0]
+	var open_dist_left: float = INF
+	var open_dist_right: float = INF
+	
+	# Probe sisi kiri untuk mendeteksi ujung rintangan
+	for d in probe_distances:
+		var p_start := hit_pos + (dir_left * d) - (to_target * 24.0)
+		var p_end := hit_pos + (dir_left * d) + (to_target * 24.0)
+		var check_ray := PhysicsRayQueryParameters2D.create(p_start, p_end)
+		check_ray.collision_mask = 1
+		check_ray.exclude = [self]
+		if space_state.intersect_ray(check_ray).is_empty():
+			open_dist_left = d
+			break
+			
+	# Probe sisi kanan untuk mendeteksi ujung rintangan
+	for d in probe_distances:
+		var p_start := hit_pos + (dir_right * d) - (to_target * 24.0)
+		var p_end := hit_pos + (dir_right * d) + (to_target * 24.0)
+		var check_ray := PhysicsRayQueryParameters2D.create(p_start, p_end)
+		check_ray.collision_mask = 1
+		check_ray.exclude = [self]
+		if space_state.intersect_ray(check_ray).is_empty():
+			open_dist_right = d
+			break
+			
+	# Pilih sisi terdekat dari posisi karakter saat ini
+	var chosen_dir: Vector2 = dir_left
+	var chosen_dist: float = 120.0
+	var left_valid: bool = (open_dist_left < 1000.0)
+	var right_valid: bool = (open_dist_right < 1000.0)
+	
+	if left_valid and right_valid:
+		var pos_left := hit_pos + dir_left * open_dist_left
+		var pos_right := hit_pos + dir_right * open_dist_right
+		if my_pos.distance_to(pos_left) <= my_pos.distance_to(pos_right):
+			chosen_dir = dir_left
+			chosen_dist = open_dist_left
+		else:
+			chosen_dir = dir_right
+			chosen_dist = open_dist_right
+	elif left_valid:
+		chosen_dir = dir_left
+		chosen_dist = open_dist_left
+	elif right_valid:
+		chosen_dir = dir_right
+		chosen_dist = open_dist_right
+	else:
+		var pos_left := hit_pos + dir_left * 80.0
+		var pos_right := hit_pos + dir_right * 80.0
+		chosen_dir = dir_left if my_pos.distance_to(pos_left) < my_pos.distance_to(pos_right) else dir_right
+		chosen_dist = 120.0
+		
+	# Waypoint 1: 40 px di luar ujung pagar, tetap di sisi karakter (-to_target * 24.0)
+	flank_wp1 = hit_pos + (chosen_dir * (chosen_dist + 40.0)) - (to_target * 24.0)
+	# Waypoint 2: Melangkah menyeberang ke area seberang (+to_target * 65.0)
+	flank_wp2 = flank_wp1 + (to_target * 65.0)
+	flank_stage = 1
+	is_flanking = true
+	flank_timeout = 5.0
+	return true
+
+func get_cardinal_direction(dir: Vector2) -> Vector2:
+	if dir == Vector2.ZERO:
+		return Vector2.DOWN
+	if abs(dir.x) >= abs(dir.y):
+		return Vector2.RIGHT if dir.x > 0 else Vector2.LEFT
+	else:
+		return Vector2.DOWN if dir.y > 0 else Vector2.UP
+
+func apply_smoothed_facing(move_dir: Vector2, delta: float) -> void:
+	if move_dir.length() < 0.1:
+		return
+	var target_cardinal := get_cardinal_direction(move_dir)
+	if target_cardinal != last_direction:
+		facing_debounce_timer -= delta
+		if facing_debounce_timer <= 0.0:
+			last_direction = target_cardinal
+			facing_debounce_timer = 0.15 # Kunci minimal 150ms sebelum boleh ganti arah
+	else:
+		facing_debounce_timer = 0.15
+	update_direction_animation(last_direction)
+
+func has_clear_projectile_los_to(target_node: Node2D, clearance_radius: float = 14.0) -> bool:
+	if not target_node or not is_instance_valid(target_node):
+		return false
+	var space_state := get_world_2d().direct_space_state
+	var from_pos: Vector2 = global_position
+	var to_pos: Vector2 = target_node.global_position
+	
+	# 1. Ray tengah
+	var query_center := PhysicsRayQueryParameters2D.create(from_pos, to_pos)
+	query_center.collision_mask = 1 # Rintangan / pagar / dinding / tunggul
+	query_center.exclude = [self, target_node]
+	if not space_state.intersect_ray(query_center).is_empty():
+		return false
+		
+	# 2. Vektor tegak lurus (perpendicular) untuk menguji lebar fisik proyektil
+	var fire_dir := (to_pos - from_pos).normalized()
+	if fire_dir == Vector2.ZERO:
+		return false
+	var perp := Vector2(-fire_dir.y, fire_dir.x) * clearance_radius
+	
+	# 3. Ray sayap kiri (menguji apakah sisi kiri proyektil menyenggol rintangan)
+	var query_left := PhysicsRayQueryParameters2D.create(from_pos + perp, to_pos + perp)
+	query_left.collision_mask = 1
+	query_left.exclude = [self, target_node]
+	if not space_state.intersect_ray(query_left).is_empty():
+		return false
+		
+	# 4. Ray sayap kanan (menguji apakah sisi kanan proyektil menyenggol rintangan)
+	var query_right := PhysicsRayQueryParameters2D.create(from_pos - perp, to_pos - perp)
+	query_right.collision_mask = 1
+	query_right.exclude = [self, target_node]
+	if not space_state.intersect_ray(query_right).is_empty():
+		return false
+		
+	return true
+
+func has_line_of_sight_to(target_node: Node2D) -> bool:
+	return has_clear_projectile_los_to(target_node, 14.0)
 
 
 func shoot_at_player():
@@ -448,6 +655,10 @@ func play_attack_animation():
 		animated_sprite.flip_h = false
 
 
+func apply_knockback(force: Vector2) -> void:
+	knockback_velocity = force
+
+
 # =========================================================
 # MENERIMA DAMAGE DARI PANAH ARCHER
 # =========================================================
@@ -512,6 +723,13 @@ func die():
 	is_dead = true
 	is_shooting = false
 	velocity = Vector2.ZERO
+	knockback_velocity = Vector2.ZERO
+	is_flanking = false
+	flank_wp1 = Vector2.ZERO
+	flank_wp2 = Vector2.ZERO
+	flank_stage = 1
+	flank_timeout = 0.0
+	facing_debounce_timer = 0.0
 
 	# Sembunyikan visual dan matikan proses
 	visible = false
@@ -541,6 +759,12 @@ func respawn():
 	current_health = max_health
 	is_touching_player = false
 	player = null
+	is_flanking = false
+	flank_wp1 = Vector2.ZERO
+	flank_wp2 = Vector2.ZERO
+	flank_stage = 1
+	flank_timeout = 0.0
+	facing_debounce_timer = 0.0
 	current_state = State.IDLE_PATROL
 	wander_target = spawn_position
 	wander_timer = 0.0

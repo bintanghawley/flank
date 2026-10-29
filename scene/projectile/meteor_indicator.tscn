@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://c6xk4y8m3p0da"]
+
+[ext_resource type="Script" path="res://scene/projectile/meteor_indicator.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://c84dhf0ll1k73" path="res://assets/skills/mage/fireball/skill-indicator.png" id="2_texture"]
+
+[node name="MeteorIndicator" type="Node2D"]
+z_index = 5
+script = ExtResource("1_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+scale = Vector2(5.6, 5.6)
+texture = ExtResource("2_texture")
+

@@ -10,7 +10,29 @@ var leader_node: CharacterBody2D = null
 var queue_slot_index: int = 0
 var in_party_combat: bool = false
 var ai_attack_timer: float = 0.0
+enum PartyCommand { ATTACK, FOLLOW }
+var party_command: PartyCommand = PartyCommand.ATTACK
 const COMBAT_ATTACK_RANGE: float = 480.0
+var is_flanking: bool = false
+var flank_wp1: Vector2 = Vector2.ZERO
+var flank_wp2: Vector2 = Vector2.ZERO
+var flank_stage: int = 1
+var flank_timeout: float = 0.0
+var facing_debounce_timer: float = 0.0
+
+func set_party_command(cmd: int) -> void:
+	party_command = cmd as PartyCommand
+	if party_command == PartyCommand.FOLLOW:
+		is_flanking = false
+		flank_wp1 = Vector2.ZERO
+		flank_wp2 = Vector2.ZERO
+		flank_stage = 1
+		flank_timeout = 0.0
+		is_attacking = false
+		velocity = Vector2.ZERO
+		if not is_leader and not is_dead:
+			if animated_sprite.animation.begins_with("atk_"):
+				play_idle_animation()
 
 func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: int = 0) -> void:
 	is_leader = active
@@ -21,10 +43,19 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 	velocity = Vector2.ZERO
 
 	attack_stuck_timer = 0.0
+	var game_node = get_tree().current_scene
+	if game_node and "current_party_command" in game_node:
+		party_command = game_node.current_party_command as PartyCommand
 
 	if is_leader:
 		in_party_combat = false
 		ai_attack_timer = 0.0
+		is_flanking = false
+		flank_wp1 = Vector2.ZERO
+		flank_wp2 = Vector2.ZERO
+		flank_stage = 1
+		flank_timeout = 0.0
+		facing_debounce_timer = 0.0
 		print(name, " maju sebagai Leader!")
 	else:
 		if current_skill_state != SkillState.INACTIVE:
@@ -50,6 +81,12 @@ func set_party_combat_mode(active: bool) -> void:
 		ai_attack_timer = randf_range(0.3, 0.7)
 	else:
 		ai_attack_timer = 0.0
+		is_flanking = false
+		flank_wp1 = Vector2.ZERO
+		flank_wp2 = Vector2.ZERO
+		flank_stage = 1
+		flank_timeout = 0.0
+		facing_debounce_timer = 0.0
 		if not is_leader and leader_node and is_instance_valid(leader_node) and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
 			play_idle_animation()
@@ -502,151 +539,168 @@ func process_follower_logic(delta: float) -> void:
 		return
 
 	# 1. POSISI BERTEMPUR (COMBAT STATE ALA GUARDIAN TALES)
-	if in_party_combat:
+	# HANYA aktif jika party_command == PartyCommand.ATTACK dan in_party_combat == true
+	if party_command == PartyCommand.ATTACK and in_party_combat:
 		process_follower_combat(delta)
 		return
 
-	# Jika sebelumnya memutar animasi attack karena transisi combat, kembalikan ke idle
+	# 2. POSISI MENGEKOR (EXPLORING STATE - SNAKE BREADCRUMBS)
+	process_follower_exploring(delta)
+
+
+func process_follower_exploring(delta: float) -> void:
 	if animated_sprite.animation.begins_with("atk_") and not is_attacking:
 		play_idle_animation()
 
-	# 2. POSISI BERJALAN & MENJAGA JARAK ANTREAN LEADER (FORMASI TETAP)
-	const FOLLOW_DISTANCE: float = 85.0
-	const STOP_THRESHOLD: float = 8.0
-	const START_THRESHOLD: float = 24.0
+	var slot_info: Dictionary = {}
+	var game_node = get_tree().current_scene
+	if game_node and game_node.has_method("get_follower_trail_slot"):
+		slot_info = game_node.get_follower_trail_slot(queue_slot_index)
 
-	var leader_is_moving: bool = false
-	if "velocity" in leader_node and leader_node.velocity.length() > 10.0:
-		leader_is_moving = true
+	if slot_info.is_empty():
+		return
 
-	# Hitung anchor_dir secara stabil:
-	# Gunakan last_movement_direction jika Leader bergerak, gunakan last_direction jika Leader diam
-	var anchor_dir: Vector2 = Vector2.DOWN
-	if leader_is_moving:
-		if "last_movement_direction" in leader_node and leader_node.last_movement_direction != Vector2.ZERO:
-			anchor_dir = leader_node.last_movement_direction
-		elif "velocity" in leader_node and leader_node.velocity != Vector2.ZERO:
-			anchor_dir = leader_node.velocity
-	else:
-		if "last_direction" in leader_node and leader_node.last_direction != Vector2.ZERO:
-			anchor_dir = leader_node.last_direction
-		elif "last_movement_direction" in leader_node and leader_node.last_movement_direction != Vector2.ZERO:
-			anchor_dir = leader_node.last_movement_direction
+	var follow_slot: Vector2 = slot_info["pos"]
+	var target_facing: Vector2 = slot_info.get("dir", leader_node.last_direction)
+	var dist_to_slot := global_position.distance_to(follow_slot)
 
-	if anchor_dir == Vector2.ZERO:
-		anchor_dir = Vector2.DOWN
+	var leader_is_moving := false
+	if leader_node and is_instance_valid(leader_node):
+		if "is_moving" in leader_node and leader_node.is_moving:
+			leader_is_moving = true
+		elif "velocity" in leader_node and leader_node.velocity.length() >= 10.0:
+			leader_is_moving = true
 
-	var follow_slot: Vector2 = leader_node.global_position - (anchor_dir.normalized() * (FOLLOW_DISTANCE * queue_slot_index))
-	var dist_to_slot: float = global_position.distance_to(follow_slot)
+	# 2. Kondisi Berhenti yang Tegas saat Leader Diam
+	if not leader_is_moving and dist_to_slot <= 16.0:
+		velocity = Vector2.ZERO
+		is_moving = false
+		global_position = global_position.move_toward(follow_slot, 50.0 * delta)
+		if "last_direction" in leader_node:
+			last_direction = leader_node.last_direction
+		play_idle_animation()
+		move_and_slide()
+		return
 
-	# Sistem Hysteresis Deadzone:
-	# 1. Batas Berhenti (Stop Threshold): <= 8.0 px langsung dianggap TIBA (IDLE)
-	# 2. Batas Mulai Bergerak (Start Threshold): Hanya mulai gerak jika dist > 24.0 px ATAU Leader sedang aktif bergerak
-	var should_stop: bool = false
-	if dist_to_slot <= STOP_THRESHOLD:
+	# Sistem Hysteresis Deadzone
+	const STOP_THRESHOLD := 6.0
+	const START_THRESHOLD := 16.0
+
+	var should_stop := false
+	if not is_moving and dist_to_slot < START_THRESHOLD:
 		should_stop = true
-	elif not is_moving and not leader_is_moving and dist_to_slot <= START_THRESHOLD:
+	elif is_moving and dist_to_slot <= STOP_THRESHOLD:
 		should_stop = true
 
 	if should_stop:
 		velocity = knockback_velocity
 		is_moving = false
-		# Kunci posisi perlahan ke titik slot presisi (menjamin barisan 100% lurus di satu garis)
+		move_and_slide()
 		global_position = global_position.move_toward(follow_slot, 40.0 * delta)
-
-		# Sinkronisasi arah hadap persis dengan Leader aktif
-		if "last_direction" in leader_node and leader_node.last_direction != Vector2.ZERO:
+		if not leader_is_moving and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
-
+		else:
+			last_direction = target_facing
 		if not is_attacking:
 			play_idle_animation()
-		move_and_slide()
 	else:
 		var move_dir := global_position.direction_to(follow_slot)
-
-		# Normalisasi Kecepatan (Cegah 2x Speed, adaptif & proporsional)
-		var follow_speed: float = NORMAL_SPEED
+		var follow_speed := NORMAL_SPEED
 		if Input.is_key_pressed(KEY_SHIFT) or (leader_node and leader_node.velocity.length() > NORMAL_SPEED + 10.0):
 			follow_speed = SPRINT_SPEED
-		elif dist_to_slot > 220.0:
+		elif dist_to_slot > 180.0:
 			follow_speed = SPRINT_SPEED
-		elif dist_to_slot > 120.0:
+		elif dist_to_slot > 90.0:
 			follow_speed = NORMAL_SPEED * 1.15
 
-		velocity = (move_dir * follow_speed) + knockback_velocity
+		# 1. Pencegahan Overshoot Jitter (Arrival Clamping)
+		var current_speed: float = min(follow_speed, dist_to_slot / max(delta, 0.001))
+
+		velocity = (move_dir * current_speed) + knockback_velocity
 		move_and_slide()
 		is_moving = true
 		last_movement_direction = move_dir
 		update_direction_animation(move_dir)
 
-
 func process_follower_combat(delta: float) -> void:
+	if not in_party_combat:
+		return
 	if is_attacking:
 		velocity = knockback_velocity
 		move_and_slide()
 		return
-
-	# Leash Ekstrem: Follower HANYA ditarik jika Leader melarikan diri sangat jauh keluar layar (> 750 px)
-	if leader_node and is_instance_valid(leader_node):
-		var dist_to_leader: float = global_position.distance_to(leader_node.global_position)
-		if dist_to_leader > 750.0:
-			var move_dir: Vector2 = global_position.direction_to(leader_node.global_position)
-			velocity = (move_dir * SPRINT_SPEED) + knockback_velocity
-			move_and_slide()
-			is_moving = true
-			last_movement_direction = move_dir
-			update_direction_animation(move_dir)
-			return
-
-	# 1. Cari Target Musuh Hidup Terdekat dari posisi follower saat itu
+		
+	# 1. Cari musuh hidup terdekat di dalam layar kamera
+	var cam_rect := get_camera_world_rect()
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	var target_enemy: Node2D = null
-	var min_dist := INF
-
+	var min_dist: float = INF
+	
 	for e in enemies:
 		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
-			var d := global_position.distance_to(e.global_position)
-			if d < min_dist:
-				min_dist = d
-				target_enemy = e
-
+			if cam_rect.has_point(e.global_position):
+				var d: float = global_position.distance_to(e.global_position)
+				if d < min_dist:
+					min_dist = d
+					target_enemy = e
+					
 	if not target_enemy:
-		# Tidak ada musuh hidup di area, follower diam siaga
-		velocity = knockback_velocity
-		is_moving = false
-		move_and_slide()
-		if not is_attacking:
-			play_idle_animation()
+		is_flanking = false
+		process_follower_exploring(delta)
 		return
-
-	var dist_to_enemy: float = global_position.distance_to(target_enemy.global_position)
-
-	# 2. Evaluasi Jarak ke Target (Stand & Shoot ala Guardian Tales)
-	if dist_to_enemy > COMBAT_ATTACK_RANGE:
-		# Jika di luar jangkauan tembak: berjalan lurus mendekati musuh
-		var move_dir: Vector2 = global_position.direction_to(target_enemy.global_position)
-		velocity = (move_dir * NORMAL_SPEED) + knockback_velocity
-		move_and_slide()
-		is_moving = true
-		last_movement_direction = move_dir
-		update_direction_animation(move_dir)
+		
+	# 2. Uji koridor tembak
+	var has_los := has_clear_projectile_los_to(target_enemy, 12.0)
+	var dist_to_enemy := global_position.distance_to(target_enemy.global_position)
+	
+	# 3. KONDISI TEMBAK (STAND & SHOOT): Jika koridor bebas DAN masuk jarak tembak
+	if has_los:
+		is_flanking = false
+		if dist_to_enemy <= COMBAT_ATTACK_RANGE:
+			velocity = knockback_velocity
+			is_moving = false
+			move_and_slide()
+			last_direction = get_cardinal_direction(global_position.direction_to(target_enemy.global_position))
+			if not is_attacking:
+				play_idle_animation()
+			ai_attack_timer -= delta
+			if ai_attack_timer <= 0.0 and not is_attacking:
+				ai_attack_timer = randf_range(1.2, 1.5)
+				shoot_towards(target_enemy.global_position)
+			return
+		else:
+			# Jalur bersih tapi musuh masih agak jauh: dekati langsung
+			var move_dir := global_position.direction_to(target_enemy.global_position)
+			velocity = (move_dir * NORMAL_SPEED) + knockback_velocity
+			is_moving = true
+			move_and_slide()
+			last_movement_direction = move_dir
+			apply_smoothed_facing(move_dir, delta)
+			return
+			
+	# 4. KONDISI TERHALANG RINTANGAN (NAVIGASI MEMUTAR):
+	flank_timeout -= delta
+	if not is_flanking or flank_timeout <= 0.0:
+		calculate_flank_waypoints(target_enemy)
+		
+	var active_wp := flank_wp1
+	if flank_stage == 1:
+		if global_position.distance_to(flank_wp1) <= 28.0:
+			flank_stage = 2
+			active_wp = flank_wp2
 	else:
-		# Jika sudah masuk jangkauan tembak: BERHENTI TOTAL (STAND GROUND)
-		velocity = knockback_velocity
-		is_moving = false
-		move_and_slide()
-
-		# Arahkan pandangan tepat ke musuh
-		last_direction = get_8_direction(global_position.direction_to(target_enemy.global_position))
-		if not is_attacking:
-			play_idle_animation()
-
-		# Eksekusi Tembakan Berkala
-		ai_attack_timer -= delta
-		if ai_attack_timer <= 0.0 and not is_attacking:
-			ai_attack_timer = randf_range(1.2, 1.5)
-			attack_timer = 0.0
-			shoot_towards(target_enemy.global_position)
+		active_wp = flank_wp2
+		if global_position.distance_to(flank_wp2) <= 28.0:
+			is_flanking = false
+			
+	var move_dir := global_position.direction_to(active_wp)
+	if move_dir == Vector2.ZERO:
+		move_dir = last_direction
+	velocity = (move_dir * NORMAL_SPEED) + knockback_velocity
+	is_moving = true
+	move_and_slide()
+	last_movement_direction = move_dir
+	apply_smoothed_facing(move_dir, delta)
 func update_direction_animation(direction: Vector2):
 
 	if direction == Vector2.ZERO:
@@ -664,6 +718,15 @@ func update_direction_animation(direction: Vector2):
 # =========================================================
 # KONVERSI ARAH MENJADI 8 ARAH
 # =========================================================
+
+func get_cardinal_direction(dir: Vector2) -> Vector2:
+	if dir == Vector2.ZERO:
+		return Vector2.DOWN
+	# Jika komponen horizontal lebih besar atau sama dengan vertikal, prioritaskan horizontal
+	if abs(dir.x) >= abs(dir.y):
+		return Vector2.RIGHT if dir.x > 0 else Vector2.LEFT
+	else:
+		return Vector2.DOWN if dir.y > 0 else Vector2.UP
 
 func get_8_direction(direction: Vector2) -> Vector2:
 
@@ -908,8 +971,177 @@ func get_arrow_spawn_position() -> Vector2:
 	return center_pos + dir * forward_dist
 
 
+
+func calculate_flank_waypoints(target_node: Node2D) -> bool:
+	if not target_node or not is_instance_valid(target_node):
+		return false
+	var space_state := get_world_2d().direct_space_state
+	var my_pos: Vector2 = global_position
+	var target_pos: Vector2 = target_node.global_position
+	
+	# Raycast langsung ke target untuk mendeteksi titik benturan rintangan
+	var ray := PhysicsRayQueryParameters2D.create(my_pos, target_pos)
+	ray.collision_mask = 1 # Layer 1: dinding / pagar / rintangan fisik
+	ray.exclude = [self, target_node]
+	var hit := space_state.intersect_ray(ray)
+	if hit.is_empty():
+		return false
+		
+	var hit_pos: Vector2 = hit.position
+	var to_target: Vector2 = (target_pos - my_pos).normalized()
+	if to_target == Vector2.ZERO:
+		to_target = Vector2.UP
+		
+	# Arah tegak lurus melintang terhadap garis bidik target (kiri & kanan murni)
+	var dir_left: Vector2 = Vector2(-to_target.y, to_target.x).normalized()
+	var dir_right: Vector2 = -dir_left
+	
+	var probe_distances: Array[float] = [24.0, 48.0, 72.0, 96.0, 128.0, 160.0, 200.0, 260.0, 340.0, 440.0, 560.0, 720.0]
+	var open_dist_left: float = INF
+	var open_dist_right: float = INF
+	
+	# Probe sisi kiri untuk mendeteksi ujung rintangan
+	for d in probe_distances:
+		var p_start := hit_pos + (dir_left * d) - (to_target * 24.0)
+		var p_end := hit_pos + (dir_left * d) + (to_target * 24.0)
+		var check_ray := PhysicsRayQueryParameters2D.create(p_start, p_end)
+		check_ray.collision_mask = 1
+		check_ray.exclude = [self]
+		if space_state.intersect_ray(check_ray).is_empty():
+			open_dist_left = d
+			break
+			
+	# Probe sisi kanan untuk mendeteksi ujung rintangan
+	for d in probe_distances:
+		var p_start := hit_pos + (dir_right * d) - (to_target * 24.0)
+		var p_end := hit_pos + (dir_right * d) + (to_target * 24.0)
+		var check_ray := PhysicsRayQueryParameters2D.create(p_start, p_end)
+		check_ray.collision_mask = 1
+		check_ray.exclude = [self]
+		if space_state.intersect_ray(check_ray).is_empty():
+			open_dist_right = d
+			break
+			
+	# Pilih sisi terdekat dari posisi karakter saat ini
+	var chosen_dir: Vector2 = dir_left
+	var chosen_dist: float = 120.0
+	var left_valid: bool = (open_dist_left < 1000.0)
+	var right_valid: bool = (open_dist_right < 1000.0)
+	
+	if left_valid and right_valid:
+		var pos_left := hit_pos + dir_left * open_dist_left
+		var pos_right := hit_pos + dir_right * open_dist_right
+		if my_pos.distance_to(pos_left) <= my_pos.distance_to(pos_right):
+			chosen_dir = dir_left
+			chosen_dist = open_dist_left
+		else:
+			chosen_dir = dir_right
+			chosen_dist = open_dist_right
+	elif left_valid:
+		chosen_dir = dir_left
+		chosen_dist = open_dist_left
+	elif right_valid:
+		chosen_dir = dir_right
+		chosen_dist = open_dist_right
+	else:
+		var pos_left := hit_pos + dir_left * 80.0
+		var pos_right := hit_pos + dir_right * 80.0
+		chosen_dir = dir_left if my_pos.distance_to(pos_left) < my_pos.distance_to(pos_right) else dir_right
+		chosen_dist = 120.0
+		
+	# Waypoint 1: 40 px di luar ujung pagar, tetap di sisi karakter (-to_target * 24.0)
+	flank_wp1 = hit_pos + (chosen_dir * (chosen_dist + 40.0)) - (to_target * 24.0)
+	# Waypoint 2: Melangkah menyeberang ke area seberang (+to_target * 65.0)
+	flank_wp2 = flank_wp1 + (to_target * 65.0)
+	flank_stage = 1
+	is_flanking = true
+	flank_timeout = 5.0
+	return true
+
+func apply_smoothed_facing(move_dir: Vector2, delta: float) -> void:
+	if move_dir.length() < 0.1:
+		return
+	var target_cardinal := get_cardinal_direction(move_dir)
+	if target_cardinal != last_direction:
+		facing_debounce_timer -= delta
+		if facing_debounce_timer <= 0.0:
+			last_direction = target_cardinal
+			facing_debounce_timer = 0.15 # Kunci minimal 150ms sebelum boleh ganti arah
+	else:
+		facing_debounce_timer = 0.15
+	update_direction_animation(last_direction)
+
+func has_clear_projectile_los_to(target_node: Node2D, clearance_radius: float = 14.0) -> bool:
+	if not target_node or not is_instance_valid(target_node):
+		return false
+	var space_state := get_world_2d().direct_space_state
+	var from_pos: Vector2 = global_position
+	var to_pos: Vector2 = target_node.global_position
+	
+	# 1. Ray tengah
+	var query_center := PhysicsRayQueryParameters2D.create(from_pos, to_pos)
+	query_center.collision_mask = 1 # Rintangan / pagar / dinding / tunggul
+	query_center.exclude = [self, target_node]
+	if not space_state.intersect_ray(query_center).is_empty():
+		return false
+		
+	# 2. Vektor tegak lurus (perpendicular) untuk menguji lebar fisik proyektil
+	var fire_dir := (to_pos - from_pos).normalized()
+	if fire_dir == Vector2.ZERO:
+		return false
+	var perp := Vector2(-fire_dir.y, fire_dir.x) * clearance_radius
+	
+	# 3. Ray sayap kiri (menguji apakah sisi kiri proyektil menyenggol rintangan)
+	var query_left := PhysicsRayQueryParameters2D.create(from_pos + perp, to_pos + perp)
+	query_left.collision_mask = 1
+	query_left.exclude = [self, target_node]
+	if not space_state.intersect_ray(query_left).is_empty():
+		return false
+		
+	# 4. Ray sayap kanan (menguji apakah sisi kanan proyektil menyenggol rintangan)
+	var query_right := PhysicsRayQueryParameters2D.create(from_pos - perp, to_pos - perp)
+	query_right.collision_mask = 1
+	query_right.exclude = [self, target_node]
+	if not space_state.intersect_ray(query_right).is_empty():
+		return false
+		
+	return true
+
+func has_line_of_sight_to(target_node: Node2D) -> bool:
+	return has_clear_projectile_los_to(target_node, 14.0)
+
+
+func has_valid_attack_target() -> bool:
+	var cam_rect := get_camera_world_rect()
+	var enemies := get_tree().get_nodes_in_group("enemy")
+	for e in enemies:
+		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
+			if cam_rect.has_point(e.global_position):
+				if global_position.distance_to(e.global_position) <= attack_range:
+					return true
+	return false
+
+func get_camera_world_rect() -> Rect2:
+	var game_node = get_tree().current_scene
+	if game_node and game_node.has_method("get_camera_world_rect"):
+		return game_node.get_camera_world_rect()
+
+	var vp := get_viewport()
+	if not vp:
+		return Rect2()
+	var cam := vp.get_camera_2d()
+	if not cam:
+		return Rect2()
+	var vp_size: Vector2 = vp.get_visible_rect().size / cam.zoom
+	var center: Vector2 = cam.get_screen_center_position()
+	return Rect2(center - vp_size * 0.5, vp_size).grow(40.0)
+
 func shoot_towards(target_pos: Vector2):
-	if attack_timer > 0.0 or is_attacking:
+	if attack_timer > 0.0 or is_attacking or is_dead:
+		return
+
+	# [BATASI SERANGAN KOSONG]: Jika karakter aktif (Leader), wajib ada musuh valid di layar & jangkauan
+	if is_leader and not has_valid_attack_target():
 		return
 
 	# Hentikan pergerakan
@@ -1042,6 +1274,12 @@ func die():
 	is_attacking = false
 	in_party_combat = false
 	ai_attack_timer = 0.0
+	is_flanking = false
+	flank_wp1 = Vector2.ZERO
+	flank_wp2 = Vector2.ZERO
+	flank_stage = 1
+	flank_timeout = 0.0
+	facing_debounce_timer = 0.0
 	attack_stuck_timer = 0.0
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO
@@ -1071,6 +1309,12 @@ func die():
 
 
 func respawn():
+	is_flanking = false
+	flank_wp1 = Vector2.ZERO
+	flank_wp2 = Vector2.ZERO
+	flank_stage = 1
+	flank_timeout = 0.0
+	facing_debounce_timer = 0.0
 	# Kembalikan ke posisi awal saat game dimulai
 	global_position = spawn_position
 	target_position = spawn_position
@@ -1093,8 +1337,18 @@ func respawn():
 	# Tampilkan kembali karakter
 	visible = true
 	is_dead = false
-	in_party_combat = false
-	ai_attack_timer = 0.0
+	var game_node = get_tree().current_scene
+	if game_node and "current_party_command" in game_node:
+		party_command = game_node.current_party_command as PartyCommand
+	if game_node and "current_combat_state" in game_node:
+		in_party_combat = (game_node.current_combat_state == game_node.PartyCombatState.COMBAT)
+	else:
+		in_party_combat = false
+
+	if in_party_combat:
+		ai_attack_timer = randf_range(0.3, 0.7)
+	else:
+		ai_attack_timer = 0.0
 	attack_stuck_timer = 0.0
 	last_movement_direction = Vector2.DOWN
 	last_direction = Vector2.DOWN
