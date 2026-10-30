@@ -350,16 +350,7 @@ func _physics_process(delta: float):
 				shoot_towards(get_global_mouse_position())
 
 	# =====================================================
-	# HOLD RIGHT CLICK
-	# =====================================================
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
-		if not is_skill_locked():
-			target_position = get_global_mouse_position()
-			if global_position.distance_to(target_position) > 2.0:
-				is_moving = true
-
-	# =====================================================
-	# MOVEMENT (WASD / ARROW KEYS / MOUSE)
+	# MOVEMENT (WASD / ARROW KEYS)
 	# =====================================================
 	var input_dir := Vector2.ZERO
 	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
@@ -421,7 +412,7 @@ func _physics_process(delta: float):
 			is_moving = false
 			if not is_attacking and not is_skill_locked():
 				play_idle_animation()
-		elif not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and get_slide_collision_count() > 0:
+		elif get_slide_collision_count() > 0:
 			if get_real_velocity().length() < 12.0:
 				is_moving = false
 				if not is_attacking and not is_skill_locked():
@@ -503,25 +494,11 @@ func _unhandled_input(event: InputEvent):
 						skill_current_range = min_skill_range
 					elif current_skill_state == SkillState.CHARGING:
 						execute_skill_release()
-
-			elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-				if not is_skill_locked():
-					target_position = get_global_mouse_position()
-					is_moving = true
-					var direction := global_position.direction_to(target_position)
-					update_direction_animation(direction)
 		return
 
-	# Penanganan Input Mode Biasa (Basic Attack & Walk)
+	# Penanganan Input Mode Biasa (Basic Attack)
 	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			target_position = get_global_mouse_position()
-			is_moving = true
-			var direction := global_position.direction_to(target_position)
-			if not is_attacking:
-				update_direction_animation(direction)
-
-		elif event.button_index == MOUSE_BUTTON_LEFT:
+		if event.button_index == MOUSE_BUTTON_LEFT:
 			if attack_timer <= 0.0 and not is_attacking:
 				shoot_towards(get_global_mouse_position())
 
@@ -1428,9 +1405,7 @@ func _create_wall_shape(parent: Node2D, pos: Vector2, size: Vector2):
 
 func apply_knockback(force: Vector2):
 	knockback_velocity = force
-	# Batalkan pergerakan mouse klik satu kali agar dorongan terasa nyata
-	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
-		is_moving = false
+	is_moving = false
 
 
 # =========================================================

@@ -27,7 +27,6 @@ Dalam game ini, pemain mengendalikan sebuah regu (*party*) beranggotakan empat h
 | Input | Fungsi |
 |---|---|
 | `W`, `A`, `S`, `D` / Tombol Panah | Menggerakkan Leader aktif |
-| Tahan Klik Kanan | Menggerakkan Leader aktif menuju posisi kursor mouse |
 | `Shift` | Sprint (meningkatkan kecepatan dari konstanta dasar 128 px/s menjadi 220 px/s pada kode sumber, disertai efek debu) |
 | `Tab` | Mengganti Leader aktif secara berurutan (1 → 2 → 3 → 4 → 1) |
 | `1`–`4` | Memilih Leader aktif secara langsung (1: Archer 1, 2: Mage 1, 3: Archer 2, 4: Mage 2) |

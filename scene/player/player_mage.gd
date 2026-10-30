@@ -255,16 +255,9 @@ func _unhandled_input(event: InputEvent):
 				get_viewport().set_input_as_handled()
 		return
 
-	# Klik kanan untuk bergerak
+	# Serangan dasar klik kiri
 	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			target_position = get_global_mouse_position()
-			is_moving = true
-			var direction := global_position.direction_to(target_position)
-			if not is_attacking:
-				update_direction_animation(direction)
-
-		elif event.button_index == MOUSE_BUTTON_LEFT:
+		if event.button_index == MOUSE_BUTTON_LEFT:
 			if attack_timer <= 0.0 and not is_attacking:
 				shoot_towards(get_global_mouse_position())
 
@@ -286,12 +279,6 @@ func process_leader_movement(delta: float):
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		if attack_timer <= 0.0 and not is_attacking:
 			shoot_towards(get_global_mouse_position())
-
-	# Tahan klik kanan untuk mengarahkan pergerakan
-	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
-		target_position = get_global_mouse_position()
-		if global_position.distance_to(target_position) > 2.0:
-			is_moving = true
 
 	# Input keyboard WASD / Arrow
 	var input_dir := Vector2.ZERO
@@ -349,7 +336,7 @@ func process_leader_movement(delta: float):
 			is_moving = false
 			if not is_attacking:
 				play_idle_animation()
-		elif not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and get_slide_collision_count() > 0:
+		elif get_slide_collision_count() > 0:
 			if get_real_velocity().length() < 12.0:
 				is_moving = false
 				if not is_attacking:
@@ -920,8 +907,7 @@ func apply_camera_shake(intensity: float = 7.0):
 
 func apply_knockback(force: Vector2):
 	knockback_velocity = force
-	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
-		is_moving = false
+	is_moving = false
 
 
 func take_damage(amount: int, source_position: Vector2 = Vector2.ZERO):

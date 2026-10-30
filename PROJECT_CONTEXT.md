@@ -64,7 +64,7 @@ flank/
    - Memindai Rect2 kamera (+50 px margin) setiap 0.15 detik untuk memicu aggro tempur saat musuh terlihat di layar.
    - Menghasilkan dinding pembatas map (*WorldBorders*) secara dinamis saat runtime dari Rect layer `Ground`.
 2. **`scene/player/player_archer.gd`:**
-   - Logika kontrol manual Leader (WASD, klik kanan, sprint).
+   - Logika kontrol manual Leader (WASD, sprint).
    - Logika otonom Follower (mode menjelajah berbaris vs mode bertempur mandiri).
    - Serangan dasar panah (`arrow.tscn`) via klik kiri.
    - Skill khusus tombol `E`: *Charged Line Snipe* (kuota 3 tembakan, durasi 10s, indikator memanjang elastis).
@@ -93,7 +93,6 @@ flank/
 
 ### Skema Input (Terverifikasi dalam Pengujian Manual):
 - `W`, `A`, `S`, `D` / Panah: Gerak manual Leader.
-- Tahan `Klik Kanan`: Gerak Leader mengikuti posisi kursor mouse.
 - Tahan `Shift`: Sprint Leader dan Follower + memunculkan partikel debu lari.
 - `Tab`: Pergantian Leader berurutan secara siklis (1 ➔ 2 ➔ 3 ➔ 4 ➔ 1).
 - Angka `1`, `2`, `3`, `4`: Memilih Leader secara langsung sesuai nomor slot.
@@ -122,7 +121,7 @@ flank/
 ### A. Fitur yang Berhasil dalam Skenario Pengujian yang Telah Dilakukan:
 Klaim berikut dibatasi secara ketat pada skenario pengujian dasar yang telah dijalankan, dan **tidak mengasumsikan seluruh *edge case* telah teruji**:
 
-- **Pergerakan Leader & Formasi Follower:** Berhasil via WASD dan klik kanan; follower mengekor dan merespons U-turn 180° (*Diverifikasi via pengamatan manual user*).
+- **Pergerakan Leader & Formasi Follower:** Berhasil via WASD; follower mengekor dan merespons U-turn 180° (*Diverifikasi via pengamatan manual user*).
 - **Pergantian Leader & Sinkronisasi Kamera:** Berhasil via tombol Tab dan angka 1–4 (*Diverifikasi via pengamatan manual user & log runtime*).
 - **Komando Party FOLLOW (C) dan ATTACK (V):** Berhasil mengubah perilaku kawal barisan vs serang mandiri (*Diverifikasi via pengamatan manual user & log runtime*).
 - **Serangan Dasar (Klik Kiri):** Panah Archer dan bola sihir Mage berhasil ditembakkan dan mengenai musuh (*Diverifikasi via pengamatan manual user*).
