@@ -1,7 +1,7 @@
 extends Node2D
 
 # =========================================================
-# GAME CONTROLLER & 4-CHARACTER PARTY MANAGER
+# GAME CONTROLLER & 3-CHARACTER PARTY MANAGER
 # =========================================================
 
 @onready var camera: Camera2D = $Camera2D
@@ -28,27 +28,27 @@ var shake_decay: float = 35.0
 
 
 func _ready() -> void:
-	# 1. Daftarkan 4 anggota party dari scene
-	# Urutan: Archer_1, Mage_1, Archer_2, Mage_2
-	var names: Array[String] = ["Archer_1", "Mage_1", "Archer_2", "Mage_2"]
+	# 1. Daftarkan 3 anggota party dari scene
+	# Urutan: Knight_1, Mage_1, Archer_1
+	var names: Array[String] = ["Knight_1", "Mage_1", "Archer_1"]
 	for n in names:
 		var node := get_node_or_null(n) as CharacterBody2D
 		if node:
 			party_members.append(node)
 
-	# Fallback pencarian fleksibel jika node bernama Player_Archer / Player_Mage
+	# Fallback pencarian fleksibel jika node bernama Player_Knight / Player_Mage / Player_Archer
 	if party_members.is_empty():
 		for child in get_children():
 			if child.is_in_group("player") and child is CharacterBody2D:
 				party_members.append(child)
 
-	# 2. Nonaktifkan tabrakan fisik antar-seluruh anggota party (4 karakter)
+	# 2. Nonaktifkan tabrakan fisik antar-seluruh anggota party (3 karakter)
 	for i in range(party_members.size()):
 		for j in range(i + 1, party_members.size()):
 			party_members[i].add_collision_exception_with(party_members[j])
 			party_members[j].add_collision_exception_with(party_members[i])
 
-	# 3. Tentukan karakter awal sebagai Leader (Archer_1 = index 0)
+	# 3. Tentukan karakter awal sebagai Leader (Knight_1 = index 0)
 	set_active_leader(0)
 
 	# 4. Inisialisasi kamera dan batasan map
@@ -56,7 +56,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Tombol pintasan pergantian karakter: Tab (siklis) atau angka 1, 2, 3, 4
+	# Tombol pintasan pergantian karakter: Tab (siklis) atau angka 1, 2, 3
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_TAB:
 			switch_to_next_character()
@@ -69,9 +69,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_3:
 			switch_to_character(2)
-			get_viewport().set_input_as_handled()
-		elif event.keycode == KEY_4:
-			switch_to_character(3)
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_C:
 			set_party_command(PartyCommand.FOLLOW)

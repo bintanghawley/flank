@@ -6,6 +6,15 @@ extends CharacterBody2D
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
+@onready var shield_sprite: Sprite2D = get_node_or_null("ShieldSprite")
+
+# =========================
+# PARTY SHIELD GUARD (DARI KNIGHT)
+# =========================
+const SHIELD_CENTER_OFFSET: Vector2 = Vector2(0.0, 3.5)
+var is_shield_active: bool = false
+var shield_timer: float = 0.0
+var shield_tween: Tween = null
 
 # =========================
 # PARTY / LEADER / FOLLOWER
@@ -93,6 +102,7 @@ func _ready():
 	spawn_position = global_position
 	target_position = global_position
 	play_idle_animation()
+	_setup_shield_sprite()
 
 	if animated_sprite:
 		animated_sprite.animation_finished.connect(_on_animated_sprite_animation_finished)
@@ -191,6 +201,14 @@ func _physics_process(delta: float) -> void:
 	# Cooldown timer skill aktif
 	if skill_cooldown_timer > 0.0:
 		skill_cooldown_timer -= delta
+
+	# Shield timer & visual update (aktif konsisten baik sebagai Leader maupun Follower)
+	if is_shield_active or (shield_sprite and shield_sprite.visible):
+		if is_shield_active:
+			shield_timer -= delta
+			if shield_timer <= 0.0:
+				deactivate_shield()
+		update_shield_visual()
 
 	# Pembaruan saat sedang membidik skill
 	if is_aiming_skill:
@@ -930,6 +948,21 @@ func take_damage(amount: int, source_position: Vector2 = Vector2.ZERO):
 	if is_dead:
 		return
 
+	# Shield Guard: menahan seluruh damage serangan musuh
+	if is_shield_active:
+		var knockback_dir := Vector2.ZERO
+		if source_position != Vector2.ZERO and source_position != global_position:
+			knockback_dir = source_position.direction_to(global_position)
+		else:
+			knockback_dir = -last_direction
+		modulate = Color(1.8, 1.8, 2.4)
+		var tween = create_tween()
+		tween.tween_property(self, "modulate", Color.WHITE, 0.2)
+		apply_knockback(knockback_dir * 80.0)
+		apply_camera_shake(3.0)
+		print(name, " memblok serangan dengan perisai! 0 damage diterima.")
+		return
+
 	# [BUG 1 FIX]: Batalkan serangan dan bebaskan kontrol jika terkena hit
 	cancel_skill()
 
@@ -956,6 +989,7 @@ func take_damage(amount: int, source_position: Vector2 = Vector2.ZERO):
 
 func die():
 	cancel_skill()
+	deactivate_shield()
 	if is_dead:
 		return
 	is_dead = true
@@ -988,6 +1022,7 @@ func die():
 
 
 func respawn():
+	deactivate_shield()
 	is_flanking = false
 	flank_wp1 = Vector2.ZERO
 	flank_wp2 = Vector2.ZERO
@@ -1029,6 +1064,79 @@ func respawn():
 	var respawn_tween = create_tween()
 	respawn_tween.tween_property(self, "modulate:a", 1.0, 0.4)
 	print("Mage berhasil respawn!")
+
+
+# =========================================================
+# PARTY SHIELD GUARD (DARI SKILL KNIGHT)
+# =========================================================
+
+func _setup_shield_sprite() -> void:
+	if not shield_sprite or not is_instance_valid(shield_sprite):
+		if has_node("ShieldSprite"):
+			shield_sprite = get_node("ShieldSprite") as Sprite2D
+		else:
+			shield_sprite = Sprite2D.new()
+			shield_sprite.name = "ShieldSprite"
+			shield_sprite.texture = preload("res://assets/skills/knight/shield/shield.png")
+			shield_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			shield_sprite.z_index = 6
+			shield_sprite.position = SHIELD_CENTER_OFFSET
+			shield_sprite.scale = Vector2(0.85, 0.85)
+			shield_sprite.visible = false
+			add_child(shield_sprite)
+	if shield_sprite:
+		shield_sprite.visible = false
+		shield_sprite.modulate.a = 0.0
+
+
+func grant_shield(duration: float) -> void:
+	if is_dead:
+		return
+	is_shield_active = true
+	shield_timer = duration
+
+	_setup_shield_sprite()
+	if shield_sprite:
+		shield_sprite.visible = true
+		shield_sprite.modulate.a = 0.0
+		update_shield_visual()
+		if shield_tween and shield_tween.is_valid():
+			shield_tween.kill()
+		shield_tween = create_tween()
+		shield_tween.tween_property(shield_sprite, "modulate:a", 1.0, 0.25)\
+			.set_trans(Tween.TRANS_QUAD)\
+			.set_ease(Tween.EASE_OUT)
+
+	print(name, " menerima pelindung Shield Guard selama ", duration, " detik!")
+
+
+func deactivate_shield() -> void:
+	if not is_shield_active and not (shield_sprite and shield_sprite.visible):
+		return
+	is_shield_active = false
+	shield_timer = 0.0
+
+	if shield_sprite and shield_sprite.visible:
+		if shield_tween and shield_tween.is_valid():
+			shield_tween.kill()
+		shield_tween = create_tween()
+		shield_tween.tween_property(shield_sprite, "modulate:a", 0.0, 0.35)\
+			.set_trans(Tween.TRANS_QUAD)\
+			.set_ease(Tween.EASE_IN)
+		await shield_tween.finished
+		if not is_shield_active and shield_sprite:
+			shield_sprite.visible = false
+
+
+func update_shield_visual() -> void:
+	if not shield_sprite:
+		return
+	# Pelindung perisai tegak dan tepat berada di tengah tubuh karakter Mage (SHIELD_CENTER_OFFSET)
+	shield_sprite.rotation = 0.0
+	var float_y: float = sin(Time.get_ticks_msec() * 0.007) * 0.8
+	shield_sprite.position = SHIELD_CENTER_OFFSET + Vector2(0.0, float_y)
+	var pulse: float = 0.85 + sin(Time.get_ticks_msec() * 0.009) * 0.03
+	shield_sprite.scale = Vector2(pulse, pulse)
 
 
 # =========================================================

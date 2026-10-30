@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://dol0jnt4w2mn7" path="res://scene/enemy/enemy.tscn" id="2_xwcet"]
 [ext_resource type="PackedScene" uid="uid://dohfp8llv3rfc" path="res://scene/world/map_region_1.tscn" id="3_p1ry8"]
 [ext_resource type="PackedScene" path="res://scene/player/player_mage.tscn" id="4_mage"]
+[ext_resource type="PackedScene" path="res://scene/player/player_knight.tscn" id="5_knight"]
 
 [node name="Game" type="Node2D" unique_id=1512194323]
 position = Vector2(-1, 2)
@@ -20,7 +21,7 @@ limit_bottom = 3360
 position_smoothing_enabled = true
 position_smoothing_speed = 7.0
 
-[node name="Archer_1" parent="." unique_id=1380897880 instance=ExtResource("1_33cqm")]
+[node name="Knight_1" parent="." unique_id=1280897880 instance=ExtResource("5_knight")]
 y_sort_enabled = true
 position = Vector2(1680, 1120)
 
@@ -28,13 +29,9 @@ position = Vector2(1680, 1120)
 y_sort_enabled = true
 position = Vector2(1585, 1120)
 
-[node name="Archer_2" parent="." unique_id=1380897882 instance=ExtResource("1_33cqm")]
+[node name="Archer_1" parent="." unique_id=1380897880 instance=ExtResource("1_33cqm")]
 y_sort_enabled = true
 position = Vector2(1490, 1120)
-
-[node name="Mage_2" parent="." unique_id=1480987114 instance=ExtResource("4_mage")]
-y_sort_enabled = true
-position = Vector2(1395, 1120)
 
 [node name="Enemy1" parent="." unique_id=110304380 instance=ExtResource("2_xwcet")]
 z_index = 4

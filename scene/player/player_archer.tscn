@@ -25,6 +25,7 @@
 [ext_resource type="Texture2D" uid="uid://ldsyrk5pbqxy" path="res://assets/characters/archer/skill/release/skill-release-s.png" id="ext_sk_re_s"]
 [ext_resource type="Texture2D" uid="uid://botqpsntbovvf" path="res://assets/characters/archer/skill/release/skill-release-e.png" id="ext_sk_re_e"]
 [ext_resource type="Texture2D" uid="uid://b4dcsulpgbpoj" path="res://assets/characters/archer/skill/release/skill-release-w.png" id="ext_sk_re_w"]
+[ext_resource type="Texture2D" path="res://assets/skills/knight/shield/shield.png" id="ext_shield"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_n6v11"]
 atlas = ExtResource("2_f7y75")
@@ -1139,3 +1140,11 @@ visible = false
 position = Vector2(0.3000183, 5.6000023)
 scale = Vector2(0.99999976, 0.99999976)
 shape = SubResource("RectangleShape2D_iggao")
+
+[node name="ShieldSprite" type="Sprite2D" parent="." unique_id=1840897885]
+visible = false
+z_index = 6
+texture_filter = 1
+texture = ExtResource("ext_shield")
+position = Vector2(0, 2)
+scale = Vector2(0.85, 0.85)

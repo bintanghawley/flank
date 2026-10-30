@@ -14,7 +14,7 @@ Dokumen ini merupakan ringkasan teknis operasional proyek game **"Flank"**. Doku
 - **Genre:** Top-Down Real-Time Tactical Party Action RPG / Crawler 2D.
 - **Perspektif & Gaya Visual:** 2D Top-Down Orthographic (Y-Sorted), Pixel Art 16x16 (Sprite karakter diskalakan 5x).
 - **Konsep Inti Permainan:** 
-  Pemain mengendalikan 1 *Leader* aktif dan 3 *Follower* otonom (total 4 hero: 2 Archer dan 2 Mage). Anggota party mengekor di belakang Leader dalam barisan dinamis (*snake breadcrumb queue*). Pemain dapat menukar kendali Leader secara instan, mengubah mode komando taktis (*Follow / Attack*), melepaskan serangan proyektil dan skill area (AoE), serta memanfaatkan manuver melipir rintangan (*flanking*).
+  Pemain mengendalikan 1 *Leader* aktif dan 2 *Follower* otonom (total 3 hero: Knight, Mage, dan Archer). Anggota party mengekor di belakang Leader dalam barisan dinamis (*snake breadcrumb queue*). Pemain dapat menukar kendali Leader secara instan, mengubah mode komando taktis (*Follow / Attack*), melepaskan tebasan melee, serangan proyektil, dan skill khusus (Shield Guard, Meteor Strike, Line Snipe), serta memanfaatkan manuver melipir rintangan (*flanking*).
 
 ---
 
@@ -29,7 +29,7 @@ Dokumen ini merupakan ringkasan teknis operasional proyek game **"Flank"**. Doku
 - **Sistem Fisika:** 
   - 2D Physics Engine bawaan Godot.
   - **Collision Layer 1:** Lingkungan dunia fisik, dinding, rintangan, dan pembatas map (*WorldBorders*).
-  - Pengecualian tabrakan (*collision exception*) diterapkan antar-seluruh anggota party via `add_collision_exception_with()` agar tidak saling mendorong.
+  - Pengecualian tabrakan (*collision exception*) diterapkan antar-seluruh anggota party (3 karakter) via `add_collision_exception_with()` agar tidak saling mendorong.
 
 ---
 
@@ -46,7 +46,7 @@ flank/
 ├── scene/                   # Logika kode sumber dan hierarki node
 │   ├── effect/              # Efek visual mandiri (run_dust.tscn / .gd)
 │   ├── enemy/               # AI dan prefab musuh (enemy.tscn / .gd)
-│   ├── player/              # Entitas hero (player_archer dan player_mage)
+│   ├── player/              # Entitas hero (player_knight, player_mage, player_archer)
 │   ├── projectile/          # Proyektil dan efek area (arrow, magic_bolt, meteor)
 │   ├── world/               # Peta TileMapLayer (map_region_1.tscn)
 │   ├── game.gd              # Controller utama party, kamera, dan boundary
@@ -57,24 +57,29 @@ flank/
 
 ### Tanggung Jawab Komponen Kunci:
 1. **`scene/game.gd` (Game & Party Manager):**
-   - Mendaftarkan 4 anggota party (`Archer_1`, `Mage_1`, `Archer_2`, `Mage_2`).
-   - Mengelola pergantian Leader aktif dan penugasan slot antrean Follower (slot 1, 2, 3).
+   - Mendaftarkan 3 anggota party (`Knight_1`, `Mage_1`, `Archer_1`).
+   - Mengelola pergantian Leader aktif dan penugasan slot antrean Follower (slot 1 dan 2).
    - Menghitung riwayat jejak langkah (*breadcrumbs queue*) dan pembalikan antrean 180° (*cascade swap*).
    - Mengendalikan pergerakan kamera halus (*position smoothing*), offset target (+45 px vertikal), dan screen shake.
    - Memindai Rect2 kamera (+50 px margin) setiap 0.15 detik untuk memicu aggro tempur saat musuh terlihat di layar.
    - Menghasilkan dinding pembatas map (*WorldBorders*) secara dinamis saat runtime dari Rect layer `Ground`.
-2. **`scene/player/player_archer.gd`:**
+2. **`scene/player/player_knight.gd`:**
+   - Logika kontrol manual Leader (WASD, sprint) dan otonom Follower petarung melee.
+   - Serangan dasar tebasan pedang mouse-directed (jangkauan busur 90 px, damage 2, knockback 420 px/s, camera shake 7.0).
+   - Skill khusus tombol `E`: *Shield Guard* (durasi 3.5s, cooldown 6.0s; merapalkan pelindung perisai ke seluruh anggota party sekaligus: Knight, Mage, dan Archer. Perisai muncul tegak presisi di tengah visual tubuh masing-masing karakter setelah animasi rapalan Knight selesai dengan transisi fade-in/fade-out, tetap aktif saat pergantian karakter hingga durasi habis, serta menahan 100% damage serangan musuh untuk seluruh party).
+   - Perilaku AI tempur Follower: mendekati musuh hingga jarak melee (85 px), menebas berulang setiap 1.2s, dan otomatis mengaktifkan perisai saat HP kritis.
+3. **`scene/player/player_mage.gd`:**
+   - Logika pergerakan dan formasi party (arsitektur serupa dengan Archer).
+   - Serangan dasar bola sihir (`magic_bolt.tscn`) via klik kiri.
+   - Skill khusus tombol `E`: *Meteor Strike AoE* (indikator radius di kursor mouse, memanggil meteor jatuh).
+4. **`scene/player/player_archer.gd`:**
    - Logika kontrol manual Leader (WASD, sprint).
    - Logika otonom Follower (mode menjelajah berbaris vs mode bertempur mandiri).
    - Serangan dasar panah (`arrow.tscn`) via klik kiri.
    - Skill khusus tombol `E`: *Charged Line Snipe* (kuota 3 tembakan, durasi 10s, indikator memanjang elastis).
    - Algoritma raycasting manuver melipir rintangan (*flanking waypoints*).
    - Penanganan knockback decay, penerimaan damage, kematian (fade-out), dan respawn (3s).
-3. **`scene/player/player_mage.gd`:**
-   - Logika pergerakan dan formasi party (arsitektur serupa dengan Archer).
-   - Serangan dasar bola sihir (`magic_bolt.tscn`) via klik kiri.
-   - Skill khusus tombol `E`: *Meteor Strike AoE* (indikator radius di kursor mouse, memanggil meteor jatuh).
-4. **`scene/enemy/enemy.gd`:**
+5. **`scene/enemy/enemy.gd`:**
    - State AI musuh: `IDLE_PATROL` dan `CHASE`.
    - Serangan panah jarak jauh (320 px) dan kontak fisik (1 damage).
    - Bar HP ganda (merah untuk HP riil, kuning untuk animasi lag pengurangan damage).
@@ -85,21 +90,20 @@ flank/
 
 ## 4. DAFTAR KARAKTER & SKEMA KONTROL GAMEPLAY
 
-### Komposisi Party (Indeks 0–3):
-- **Slot 1 (Indeks 0):** `Archer_1` (Leader default saat game dimulai)
+### Komposisi Party (Indeks 0–2):
+- **Slot 1 (Indeks 0):** `Knight_1` (Leader default saat game dimulai)
 - **Slot 2 (Indeks 1):** `Mage_1`
-- **Slot 3 (Indeks 2):** `Archer_2`
-- **Slot 4 (Indeks 3):** `Mage_2`
+- **Slot 3 (Indeks 2):** `Archer_1`
 
 ### Skema Input (Terverifikasi dalam Pengujian Manual):
 - `W`, `A`, `S`, `D` / Panah: Gerak manual Leader.
 - Tahan `Shift`: Sprint Leader dan Follower + memunculkan partikel debu lari.
-- `Tab`: Pergantian Leader berurutan secara siklis (1 ➔ 2 ➔ 3 ➔ 4 ➔ 1).
-- Angka `1`, `2`, `3`, `4`: Memilih Leader secara langsung sesuai nomor slot.
+- `Tab`: Pergantian Leader berurutan secara siklis (1 ➔ 2 ➔ 3 ➔ 1).
+- Angka `1`, `2`, `3`: Memilih Leader secara langsung sesuai nomor slot (1: Knight, 2: Mage, 3: Archer).
 - Tombol `C`: Komando **FOLLOW** (follower dilarang menyerang, wajib berada di barisan).
 - Tombol `V`: Komando **ATTACK** (follower diizinkan keluar barisan dan bertarung mandiri).
-- `Klik Kiri`: Serangan dasar (Panah / Magic Bolt).
-- Tombol `E`: Masuk ke mode skill khusus karakter aktif.
+- `Klik Kiri`: Serangan dasar (Tebasan Melee Knight / Bola Sihir Mage / Panah Archer).
+- Tombol `E`: Masuk ke mode skill khusus karakter aktif (Knight: Shield Guard, Mage: Meteor Strike, Archer: Charged Line Snipe).
 
 ---
 
@@ -124,10 +128,10 @@ flank/
 Klaim berikut dibatasi secara ketat pada skenario pengujian dasar yang telah dijalankan, dan **tidak mengasumsikan seluruh *edge case* telah teruji**:
 
 - **Pergerakan Leader & Formasi Follower:** Berhasil via WASD; follower mengekor dan merespons U-turn 180° (*Diverifikasi via pengamatan manual user*).
-- **Pergantian Leader & Sinkronisasi Kamera:** Berhasil via tombol Tab dan angka 1–4 (*Diverifikasi via pengamatan manual user & log runtime*).
+- **Pergantian Leader & Sinkronisasi Kamera:** Berhasil via tombol Tab dan angka 1–3 (*Diverifikasi via pengamatan manual user & log runtime*).
 - **Komando Party FOLLOW (C) dan ATTACK (V):** Berhasil mengubah perilaku kawal barisan vs serang mandiri (*Diverifikasi via pengamatan manual user & log runtime*).
-- **Serangan Dasar (Klik Kiri):** Panah Archer dan bola sihir Mage berhasil ditembakkan dan mengenai musuh (*Diverifikasi via pengamatan manual user*).
-- **Skill Khusus (Tombol E):** *Charged Line Snipe* Archer dan *Meteor Strike* Mage berhasil diaktifkan dan memberikan dampak area (*Diverifikasi via pengamatan manual user*).
+- **Serangan Dasar (Klik Kiri):** Tebasan pedang Knight, panah Archer, dan bola sihir Mage berhasil diarahkan ke kursor dan mengenai musuh (*Diverifikasi via pengamatan manual user*).
+- **Skill Khusus (Tombol E):** *Shield Guard* Knight, *Charged Line Snipe* Archer, dan *Meteor Strike* Mage berhasil diaktifkan dan memberikan dampak taktis (*Diverifikasi via pengamatan manual user*).
 - **Siklus Kematian & Respawn:** Pengurangan HP saat terkena serangan musuh, transisi mati (fade-out), timer tunggu, dan kemunculan kembali karakter berhasil berjalan normal (*Diverifikasi via pengamatan manual user & log runtime*).
 
 > **Catatan Sumber Verifikasi Parameter:**  
@@ -140,7 +144,7 @@ Klaim berikut dibatasi secara ketat pada skenario pengujian dasar yang telah dij
 
 ### C. Technical Debt & Rencana Masa Depan (*Backlog*):
 *(Hanya dikerjakan jika secara spesifik diminta oleh pengguna)*
-1. **Refactoring Base Character:** Penggabungan duplikasi logika (~80%) antara `player_archer.gd` dan `player_mage.gd` ke dalam kelas dasar bersama.
+1. **Refactoring Base Character:** Penggabungan duplikasi logika (~80%) antara `player_knight.gd`, `player_archer.gd`, dan `player_mage.gd` ke dalam kelas dasar bersama.
 2. **UI / HUD Pemain:** Tampilan bar HP party di layar, indikator cooldown skill visual, dan ikon status komando.
 3. **Sistem Audio:** Integrasi BGM dan SFX (langkah, tembakan busur, sihir, ledakan, hit).
 4. **Sentralisasi InputMap:** Memindahkan konstanta fisik `KEY_*` di script ke action resmi di `project.godot`.
