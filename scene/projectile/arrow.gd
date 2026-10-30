@@ -2,7 +2,7 @@ extends Area2D
 
 const IMPACT_SCENE = preload("res://scene/projectile/arrow_impact.tscn")
 
-@export var speed: float = 500.0
+@export var speed: float = 580.0 # Kecepatan dasar panah (dipercepat menjadi 580.0 px/s)
 @export var damage: int = 1
 @export var shooter_group: String = "player" # "player" atau "enemy"
 var shooter_node: CharacterBody2D = null

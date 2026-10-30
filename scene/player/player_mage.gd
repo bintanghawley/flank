@@ -39,14 +39,17 @@ var last_direction := Vector2.DOWN
 var last_movement_direction := Vector2.DOWN
 
 # =========================
-# COMBAT SETTINGS
+# COMBAT SETTINGS & BASIC ATTACK PROJECTILE
 # =========================
 const MAGIC_BOLT_SCENE = preload("res://scene/projectile/magic_bolt.tscn")
 const DUST_SCENE = preload("res://scene/effect/run_dust.tscn")
 
+@export var controlled_projectile_speed: float = 500.0 # Kecepatan magic bolt saat Mage dikendalikan pemain (Leader - disesuaikan dikurangi sedikit menjadi 500.0 px/s)
+@export var follower_projectile_ratio: float = 1.0   # Rasio kecepatan magic bolt saat Mage menjadi follower (disamakan 1.0 dengan Leader)
+
 @export var attack_range: float = 520.0
 var attack_stuck_timer: float = 0.0
-@export var attack_cooldown: float = 0.8
+@export var attack_cooldown: float = 1.5 # Jeda tembakan serangan dasar (dinaikkan menjadi 1.5s agar basic attack fire rate Mage sedikit lebih lambat dari Archer)
 var attack_timer: float = 0.0
 var is_attacking: bool = false
 var attack_direction: Vector2 = Vector2.RIGHT
@@ -482,7 +485,7 @@ func process_follower_combat(delta: float) -> void:
 				play_idle_animation()
 			ai_attack_timer -= delta
 			if ai_attack_timer <= 0.0 and not is_attacking:
-				ai_attack_timer = randf_range(1.2, 1.5)
+				ai_attack_timer = attack_cooldown
 				shoot_towards(target_enemy.global_position)
 			return
 		else:
@@ -710,6 +713,18 @@ func shoot_towards(target_pos: Vector2):
 	reset_attack_state()
 
 
+func get_controlled_projectile_speed() -> float:
+	return controlled_projectile_speed
+
+
+func get_dynamic_projectile_speed() -> float:
+	if is_leader:
+		return controlled_projectile_speed
+
+	# Kecepatan proyektil magic bolt dibuat sama baik dikendalikan maupun tidak dikendalikan
+	return controlled_projectile_speed * follower_projectile_ratio
+
+
 func reset_attack_state():
 	# Frame ayunan tongkat sihir (~0.25 detik)
 	await get_tree().create_timer(0.24).timeout
@@ -723,6 +738,7 @@ func reset_attack_state():
 	bolt.direction = attack_direction
 	bolt.rotation = attack_direction.angle()
 	bolt.shooter_node = self
+	bolt.speed = get_dynamic_projectile_speed()
 	get_tree().current_scene.add_child(bolt)
 
 	# Tunggu sampai animasi attack selesai

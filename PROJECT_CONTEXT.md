@@ -113,6 +113,8 @@ flank/
    Unit melakukan raycast langsung ke target pada Collision Layer 1. Jika terhalang, sistem melakukan probe melintang (24–720 px) ke sisi kiri dan kanan untuk mencari celah tepi rintangan, lalu membuat dua titik pandu (*waypoints*) untuk melipir.
 4. **Siklus Kematian & Respawn:**
    Unit yang mencapai HP 0 mematikan collision-nya, memudar (fade-out), menunggu timer respawn (3s untuk player, 4s untuk musuh), lalu bangkit kembali di posisi awal dengan HP penuh.
+5. **Sistem Kecepatan Proyektil Dasar & Penyeimbangan Fire Rate:**
+   Kecepatan terbang proyektil panah dibuat seragam sebesar 580 px/s untuk Archer (baik terkendali maupun follower) serta musuh archer. Kecepatan proyektil bola sihir Mage disesuaikan dikurangi sedikit menjadi 500 px/s dan dibuat sama baik saat dikendalikan (Leader) maupun tidak dikendalikan (follower). Sedangkan *basic attack fire rate* diselaraskan secara konsisten antara karakter yang dikendalikan, follower, dan musuh model archer: frekuensi tembakan Archer (Leader dan follower) serta musuh archer sama-sama berjarak 1.4s, sementara Mage (Leader dan follower) sama-sama berjarak 1.5s.
 
 ---
 
@@ -129,7 +131,7 @@ Klaim berikut dibatasi secara ketat pada skenario pengujian dasar yang telah dij
 - **Siklus Kematian & Respawn:** Pengurangan HP saat terkena serangan musuh, transisi mati (fade-out), timer tunggu, dan kemunculan kembali karakter berhasil berjalan normal (*Diverifikasi via pengamatan manual user & log runtime*).
 
 > **Catatan Sumber Verifikasi Parameter:**  
-> Parameter numerik internal seperti kecepatan gerak (128 px/s normal, 220 px/s sprint), durasi cooldown serangan/skill, kekuatan dorongan knockback (`knockback_strength`), laju redaman (`knockback_decay = 1400.0`), jarak antrean (85 px), serta interval pemindaian aggro (0.15s) bersumber dari **inspeksi kode sumber dan log runtime**, bukan hasil pengukuran stopwatch manual pemain.
+> Parameter numerik internal seperti kecepatan gerak (128 px/s normal, 220 px/s sprint), kecepatan dasar proyektil (panah 580 px/s untuk Archer dan musuh, magic bolt 500 px/s untuk Mage baik terkendali maupun tidak), rasio kesetaraan proyektil (1.0), durasi cooldown serangan dasar (1.4s untuk Archer Leader/follower/musuh archer, 1.5s untuk Mage Leader/follower) / skill, kekuatan dorongan knockback (`knockback_strength`), laju redaman (`knockback_decay = 1400.0`), jarak antrean (85 px), serta interval pemindaian aggro (0.15s) bersumber dari **inspeksi kode sumber dan log runtime**, bukan hasil pengukuran stopwatch manual pemain.
 
 ### B. Masalah yang Sengaja Ditunda (*Deferred Issues*):
 - **Penyempurnaan AI Musuh & Flanking Navigasi:**

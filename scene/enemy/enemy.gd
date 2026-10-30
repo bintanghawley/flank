@@ -18,9 +18,10 @@ const ARROW_SCENE = preload("res://scene/projectile/arrow.tscn")
 const TRACE_SCENE = preload("res://scene/projectile/arrow_trace.tscn")
 
 @export var shoot_range: float = 320.0       # Jarak tembak musuh (pixel)
-@export var shoot_cooldown: float = 1.6     # Cooldown tembakan musuh (detik)
+@export var shoot_cooldown: float = 1.4     # Cooldown tembakan musuh (disamakan 1.4s dengan basic attack fire rate Archer pemain)
 @export var projectile_damage: int = 1      # Damage panah musuh
-@export var projectile_speed: float = 380.0 # Kecepatan panah musuh
+@export var projectile_speed: float = 580.0 # Kecepatan panah musuh (disamakan 580.0 px/s dengan archer player)
+@export var enemy_projectile_ratio: float = 1.0 # Rasio kecepatan panah musuh relatif terhadap speed karakter yang dikendalikan (1.0 = sama persis)
 
 var shoot_timer: float = 0.0
 var is_shooting: bool = false
@@ -74,7 +75,7 @@ func _ready():
 	current_health = max_health
 	spawn_position = global_position
 	wander_target = spawn_position
-	shoot_timer = randf_range(0.5, shoot_cooldown)
+	shoot_timer = randf_range(0.5, get_dynamic_shoot_cooldown())
 
 	setup_health_bar()
 	play_idle_animation()
@@ -461,6 +462,24 @@ func has_line_of_sight_to(target_node: Node2D) -> bool:
 	return has_clear_projectile_los_to(target_node, 14.0)
 
 
+func get_dynamic_projectile_speed() -> float:
+	# Panah musuh menggunakan model Archer, diselaraskan sama persis dengan kecepatan panah Archer pemain
+	var party = get_tree().get_nodes_in_group("player")
+	for p in party:
+		if is_instance_valid(p) and p.name.begins_with("Archer") and "controlled_projectile_speed" in p:
+			return p.controlled_projectile_speed * enemy_projectile_ratio
+	return projectile_speed
+
+
+func get_dynamic_shoot_cooldown() -> float:
+	# Musuh menggunakan model Archer, diselaraskan cooldown tembakannya dengan Archer pemain
+	var party = get_tree().get_nodes_in_group("player")
+	for p in party:
+		if is_instance_valid(p) and p.name.begins_with("Archer") and "attack_cooldown" in p:
+			return p.attack_cooldown
+	return shoot_cooldown
+
+
 func shoot_at_player():
 	if player == null or not is_instance_valid(player) or is_dead or is_shooting:
 		return
@@ -481,6 +500,7 @@ func shoot_at_player():
 	arrow.direction = dir
 	arrow.rotation = dir.angle()
 	arrow.shooter_group = "enemy"
+	projectile_speed = get_dynamic_projectile_speed()
 	arrow.speed = projectile_speed
 	arrow.damage = projectile_damage
 	arrow.modulate = Color(1.8, 0.4, 0.4) # Warna kemerahan agar jelas panah musuh
@@ -500,7 +520,7 @@ func shoot_at_player():
 		trace.modulate = Color(1.8, 0.4, 0.4)
 		get_parent().add_child(trace)
 
-	shoot_timer = shoot_cooldown
+	shoot_timer = get_dynamic_shoot_cooldown()
 
 	# Tunggu durasi animasi menembak selesai (~0.35 detik), lalu kembali ke idle
 	await get_tree().create_timer(0.35).timeout
@@ -771,7 +791,7 @@ func respawn():
 	damage_timer = 0.0
 	threat_target = null
 	threat_timer = 0.0
-	shoot_timer = randf_range(0.5, shoot_cooldown)
+	shoot_timer = randf_range(0.5, get_dynamic_shoot_cooldown())
 	is_shooting = false
 	last_direction = Vector2.DOWN
 

@@ -114,6 +114,12 @@ const TRACE_SCENE = preload("res://scene/projectile/arrow_trace.tscn")
 const DUST_SCENE = preload("res://scene/effect/run_dust.tscn")
 
 # =========================
+# BASIC ATTACK PROJECTILE SETTINGS
+# =========================
+@export var controlled_projectile_speed: float = 580.0 # Kecepatan panah saat Archer dikendalikan pemain (Leader)
+@export var follower_projectile_ratio: float = 1.0   # Rasio kecepatan panah saat Archer menjadi follower (disamakan 1.0 dengan Leader)
+
+# =========================
 # SPRINT DUST SETTINGS
 # =========================
 var dust_timer: float = 0.0
@@ -157,7 +163,7 @@ var skill_release_queued: bool = false
 
 @export var attack_range: float = 520.0    # Jarak jangkauan tembak ranged (pixel)
 var attack_stuck_timer: float = 0.0
-@export var attack_cooldown: float = 0.8   # Jeda tembakan (0.8 detik)
+@export var attack_cooldown: float = 1.4   # Jeda tembakan serangan dasar (dinaikkan menjadi 1.4s agar basic attack fire rate Archer berkurang sedikit)
 var attack_timer: float = 0.0
 var is_attacking: bool = false
 var attack_direction: Vector2 = Vector2.RIGHT
@@ -642,7 +648,7 @@ func process_follower_combat(delta: float) -> void:
 				play_idle_animation()
 			ai_attack_timer -= delta
 			if ai_attack_timer <= 0.0 and not is_attacking:
-				ai_attack_timer = randf_range(1.2, 1.5)
+				ai_attack_timer = attack_cooldown
 				shoot_towards(target_enemy.global_position)
 			return
 		else:
@@ -1151,6 +1157,18 @@ func shoot_at(target: Node2D):
 		shoot_towards(target.global_position)
 
 
+func get_controlled_projectile_speed() -> float:
+	return controlled_projectile_speed
+
+
+func get_dynamic_projectile_speed() -> float:
+	if is_leader:
+		return controlled_projectile_speed
+
+	# Kecepatan panah Archer dibuat sama baik dikendalikan maupun tidak dikendalikan (580.0 px/s)
+	return controlled_projectile_speed * follower_projectile_ratio
+
+
 func reset_attack_state():
 	# Tunggu sampai sekitar frame 3-4 dari animasi attack
 	await get_tree().create_timer(0.22).timeout
@@ -1166,6 +1184,7 @@ func reset_attack_state():
 	arrow.direction = attack_direction
 	arrow.rotation = attack_direction.angle()
 	arrow.shooter_node = self
+	arrow.speed = get_dynamic_projectile_speed()
 	if last_direction == Vector2.UP or animated_sprite.animation == "atk_n":
 		arrow.get_node("Sprite2D").z_index = 3
 	else:

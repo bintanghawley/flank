@@ -6,7 +6,7 @@ extends Area2D
 
 const FIREBALL_IMPACT_SCENE = preload("res://scene/projectile/fireball_impact.tscn")
 
-@export var speed: float = 520.0
+@export var speed: float = 500.0 # Kecepatan dasar magic bolt (disesuaikan dikurangi sedikit menjadi 500.0 px/s)
 @export var damage: int = 1 # Rebalanced: seimbang dengan panah Archer
 @export var shooter_group: String = "player"
 var shooter_node: CharacterBody2D = null

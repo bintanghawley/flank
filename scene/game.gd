@@ -141,6 +141,19 @@ func set_active_leader(idx: int) -> void:
 	print("Party Switch -> Leader aktif: [", active_leader_index + 1, "] ", leader.name)
 
 
+func get_active_leader() -> CharacterBody2D:
+	if not party_members.is_empty() and active_leader_index >= 0 and active_leader_index < party_members.size():
+		return party_members[active_leader_index]
+	return null
+
+
+func get_controlled_projectile_speed() -> float:
+	var leader := get_active_leader()
+	if leader and is_instance_valid(leader) and leader.has_method("get_controlled_projectile_speed"):
+		return leader.get_controlled_projectile_speed()
+	return 580.0
+
+
 func _process(delta: float) -> void:
 	handle_camera_shake(delta)
 	update_camera_target()
