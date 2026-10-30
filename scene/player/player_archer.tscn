@@ -1107,7 +1107,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_iggao"]
-size = Vector2(13.799984, 5.6000004)
+size = Vector2(13.8, 5.6)
 
 [node name="Player_Archer" type="CharacterBody2D" unique_id=1380897880]
 z_index = 4
@@ -1117,7 +1117,8 @@ script = ExtResource("1_04l4p")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1608748716]
 texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_84mjf")
-animation = &"atk_e"
+animation = &"idle_s"
+offset = Vector2(0, 4)
 metadata/_aseprite_wizard_interface_config_ = {
 "animation_section": false,
 "pending_changes": {
@@ -1137,8 +1138,7 @@ metadata/_aseprite_wizard_interface_config_ = {
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1152115181]
 visible = false
-position = Vector2(0.3000183, 5.6000023)
-scale = Vector2(0.99999976, 0.99999976)
+position = Vector2(0, 5.6)
 shape = SubResource("RectangleShape2D_iggao")
 
 [node name="ShieldSprite" type="Sprite2D" parent="." unique_id=1840897885]
@@ -1146,5 +1146,5 @@ visible = false
 z_index = 6
 texture_filter = 1
 texture = ExtResource("ext_shield")
-position = Vector2(0, 2)
+position = Vector2(0, 4)
 scale = Vector2(0.85, 0.85)

@@ -71,11 +71,14 @@ var damage_tween: Tween = null
 
 
 func _ready():
+	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("enemy")
 	current_health = max_health
 	spawn_position = global_position
 	wander_target = spawn_position
 	shoot_timer = randf_range(0.5, get_dynamic_shoot_cooldown())
+
+	_setup_player_collision_exceptions.call_deferred()
 
 	setup_health_bar()
 	play_idle_animation()
@@ -88,6 +91,14 @@ func _ready():
 	if hitbox and not hitbox.body_entered.is_connected(_on_hitbox_body_entered):
 		hitbox.body_entered.connect(_on_hitbox_body_entered)
 		hitbox.body_exited.connect(_on_hitbox_body_exited)
+
+
+func _setup_player_collision_exceptions() -> void:
+	var party := get_tree().get_nodes_in_group("player")
+	for p in party:
+		if is_instance_valid(p) and p is CollisionObject2D:
+			add_collision_exception_with(p)
+			p.add_collision_exception_with(self)
 
 
 func alert_to_combat(target: CharacterBody2D = null) -> void:
@@ -169,7 +180,7 @@ func _physics_process(delta):
 	if knockback_velocity != Vector2.ZERO:
 		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, knockback_decay * delta)
 		velocity = knockback_velocity
-		move_and_slide()
+		move_and_slide_with_separation()
 		if knockback_velocity.length() < 8.0:
 			knockback_velocity = Vector2.ZERO
 		return
@@ -210,35 +221,62 @@ func _physics_process(delta):
 		var has_los := has_clear_projectile_los_to(player, 12.0)
 		var dist_to_player: float = global_position.distance_to(player.global_position)
 
-		if has_los:
+		# 1. Jarak tembak dan manuver penembak jarak jauh
+		if dist_to_player <= shoot_range and has_los:
 			is_flanking = false
-			if dist_to_player <= shoot_range:
-				velocity = Vector2.ZERO
-				move_and_slide()
-				var look_dir := global_position.direction_to(player.global_position)
-				update_direction_animation(look_dir)
-
-				# Eksekusi tembakan musuh sesuai timer shoot_cooldown
-				if shoot_timer <= 0.0 and not is_shooting:
-					shoot_at_player()
-				if not is_shooting:
-					last_direction = get_8_direction(look_dir)
-					play_idle_animation()
+			# Jika musuh terlalu dekat (< 80 px), mundur perlahan (kiting) agar tidak menempel ke badan player
+			if dist_to_player < 80.0:
+				var retreat_dir := -dir
+				velocity = retreat_dir * (chase_speed * 0.75)
+				move_and_slide_with_separation()
+				update_direction_animation(dir)
 			else:
-				# Belum masuk shoot_range: dekati player secara langsung
-				if is_shooting:
-					velocity = Vector2.ZERO
-					move_and_slide()
-				else:
-					var move_dir: Vector2 = dir
-					velocity = move_dir * chase_speed
-					move_and_slide()
-					apply_smoothed_facing(move_dir, delta)
-		else:
-			# Terhalang pagar: navigasi 2-waypoint
+				# Berada dalam jarak tembak aman: berhenti melangkah maju dan fokus menembak
+				velocity = Vector2.ZERO
+				move_and_slide_with_separation()
+				update_direction_animation(dir)
+
+			# Eksekusi tembakan musuh sesuai timer shoot_cooldown
+			if shoot_timer <= 0.0 and not is_shooting:
+				shoot_at_player()
+			if not is_shooting and dist_to_player >= 80.0:
+				last_direction = get_8_direction(dir)
+				play_idle_animation()
+		elif dist_to_player <= 140.0:
+			# Jarak sudah sangat dekat (<= 140 px): Musuh penembak TIDAK BOLEH memaksakan diri maju menempel ke 0 px!
+			# Berhenti melangkah maju, hadap player, dan tembak jika cooldown siap
+			is_flanking = false
+			if dist_to_player < 80.0:
+				var retreat_dir := -dir
+				velocity = retreat_dir * (chase_speed * 0.75)
+				move_and_slide_with_separation()
+				update_direction_animation(dir)
+			else:
+				velocity = Vector2.ZERO
+				move_and_slide_with_separation()
+				update_direction_animation(dir)
+
+			if shoot_timer <= 0.0 and not is_shooting:
+				shoot_at_player()
+			if not is_shooting and dist_to_player >= 80.0:
+				last_direction = get_8_direction(dir)
+				play_idle_animation()
+		elif has_los:
+			# Belum masuk shoot_range: dekati player secara langsung
+			is_flanking = false
 			if is_shooting:
 				velocity = Vector2.ZERO
-				move_and_slide()
+				move_and_slide_with_separation()
+			else:
+				var move_dir: Vector2 = dir
+				velocity = move_dir * chase_speed
+				move_and_slide_with_separation()
+				apply_smoothed_facing(move_dir, delta)
+		else:
+			# Terhalang pagar / dinding fisik: navigasi 2-waypoint
+			if is_shooting:
+				velocity = Vector2.ZERO
+				move_and_slide_with_separation()
 			else:
 				flank_timeout -= delta
 				if not is_flanking or flank_timeout <= 0.0:
@@ -258,12 +296,12 @@ func _physics_process(delta):
 				if move_dir == Vector2.ZERO:
 					move_dir = last_direction
 				velocity = move_dir * chase_speed
-				move_and_slide()
+				move_and_slide_with_separation()
 				apply_smoothed_facing(move_dir, delta)
 	else:
 		# Patroli mutar-mutar santai di area
 		handle_idle_patrol(delta)
-		move_and_slide()
+		move_and_slide_with_separation()
 
 	# ---------------------------------------------------------
 	# 2. LOGIKA DAMAGE SAAT MENYENTUH ARCHER
@@ -322,13 +360,21 @@ func calculate_flank_waypoints(target_node: Node2D) -> bool:
 	var my_pos: Vector2 = global_position
 	var target_pos: Vector2 = target_node.global_position
 	
+	var exclude_rids: Array[RID] = [get_rid()]
+	if target_node is CollisionObject2D:
+		exclude_rids.append(target_node.get_rid())
+
 	# Raycast langsung ke target untuk mendeteksi titik benturan rintangan
 	var ray := PhysicsRayQueryParameters2D.create(my_pos, target_pos)
 	ray.collision_mask = 1 # Layer 1: dinding / pagar / rintangan fisik
-	ray.exclude = [self, target_node]
+	ray.exclude = exclude_rids
 	var hit := space_state.intersect_ray(ray)
 	if hit.is_empty():
 		return false
+		
+	var col = hit.get("collider")
+	if not (col is TileMapLayer or col is StaticBody2D):
+		return false # Bukan dinding fisik, tidak perlu flank
 		
 	var hit_pos: Vector2 = hit.position
 	var to_target: Vector2 = (target_pos - my_pos).normalized()
@@ -429,32 +475,45 @@ func has_clear_projectile_los_to(target_node: Node2D, clearance_radius: float = 
 	var from_pos: Vector2 = global_position
 	var to_pos: Vector2 = target_node.global_position
 	
+	var exclude_rids: Array[RID] = [get_rid()]
+	if target_node is CollisionObject2D:
+		exclude_rids.append(target_node.get_rid())
+
 	# 1. Ray tengah
 	var query_center := PhysicsRayQueryParameters2D.create(from_pos, to_pos)
 	query_center.collision_mask = 1 # Rintangan / pagar / dinding / tunggul
-	query_center.exclude = [self, target_node]
-	if not space_state.intersect_ray(query_center).is_empty():
-		return false
+	query_center.exclude = exclude_rids
+	var hit_center := space_state.intersect_ray(query_center)
+	if not hit_center.is_empty():
+		var col = hit_center.get("collider")
+		if col is TileMapLayer or col is StaticBody2D:
+			return false
 		
 	# 2. Vektor tegak lurus (perpendicular) untuk menguji lebar fisik proyektil
 	var fire_dir := (to_pos - from_pos).normalized()
 	if fire_dir == Vector2.ZERO:
-		return false
+		return true
 	var perp := Vector2(-fire_dir.y, fire_dir.x) * clearance_radius
 	
 	# 3. Ray sayap kiri (menguji apakah sisi kiri proyektil menyenggol rintangan)
 	var query_left := PhysicsRayQueryParameters2D.create(from_pos + perp, to_pos + perp)
 	query_left.collision_mask = 1
-	query_left.exclude = [self, target_node]
-	if not space_state.intersect_ray(query_left).is_empty():
-		return false
+	query_left.exclude = exclude_rids
+	var hit_left := space_state.intersect_ray(query_left)
+	if not hit_left.is_empty():
+		var col = hit_left.get("collider")
+		if col is TileMapLayer or col is StaticBody2D:
+			return false
 		
 	# 4. Ray sayap kanan (menguji apakah sisi kanan proyektil menyenggol rintangan)
 	var query_right := PhysicsRayQueryParameters2D.create(from_pos - perp, to_pos - perp)
 	query_right.collision_mask = 1
-	query_right.exclude = [self, target_node]
-	if not space_state.intersect_ray(query_right).is_empty():
-		return false
+	query_right.exclude = exclude_rids
+	var hit_right := space_state.intersect_ray(query_right)
+	if not hit_right.is_empty():
+		var col = hit_right.get("collider")
+		if col is TileMapLayer or col is StaticBody2D:
+			return false
 		
 	return true
 
@@ -823,6 +882,7 @@ func respawn():
 	visible = true
 	set_physics_process(true)
 	is_dead = false
+	_setup_player_collision_exceptions()
 
 	# Efek fade-in halus saat respawn
 	modulate.a = 0.2
@@ -875,3 +935,37 @@ func _on_hitbox_body_entered(body):
 func _on_hitbox_body_exited(body):
 	if body.is_in_group("player") or body.name == "Player_Archer":
 		is_touching_player = false
+
+
+func get_separation_vector() -> Vector2:
+	var separation := Vector2.ZERO
+	var min_sep_dist: float = 55.0 # Jarak personal aman antar karakter
+
+	# 1. Pisahkan diri dari musuh terdekat jika saling menempel
+	var enemies := get_tree().get_nodes_in_group("enemy")
+	for e in enemies:
+		if e != self and is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
+			var diff: Vector2 = global_position - e.global_position
+			var d: float = diff.length()
+			if d < min_sep_dist:
+				var push_dir: Vector2 = diff.normalized() if d > 0.5 else Vector2(1.0, 0.0)
+				separation += push_dir * (min_sep_dist - d)
+
+	# 2. Pisahkan diri dari anggota tim terdekat jika saling menumpuk
+	var players := get_tree().get_nodes_in_group("player")
+	for p in players:
+		if p != self and is_instance_valid(p) and not ("is_dead" in p and p.is_dead):
+			var diff: Vector2 = global_position - p.global_position
+			var d: float = diff.length()
+			if d < min_sep_dist:
+				var push_dir: Vector2 = diff.normalized() if d > 0.5 else Vector2(-1.0, 0.0)
+				separation += push_dir * (min_sep_dist - d)
+
+	return separation
+
+
+func move_and_slide_with_separation() -> void:
+	var sep := get_separation_vector()
+	if sep != Vector2.ZERO:
+		velocity += sep.limit_length(55.0) * 8.0
+	move_and_slide()

@@ -48,11 +48,24 @@ func _ready() -> void:
 			party_members[i].add_collision_exception_with(party_members[j])
 			party_members[j].add_collision_exception_with(party_members[i])
 
-	# 3. Tentukan karakter awal sebagai Leader (Knight_1 = index 0)
+	# 3. Nonaktifkan tabrakan fisik antara anggota party dan musuh agar tidak saling menyeret / mengunci
+	setup_party_enemy_collision_exceptions.call_deferred()
+
+	# 4. Tentukan karakter awal sebagai Leader (Knight_1 = index 0)
 	set_active_leader(0)
 
-	# 4. Inisialisasi kamera dan batasan map
+	# 5. Inisialisasi kamera dan batasan map
 	setup_camera_and_boundaries.call_deferred()
+
+
+func setup_party_enemy_collision_exceptions() -> void:
+	var enemies := get_tree().get_nodes_in_group("enemy")
+	for p in party_members:
+		if is_instance_valid(p) and p is CollisionObject2D:
+			for e in enemies:
+				if is_instance_valid(e) and e is CollisionObject2D:
+					p.add_collision_exception_with(e)
+					e.add_collision_exception_with(p)
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -43,13 +43,20 @@ var last_movement_direction := Vector2.DOWN
 # =========================
 const DUST_SCENE = preload("res://scene/effect/run_dust.tscn")
 
-@export var attack_range: float = 90.0      # Jarak jangkauan tebasan pedang
+@export var attack_range: float = 125.0     # Jarak jangkauan tebasan pedang
 @export var attack_damage: int = 2          # Damage tebasan melee Knight (lebih bertenaga dari proyektil)
 @export var attack_cooldown: float = 1.2    # Jeda tebasan serangan dasar
 var attack_stuck_timer: float = 0.0
 var attack_timer: float = 0.0
 var is_attacking: bool = false
 var attack_direction: Vector2 = Vector2.DOWN
+
+var is_slash_active: bool = false
+var slash_active_timer: float = 0.0
+var slash_windup_timer: float = 0.0
+var slash_hit_enemies: Array[Node2D] = []
+const SLASH_WINDUP_DELAY: float = 0.18    # Jeda ancang-ancang (~180ms, frame 0-2) sebelum bilah mengayun ke depan
+const SLASH_ACTIVE_DURATION: float = 0.20 # Window aktif sapuan tebasan pedang saat bilah memotong ke depan (200ms)
 
 # =========================
 # SPECIAL SKILL: SHIELD BLOCK (TOMBOL E)
@@ -91,11 +98,14 @@ var shake_decay: float = 35.0
 
 
 func _ready() -> void:
+	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("player")
 	current_health = max_health
 	spawn_position = global_position
 	target_position = global_position
 	play_idle_animation()
+
+	_setup_enemy_collision_exceptions.call_deferred()
 
 	if shield_sprite:
 		shield_sprite.visible = false
@@ -103,6 +113,14 @@ func _ready() -> void:
 
 	if animated_sprite:
 		animated_sprite.animation_finished.connect(_on_animated_sprite_animation_finished)
+
+
+func _setup_enemy_collision_exceptions() -> void:
+	var enemies := get_tree().get_nodes_in_group("enemy")
+	for e in enemies:
+		if is_instance_valid(e) and e is CollisionObject2D:
+			add_collision_exception_with(e)
+			e.add_collision_exception_with(self)
 
 
 func set_party_command(cmd: int) -> void:
@@ -220,11 +238,31 @@ func _physics_process(delta: float) -> void:
 				deactivate_shield()
 		update_shield_visual()
 
+	# Penanganan timing tebasan pedang: Windup (ancang-ancang) -> Active Slash Window (impact)
+	if is_attacking:
+		if slash_windup_timer > 0.0:
+			slash_windup_timer -= delta
+			if slash_windup_timer <= 0.0:
+				# Fase windup selesai, bilah pedang mengayun ke depan (impact frame)
+				is_slash_active = true
+				slash_active_timer = SLASH_ACTIVE_DURATION
+				execute_slash_damage(attack_direction)
+		elif is_slash_active:
+			slash_active_timer -= delta
+			if slash_active_timer <= 0.0:
+				is_slash_active = false
+			else:
+				execute_slash_damage(attack_direction)
+
 	# Timeout pengaman animasi attack
 	if is_attacking:
 		attack_stuck_timer += delta
 		if attack_stuck_timer >= 0.75:
 			is_attacking = false
+			is_slash_active = false
+			slash_windup_timer = 0.0
+			slash_active_timer = 0.0
+			slash_hit_enemies.clear()
 			attack_stuck_timer = 0.0
 			if not is_dead and not is_moving:
 				play_idle_animation()
@@ -237,6 +275,9 @@ func _physics_process(delta: float) -> void:
 			process_follower_combat(delta)
 		else:
 			process_follower_exploring(delta)
+
+	# Siklus debu lari terpusat untuk Leader dan Follower
+	handle_run_dust_cycle(delta)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -287,14 +328,12 @@ func process_leader_movement(delta: float) -> void:
 			play_idle_animation()
 
 	velocity = move_velocity + knockback_velocity
-	move_and_slide()
-
-	handle_run_dust_cycle(delta)
+	move_and_slide_with_separation()
 
 
 func handle_run_dust_cycle(delta: float) -> void:
 	var current_move_speed := velocity.length()
-	if current_move_speed >= (NORMAL_SPEED * 1.35) and not is_attacking and not is_dead:
+	if current_move_speed >= (NORMAL_SPEED * 1.35) and not is_attacking and not is_skill_animating and not is_dead:
 		dust_timer -= delta
 		if dust_timer <= 0.0:
 			dust_timer = DUST_INTERVAL
@@ -306,12 +345,36 @@ func handle_run_dust_cycle(delta: float) -> void:
 func spawn_run_dust(move_dir: Vector2) -> void:
 	if not get_parent():
 		return
+
 	var dust = DUST_SCENE.instantiate()
-	var feet_y: float = 24.0
-	var spawn_pos: Vector2 = global_position + Vector2(0, feet_y) - (move_dir * 8.0)
+	var feet_y: float = 36.0
+	var lag_x: float = 6.0
+	var lag_y: float = 4.0
+
+	if move_dir.y < -0.3:
+		# Arah atas (North, Northwest, Northeast): debu tertinggal di belakang kaki (di bawah tubuh)
+		feet_y = 38.0
+		lag_y = 10.0
+		lag_x = 7.0
+	elif absf(move_dir.y) <= 0.3:
+		# Arah samping murni (West, East): sejajar kaki, trailing horizontal
+		feet_y = 36.0
+		lag_y = 0.0
+		lag_x = 8.0
+	else:
+		# Arah bawah (South, Southwest, Southeast)
+		feet_y = 38.0
+		lag_y = 6.0
+		lag_x = 6.0
+
+	var feet_pos := global_position + Vector2(0.0, feet_y)
+	var spawn_pos := feet_pos - Vector2(move_dir.x * lag_x, move_dir.y * lag_y)
+	spawn_pos += Vector2(randf_range(-3.0, 3.0), randf_range(-1.5, 1.5))
+
 	dust.global_position = spawn_pos
-	dust.scale = Vector2(3.5, 3.5)
-	dust.modulate = Color(1.0, 1.0, 1.0, 0.75)
+	dust.flip_h = randf() > 0.5
+	dust.scale = Vector2(randf_range(3.5, 4.5), randf_range(3.5, 4.5))
+	dust.z_index = 3 # Di bawah tubuh karakter (z_index 4) namun di atas lantai & bayangan
 	get_parent().add_child(dust)
 
 
@@ -330,55 +393,95 @@ func has_valid_attack_target() -> bool:
 	return false
 
 
-func shoot_towards(target_pos: Vector2) -> void:
-	if attack_timer > 0.0 or is_attacking or is_dead:
-		return
+func has_line_of_sight_to(target_node: Node2D) -> bool:
+	if not target_node or not is_instance_valid(target_node):
+		return false
+	var space_state := get_world_2d().direct_space_state
+	var knight_center := global_position + Vector2(0.0, 25.0)
+	var exclude_rids: Array[RID] = [get_rid()]
+	if target_node is CollisionObject2D:
+		exclude_rids.append(target_node.get_rid())
+	var query := PhysicsRayQueryParameters2D.create(knight_center, target_node.global_position)
+	query.collision_mask = 1 # Rintangan / dinding Layer 1
+	query.exclude = exclude_rids
+	var hit := space_state.intersect_ray(query)
+	if not hit.is_empty():
+		var col = hit.get("collider")
+		if col is TileMapLayer or col is StaticBody2D:
+			return false # Hanya dinding/pagar fisik yang memblokir tebasan
+	return true
 
-	if is_leader and not has_valid_attack_target():
+
+func shoot_towards(target_pos: Vector2) -> void:
+	if attack_timer > 0.0 or is_attacking or is_dead or is_skill_animating:
 		return
 
 	is_moving = false
 	velocity = Vector2.ZERO
 
-	var center_pos := global_position + Vector2(0.0, 5.0)
-	var dir := center_pos.direction_to(target_pos)
+	var knight_center := global_position + Vector2(0.0, 25.0)
+	var dir := knight_center.direction_to(target_pos)
 	if dir == Vector2.ZERO:
 		dir = last_direction
 
 	attack_direction = dir
-	last_direction = get_8_direction(dir)
+	last_direction = get_cardinal_direction(dir)
 
 	is_attacking = true
+	is_slash_active = false
+	slash_windup_timer = SLASH_WINDUP_DELAY
+	slash_active_timer = 0.0
+	slash_hit_enemies.clear()
 	play_attack_animation()
 	attack_timer = attack_cooldown
 
-	execute_melee_slash()
 
-
-func execute_melee_slash() -> void:
-	# Tunggu momen puncak tebasan pedang (~0.2 detik)
-	await get_tree().create_timer(0.20).timeout
-	if is_dead or not is_instance_valid(self):
-		return
-
-	var center_pos := global_position + Vector2(0.0, 5.0)
+func execute_slash_damage(attack_dir: Vector2) -> void:
+	var slash_range: float = 125.0      # Jangkauan visual tebasan (pixel-art 5x)
+	var slash_arc_deg: float = 170.0   # Sudut sapuan tebasan (170 derajat ke depan)
+	var close_contact_radius: float = 65.0 # Area kontak dekat sekeliling tubuh Knight (musuh menempel)
+	
+	var knight_center := global_position + Vector2(0.0, 25.0)
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	var hit_any: bool = false
-
+	
 	for e in enemies:
-		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
-			var dist := center_pos.distance_to(e.global_position)
-			if dist <= attack_range:
-				var to_enemy := center_pos.direction_to(e.global_position)
-				# Batasi sudut tebasan melee dalam sudut ~110 derajat di depan arah ayunan
-				if attack_direction.dot(to_enemy) >= -0.2:
-					hit_any = true
-					if e.has_method("take_damage"):
-						e.take_damage(attack_damage, self)
-					elif "current_health" in e:
-						e.current_health -= attack_damage
-					if "knockback_velocity" in e:
-						e.knockback_velocity = attack_direction * 420.0
+		if not is_instance_valid(e) or ("is_dead" in e and e.is_dead) or e in slash_hit_enemies:
+			continue
+			
+		var to_enemy: Vector2 = e.global_position - knight_center
+		var dist: float = to_enemy.length()
+		
+		var is_hit: bool = false
+		
+		# 1. Musuh menempel/sangat dekat di sekeliling tubuh Knight pasti kena hit
+		if dist <= close_contact_radius:
+			is_hit = true
+		# 2. Musuh berada dalam jangkauan tebasan dan sudut busur arah hadap
+		elif dist <= slash_range:
+			var angle_diff: float = absf(attack_dir.angle_to(to_enemy))
+			if angle_diff <= deg_to_rad(slash_arc_deg * 0.5):
+				# Pastikan tidak terhalang dinding/pagar tebal
+				if has_line_of_sight_to(e):
+					is_hit = true
+					
+		if is_hit:
+			slash_hit_enemies.append(e)
+			hit_any = true
+			if e.has_method("take_damage"):
+				e.take_damage(attack_damage, self)
+			elif "hp" in e:
+				e.hp -= attack_damage
+			elif "current_health" in e:
+				e.current_health -= attack_damage
+			
+			var knock_dir: Vector2 = (e.global_position - knight_center).normalized()
+			if knock_dir == Vector2.ZERO:
+				knock_dir = attack_dir
+			if e.has_method("apply_knockback"):
+				e.apply_knockback(knock_dir * 300.0)
+			elif "knockback_velocity" in e:
+				e.knockback_velocity = knock_dir * 300.0
 
 	if hit_any:
 		apply_camera_shake(camera_shake_strength)
@@ -389,7 +492,8 @@ func execute_melee_slash() -> void:
 # =========================================================
 
 func activate_shield() -> void:
-	if is_dead or is_skill_animating or is_shield_active:
+	# Skill aktif (tombol 'E') HANYA boleh digunakan saat Knight menjadi Leader yang dikendalikan pemain
+	if not is_leader or is_dead or is_skill_animating or is_shield_active:
 		return
 	is_moving = false
 	velocity = Vector2.ZERO
@@ -473,7 +577,7 @@ func update_shield_visual() -> void:
 func process_follower_exploring(delta: float) -> void:
 	if is_skill_animating:
 		velocity = knockback_velocity
-		move_and_slide()
+		move_and_slide_with_separation()
 		return
 
 	if animated_sprite.animation.begins_with("atk_") and not is_attacking:
@@ -506,7 +610,7 @@ func process_follower_exploring(delta: float) -> void:
 		if leader_node and is_instance_valid(leader_node) and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
 		play_idle_animation()
-		move_and_slide()
+		move_and_slide_with_separation()
 		return
 
 	# Sistem Hysteresis Deadzone
@@ -522,7 +626,7 @@ func process_follower_exploring(delta: float) -> void:
 	if should_stop:
 		velocity = knockback_velocity
 		is_moving = false
-		move_and_slide()
+		move_and_slide_with_separation()
 		global_position = global_position.move_toward(follow_slot, 40.0 * delta)
 		if not leader_is_moving and leader_node and is_instance_valid(leader_node) and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
@@ -544,7 +648,7 @@ func process_follower_exploring(delta: float) -> void:
 		var current_speed: float = min(follow_speed, dist_to_slot / max(delta, 0.001))
 
 		velocity = (move_dir * current_speed) + knockback_velocity
-		move_and_slide()
+		move_and_slide_with_separation()
 		is_moving = true
 		last_movement_direction = move_dir
 		update_direction_animation(move_dir)
@@ -555,7 +659,7 @@ func process_follower_combat(delta: float) -> void:
 		return
 	if is_attacking or is_skill_animating:
 		velocity = knockback_velocity
-		move_and_slide()
+		move_and_slide_with_separation()
 		return
 
 	# Cari musuh hidup terdekat
@@ -584,7 +688,7 @@ func process_follower_combat(delta: float) -> void:
 		is_flanking = false
 		velocity = knockback_velocity
 		is_moving = false
-		move_and_slide()
+		move_and_slide_with_separation()
 		last_direction = get_cardinal_direction(global_position.direction_to(target_enemy.global_position))
 		if not is_attacking and not is_skill_animating:
 			play_idle_animation()
@@ -598,7 +702,7 @@ func process_follower_combat(delta: float) -> void:
 		var move_dir := global_position.direction_to(target_enemy.global_position)
 		velocity = (move_dir * NORMAL_SPEED) + knockback_velocity
 		is_moving = true
-		move_and_slide()
+		move_and_slide_with_separation()
 		last_movement_direction = move_dir
 		update_direction_animation(move_dir)
 
@@ -636,10 +740,6 @@ func take_damage(amount: int, source_position = null) -> void:
 	var tween = create_tween()
 	tween.tween_property(self, "modulate", Color.WHITE, 0.25)
 
-	# Follower Knight otomatis menyalakan shield jika HP terancam
-	if not is_leader and current_health <= 6 and skill_cooldown_timer <= 0.0 and not is_skill_animating and not is_shield_active:
-		activate_shield()
-
 	if current_health <= 0:
 		die()
 
@@ -653,6 +753,10 @@ func die() -> void:
 	velocity = Vector2.ZERO
 	is_moving = false
 	is_attacking = false
+	is_slash_active = false
+	slash_windup_timer = 0.0
+	slash_active_timer = 0.0
+	slash_hit_enemies.clear()
 	deactivate_shield()
 
 	if collision_shape:
@@ -718,6 +822,10 @@ func play_skill_animation() -> void:
 func _on_animated_sprite_animation_finished() -> void:
 	if is_attacking:
 		is_attacking = false
+		is_slash_active = false
+		slash_windup_timer = 0.0
+		slash_active_timer = 0.0
+		slash_hit_enemies.clear()
 		attack_stuck_timer = 0.0
 		if not is_dead and not is_moving:
 			play_idle_animation()
@@ -793,3 +901,37 @@ func apply_camera_shake(intensity: float = -1.0) -> void:
 func get_controlled_projectile_speed() -> float:
 	# Fallback kompatibilitas sistem proyektil saat Knight bertindak sebagai Leader
 	return 580.0
+
+
+func get_separation_vector() -> Vector2:
+	var separation := Vector2.ZERO
+	var min_sep_dist: float = 55.0 # Jarak personal aman antar karakter
+
+	# 1. Pisahkan diri dari musuh terdekat jika saling menempel
+	var enemies := get_tree().get_nodes_in_group("enemy")
+	for e in enemies:
+		if e != self and is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
+			var diff: Vector2 = global_position - e.global_position
+			var d: float = diff.length()
+			if d < min_sep_dist:
+				var push_dir: Vector2 = diff.normalized() if d > 0.5 else Vector2(1.0, 0.0)
+				separation += push_dir * (min_sep_dist - d)
+
+	# 2. Pisahkan diri dari anggota tim terdekat jika saling menumpuk
+	var players := get_tree().get_nodes_in_group("player")
+	for p in players:
+		if p != self and is_instance_valid(p) and not ("is_dead" in p and p.is_dead):
+			var diff: Vector2 = global_position - p.global_position
+			var d: float = diff.length()
+			if d < min_sep_dist:
+				var push_dir: Vector2 = diff.normalized() if d > 0.5 else Vector2(-1.0, 0.0)
+				separation += push_dir * (min_sep_dist - d)
+
+	return separation
+
+
+func move_and_slide_with_separation() -> void:
+	var sep := get_separation_vector()
+	if sep != Vector2.ZERO:
+		velocity += sep.limit_length(55.0) * 8.0
+	move_and_slide()

@@ -97,15 +97,25 @@ var knockback_decay: float = 1400.0
 
 
 func _ready():
+	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("player")
 	current_health = max_health
 	spawn_position = global_position
 	target_position = global_position
 	play_idle_animation()
 	_setup_shield_sprite()
+	_setup_enemy_collision_exceptions.call_deferred()
 
 	if animated_sprite:
 		animated_sprite.animation_finished.connect(_on_animated_sprite_animation_finished)
+
+
+func _setup_enemy_collision_exceptions() -> void:
+	var enemies := get_tree().get_nodes_in_group("enemy")
+	for e in enemies:
+		if is_instance_valid(e) and e is CollisionObject2D:
+			add_collision_exception_with(e)
+			e.add_collision_exception_with(self)
 
 
 func set_party_command(cmd: int) -> void:
@@ -290,7 +300,7 @@ func _unhandled_input(event: InputEvent):
 func process_leader_movement(delta: float):
 	if is_aiming_skill or is_skill_releasing:
 		velocity = knockback_velocity
-		move_and_slide()
+		move_and_slide_with_separation()
 		return
 
 	if attack_timer > 0.0:
@@ -348,7 +358,7 @@ func process_leader_movement(delta: float):
 			play_idle_animation()
 
 	velocity = move_velocity + knockback_velocity
-	move_and_slide()
+	move_and_slide_with_separation()
 
 	# Respon benturan saat klik mouse
 	if is_moving:
@@ -371,7 +381,7 @@ func process_leader_movement(delta: float):
 func process_follower_logic(delta: float) -> void:
 	if not leader_node or not is_instance_valid(leader_node) or ("is_dead" in leader_node and leader_node.is_dead):
 		velocity = knockback_velocity
-		move_and_slide()
+		move_and_slide_with_separation()
 		if not is_attacking:
 			play_idle_animation()
 		return
@@ -417,7 +427,7 @@ func process_follower_exploring(delta: float) -> void:
 		if "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
 		play_idle_animation()
-		move_and_slide()
+		move_and_slide_with_separation()
 		return
 
 	# Sistem Hysteresis Deadzone
@@ -433,7 +443,7 @@ func process_follower_exploring(delta: float) -> void:
 	if should_stop:
 		velocity = knockback_velocity
 		is_moving = false
-		move_and_slide()
+		move_and_slide_with_separation()
 		global_position = global_position.move_toward(follow_slot, 40.0 * delta)
 		if not leader_is_moving and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
@@ -455,7 +465,7 @@ func process_follower_exploring(delta: float) -> void:
 		var current_speed: float = min(follow_speed, dist_to_slot / max(delta, 0.001))
 
 		velocity = (move_dir * current_speed) + knockback_velocity
-		move_and_slide()
+		move_and_slide_with_separation()
 		is_moving = true
 		last_movement_direction = move_dir
 		update_direction_animation(move_dir)
@@ -465,7 +475,7 @@ func process_follower_combat(delta: float) -> void:
 		return
 	if is_attacking:
 		velocity = knockback_velocity
-		move_and_slide()
+		move_and_slide_with_separation()
 		return
 		
 	# 1. Cari musuh hidup terdekat di dalam layar kamera
@@ -497,7 +507,7 @@ func process_follower_combat(delta: float) -> void:
 		if dist_to_enemy <= COMBAT_ATTACK_RANGE:
 			velocity = knockback_velocity
 			is_moving = false
-			move_and_slide()
+			move_and_slide_with_separation()
 			last_direction = get_cardinal_direction(global_position.direction_to(target_enemy.global_position))
 			if not is_attacking:
 				play_idle_animation()
@@ -511,7 +521,7 @@ func process_follower_combat(delta: float) -> void:
 			var move_dir := global_position.direction_to(target_enemy.global_position)
 			velocity = (move_dir * NORMAL_SPEED) + knockback_velocity
 			is_moving = true
-			move_and_slide()
+			move_and_slide_with_separation()
 			last_movement_direction = move_dir
 			apply_smoothed_facing(move_dir, delta)
 			return
@@ -536,7 +546,7 @@ func process_follower_combat(delta: float) -> void:
 		move_dir = last_direction
 	velocity = (move_dir * NORMAL_SPEED) + knockback_velocity
 	is_moving = true
-	move_and_slide()
+	move_and_slide_with_separation()
 	last_movement_direction = move_dir
 	apply_smoothed_facing(move_dir, delta)
 func calculate_flank_waypoints(target_node: Node2D) -> bool:
@@ -546,13 +556,21 @@ func calculate_flank_waypoints(target_node: Node2D) -> bool:
 	var my_pos: Vector2 = global_position
 	var target_pos: Vector2 = target_node.global_position
 	
+	var exclude_rids: Array[RID] = [get_rid()]
+	if target_node is CollisionObject2D:
+		exclude_rids.append(target_node.get_rid())
+
 	# Raycast langsung ke target untuk mendeteksi titik benturan rintangan
 	var ray := PhysicsRayQueryParameters2D.create(my_pos, target_pos)
 	ray.collision_mask = 1 # Layer 1: dinding / pagar / rintangan fisik
-	ray.exclude = [self, target_node]
+	ray.exclude = exclude_rids
 	var hit := space_state.intersect_ray(ray)
 	if hit.is_empty():
 		return false
+		
+	var col = hit.get("collider")
+	if not (col is TileMapLayer or col is StaticBody2D):
+		return false # Bukan dinding fisik, tidak perlu flank
 		
 	var hit_pos: Vector2 = hit.position
 	var to_target: Vector2 = (target_pos - my_pos).normalized()
@@ -645,12 +663,19 @@ func has_clear_projectile_los_to(target_node: Node2D, clearance_radius: float = 
 	var from_pos: Vector2 = global_position
 	var to_pos: Vector2 = target_node.global_position
 	
+	var exclude_rids: Array[RID] = [get_rid()]
+	if target_node is CollisionObject2D:
+		exclude_rids.append(target_node.get_rid())
+
 	# 1. Ray tengah
 	var query_center := PhysicsRayQueryParameters2D.create(from_pos, to_pos)
 	query_center.collision_mask = 1 # Rintangan / pagar / dinding / tunggul
-	query_center.exclude = [self, target_node]
-	if not space_state.intersect_ray(query_center).is_empty():
-		return false
+	query_center.exclude = exclude_rids
+	var hit_center := space_state.intersect_ray(query_center)
+	if not hit_center.is_empty():
+		var col = hit_center.get("collider")
+		if col is TileMapLayer or col is StaticBody2D:
+			return false
 		
 	# 2. Vektor tegak lurus (perpendicular) untuk menguji lebar fisik proyektil
 	var fire_dir := (to_pos - from_pos).normalized()
@@ -661,16 +686,22 @@ func has_clear_projectile_los_to(target_node: Node2D, clearance_radius: float = 
 	# 3. Ray sayap kiri (menguji apakah sisi kiri proyektil menyenggol rintangan)
 	var query_left := PhysicsRayQueryParameters2D.create(from_pos + perp, to_pos + perp)
 	query_left.collision_mask = 1
-	query_left.exclude = [self, target_node]
-	if not space_state.intersect_ray(query_left).is_empty():
-		return false
+	query_left.exclude = exclude_rids
+	var hit_left := space_state.intersect_ray(query_left)
+	if not hit_left.is_empty():
+		var col = hit_left.get("collider")
+		if col is TileMapLayer or col is StaticBody2D:
+			return false
 		
 	# 4. Ray sayap kanan (menguji apakah sisi kanan proyektil menyenggol rintangan)
 	var query_right := PhysicsRayQueryParameters2D.create(from_pos - perp, to_pos - perp)
 	query_right.collision_mask = 1
-	query_right.exclude = [self, target_node]
-	if not space_state.intersect_ray(query_right).is_empty():
-		return false
+	query_right.exclude = exclude_rids
+	var hit_right := space_state.intersect_ray(query_right)
+	if not hit_right.is_empty():
+		var col = hit_right.get("collider")
+		if col is TileMapLayer or col is StaticBody2D:
+			return false
 		
 	return true
 
@@ -902,8 +933,8 @@ func play_attack_animation():
 
 func handle_run_dust_cycle(delta: float) -> void:
 	var current_move_speed := velocity.length()
-	# [PERBAIKAN BUG 2]: Berbasis kecepatan nyata, aktif untuk Leader dan Follower
-	if current_move_speed >= (NORMAL_SPEED * 1.35) and not is_attacking and not is_dead:
+	# [PERBAIKAN BUG 2]: Berbasis kecepatan nyata, aktif untuk Leader dan Follower saat sprint
+	if current_move_speed >= (NORMAL_SPEED * 1.35) and not is_attacking and not is_aiming_skill and not is_skill_releasing and not is_dead:
 		dust_timer -= delta
 		if dust_timer <= 0.0:
 			dust_timer = DUST_INTERVAL
@@ -912,19 +943,39 @@ func handle_run_dust_cycle(delta: float) -> void:
 		dust_timer = 0.0
 
 
-func spawn_run_dust(move_dir: Vector2):
+func spawn_run_dust(move_dir: Vector2) -> void:
 	if not get_parent():
 		return
 
 	var dust = DUST_SCENE.instantiate()
-	var feet_pos := global_position + Vector2(0.0, 30.0)
-	var spawn_pos := feet_pos - Vector2(move_dir.x * 5.0, move_dir.y * 2.0)
+	var feet_y: float = 36.0
+	var lag_x: float = 6.0
+	var lag_y: float = 4.0
+
+	if move_dir.y < -0.3:
+		# Arah atas (North, Northwest, Northeast): debu tertinggal di belakang kaki (di bawah tubuh)
+		feet_y = 38.0
+		lag_y = 10.0
+		lag_x = 7.0
+	elif absf(move_dir.y) <= 0.3:
+		# Arah samping murni (West, East): sejajar kaki, trailing horizontal
+		feet_y = 36.0
+		lag_y = 0.0
+		lag_x = 8.0
+	else:
+		# Arah bawah (South, Southwest, Southeast)
+		feet_y = 38.0
+		lag_y = 6.0
+		lag_x = 6.0
+
+	var feet_pos := global_position + Vector2(0.0, feet_y)
+	var spawn_pos := feet_pos - Vector2(move_dir.x * lag_x, move_dir.y * lag_y)
 	spawn_pos += Vector2(randf_range(-3.0, 3.0), randf_range(-1.5, 1.5))
 
 	dust.global_position = spawn_pos
 	dust.flip_h = randf() > 0.5
 	dust.scale = Vector2(randf_range(3.5, 4.5), randf_range(3.5, 4.5))
-	dust.z_index = 2
+	dust.z_index = 3 # Di bawah tubuh karakter (z_index 4) namun di atas lantai & bayangan
 	get_parent().add_child(dust)
 
 
@@ -1294,3 +1345,37 @@ func get_4_direction_vector(dir_str: String) -> Vector2:
 		"s": return Vector2.DOWN
 		"w": return Vector2.LEFT
 		_: return Vector2.RIGHT
+
+
+func get_separation_vector() -> Vector2:
+	var separation := Vector2.ZERO
+	var min_sep_dist: float = 55.0 # Jarak personal aman antar karakter
+
+	# 1. Pisahkan diri dari musuh terdekat jika saling menempel
+	var enemies := get_tree().get_nodes_in_group("enemy")
+	for e in enemies:
+		if e != self and is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
+			var diff: Vector2 = global_position - e.global_position
+			var d: float = diff.length()
+			if d < min_sep_dist:
+				var push_dir: Vector2 = diff.normalized() if d > 0.5 else Vector2(1.0, 0.0)
+				separation += push_dir * (min_sep_dist - d)
+
+	# 2. Pisahkan diri dari anggota tim terdekat jika saling menumpuk
+	var players := get_tree().get_nodes_in_group("player")
+	for p in players:
+		if p != self and is_instance_valid(p) and not ("is_dead" in p and p.is_dead):
+			var diff: Vector2 = global_position - p.global_position
+			var d: float = diff.length()
+			if d < min_sep_dist:
+				var push_dir: Vector2 = diff.normalized() if d > 0.5 else Vector2(-1.0, 0.0)
+				separation += push_dir * (min_sep_dist - d)
+
+	return separation
+
+
+func move_and_slide_with_separation() -> void:
+	var sep := get_separation_vector()
+	if sep != Vector2.ZERO:
+		velocity += sep.limit_length(55.0) * 8.0
+	move_and_slide()
