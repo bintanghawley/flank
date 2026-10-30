@@ -82,10 +82,10 @@ Berikut adalah panduan untuk mengunduh, membuka, dan menjalankan proyek Flank di
 flank/
 ├── .agents/skills/flank-godot-workflow/  # Prosedur kerja pengembangan dan pengujian agen Antigravity
 ├── assets/                               # Aset visual permainan (karakter, partikel, proyektil, tileset)
-│   ├── characters/                       # Animasi 4-arah untuk Archer dan Mage
+│   ├── characters/                       # Animasi 4-arah untuk Archer, Mage, dan Knight
 │   ├── particles/                        # Efek debu lari dan partikel benturan
 │   ├── projectile/                       # Sprite anak panah dan proyektil sihir
-│   ├── skills/                           # Indikator bidikan dan tekstur efek skill khusus
+│   ├── skills/                           # Indikator bidikan dan tekstur efek skill khusus (Archer, Mage, Knight)
 │   └── tileset/                          # Spritesheet lingkungan 16px SunnySide World
 ├── scene/                                # Scene Godot (.tscn) dan script logika (.gd)
 │   ├── effect/                           # Efek visual mandiri (run_dust)

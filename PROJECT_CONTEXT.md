@@ -38,10 +38,10 @@ Dokumen ini merupakan ringkasan teknis operasional proyek game **"Flank"**. Doku
 ```text
 flank/
 ├── assets/                  # Seluruh aset visual (spritesheet karakter, tileset, proyektil)
-│   ├── characters/          # Animasi 4-arah Archer dan Mage (idle, walk, attack, skill)
+│   ├── characters/          # Animasi 4-arah Archer, Mage, dan Knight (idle, walk, attack, skill)
 │   ├── particles/           # Partikel debu lari (dust.png, dust_puff.png)
 │   ├── projectile/          # Tekstur panah, trace trail, dan magic bolt
-│   ├── skills/              # Indikator dan efek visual skill Archer & Mage
+│   ├── skills/              # Indikator dan efek visual skill Archer, Mage, & Knight
 │   └── tileset/             # Spritesheet SunnySide World 16px
 ├── scene/                   # Logika kode sumber dan hierarki node
 │   ├── effect/              # Efek visual mandiri (run_dust.tscn / .gd)
