@@ -684,12 +684,12 @@ func process_follower_combat(delta: float) -> void:
 			return
 		else:
 			# Jalur bersih tapi musuh masih agak jauh: dekati langsung
-			var move_dir := global_position.direction_to(target_enemy.global_position)
-			velocity = (move_dir * NORMAL_SPEED) + knockback_velocity
+			var approach_dir := global_position.direction_to(target_enemy.global_position)
+			velocity = (approach_dir * NORMAL_SPEED) + knockback_velocity
 			is_moving = true
 			move_and_slide_with_separation()
-			last_movement_direction = move_dir
-			apply_smoothed_facing(move_dir, delta)
+			last_movement_direction = approach_dir
+			apply_smoothed_facing(approach_dir, delta)
 			return
 			
 	# 4. KONDISI TERHALANG RINTANGAN (NAVIGASI MEMUTAR):

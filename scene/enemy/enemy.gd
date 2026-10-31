@@ -926,7 +926,7 @@ func _on_detection_area_body_exited(body):
 # =========================================================
 
 func update_touching_players_and_get_target(exited_body: Node2D = null) -> CharacterBody2D:
-	if exited_body != null:
+	if exited_body != null and exited_body is CharacterBody2D:
 		touching_players.erase(exited_body)
 
 	# Sinkronkan dengan overlap aktual jika tidak sedang dalam pemanggilan body_exited
@@ -964,8 +964,8 @@ func update_touching_players_and_get_target(exited_body: Node2D = null) -> Chara
 func _on_hitbox_body_entered(body: Node2D) -> void:
 	if is_dead or body == null:
 		return
-	if body.is_in_group("player") and not ("is_dead" in body and body.is_dead):
-		if body is CharacterBody2D and body not in touching_players:
+	if body is CharacterBody2D and body.is_in_group("player") and not ("is_dead" in body and body.is_dead):
+		if body not in touching_players:
 			touching_players.append(body)
 		var target_player := update_touching_players_and_get_target()
 		if target_player:
@@ -980,7 +980,8 @@ func _on_hitbox_body_entered(body: Node2D) -> void:
 
 
 func _on_hitbox_body_exited(body: Node2D) -> void:
-	update_touching_players_and_get_target(body)
+	if body is CharacterBody2D:
+		update_touching_players_and_get_target(body)
 
 
 func get_separation_vector() -> Vector2:

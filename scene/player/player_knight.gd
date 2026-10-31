@@ -293,7 +293,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
-func process_leader_movement(delta: float) -> void:
+func process_leader_movement(_delta: float) -> void:
 	# Serangan dasar klik kiri (Hold / Tap)
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		if attack_timer <= 0.0 and not is_attacking and not is_skill_animating:
@@ -728,8 +728,8 @@ func take_damage(amount: int, source_position = null) -> void:
 	# Shield Guard: menahan seluruh damage serangan musuh
 	if is_shield_active:
 		modulate = Color(1.8, 1.8, 2.4)
-		var tween = create_tween()
-		tween.tween_property(self, "modulate", Color.WHITE, 0.2)
+		var shield_flash_tween = create_tween()
+		shield_flash_tween.tween_property(self, "modulate", Color.WHITE, 0.2)
 		knockback_velocity = knockback_dir * 80.0
 		apply_camera_shake(3.0)
 		print(name, " memblok serangan dengan perisai! 0 damage diterima.")
@@ -739,8 +739,8 @@ func take_damage(amount: int, source_position = null) -> void:
 	knockback_velocity = knockback_dir * knockback_strength
 
 	modulate = Color(1.8, 0.4, 0.4)
-	var tween = create_tween()
-	tween.tween_property(self, "modulate", Color.WHITE, 0.25)
+	var hit_flash_tween = create_tween()
+	hit_flash_tween.tween_property(self, "modulate", Color.WHITE, 0.25)
 
 	if current_health <= 0:
 		die()
