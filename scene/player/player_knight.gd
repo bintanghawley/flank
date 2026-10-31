@@ -42,6 +42,8 @@ var last_movement_direction := Vector2.DOWN
 # COMBAT & MELEE SLASH SETTINGS
 # =========================
 const DUST_SCENE = preload("res://scene/effect/run_dust.tscn")
+const VISUAL_CENTER_OFFSET: Vector2 = Vector2(0.0, 7.5) # Pusat visual torso Knight di ruang global (skala 5x, setara y=1.5 lokal)
+const SLASH_CENTER_OFFSET: Vector2 = VISUAL_CENTER_OFFSET
 
 @export var attack_range: float = 125.0     # Jarak jangkauan tebasan pedang
 @export var attack_damage: int = 2          # Damage tebasan melee Knight (lebih bertenaga dari proyektil)
@@ -397,7 +399,7 @@ func has_line_of_sight_to(target_node: Node2D) -> bool:
 	if not target_node or not is_instance_valid(target_node):
 		return false
 	var space_state := get_world_2d().direct_space_state
-	var knight_center := global_position + Vector2(0.0, 25.0)
+	var knight_center := global_position + SLASH_CENTER_OFFSET
 	var exclude_rids: Array[RID] = [get_rid()]
 	if target_node is CollisionObject2D:
 		exclude_rids.append(target_node.get_rid())
@@ -419,7 +421,7 @@ func shoot_towards(target_pos: Vector2) -> void:
 	is_moving = false
 	velocity = Vector2.ZERO
 
-	var knight_center := global_position + Vector2(0.0, 25.0)
+	var knight_center := global_position + SLASH_CENTER_OFFSET
 	var dir := knight_center.direction_to(target_pos)
 	if dir == Vector2.ZERO:
 		dir = last_direction
@@ -441,7 +443,7 @@ func execute_slash_damage(attack_dir: Vector2) -> void:
 	var slash_arc_deg: float = 170.0   # Sudut sapuan tebasan (170 derajat ke depan)
 	var close_contact_radius: float = 65.0 # Area kontak dekat sekeliling tubuh Knight (musuh menempel)
 	
-	var knight_center := global_position + Vector2(0.0, 25.0)
+	var knight_center := global_position + SLASH_CENTER_OFFSET
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	var hit_any: bool = false
 	
