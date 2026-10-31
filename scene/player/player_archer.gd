@@ -212,7 +212,6 @@ func _ready():
 	spawn_position = global_position
 	target_position = global_position
 	play_idle_animation()
-	setup_map_boundaries.call_deferred()
 	_setup_shield_sprite()
 	_setup_enemy_collision_exceptions.call_deferred()
 
@@ -1432,70 +1431,6 @@ func respawn():
 	respawn_tween.tween_property(self, "modulate:a", 1.0, 0.4)
 
 	print("Archer berhasil respawn di titik awal! HP penuh: ", current_health)
-
-
-# =========================================================
-# BATASAN MAP & KAMERA OTOMATIS (WORLD BORDERS)
-# =========================================================
-
-func setup_map_boundaries():
-	if not get_parent():
-		return
-
-	var ground = get_parent().get_node_or_null("Ground") as TileMapLayer
-	if not ground:
-		ground = get_parent().get_node_or_null("map_region1/Ground") as TileMapLayer
-	if not ground:
-		ground = get_parent().find_child("Ground", true, false) as TileMapLayer
-	if not ground:
-		return
-
-	var rect: Rect2i = ground.get_used_rect()
-	if rect.size == Vector2i.ZERO:
-		return
-
-	# Dapatkan batas koordinat dunia (pixel) dari layer Ground
-	var map_min: Vector2 = ground.to_global(Vector2(rect.position.x * 16.0, rect.position.y * 16.0))
-	var map_max: Vector2 = ground.to_global(Vector2((rect.position.x + rect.size.x) * 16.0, (rect.position.y + rect.size.y) * 16.0))
-
-	# 1. Sesuaikan batasan Camera2D persis ke tepi map
-	var cam: Camera2D = get_camera()
-	if cam:
-		cam.limit_left = int(map_min.x)
-		cam.limit_top = int(map_min.y)
-		cam.limit_right = int(map_max.x)
-		cam.limit_bottom = int(map_max.y)
-
-	# 2. Buat pembatas fisik (invisible walls) di sekeliling tepi peta
-	if not get_parent().has_node("WorldBorders"):
-		var borders := StaticBody2D.new()
-		borders.name = "WorldBorders"
-		borders.collision_layer = 1
-		borders.collision_mask = 0
-
-		var thickness := 80.0
-		var width := map_max.x - map_min.x
-		var height := map_max.y - map_min.y
-
-		# Dinding Atas
-		_create_wall_shape(borders, Vector2(map_min.x + width / 2.0, map_min.y - thickness / 2.0), Vector2(width + thickness * 2.0, thickness))
-		# Dinding Bawah
-		_create_wall_shape(borders, Vector2(map_min.x + width / 2.0, map_max.y + thickness / 2.0), Vector2(width + thickness * 2.0, thickness))
-		# Dinding Kiri
-		_create_wall_shape(borders, Vector2(map_min.x - thickness / 2.0, map_min.y + height / 2.0), Vector2(thickness, height + thickness * 2.0))
-		# Dinding Kanan
-		_create_wall_shape(borders, Vector2(map_max.x + thickness / 2.0, map_min.y + height / 2.0), Vector2(thickness, height + thickness * 2.0))
-
-		get_parent().call_deferred("add_child", borders)
-
-
-func _create_wall_shape(parent: Node2D, pos: Vector2, size: Vector2):
-	var col := CollisionShape2D.new()
-	var rect_shape := RectangleShape2D.new()
-	rect_shape.size = size
-	col.shape = rect_shape
-	col.position = pos
-	parent.add_child(col)
 
 
 func apply_knockback(force: Vector2):
