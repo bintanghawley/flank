@@ -117,7 +117,7 @@ flank/
 3. **Flanking Navigasi:**
    Unit melakukan raycast langsung ke target pada Collision Layer 1. Jika terhalang, sistem melakukan probe melintang (24–720 px) ke sisi kiri dan kanan untuk mencari celah tepi rintangan, lalu membuat dua titik pandu (*waypoints*) untuk melipir.
 4. **Siklus Kematian & Respawn:**
-   Unit yang mencapai HP 0 mematikan collision-nya, memudar (fade-out), menunggu timer respawn (3s untuk player, 4s untuk musuh), lalu bangkit kembali di posisi awal dengan HP penuh.
+   Unit yang mencapai HP 0 mematikan collision-nya, memicu auto-switch kendali ke anggota party lain yang masih hidup jika berstatus Leader aktif, memudar (fade-out), menunggu timer respawn (3s untuk player, 4s untuk musuh), lalu bangkit kembali di posisi awal dengan HP penuh.
 5. **Sistem Kecepatan Proyektil Dasar & Penyeimbangan Fire Rate:**
    Kecepatan terbang proyektil panah dibuat seragam sebesar 580 px/s untuk Archer (baik terkendali maupun follower) serta musuh archer. Kecepatan proyektil bola sihir Mage disesuaikan dikurangi sedikit menjadi 500 px/s dan dibuat sama baik saat dikendalikan (Leader) maupun tidak dikendalikan (follower). Sedangkan *basic attack fire rate* diselaraskan secara konsisten antara karakter yang dikendalikan, follower, dan musuh model archer: frekuensi tembakan Archer (Leader dan follower) serta musuh archer sama-sama berjarak 1.4s, sementara Mage (Leader dan follower) sama-sama berjarak 1.5s.
 6. **Sistem Soft Collision & Separasi Dinamis:**

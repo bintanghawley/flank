@@ -1059,6 +1059,15 @@ func die():
 	knockback_velocity = Vector2.ZERO
 	print("Mage Gugur! Menunggu respawn...")
 
+	# Auto-switch jika Leader aktif gugur
+	if is_leader:
+		var game_node = get_tree().current_scene
+		if not game_node or not game_node.has_method("switch_to_next_character"):
+			if get_parent() and get_parent().has_method("switch_to_next_character"):
+				game_node = get_parent()
+		if game_node and game_node.has_method("switch_to_next_character"):
+			game_node.switch_to_next_character()
+
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
 	remove_from_group("player")

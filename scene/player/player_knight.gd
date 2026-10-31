@@ -749,6 +749,8 @@ func apply_knockback(force: Vector2) -> void:
 
 
 func die() -> void:
+	if is_dead:
+		return
 	is_dead = true
 	velocity = Vector2.ZERO
 	is_moving = false
@@ -758,6 +760,15 @@ func die() -> void:
 	slash_active_timer = 0.0
 	slash_hit_enemies.clear()
 	deactivate_shield()
+
+	# Auto-switch jika Leader aktif gugur
+	if is_leader:
+		var game_node = get_tree().current_scene
+		if not game_node or not game_node.has_method("switch_to_next_character"):
+			if get_parent() and get_parent().has_method("switch_to_next_character"):
+				game_node = get_parent()
+		if game_node and game_node.has_method("switch_to_next_character"):
+			game_node.switch_to_next_character()
 
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
