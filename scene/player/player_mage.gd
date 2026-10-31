@@ -807,24 +807,38 @@ func get_dynamic_projectile_speed() -> float:
 func get_magic_bolt_spawn_position() -> Vector2:
 	var staff_pos := global_position + BASIC_ATTACK_STAFF_OFFSET
 	var offset: Vector2 = Vector2.ZERO
-	if last_direction == Vector2.UP or animated_sprite.animation == "atk_n":
-		offset = Vector2(-28.0, -110.0)
-	elif last_direction == Vector2.DOWN or animated_sprite.animation == "atk_s":
-		offset = Vector2(22.0, 58.0)
-	elif last_direction == Vector2.LEFT or animated_sprite.animation == "atk_w":
-		offset = Vector2(-92.0, 0.0)
-	elif last_direction == Vector2.RIGHT or animated_sprite.animation == "atk_e":
-		offset = Vector2(92.0, 0.0)
-	elif last_direction == Vector2(-1, -1):
-		offset = Vector2(-78.0, -54.0)
-	elif last_direction == Vector2(1, -1):
-		offset = Vector2(78.0, -54.0)
-	elif last_direction == Vector2(-1, 1):
-		offset = Vector2(-78.0, 30.0)
-	elif last_direction == Vector2(1, 1):
-		offset = Vector2(78.0, 30.0)
-	else:
-		offset = attack_direction * 92.0
+	match last_direction:
+		Vector2.UP:
+			offset = Vector2(-28.0, -110.0)
+		Vector2.DOWN:
+			offset = Vector2(22.0, 58.0)
+		Vector2.LEFT:
+			offset = Vector2(-92.0, 0.0)
+		Vector2.RIGHT:
+			offset = Vector2(92.0, 0.0)
+		Vector2(-1, -1):
+			offset = Vector2(-78.0, -35.0)
+		Vector2(1, -1):
+			offset = Vector2(78.0, -35.0)
+		Vector2(-1, 1):
+			offset = Vector2(-78.0, 30.0)
+		Vector2(1, 1):
+			offset = Vector2(78.0, 30.0)
+		_:
+			offset = attack_direction * 92.0
+
+	# Safeguard: pastikan komponen horizontal proyektil selalu selaras dengan arah hadap sprite animasi (mencegah spawn di belakang karakter saat diagonal)
+	if animated_sprite.animation == "atk_e":
+		if animated_sprite.flip_h:
+			offset.x = -absf(offset.x)
+		else:
+			offset.x = absf(offset.x)
+	elif animated_sprite.animation == "atk_w":
+		if animated_sprite.flip_h:
+			offset.x = absf(offset.x)
+		else:
+			offset.x = -absf(offset.x)
+
 	return staff_pos + offset
 
 
