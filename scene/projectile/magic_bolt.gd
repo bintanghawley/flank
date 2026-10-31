@@ -125,7 +125,7 @@ func _on_body_entered(body: Node2D) -> void:
 		if not target.is_in_group("player") and target.get_parent() != null and target.get_parent().is_in_group("player"):
 			target = target.get_parent()
 
-		if target.is_in_group("player") or target.name == "Player_Archer" or target.name == "Player_Mage":
+		if target.is_in_group("player"):
 			if "is_dead" in target and target.is_dead:
 				return
 			if target.has_method("take_damage"):

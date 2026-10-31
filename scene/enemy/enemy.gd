@@ -903,7 +903,7 @@ func respawn():
 func _on_detection_area_body_entered(body):
 	if is_dead:
 		return
-	if (body.is_in_group("player") or body.name == "Player_Archer") and not ("is_dead" in body and body.is_dead):
+	if body.is_in_group("player") and not ("is_dead" in body and body.is_dead):
 		var target := get_closest_target()
 		player = target if target else body
 		current_state = State.CHASE
@@ -964,7 +964,7 @@ func update_touching_players_and_get_target(exited_body: Node2D = null) -> Chara
 func _on_hitbox_body_entered(body: Node2D) -> void:
 	if is_dead or body == null:
 		return
-	if (body.is_in_group("player") or body.name == "Player_Archer") and not ("is_dead" in body and body.is_dead):
+	if body.is_in_group("player") and not ("is_dead" in body and body.is_dead):
 		if body is CharacterBody2D and body not in touching_players:
 			touching_players.append(body)
 		var target_player := update_touching_players_and_get_target()
