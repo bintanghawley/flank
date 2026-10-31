@@ -161,5 +161,5 @@ func _on_body_entered(body):
 			if "is_dead" in target and target.is_dead:
 				return
 			if target.has_method("take_damage"):
-				target.take_damage(damage, global_position)
+				target.take_damage(damage, global_position - direction * 30.0)
 			destroy(true)

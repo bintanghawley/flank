@@ -583,6 +583,8 @@ func shoot_at_player():
 		get_parent().add_child(trace)
 
 	shoot_timer = get_dynamic_shoot_cooldown()
+	# Sinkronisasi damage kontak agar tembakan panah jarak dekat tidak memicu double damage
+	damage_timer = max(damage_timer, 0.6)
 
 	# Tunggu durasi animasi menembak selesai (~0.35 detik), lalu kembali ke idle
 	await get_tree().create_timer(0.35).timeout

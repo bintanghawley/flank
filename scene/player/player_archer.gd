@@ -77,15 +77,24 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 		play_idle_animation()
 
 func cancel_skill() -> void:
-	if current_skill_state != SkillState.INACTIVE or is_attacking:
-		current_skill_state = SkillState.INACTIVE
-		is_attacking = false
-		attack_stuck_timer = 0.0
-		skill_release_queued = false
-		if skill_indicator_instance and is_instance_valid(skill_indicator_instance):
-			skill_indicator_instance.visible = false
-		if not is_dead:
-			play_idle_animation()
+	attack_token += 1
+	is_attacking = false
+	attack_stuck_timer = 0.0
+	skill_release_queued = false
+
+	if skill_indicator_instance and is_instance_valid(skill_indicator_instance):
+		skill_indicator_instance.visible = false
+
+	if current_skill_state != SkillState.INACTIVE:
+		# Kembalikan ke READY agar Archer tidak terkunci (is_skill_locked menjadi false)
+		current_skill_state = SkillState.READY
+		skill_current_range = min_skill_range
+
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		require_mouse_release = true
+
+	if not is_dead and not is_moving:
+		play_idle_animation()
 
 func set_party_combat_mode(active: bool) -> void:
 	in_party_combat = active
@@ -179,6 +188,8 @@ var attack_stuck_timer: float = 0.0
 var attack_timer: float = 0.0
 var is_attacking: bool = false
 var attack_direction: Vector2 = Vector2.RIGHT
+var attack_token: int = 0
+var require_mouse_release: bool = false
 
 # =========================
 # HEALTH & RESPAWN SETTINGS
@@ -198,6 +209,9 @@ var spawn_position: Vector2
 @export var knockback_strength: float = 380.0 # Kekuatan dorongan saat terkena hit
 var knockback_velocity: Vector2 = Vector2.ZERO
 var knockback_decay: float = 1400.0           # Kecepatan redaman dorongan knockback
+
+@export var invulnerability_duration: float = 0.25 # Durasi proteksi kebal singkat setelah terkena hit (mencegah double hit)
+var invulnerability_timer: float = 0.0
 
 # =========================
 # CAMERA SHAKE SETTINGS
@@ -277,6 +291,10 @@ func _physics_process(delta: float):
 		if knockback_velocity.length() < 8.0:
 			knockback_velocity = Vector2.ZERO
 
+	# Cooldown invulnerability frame pasca terkena serangan
+	if invulnerability_timer > 0.0:
+		invulnerability_timer -= delta
+
 	# Cooldown timer serangan dasar untuk SEMUA karakter
 	if attack_timer > 0.0:
 		attack_timer -= delta
@@ -295,6 +313,7 @@ func _physics_process(delta: float):
 		if attack_stuck_timer >= 0.6:
 			is_attacking = false
 			attack_stuck_timer = 0.0
+			attack_token += 1
 			if not is_moving and not is_skill_locked():
 				play_idle_animation()
 	else:
@@ -304,6 +323,11 @@ func _physics_process(delta: float):
 		process_follower_logic(delta)
 		handle_run_dust_cycle(delta)
 		return
+
+	# Reset require_mouse_release jika tombol mouse kiri sudah dilepas
+	if require_mouse_release:
+		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			require_mouse_release = false
 
 	# =====================================================
 	# SKILL MODE TIMERS & STATE UPDATES
@@ -382,7 +406,7 @@ func _physics_process(delta: float):
 	# =====================================================
 	if current_skill_state == SkillState.INACTIVE:
 		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-			if attack_timer <= 0.0 and not is_attacking:
+			if not require_mouse_release and attack_timer <= 0.0 and not is_attacking:
 				shoot_towards(get_global_mouse_position())
 
 	# =====================================================
@@ -514,10 +538,12 @@ func _unhandled_input(event: InputEvent):
 	if not is_leader or is_dead:
 		return
 
-	# Pemicu Aktivasi Skill Mode (Tombol E / ui_skill)
+	# Pemicu Aktivasi / Deaktivasi Skill Mode (Tombol E / ui_skill)
 	if is_skill_action_pressed(event):
 		if can_activate_skill():
 			activate_skill_mode()
+		elif current_skill_state == SkillState.READY:
+			deactivate_skill_mode()
 		return
 
 	# Penanganan Input Selama Dalam Mode Skill
@@ -525,21 +551,30 @@ func _unhandled_input(event: InputEvent):
 		if event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_LEFT:
 				if event.pressed:
-					if current_skill_state == SkillState.READY and skill_interval_timer <= 0.0 and skill_charges > 0:
+					if not require_mouse_release and current_skill_state == SkillState.READY and skill_interval_timer <= 0.0 and skill_charges > 0:
 						start_skill_charge()
 				else:
+					require_mouse_release = false
 					if current_skill_state == SkillState.STARTING:
 						skill_release_queued = true
 						skill_current_range = min_skill_range
 					elif current_skill_state == SkillState.CHARGING:
 						execute_skill_release()
+			elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+				if current_skill_state == SkillState.STARTING or current_skill_state == SkillState.CHARGING:
+					cancel_skill()
+				elif current_skill_state == SkillState.READY:
+					deactivate_skill_mode()
 		return
 
 	# Penanganan Input Mode Biasa (Basic Attack)
-	if event is InputEventMouseButton and event.pressed:
+	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			if attack_timer <= 0.0 and not is_attacking:
-				shoot_towards(get_global_mouse_position())
+			if event.pressed:
+				if not require_mouse_release and attack_timer <= 0.0 and not is_attacking:
+					shoot_towards(get_global_mouse_position())
+			else:
+				require_mouse_release = false
 
 
 # =========================================================
@@ -589,6 +624,10 @@ func process_follower_exploring(delta: float) -> void:
 
 	# 2. Kondisi Berhenti yang Tegas saat Leader Diam
 	if not leader_is_moving and dist_to_slot <= 16.0:
+		if knockback_velocity != Vector2.ZERO:
+			velocity = knockback_velocity
+			move_and_slide_with_separation()
+			return
 		velocity = Vector2.ZERO
 		is_moving = false
 		global_position = global_position.move_toward(follow_slot, 50.0 * delta)
@@ -612,7 +651,8 @@ func process_follower_exploring(delta: float) -> void:
 		velocity = knockback_velocity
 		is_moving = false
 		move_and_slide_with_separation()
-		global_position = global_position.move_toward(follow_slot, 40.0 * delta)
+		if knockback_velocity == Vector2.ZERO:
+			global_position = global_position.move_toward(follow_slot, 40.0 * delta)
 		if not leader_is_moving and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
 		else:
@@ -1183,7 +1223,7 @@ func shoot_towards(target_pos: Vector2):
 
 	# Hentikan pergerakan
 	is_moving = false
-	velocity = Vector2.ZERO
+	velocity = knockback_velocity
 
 	# Tentukan arah tembakan saat klik (dihitung dari titik visual busur panah karakter)
 	var bow_pos := global_position + BASIC_ATTACK_ARROW_OFFSET
@@ -1198,13 +1238,16 @@ func shoot_towards(target_pos: Vector2):
 	# Hadap ke arah tembakan
 	last_direction = get_8_direction(dir)
 
+	attack_token += 1
+	var token := attack_token
+
 	# Mulai animasi attack
 	is_attacking = true
 	play_attack_animation()
 
 	attack_timer = attack_cooldown
 
-	reset_attack_state()
+	reset_attack_state(token)
 
 func shoot_at(target: Node2D):
 	if is_instance_valid(target):
@@ -1223,11 +1266,12 @@ func get_dynamic_projectile_speed() -> float:
 	return controlled_projectile_speed * follower_projectile_ratio
 
 
-func reset_attack_state():
+func reset_attack_state(token: int):
 	# Tunggu sampai sekitar frame 3-4 dari animasi attack
 	await get_tree().create_timer(0.22).timeout
 
-	if is_dead:
+	# Jika terinterupsi saat windup (terkena damage/knockback atau mati), batalkan spawn proyektil
+	if is_dead or attack_token != token or not is_attacking:
 		return
 
 	# Arrow keluar saat Archer melepas busur tepat dari posisi tengah yang presisi
@@ -1254,10 +1298,12 @@ func reset_attack_state():
 		trace.z_index = 10
 		get_parent().add_child(trace)
 
-	# Tunggu sampai animasi attack selesai
-	await animated_sprite.animation_finished
+	# Tunggu sampai animasi attack selesai dengan timeout cadangan agar tidak deadlock
+	var timer := get_tree().create_timer(0.35)
+	while is_instance_valid(self) and not is_dead and attack_token == token and animated_sprite.is_playing() and animated_sprite.animation.begins_with("atk_") and timer.time_left > 0.0:
+		await get_tree().process_frame
 
-	if is_dead:
+	if is_dead or attack_token != token:
 		return
 
 	is_attacking = false
@@ -1273,18 +1319,25 @@ func reset_attack_state():
 # =========================================================
 
 func take_damage(amount: int, source_position = null):
-	if is_dead:
+	if is_dead or invulnerability_timer > 0.0:
 		return
+	invulnerability_timer = invulnerability_duration
+
+	# Batalkan tembakan/skill aktif agar Archer bebas bergerak dan terdorong knockback
+	cancel_skill()
 
 	# Tentukan arah dorongan knockback (menjauh dari sumber serangan)
 	var knockback_dir := Vector2.ZERO
 	if source_position is Node2D and is_instance_valid(source_position):
 		knockback_dir = source_position.global_position.direction_to(global_position)
-	elif source_position is Vector2 and source_position != Vector2.ZERO and source_position != global_position:
-		knockback_dir = source_position.direction_to(global_position)
-	else:
-		# Jika posisi sumber tidak diketahui, dorong ke belakang arah hadap
+	elif source_position is Vector2 and source_position != Vector2.ZERO:
+		if source_position.distance_squared_to(global_position) > 0.1:
+			knockback_dir = source_position.direction_to(global_position)
+
+	if knockback_dir == Vector2.ZERO:
 		knockback_dir = -last_direction
+	if knockback_dir == Vector2.ZERO:
+		knockback_dir = Vector2.UP
 
 	# Shield Guard: menahan seluruh damage serangan musuh
 	if is_shield_active:
@@ -1302,11 +1355,10 @@ func take_damage(amount: int, source_position = null):
 	# Terapkan gaya dorong knockback
 	apply_knockback(knockback_dir * knockback_strength)
 
-	# Efek kedip merah saat terkena serangan
+	# Efek kedip merah saat terkena serangan (Tween non-blocking)
 	modulate = Color(2.5, 0.3, 0.3)
-	await get_tree().create_timer(0.12).timeout
-	if is_instance_valid(self) and not is_dead:
-		modulate = Color.WHITE
+	var hit_tween = create_tween()
+	hit_tween.tween_property(self, "modulate", Color.WHITE, 0.12)
 
 	# Cek kematian jika darah habis
 	if current_health <= 0 and not is_dead:
@@ -1319,18 +1371,14 @@ func take_damage(amount: int, source_position = null):
 # =========================================================
 
 func die():
+	attack_token += 1
 	deactivate_shield()
 	if is_dead:
 		return
 
 	# Batalkan mode skill dan bersihkan indikator bila archer gugur
 	if current_skill_state != SkillState.INACTIVE:
-		current_skill_state = SkillState.INACTIVE
-		skill_charges = 0
-		skill_mode_timer = 0.0
-		if skill_indicator_instance and is_instance_valid(skill_indicator_instance):
-			skill_indicator_instance.queue_free()
-			skill_indicator_instance = null
+		deactivate_skill_mode()
 
 	is_dead = true
 	is_moving = false
@@ -1346,6 +1394,7 @@ func die():
 	attack_stuck_timer = 0.0
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO
+	invulnerability_timer = 0.0
 	shake_intensity = 0.0
 	var cam: Camera2D = get_camera()
 	if cam:
@@ -1396,6 +1445,7 @@ func respawn():
 	is_attacking = false
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO
+	invulnerability_timer = 0.0
 
 	# Reset pergerakan kamera agar langsung fokus tanpa lag panning
 	var cam: Camera2D = get_camera()

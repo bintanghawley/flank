@@ -91,6 +91,9 @@ var spawn_position: Vector2
 var knockback_velocity: Vector2 = Vector2.ZERO
 var knockback_decay: float = 1500.0
 
+@export var invulnerability_duration: float = 0.25 # Durasi proteksi kebal singkat setelah terkena hit (mencegah double hit)
+var invulnerability_timer: float = 0.0
+
 # =========================
 # CAMERA SHAKE SETTINGS
 # =========================
@@ -211,6 +214,10 @@ func _physics_process(delta: float) -> void:
 		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, knockback_decay * delta)
 		if knockback_velocity.length() < 8.0:
 			knockback_velocity = Vector2.ZERO
+
+	# Cooldown invulnerability frame pasca terkena serangan
+	if invulnerability_timer > 0.0:
+		invulnerability_timer -= delta
 
 	# Cooldown timer serangan dasar
 	if attack_timer > 0.0:
@@ -419,7 +426,7 @@ func shoot_towards(target_pos: Vector2) -> void:
 		return
 
 	is_moving = false
-	velocity = Vector2.ZERO
+	velocity = knockback_velocity
 
 	var knight_center := global_position + SLASH_CENTER_OFFSET
 	var dir := knight_center.direction_to(target_pos)
@@ -442,8 +449,17 @@ func execute_slash_damage(attack_dir: Vector2) -> void:
 	var slash_range: float = 125.0      # Jangkauan visual tebasan (pixel-art 5x)
 	var slash_arc_deg: float = 170.0   # Sudut sapuan tebasan (170 derajat ke depan)
 	var close_contact_radius: float = 65.0 # Area kontak dekat sekeliling tubuh Knight (musuh menempel)
+	var center_offset: Vector2 = SLASH_CENTER_OFFSET
 	
-	var knight_center := global_position + SLASH_CENTER_OFFSET
+	# Jangkauan tebasan ke arah bawah (South) diperpanjang dan dipusatkan lebih ke bawah
+	# agar selaras dan proporsional dengan sapuan visual bilah pedang yang mengayun jauh ke bawah
+	if attack_dir.y > 0.3:
+		slash_range = 160.0
+		close_contact_radius = 85.0
+		slash_arc_deg = 180.0
+		center_offset = Vector2(0.0, 32.0)
+	
+	var knight_center := global_position + center_offset
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	var hit_any: bool = false
 	
@@ -606,6 +622,10 @@ func process_follower_exploring(delta: float) -> void:
 
 	# 2. Kondisi Berhenti yang Tegas saat Leader Diam
 	if not leader_is_moving and dist_to_slot <= 16.0:
+		if knockback_velocity != Vector2.ZERO:
+			velocity = knockback_velocity
+			move_and_slide_with_separation()
+			return
 		velocity = Vector2.ZERO
 		is_moving = false
 		global_position = global_position.move_toward(follow_slot, 50.0 * delta)
@@ -629,7 +649,8 @@ func process_follower_exploring(delta: float) -> void:
 		velocity = knockback_velocity
 		is_moving = false
 		move_and_slide_with_separation()
-		global_position = global_position.move_toward(follow_slot, 40.0 * delta)
+		if knockback_velocity == Vector2.ZERO:
+			global_position = global_position.move_toward(follow_slot, 40.0 * delta)
 		if not leader_is_moving and leader_node and is_instance_valid(leader_node) and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
 		else:
@@ -713,30 +734,50 @@ func process_follower_combat(delta: float) -> void:
 # DAMAGE, HEALTH & RESPAWN
 # =========================================================
 
+func cancel_attack() -> void:
+	if is_attacking:
+		is_attacking = false
+		is_slash_active = false
+		slash_windup_timer = 0.0
+		slash_active_timer = 0.0
+		slash_hit_enemies.clear()
+		attack_stuck_timer = 0.0
+	if not is_dead and not is_moving:
+		play_idle_animation()
+
+
 func take_damage(amount: int, source_position = null) -> void:
-	if is_dead:
+	if is_dead or invulnerability_timer > 0.0:
 		return
+	invulnerability_timer = invulnerability_duration
+
+	# Batalkan tebasan aktif agar Knight responsif terhadap hit dan dapat terdorong knockback
+	cancel_attack()
 
 	var knockback_dir := Vector2.ZERO
 	if source_position is Node2D and is_instance_valid(source_position):
 		knockback_dir = source_position.global_position.direction_to(global_position)
-	elif source_position is Vector2 and source_position != Vector2.ZERO and source_position != global_position:
-		knockback_dir = source_position.direction_to(global_position)
-	else:
+	elif source_position is Vector2 and source_position != Vector2.ZERO:
+		if source_position.distance_squared_to(global_position) > 0.1:
+			knockback_dir = source_position.direction_to(global_position)
+
+	if knockback_dir == Vector2.ZERO:
 		knockback_dir = -last_direction
+	if knockback_dir == Vector2.ZERO:
+		knockback_dir = Vector2.UP
 
 	# Shield Guard: menahan seluruh damage serangan musuh
 	if is_shield_active:
 		modulate = Color(1.8, 1.8, 2.4)
 		var shield_flash_tween = create_tween()
 		shield_flash_tween.tween_property(self, "modulate", Color.WHITE, 0.2)
-		knockback_velocity = knockback_dir * 80.0
+		apply_knockback(knockback_dir * 80.0)
 		apply_camera_shake(3.0)
 		print(name, " memblok serangan dengan perisai! 0 damage diterima.")
 		return
 
 	current_health -= amount
-	knockback_velocity = knockback_dir * knockback_strength
+	apply_knockback(knockback_dir * knockback_strength)
 
 	modulate = Color(1.8, 0.4, 0.4)
 	var hit_flash_tween = create_tween()
@@ -748,6 +789,7 @@ func take_damage(amount: int, source_position = null) -> void:
 
 func apply_knockback(force: Vector2) -> void:
 	knockback_velocity = force
+	is_moving = false
 
 
 func die() -> void:
@@ -816,6 +858,7 @@ func respawn() -> void:
 	slash_hit_enemies.clear()
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO
+	invulnerability_timer = 0.0
 
 	if collision_shape:
 		collision_shape.set_deferred("disabled", false)

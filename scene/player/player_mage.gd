@@ -63,6 +63,8 @@ var attack_stuck_timer: float = 0.0
 var attack_timer: float = 0.0
 var is_attacking: bool = false
 var attack_direction: Vector2 = Vector2.RIGHT
+var attack_token: int = 0
+var require_mouse_release: bool = false
 
 # =========================
 # SPECIAL SKILL MODE SETTINGS (METEOR STRIKE)
@@ -95,6 +97,9 @@ var spawn_position: Vector2
 @export var knockback_strength: float = 380.0
 var knockback_velocity: Vector2 = Vector2.ZERO
 var knockback_decay: float = 1400.0
+
+@export var invulnerability_duration: float = 0.25 # Durasi proteksi kebal singkat setelah terkena hit (mencegah double hit)
+var invulnerability_timer: float = 0.0
 
 
 func _ready():
@@ -163,6 +168,7 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 		play_idle_animation()
 
 func cancel_skill() -> void:
+	attack_token += 1
 	if active_indicator and is_instance_valid(active_indicator):
 		active_indicator.queue_free()
 		active_indicator = null
@@ -171,6 +177,8 @@ func cancel_skill() -> void:
 	if is_attacking:
 		is_attacking = false
 		attack_stuck_timer = 0.0
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		require_mouse_release = true
 	if not is_dead and not is_moving:
 		play_idle_animation()
 
@@ -205,6 +213,10 @@ func _physics_process(delta: float) -> void:
 		if knockback_velocity.length() < 8.0:
 			knockback_velocity = Vector2.ZERO
 
+	# Cooldown invulnerability frame pasca terkena serangan
+	if invulnerability_timer > 0.0:
+		invulnerability_timer -= delta
+
 	# Cooldown timer serangan dasar untuk SEMUA karakter
 	if attack_timer > 0.0:
 		attack_timer -= delta
@@ -231,6 +243,7 @@ func _physics_process(delta: float) -> void:
 		if attack_stuck_timer >= 0.8:
 			is_attacking = false
 			attack_stuck_timer = 0.0
+			attack_token += 1
 			if not is_moving and not is_aiming_skill and not is_skill_releasing:
 				play_idle_animation()
 	else:
@@ -288,10 +301,13 @@ func _unhandled_input(event: InputEvent):
 		return
 
 	# Serangan dasar klik kiri
-	if event is InputEventMouseButton and event.pressed:
+	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			if attack_timer <= 0.0 and not is_attacking:
-				shoot_towards(get_global_mouse_position())
+			if event.pressed:
+				if not require_mouse_release and attack_timer <= 0.0 and not is_attacking:
+					shoot_towards(get_global_mouse_position())
+			else:
+				require_mouse_release = false
 
 
 # =========================================================
@@ -307,9 +323,14 @@ func process_leader_movement(delta: float):
 	if attack_timer > 0.0:
 		attack_timer -= delta
 
+	# Reset require_mouse_release jika tombol mouse kiri telah dilepas
+	if require_mouse_release:
+		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			require_mouse_release = false
+
 	# Tahan klik kiri untuk serangan berkelanjutan
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		if attack_timer <= 0.0 and not is_attacking:
+		if not require_mouse_release and attack_timer <= 0.0 and not is_attacking:
 			shoot_towards(get_global_mouse_position())
 
 	# Input keyboard WASD / Arrow
@@ -422,6 +443,10 @@ func process_follower_exploring(delta: float) -> void:
 
 	# 2. Kondisi Berhenti yang Tegas saat Leader Diam
 	if not leader_is_moving and dist_to_slot <= 16.0:
+		if knockback_velocity != Vector2.ZERO:
+			velocity = knockback_velocity
+			move_and_slide_with_separation()
+			return
 		velocity = Vector2.ZERO
 		is_moving = false
 		global_position = global_position.move_toward(follow_slot, 50.0 * delta)
@@ -445,7 +470,8 @@ func process_follower_exploring(delta: float) -> void:
 		velocity = knockback_velocity
 		is_moving = false
 		move_and_slide_with_separation()
-		global_position = global_position.move_toward(follow_slot, 40.0 * delta)
+		if knockback_velocity == Vector2.ZERO:
+			global_position = global_position.move_toward(follow_slot, 40.0 * delta)
 		if not leader_is_moving and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
 		else:
@@ -744,7 +770,7 @@ func shoot_towards(target_pos: Vector2):
 		return
 
 	is_moving = false
-	velocity = Vector2.ZERO
+	velocity = knockback_velocity
 
 	# Titik visual tengah senjata tongkat sihir Mage
 	var staff_pos := global_position + BASIC_ATTACK_STAFF_OFFSET
@@ -755,12 +781,15 @@ func shoot_towards(target_pos: Vector2):
 	attack_direction = dir
 	last_direction = get_8_direction(dir)
 
+	attack_token += 1
+	var token := attack_token
+
 	is_attacking = true
 	play_attack_animation()
 	attack_timer = attack_cooldown
 
 	# Spawn magic bolt pada momen ayunan tongkat sihir
-	reset_attack_state()
+	reset_attack_state(token)
 
 
 func get_controlled_projectile_speed() -> float:
@@ -799,11 +828,12 @@ func get_magic_bolt_spawn_position() -> Vector2:
 	return staff_pos + offset
 
 
-func reset_attack_state():
+func reset_attack_state(token: int):
 	# Saat senjata tongkat sihir mengarah ke depan dan efek sihir meletup (~0.34 detik, Frame 4)
 	await get_tree().create_timer(0.34).timeout
 
-	if is_dead:
+	# Jika serangan dibatalkan karena terkena hit, knockback, atau gugur saat windup: batalkan peluncuran proyektil
+	if is_dead or attack_token != token or not is_attacking:
 		return
 
 	var spawn_pos := get_magic_bolt_spawn_position()
@@ -815,10 +845,12 @@ func reset_attack_state():
 	bolt.speed = get_dynamic_projectile_speed()
 	get_tree().current_scene.add_child(bolt)
 
-	# Tunggu sampai animasi attack selesai seutuhnya (frame 7 recovery)
-	if animated_sprite.is_playing() and animated_sprite.animation.begins_with("atk_"):
-		await animated_sprite.animation_finished
-	if is_dead:
+	# Tunggu sampai animasi attack selesai seutuhnya (frame 7 recovery) dengan timeout cadangan
+	var timer := get_tree().create_timer(0.4)
+	while is_instance_valid(self) and not is_dead and attack_token == token and animated_sprite.is_playing() and animated_sprite.animation.begins_with("atk_") and timer.time_left > 0.0:
+		await get_tree().process_frame
+
+	if is_dead or attack_token != token:
 		return
 
 	is_attacking = false
@@ -1022,16 +1054,24 @@ func apply_knockback(force: Vector2):
 
 
 func take_damage(amount: int, source_position = null):
-	if is_dead:
+	if is_dead or invulnerability_timer > 0.0:
 		return
+	invulnerability_timer = invulnerability_duration
+
+	# [BUG 1 FIX]: Batalkan serangan dan bebaskan kontrol jika terkena hit
+	cancel_skill()
 
 	var knockback_dir := Vector2.ZERO
 	if source_position is Node2D and is_instance_valid(source_position):
 		knockback_dir = source_position.global_position.direction_to(global_position)
-	elif source_position is Vector2 and source_position != Vector2.ZERO and source_position != global_position:
-		knockback_dir = source_position.direction_to(global_position)
-	else:
+	elif source_position is Vector2 and source_position != Vector2.ZERO:
+		if source_position.distance_squared_to(global_position) > 0.1:
+			knockback_dir = source_position.direction_to(global_position)
+
+	if knockback_dir == Vector2.ZERO:
 		knockback_dir = -last_direction
+	if knockback_dir == Vector2.ZERO:
+		knockback_dir = Vector2.UP
 
 	# Shield Guard: menahan seluruh damage serangan musuh
 	if is_shield_active:
@@ -1043,18 +1083,14 @@ func take_damage(amount: int, source_position = null):
 		print(name, " memblok serangan dengan perisai! 0 damage diterima.")
 		return
 
-	# [BUG 1 FIX]: Batalkan serangan dan bebaskan kontrol jika terkena hit
-	cancel_skill()
-
 	current_health -= amount
 	print("Mage terkena serangan! Sisa HP: ", current_health)
 
 	apply_knockback(knockback_dir * knockback_strength)
 
 	modulate = Color(2.5, 0.3, 0.3)
-	await get_tree().create_timer(0.12).timeout
-	if is_instance_valid(self) and not is_dead:
-		modulate = Color.WHITE
+	var hit_tween = create_tween()
+	hit_tween.tween_property(self, "modulate", Color.WHITE, 0.12)
 
 	if current_health <= 0 and not is_dead:
 		current_health = 0
@@ -1062,6 +1098,7 @@ func take_damage(amount: int, source_position = null):
 
 
 func die():
+	attack_token += 1
 	cancel_skill()
 	deactivate_shield()
 	if is_dead:
@@ -1080,6 +1117,7 @@ func die():
 	attack_stuck_timer = 0.0
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO
+	invulnerability_timer = 0.0
 	print("Mage Gugur! Menunggu respawn...")
 
 	# Auto-switch jika Leader aktif gugur
@@ -1119,6 +1157,7 @@ func respawn():
 	is_attacking = false
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO
+	invulnerability_timer = 0.0
 
 	if collision_shape:
 		collision_shape.set_deferred("disabled", false)
@@ -1234,7 +1273,7 @@ func start_skill_aiming() -> void:
 
 	is_aiming_skill = true
 	is_moving = false
-	velocity = Vector2.ZERO
+	velocity = knockback_velocity
 
 	var mouse_pos := get_global_mouse_position()
 	var aim_dir := (mouse_pos - global_position).normalized()
