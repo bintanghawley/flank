@@ -57,6 +57,7 @@ flank/
 
 ### Tanggung Jawab Komponen Kunci:
 1. **`scene/game.gd` (Game & Party Manager):**
+   - Root scene `game.tscn` terpusat pada origin `Vector2(0, 0)` sehingga menyelaraskan koordinat global entitas hero, musuh, pembatas map (`WorldBorders`), dan layer peta `map_region_1`.
    - Mendaftarkan 3 anggota party (`Knight_1`, `Mage_1`, `Archer_1`).
    - Mengelola pergantian Leader aktif (validasi hidup/mati siklis via Tab dan pemilihan langsung angka 1–3 dengan pengabaian hero yang gugur) dan penugasan slot antrean Follower (slot 1 dan 2).
    - Menghitung riwayat jejak langkah (*breadcrumbs queue*) dan pembalikan antrean 180° (*cascade swap*).
