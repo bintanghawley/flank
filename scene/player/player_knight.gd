@@ -87,7 +87,7 @@ var current_health: int = 12
 var is_dead: bool = false
 var spawn_position: Vector2
 
-@export var knockback_strength: float = 320.0 # Knight lebih kokoh terhadap dorongan lawan
+@export var knockback_strength: float = 0.0 # Knockback dinonaktifkan saat terkena damage (0.0)
 var knockback_velocity: Vector2 = Vector2.ZERO
 var knockback_decay: float = 1500.0
 
@@ -746,38 +746,25 @@ func cancel_attack() -> void:
 		play_idle_animation()
 
 
-func take_damage(amount: int, source_position = null) -> void:
+func take_damage(amount: int, _source_position = null) -> void:
 	if is_dead or invulnerability_timer > 0.0:
 		return
 	invulnerability_timer = invulnerability_duration
 
-	# Batalkan tebasan aktif agar Knight responsif terhadap hit dan dapat terdorong knockback
+	# Batalkan tebasan aktif agar Knight responsif terhadap hit
 	cancel_attack()
-
-	var knockback_dir := Vector2.ZERO
-	if source_position is Node2D and is_instance_valid(source_position):
-		knockback_dir = source_position.global_position.direction_to(global_position)
-	elif source_position is Vector2 and source_position != Vector2.ZERO:
-		if source_position.distance_squared_to(global_position) > 0.1:
-			knockback_dir = source_position.direction_to(global_position)
-
-	if knockback_dir == Vector2.ZERO:
-		knockback_dir = -last_direction
-	if knockback_dir == Vector2.ZERO:
-		knockback_dir = Vector2.UP
 
 	# Shield Guard: menahan seluruh damage serangan musuh
 	if is_shield_active:
 		modulate = Color(1.8, 1.8, 2.4)
 		var shield_flash_tween = create_tween()
 		shield_flash_tween.tween_property(self, "modulate", Color.WHITE, 0.2)
-		apply_knockback(knockback_dir * 80.0)
 		apply_camera_shake(3.0)
 		print(name, " memblok serangan dengan perisai! 0 damage diterima.")
 		return
 
 	current_health -= amount
-	apply_knockback(knockback_dir * knockback_strength)
+	print("Knight terkena serangan! Sisa HP: ", current_health)
 
 	modulate = Color(1.8, 0.4, 0.4)
 	var hit_flash_tween = create_tween()
@@ -788,6 +775,8 @@ func take_damage(amount: int, source_position = null) -> void:
 
 
 func apply_knockback(force: Vector2) -> void:
+	if force == Vector2.ZERO:
+		return
 	knockback_velocity = force
 	is_moving = false
 

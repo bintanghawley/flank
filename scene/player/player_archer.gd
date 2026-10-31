@@ -206,7 +206,7 @@ var spawn_position: Vector2
 # =========================
 # KNOCKBACK SETTINGS
 # =========================
-@export var knockback_strength: float = 380.0 # Kekuatan dorongan saat terkena hit
+@export var knockback_strength: float = 0.0 # Knockback dinonaktifkan saat terkena damage (0.0)
 var knockback_velocity: Vector2 = Vector2.ZERO
 var knockback_decay: float = 1400.0           # Kecepatan redaman dorongan knockback
 
@@ -1318,42 +1318,25 @@ func reset_attack_state(token: int):
 # MENERIMA DAMAGE DARI MUSUH & KNOCKBACK
 # =========================================================
 
-func take_damage(amount: int, source_position = null):
+func take_damage(amount: int, _source_position = null):
 	if is_dead or invulnerability_timer > 0.0:
 		return
 	invulnerability_timer = invulnerability_duration
 
-	# Batalkan tembakan/skill aktif agar Archer bebas bergerak dan terdorong knockback
+	# Batalkan tembakan/skill aktif agar Archer bebas bergerak
 	cancel_skill()
-
-	# Tentukan arah dorongan knockback (menjauh dari sumber serangan)
-	var knockback_dir := Vector2.ZERO
-	if source_position is Node2D and is_instance_valid(source_position):
-		knockback_dir = source_position.global_position.direction_to(global_position)
-	elif source_position is Vector2 and source_position != Vector2.ZERO:
-		if source_position.distance_squared_to(global_position) > 0.1:
-			knockback_dir = source_position.direction_to(global_position)
-
-	if knockback_dir == Vector2.ZERO:
-		knockback_dir = -last_direction
-	if knockback_dir == Vector2.ZERO:
-		knockback_dir = Vector2.UP
 
 	# Shield Guard: menahan seluruh damage serangan musuh
 	if is_shield_active:
 		modulate = Color(1.8, 1.8, 2.4)
 		var tween = create_tween()
 		tween.tween_property(self, "modulate", Color.WHITE, 0.2)
-		apply_knockback(knockback_dir * 80.0)
 		apply_camera_shake(3.0)
 		print(name, " memblok serangan dengan perisai! 0 damage diterima.")
 		return
 
 	current_health -= amount
 	print("Archer terkena serangan! Sisa HP: ", current_health)
-
-	# Terapkan gaya dorong knockback
-	apply_knockback(knockback_dir * knockback_strength)
 
 	# Efek kedip merah saat terkena serangan (Tween non-blocking)
 	modulate = Color(2.5, 0.3, 0.3)
@@ -1486,6 +1469,8 @@ func respawn():
 
 
 func apply_knockback(force: Vector2):
+	if force == Vector2.ZERO:
+		return
 	knockback_velocity = force
 	is_moving = false
 
