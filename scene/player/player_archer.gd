@@ -8,6 +8,8 @@ extends CharacterBody2D
 # =========================
 const SHIELD_CENTER_OFFSET: Vector2 = Vector2(0.0, 4.0)
 const VISUAL_CENTER_OFFSET: Vector2 = Vector2(2.5, 26.0)
+# Titik tengah proyektil basic attack panah diselaraskan pas dengan busur di tangan Archer (Y diturunkan dari 26.0 menjadi 35.0)
+const BASIC_ATTACK_ARROW_OFFSET: Vector2 = Vector2(2.5, 35.0)
 var is_shield_active: bool = false
 var shield_timer: float = 0.0
 var shield_tween: Tween = null
@@ -976,13 +978,13 @@ func play_attack_animation():
 # =========================================================
 
 func get_arrow_spawn_position() -> Vector2:
-	# Titik visual tengah tubuh archer (skala 5x, texture center 16.0, 16.0 dengan offset y=4)
-	var center_pos := global_position + VISUAL_CENTER_OFFSET
+	# Titik visual busur panah archer di ruang dunia (diselaraskan pas dengan senjata busur di tangan)
+	var bow_pos := global_position + BASIC_ATTACK_ARROW_OFFSET
 
 	# Posisi kemunculan panah tepat di depan busur keluar dari tubuh archer
 	var dir := attack_direction if attack_direction != Vector2.ZERO else last_direction
 	var forward_dist := 28.0 if last_direction == Vector2.UP else 20.0
-	return center_pos + dir * forward_dist
+	return bow_pos + dir * forward_dist
 
 
 
@@ -1183,9 +1185,9 @@ func shoot_towards(target_pos: Vector2):
 	is_moving = false
 	velocity = Vector2.ZERO
 
-	# Tentukan arah tembakan saat klik (dihitung dari titik visual tengah karakter)
-	var center_pos := global_position + VISUAL_CENTER_OFFSET
-	var dir := center_pos.direction_to(target_pos)
+	# Tentukan arah tembakan saat klik (dihitung dari titik visual busur panah karakter)
+	var bow_pos := global_position + BASIC_ATTACK_ARROW_OFFSET
+	var dir := bow_pos.direction_to(target_pos)
 
 	if dir == Vector2.ZERO:
 		dir = last_direction
