@@ -108,16 +108,39 @@ func set_party_command(cmd: PartyCommand) -> void:
 
 	print("Party Command -> ", "FOLLOW (Tombol C)" if cmd == PartyCommand.FOLLOW else "ATTACK (Tombol V)")
 
+func is_character_alive(character: CharacterBody2D) -> bool:
+	if not character or not is_instance_valid(character):
+		return false
+	if "is_dead" in character and character.is_dead:
+		return false
+	return true
+
+
 func switch_to_next_character() -> void:
 	if party_members.is_empty():
 		return
-	var next_idx := (active_leader_index + 1) % party_members.size()
-	switch_to_character(next_idx)
+
+	var count := party_members.size()
+	# Cari karakter hidup berikutnya secara siklis mulai dari anggota berikutnya
+	for step in range(1, count):
+		var target_idx := (active_leader_index + step) % count
+		var candidate := party_members[target_idx]
+		if is_character_alive(candidate):
+			switch_to_character(target_idx)
+			return
+
+	print("Tidak ada anggota party lain yang masih hidup untuk dipilih.")
 
 
 func switch_to_character(idx: int) -> void:
 	if idx < 0 or idx >= party_members.size() or idx == active_leader_index:
 		return
+
+	var target := party_members[idx]
+	if not is_character_alive(target):
+		print("Karakter [", idx + 1, "] sedang gugur. Pergantian Leader dibatalkan.")
+		return
+
 	set_active_leader(idx)
 
 
@@ -127,6 +150,8 @@ func set_active_leader(idx: int) -> void:
 
 	active_leader_index = idx
 	var leader := party_members[active_leader_index]
+	if not is_instance_valid(leader):
+		return
 
 	# Berikan status Leader langsung ke karakter terpilih
 	breadcrumbs.clear()
@@ -137,9 +162,10 @@ func set_active_leader(idx: int) -> void:
 	for step in range(1, party_members.size()):
 		var follower_idx := (active_leader_index + step) % party_members.size()
 		var follower := party_members[follower_idx]
-		follower.set_as_leader(false, leader, slot_order)
-		if follower.has_method("set_party_command"):
-			follower.set_party_command(current_party_command)
+		if is_instance_valid(follower):
+			follower.set_as_leader(false, leader, slot_order)
+			if follower.has_method("set_party_command"):
+				follower.set_party_command(current_party_command)
 		slot_order += 1
 
 	# Sinkronkan state combat jika pergantian karakter terjadi saat bertempur

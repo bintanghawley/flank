@@ -58,7 +58,7 @@ flank/
 ### Tanggung Jawab Komponen Kunci:
 1. **`scene/game.gd` (Game & Party Manager):**
    - Mendaftarkan 3 anggota party (`Knight_1`, `Mage_1`, `Archer_1`).
-   - Mengelola pergantian Leader aktif dan penugasan slot antrean Follower (slot 1 dan 2).
+   - Mengelola pergantian Leader aktif (validasi hidup/mati siklis via Tab dan pemilihan langsung angka 1–3 dengan pengabaian hero yang gugur) dan penugasan slot antrean Follower (slot 1 dan 2).
    - Menghitung riwayat jejak langkah (*breadcrumbs queue*) dan pembalikan antrean 180° (*cascade swap*).
    - Mengendalikan pergerakan kamera halus (*position smoothing*), offset target (+45 px vertikal), dan screen shake.
    - Memindai Rect2 kamera (+50 px margin) setiap 0.15 detik untuk memicu aggro tempur saat musuh terlihat di layar.
