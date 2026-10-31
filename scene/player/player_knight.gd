@@ -761,6 +761,17 @@ func die() -> void:
 	slash_hit_enemies.clear()
 	deactivate_shield()
 
+	ai_attack_timer = 0.0
+	is_flanking = false
+	flank_wp1 = Vector2.ZERO
+	flank_wp2 = Vector2.ZERO
+	flank_stage = 1
+	flank_timeout = 0.0
+	facing_debounce_timer = 0.0
+	attack_stuck_timer = 0.0
+	knockback_velocity = Vector2.ZERO
+	print("Knight Gugur! Menunggu respawn...")
+
 	# Auto-switch jika Leader aktif gugur
 	if is_leader:
 		var game_node = get_tree().current_scene
@@ -770,31 +781,76 @@ func die() -> void:
 		if game_node and game_node.has_method("switch_to_next_character"):
 			game_node.switch_to_next_character()
 
+	# Matikan tabrakan dan keluarkan sementara dari grup player
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
+	remove_from_group("player")
 
-	var tween = create_tween()
-	tween.tween_property(self, "modulate:a", 0.0, 0.5)
-	await tween.finished
+	var death_tween = create_tween()
+	death_tween.tween_property(self, "modulate", Color(0.8, 0.2, 0.2, 0.0), 0.5)
+	await death_tween.finished
 
+	visible = false
 	await get_tree().create_timer(respawn_time).timeout
-	_respawn()
+	respawn()
 
 
-func _respawn() -> void:
+func respawn() -> void:
+	deactivate_shield()
+	is_flanking = false
+	flank_wp1 = Vector2.ZERO
+	flank_wp2 = Vector2.ZERO
+	flank_stage = 1
+	flank_timeout = 0.0
+	facing_debounce_timer = 0.0
 	global_position = spawn_position
+	target_position = spawn_position
 	current_health = max_health
-	is_dead = false
-	velocity = Vector2.ZERO
 	is_moving = false
 	is_attacking = false
-	deactivate_shield()
+	is_slash_active = false
+	slash_windup_timer = 0.0
+	slash_active_timer = 0.0
+	slash_hit_enemies.clear()
+	velocity = Vector2.ZERO
+	knockback_velocity = Vector2.ZERO
 
 	if collision_shape:
 		collision_shape.set_deferred("disabled", false)
+	add_to_group("player")
 
-	modulate.a = 1.0
+	visible = true
+	is_dead = false
+	var game_node = get_tree().current_scene
+	if game_node and "current_party_command" in game_node:
+		party_command = game_node.current_party_command as PartyCommand
+	if game_node and "current_combat_state" in game_node:
+		in_party_combat = (game_node.current_combat_state == game_node.PartyCombatState.COMBAT)
+	else:
+		in_party_combat = false
+
+	if not is_leader and game_node and game_node.has_method("get_active_leader"):
+		var current_leader = game_node.get_active_leader()
+		if current_leader and is_instance_valid(current_leader):
+			leader_node = current_leader
+
+	if in_party_combat:
+		ai_attack_timer = randf_range(0.3, 0.7)
+	else:
+		ai_attack_timer = 0.0
+	attack_stuck_timer = 0.0
+	last_movement_direction = Vector2.DOWN
+	last_direction = Vector2.DOWN
 	play_idle_animation()
+
+	modulate = Color(1.0, 1.0, 1.0, 0.2)
+	var respawn_tween = create_tween()
+	respawn_tween.tween_property(self, "modulate:a", 1.0, 0.4)
+	print("Knight berhasil respawn di titik awal! HP penuh: ", current_health)
+
+
+func _respawn() -> void:
+	respawn()
 
 
 # =========================================================
