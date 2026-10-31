@@ -995,17 +995,20 @@ func apply_knockback(force: Vector2):
 	is_moving = false
 
 
-func take_damage(amount: int, source_position: Vector2 = Vector2.ZERO):
+func take_damage(amount: int, source_position = null):
 	if is_dead:
 		return
 
+	var knockback_dir := Vector2.ZERO
+	if source_position is Node2D and is_instance_valid(source_position):
+		knockback_dir = source_position.global_position.direction_to(global_position)
+	elif source_position is Vector2 and source_position != Vector2.ZERO and source_position != global_position:
+		knockback_dir = source_position.direction_to(global_position)
+	else:
+		knockback_dir = -last_direction
+
 	# Shield Guard: menahan seluruh damage serangan musuh
 	if is_shield_active:
-		var knockback_dir := Vector2.ZERO
-		if source_position != Vector2.ZERO and source_position != global_position:
-			knockback_dir = source_position.direction_to(global_position)
-		else:
-			knockback_dir = -last_direction
 		modulate = Color(1.8, 1.8, 2.4)
 		var tween = create_tween()
 		tween.tween_property(self, "modulate", Color.WHITE, 0.2)
@@ -1019,12 +1022,6 @@ func take_damage(amount: int, source_position: Vector2 = Vector2.ZERO):
 
 	current_health -= amount
 	print("Mage terkena serangan! Sisa HP: ", current_health)
-
-	var knockback_dir := Vector2.ZERO
-	if source_position != Vector2.ZERO and source_position != global_position:
-		knockback_dir = source_position.direction_to(global_position)
-	else:
-		knockback_dir = -last_direction
 
 	apply_knockback(knockback_dir * knockback_strength)
 
