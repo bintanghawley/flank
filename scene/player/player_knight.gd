@@ -967,11 +967,6 @@ func apply_camera_shake(intensity: float = -1.0) -> void:
 		game.apply_camera_shake(amount)
 
 
-func get_controlled_projectile_speed() -> float:
-	# Fallback kompatibilitas sistem proyektil saat Knight bertindak sebagai Leader
-	return 580.0
-
-
 func get_separation_vector() -> Vector2:
 	var separation := Vector2.ZERO
 	var min_sep_dist: float = 55.0 # Jarak personal aman antar karakter
