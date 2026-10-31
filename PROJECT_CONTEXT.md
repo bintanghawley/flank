@@ -83,7 +83,7 @@ flank/
    - Penanganan knockback decay, penerimaan damage, kematian (fade-out), dan respawn (3s).
 5. **`scene/enemy/enemy.gd`:**
    - State AI musuh: `IDLE_PATROL` dan `CHASE`.
-   - Serangan panah jarak jauh (320 px) dan kontak fisik (1 damage).
+   - Serangan panah jarak jauh (320 px) dan kontak fisik (1 damage) dengan pelacakan hitbox multi-hero yang aman (mempertahankan status kontak dan siklus cooldown selama setidaknya satu hero hidup berada di dalam hitbox).
    - Bar HP ganda (merah untuk HP riil, kuning untuk animasi lag pengurangan damage).
    - Sistem memori ancaman (*threat-aggro*) terhadap karakter yang melukainya.
    - Respawn musuh otomatis setelah 4 detik.

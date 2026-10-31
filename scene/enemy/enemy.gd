@@ -58,6 +58,7 @@ var wander_timer: float = 0.0
 # Variabel Kontak & Serangan
 var damage_timer: float = 0.0
 var is_touching_player: bool = false
+var touching_players: Array[CharacterBody2D] = []
 
 # Node references
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -304,15 +305,17 @@ func _physics_process(delta):
 		move_and_slide_with_separation()
 
 	# ---------------------------------------------------------
-	# 2. LOGIKA DAMAGE SAAT MENYENTUH ARCHER
+	# 2. LOGIKA DAMAGE KONTAK SAAT MENYENTUH HERO
 	# ---------------------------------------------------------
 	damage_timer -= delta
-	if is_touching_player and player != null and is_instance_valid(player):
-		if ("is_dead" in player and player.is_dead) or not player.is_in_group("player"):
-			is_touching_player = false
-		elif damage_timer <= 0.0:
-			if player.has_method("take_damage"):
-				player.take_damage(contact_damage, global_position)
+	var target_touching := update_touching_players_and_get_target()
+	if target_touching != null:
+		if current_state == State.IDLE_PATROL:
+			current_state = State.CHASE
+			player = target_touching
+		if damage_timer <= 0.0:
+			if target_touching.has_method("take_damage"):
+				target_touching.take_damage(contact_damage, global_position)
 			damage_timer = attack_cooldown
 
 
@@ -809,6 +812,8 @@ func die():
 	flank_stage = 1
 	flank_timeout = 0.0
 	facing_debounce_timer = 0.0
+	touching_players.clear()
+	is_touching_player = false
 
 	# Sembunyikan visual dan matikan proses
 	visible = false
@@ -836,6 +841,7 @@ func respawn():
 	# Kembalikan ke posisi awal
 	global_position = spawn_position
 	current_health = max_health
+	touching_players.clear()
 	is_touching_player = false
 	player = null
 	is_flanking = false
@@ -916,25 +922,65 @@ func _on_detection_area_body_exited(body):
 
 
 # =========================================================
-# HITBOX KONTAK
+# HITBOX KONTAK & DETEKSI MULTI-HERO
 # =========================================================
 
-func _on_hitbox_body_entered(body):
-	if is_dead:
+func update_touching_players_and_get_target(exited_body: Node2D = null) -> CharacterBody2D:
+	if exited_body != null:
+		touching_players.erase(exited_body)
+
+	# Sinkronkan dengan overlap aktual jika tidak sedang dalam pemanggilan body_exited
+	if exited_body == null and hitbox and is_instance_valid(hitbox) and not is_dead:
+		for b in hitbox.get_overlapping_bodies():
+			if b is CharacterBody2D and is_instance_valid(b):
+				if not ("is_dead" in b and b.is_dead) and b.is_in_group("player"):
+					if b not in touching_players:
+						touching_players.append(b)
+
+	# Bersihkan entri yang tidak valid, sudah mati, atau keluar dari grup player
+	var valid_touching: Array[CharacterBody2D] = []
+	for p in touching_players:
+		if is_instance_valid(p) and p is CharacterBody2D:
+			if not ("is_dead" in p and p.is_dead) and p.is_in_group("player"):
+				if p not in valid_touching:
+					valid_touching.append(p)
+	touching_players = valid_touching
+	is_touching_player = not touching_players.is_empty()
+
+	if touching_players.is_empty():
+		return null
+
+	# Pilih hero terdekat dari musuh di antara seluruh hero yang menyentuh hitbox
+	var closest: CharacterBody2D = touching_players[0]
+	var min_dist: float = global_position.distance_to(closest.global_position)
+	for i in range(1, touching_players.size()):
+		var d: float = global_position.distance_to(touching_players[i].global_position)
+		if d < min_dist:
+			min_dist = d
+			closest = touching_players[i]
+	return closest
+
+
+func _on_hitbox_body_entered(body: Node2D) -> void:
+	if is_dead or body == null:
 		return
 	if (body.is_in_group("player") or body.name == "Player_Archer") and not ("is_dead" in body and body.is_dead):
-		is_touching_player = true
-		player = body
-		# Langsung berikan damage jika cooldown siap
-		if damage_timer <= 0.0:
-			if player.has_method("take_damage"):
-				player.take_damage(contact_damage, global_position)
-			damage_timer = attack_cooldown
+		if body is CharacterBody2D and body not in touching_players:
+			touching_players.append(body)
+		var target_player := update_touching_players_and_get_target()
+		if target_player:
+			if current_state == State.IDLE_PATROL:
+				current_state = State.CHASE
+				player = target_player
+			# Langsung berikan damage jika cooldown siap
+			if damage_timer <= 0.0:
+				if target_player.has_method("take_damage"):
+					target_player.take_damage(contact_damage, global_position)
+				damage_timer = attack_cooldown
 
 
-func _on_hitbox_body_exited(body):
-	if body.is_in_group("player") or body.name == "Player_Archer":
-		is_touching_player = false
+func _on_hitbox_body_exited(body: Node2D) -> void:
+	update_touching_players_and_get_target(body)
 
 
 func get_separation_vector() -> Vector2:
