@@ -147,15 +147,13 @@ func destroy(with_impact: bool = false) -> void:
 	if with_impact:
 		spawn_impact()
 
+	# Fade out halus garis trail sebelum dihapus
 	if trail_line and trail_line.get_point_count() > 0:
-		var tw = create_tween()
-		tw.tween_property(trail_line, "modulate:a", 0.0, 0.08)
-		tw.tween_callback(trail_line.queue_free)
+		var tween = create_tween()
+		tween.tween_property(trail_line, "modulate:a", 0.0, 0.08)
+		tween.tween_callback(queue_free)
 	else:
-		if trail_line:
-			trail_line.queue_free()
-
-	queue_free()
+		queue_free()
 
 
 func spawn_impact() -> void:
