@@ -12,6 +12,7 @@ extends CharacterBody2D
 # PARTY SHIELD GUARD (DARI KNIGHT)
 # =========================
 const SHIELD_CENTER_OFFSET: Vector2 = Vector2(0.0, 3.5)
+const BASIC_ATTACK_STAFF_OFFSET: Vector2 = Vector2(0.0, 47.0) # Titik poros tengah senjata tongkat sihir Mage di ruang global
 var is_shield_active: bool = false
 var shield_timer: float = 0.0
 var shield_tween: Tween = null
@@ -224,10 +225,10 @@ func _physics_process(delta: float) -> void:
 	if is_aiming_skill:
 		process_skill_aiming()
 
-	# Watchdog anti-stuck is_attacking (maksimal 0.6 detik)
+	# Watchdog anti-stuck is_attacking (maksimal 0.8 detik agar animasi attack 0.67s selesai alami)
 	if is_attacking:
 		attack_stuck_timer += delta
-		if attack_stuck_timer >= 0.6:
+		if attack_stuck_timer >= 0.8:
 			is_attacking = false
 			attack_stuck_timer = 0.0
 			if not is_moving and not is_aiming_skill and not is_skill_releasing:
@@ -745,9 +746,9 @@ func shoot_towards(target_pos: Vector2):
 	is_moving = false
 	velocity = Vector2.ZERO
 
-	# Titik visual tengah karakter
-	var center_pos := global_position + Vector2(0.0, 5.0)
-	var dir := center_pos.direction_to(target_pos)
+	# Titik visual tengah senjata tongkat sihir Mage
+	var staff_pos := global_position + BASIC_ATTACK_STAFF_OFFSET
+	var dir := staff_pos.direction_to(target_pos)
 	if dir == Vector2.ZERO:
 		dir = last_direction
 
@@ -774,14 +775,38 @@ func get_dynamic_projectile_speed() -> float:
 	return controlled_projectile_speed * follower_projectile_ratio
 
 
+func get_magic_bolt_spawn_position() -> Vector2:
+	var staff_pos := global_position + BASIC_ATTACK_STAFF_OFFSET
+	var offset: Vector2 = Vector2.ZERO
+	if last_direction == Vector2.UP or animated_sprite.animation == "atk_n":
+		offset = Vector2(-28.0, -110.0)
+	elif last_direction == Vector2.DOWN or animated_sprite.animation == "atk_s":
+		offset = Vector2(22.0, 58.0)
+	elif last_direction == Vector2.LEFT or animated_sprite.animation == "atk_w":
+		offset = Vector2(-92.0, 0.0)
+	elif last_direction == Vector2.RIGHT or animated_sprite.animation == "atk_e":
+		offset = Vector2(92.0, 0.0)
+	elif last_direction == Vector2(-1, -1):
+		offset = Vector2(-78.0, -54.0)
+	elif last_direction == Vector2(1, -1):
+		offset = Vector2(78.0, -54.0)
+	elif last_direction == Vector2(-1, 1):
+		offset = Vector2(-78.0, 30.0)
+	elif last_direction == Vector2(1, 1):
+		offset = Vector2(78.0, 30.0)
+	else:
+		offset = attack_direction * 92.0
+	return staff_pos + offset
+
+
 func reset_attack_state():
-	# Frame ayunan tongkat sihir (~0.25 detik)
-	await get_tree().create_timer(0.24).timeout
+	# Saat senjata tongkat sihir mengarah ke depan dan efek sihir meletup (~0.34 detik, Frame 4)
+	await get_tree().create_timer(0.34).timeout
 
 	if is_dead:
 		return
 
-	var spawn_pos := global_position + Vector2(0.0, 5.0) + attack_direction * 22.0
+	var spawn_pos := get_magic_bolt_spawn_position()
 	var bolt = MAGIC_BOLT_SCENE.instantiate()
 	bolt.global_position = spawn_pos
 	bolt.direction = attack_direction
@@ -790,8 +815,9 @@ func reset_attack_state():
 	bolt.speed = get_dynamic_projectile_speed()
 	get_tree().current_scene.add_child(bolt)
 
-	# Tunggu sampai animasi attack selesai
-	await animated_sprite.animation_finished
+	# Tunggu sampai animasi attack selesai seutuhnya (frame 7 recovery)
+	if animated_sprite.is_playing() and animated_sprite.animation.begins_with("atk_"):
+		await animated_sprite.animation_finished
 	if is_dead:
 		return
 
