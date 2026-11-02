@@ -59,6 +59,7 @@ var wander_timer: float = 0.0
 var damage_timer: float = 0.0
 var is_touching_player: bool = false
 var touching_players: Array[CharacterBody2D] = []
+var stun_timer: float = 0.0
 
 # Node references
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -175,6 +176,13 @@ func setup_health_bar():
 
 func _physics_process(delta):
 	if is_dead:
+		return
+
+	# Penanganan stun / knockup: musuh diam di tempat secara horizontal tanpa pergeseran
+	if stun_timer > 0.0:
+		stun_timer -= delta
+		velocity = Vector2.ZERO
+		knockback_velocity = Vector2.ZERO
 		return
 
 	# Reduksi knockback saat terkena dampak ledakan/serangan kuat
@@ -743,6 +751,23 @@ func apply_knockback(force: Vector2) -> void:
 	knockback_velocity = force
 
 
+func apply_knockup(duration: float = 0.65, height: float = 38.0) -> void:
+	if is_dead:
+		return
+	stun_timer = maxf(stun_timer, duration)
+	velocity = Vector2.ZERO
+	knockback_velocity = Vector2.ZERO
+	if animated_sprite:
+		var orig_y: float = animated_sprite.position.y
+		var tween := create_tween()
+		tween.tween_property(animated_sprite, "position:y", orig_y - height, duration * 0.4)\
+			.set_trans(Tween.TRANS_QUAD)\
+			.set_ease(Tween.EASE_OUT)
+		tween.tween_property(animated_sprite, "position:y", orig_y, duration * 0.6)\
+			.set_trans(Tween.TRANS_BOUNCE)\
+			.set_ease(Tween.EASE_OUT)
+
+
 # =========================================================
 # MENERIMA DAMAGE DARI PANAH ARCHER
 # =========================================================
@@ -788,6 +813,11 @@ func take_damage(amount: int, attacker: CharacterBody2D = null):
 		threat_timer = 3.0
 		player = attacker
 		current_state = State.CHASE
+
+		# Serangan dan skill Bandit dilarang memberikan knockback horizontal pada musuh
+		if "Bandit" in attacker.name:
+			knockback_velocity = Vector2.ZERO
+			velocity = Vector2.ZERO
 	else:
 		var best := get_best_target()
 		if best:

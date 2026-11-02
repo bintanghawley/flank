@@ -1001,7 +1001,7 @@ script = ExtResource("ext_script")
 texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_bandit")
 animation = &"idle_s"
-offset = Vector2(0, 0)
+offset = Vector2(0, 5)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1252115992]
 visible = false
@@ -1010,7 +1010,7 @@ shape = SubResource("RectangleShape2D_bandit")
 
 [node name="ShieldSprite" type="Sprite2D" parent="." unique_id=1849182992]
 visible = false
-z_index = 6
+z_index = 7
 texture_filter = 1
 texture = ExtResource("ext_shield")
 position = Vector2(0, 1.5)

@@ -20,12 +20,12 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
   - **Mode ATTACK (`V`):** Follower diberi kebebasan untuk keluar dari barisan dan menyerang musuh terdekat dalam jangkauan tempur secara mandiri.
 - **Pertarungan Real-Time & Serangan Dasar:** Serangan diarahkan langsung ke posisi kursor mouse melalui klik kiri:
   - **Knight:** Tebasan pedang jarak dekat (*melee slash*) berdaya rusak 2 dengan area sapuan busur di depan karakter.
-  - **Bandit:** Tebasan ganda (*double swing melee*) berdaya rusak 2 untuk setiap ayunan senjata (total 4 damage per serangan dasar) dengan jeda serang lincah 0.85 detik.
+  - **Bandit:** Tebasan ganda belati (*Double Slash Dagger*) berdaya rusak 2 untuk setiap ayunan (total 4 damage per siklus) dengan jeda serang 0.85 detik. Dilengkapi kemampuan pasif *Out-of-Combat Ambush Lunge* setelah 5 detik tanpa pertempuran: serangan dasar pembuka memperoleh jangkauan *engage* luas (260 px), Bandit meluncur lunge cepat ke target, dan memberikan bonus damage +3 (total 5 damage pembuka) disertai aura visual berpendar.
   - **Archer:** Tembakan anak panah lurus berdaya rusak 1 dengan kecepatan proyektil 580 px/s dan jeda tembak 1.4 detik.
   - **Mage:** Tembakan bola sihir (*magic bolt*) berdaya rusak 1 dengan kecepatan proyektil 500 px/s dan jeda tembak 1.5 detik.
 - **Skill Khusus Hero (`E`):**
   - **Knight — *Shield Guard*:** Mengaktifkan perisai pelindung serentak untuk seluruh anggota party selama 3.5 detik (cooldown 6.0 detik). Memberikan kekebalan 100% dari seluruh serangan musuh dan tetap aktif saat pemain berganti karakter.
-  - **Bandit — *Triple Slash*:** Melancarkan 3 tebasan pedang beruntun berdaya rusak total 6 combo (2 per hit) dengan lunge maju dan getaran kamera (cooldown 5.0 detik).
+  - **Bandit — *Dash, Knockup & Triple Slash*:** Meluncur cepat (750 px/s) ke arah kursor mouse dan berhenti seketika saat menabrak musuh pertama. Musuh yang tertabrak terlempar melayang ke udara (*knockup*) serta terkena stun singkat (0.7s), lalu seketika dieksekusi dengan kombo 3 tebasan beruntun berdaya rusak total 6 (2 per hit) dengan efek visual khusus *triple slash* (cooldown 5.0 detik). Hanya dapat diaktifkan saat Bandit menjadi Leader aktif.
   - **Archer — *Charged Line Snipe*:** Mengaktifkan mode bidik garis elastis. Pemain menahan klik kiri untuk mengisi jarak tembak dan melepasnya untuk meluncurkan panah penembus rintangan berdaya rusak area garis lurus (dapat ditembakkan hingga 3 kali dalam jendela waktu 10 detik). Klik kanan untuk membatalkan pengisian daya atau keluar dari mode bidik.
   - **Mage — *Meteor Strike*:** Mengaktifkan reticle lingkaran pada posisi kursor mouse. Klik kiri memanggil proyektil meteor yang jatuh dari langit dan meledak menghasilkan kerusakan area (*AoE*). Klik kanan untuk membatalkan bidikan.
 - **Sistem Musuh & Siklus Tempur:**
@@ -73,7 +73,7 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 | `C` | Perintah FOLLOW | Menginstruksikan regu untuk merapatkan barisan dan menahan tembakan |
 | `V` | Perintah ATTACK | Mengizinkan follower bertarung mandiri menyerang musuh terdekat |
 | `Klik Kiri` (Tap / Tahan) | Serangan Dasar | Menyerang ke arah kursor mouse (tebasan Knight, ayunan ganda Bandit, panah Archer, sihir Mage) |
-| `E` | Skill Khusus | **Knight:** Langsung merapalkan perisai *Shield Guard* (durasi 3.5s, cooldown 6s)<br>**Bandit:** Langsung melancarkan combo 3 tebasan *Triple Slash* (cooldown 5s)<br>**Archer:** Masuk/keluar mode bidik *Charged Line Snipe*<br>**Mage:** Masuk mode bidik *Meteor Strike* |
+| `E` | Skill Khusus | **Knight:** Langsung merapalkan perisai *Shield Guard* (durasi 3.5s, cooldown 6s)<br>**Bandit:** Melesat dash menabrak musuh, knockup & stun musuh, lalu melancarkan combo 3 tebasan *Triple Slash* (cooldown 5s)<br>**Archer:** Masuk/keluar mode bidik *Charged Line Snipe*<br>**Mage:** Masuk mode bidik *Meteor Strike* |
 | `Klik Kiri` (Saat Mode Skill) | Eksekusi Skill | **Archer:** Tahan untuk mengisi jarak tembak, lepas untuk menembak<br>**Mage:** Klik pada area sasaran untuk menjatuhkan meteor |
 | `Klik Kanan` (Saat Mode Skill) | Batal / Keluar Skill | **Archer:** Membatalkan pengisian daya atau keluar dari mode bidik<br>**Mage:** Membatalkan reticle sasaran meteor |
 
@@ -143,7 +143,7 @@ flank/
 ├── scene/                                 # Logika kode sumber (GDScript) dan scene Godot (.tscn)
 │   ├── effect/                            # Prefab efek visual mandiri (run_dust.tscn/.gd)
 │   ├── enemy/                             # Prefab dan AI musuh (enemy.tscn/.gd)
-│   ├── player/                            # Controller hero regu (player_archer, player_knight, player_mage)
+│   ├── player/                            # Controller hero regu (player_archer, player_bandit, player_knight, player_mage)
 │   ├── projectile/                        # Proyektil fisik, benturan (impact), dan indikator reticle dunia
 │   ├── ui/                                # Folder persiapan scene Godot UI (menus & gameplay) (.gitkeep)
 │   ├── world/                             # Peta lingkungan TileMapLayer (map_region_1.tscn)
