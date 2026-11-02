@@ -35,27 +35,102 @@ Dokumen ini merupakan ringkasan teknis operasional proyek game **"Flank"**. Doku
 
 ## 3. STRUKTUR DIREKTORI & MODUL UTAMA
 
+### A. Master Plan Struktur Direktori Final (Resmi Disetujui)
+
+Struktur direktori resmi proyek game **Flank** yang disepakati sebagai acuan arsitektur jangka panjang dan panduan kolaborasi tim:
+
 ```text
 flank/
-├── assets/                  # Seluruh aset visual (spritesheet karakter, tileset, proyektil)
-│   ├── characters/          # Animasi 4-arah Archer, Mage, dan Knight (idle, walk, attack, skill)
-│   ├── particles/           # Partikel debu lari (dust.png, dust_puff.png)
-│   ├── projectile/          # Tekstur panah, trace trail, dan magic bolt
-│   ├── skills/              # Indikator dan efek visual skill Archer, Mage, & Knight
-│   └── tileset/             # Spritesheet SunnySide World 16px
-├── scene/                   # Logika kode sumber dan hierarki node
-│   ├── effect/              # Efek visual mandiri (run_dust.tscn / .gd)
-│   ├── enemy/               # AI dan prefab musuh (enemy.tscn / .gd)
-│   ├── player/              # Entitas hero (player_knight, player_mage, player_archer)
-│   ├── projectile/          # Proyektil dan efek area (arrow, magic_bolt, meteor)
-│   ├── world/               # Peta TileMapLayer (map_region_1.tscn)
-│   ├── game.gd              # Controller utama party, kamera, dan boundary
-│   └── game.tscn            # Main Scene game
-├── PROJECT_CONTEXT.md       # Dokumentasi konteks operasional proyek
-└── project.godot            # Konfigurasi engine Godot
+├── .agents/                               # Konfigurasi dan Standing Rules AI (flank-preflight, SKILL.md)
+│   ├── rules/
+│   └── skills/
+│
+├── assets/                                # ROOT SELURUH ASET GRAFIS, TEKSTUR, DAN AUDIO
+│   ├── audio/                             # Aset Suara (Disiapkan dengan .gitkeep)
+│   │   ├── bgm/                           # Musik latar (.ogg) + .gitkeep
+│   │   └── sfx/                           # Efek suara (.wav) + .gitkeep
+│   │
+│   ├── characters/                        # Seluruh Sprite Karakter (Hero Party & Karakter Musuh)
+│   │   ├── archer/                        # Sprite 4-arah Archer (Hero)
+│   │   ├── bandit/                        # Sprite 4-arah Bandit (Karakter Musuh — Tetap di sini)
+│   │   ├── knight/                        # Sprite 4-arah Knight (Hero)
+│   │   └── mage/                          # Sprite 4-arah Mage (Hero)
+│   │
+│   ├── enemies/                           # Folder Cadangan Musuh Non-Humanoid / Monster (.gitkeep)
+│   │
+│   ├── environment/                       # Aset Lingkungan & Map Dunia
+│   │   └── tileset/                       # Spritesheet SunnySide World 16px
+│   │
+│   ├── particles/                         # Tekstur Partikel (dust.png & dust_puff.png)
+│   │
+│   ├── projectiles/                       # Tekstur Proyektil Fisik (Panah & Magic Bolt)
+│   │   ├── arrow/
+│   │   └── magic_bolt/
+│   │
+│   ├── skills/                            # Tekstur Efek Animasi Skill
+│   │   ├── archer/
+│   │   ├── bandit/
+│   │   │   └── triple_slash/              # Tekstur efek skill Bandit (nama tanpa spasi)
+│   │   ├── knight/
+│   │   └── mage/
+│   │       └── meteor/                    # Tekstur efek Meteor Strike
+│   │
+│   └── ui/                                # SELURUH ASET GRAFIS MENTAH UI & FONT
+│       ├── fonts/                         # Tipografi pixel (.ttf, .otf) + .gitkeep
+│       ├── gameplay/                      # Grafis Antarmuka In-Game
+│       │   ├── dialogue/                  # 9-slice box dialog, frame avatar + .gitkeep
+│       │   ├── inventory/                 # Grid cell slot, frame tooltip + .gitkeep
+│       │   └── party_hud/                 # HP bar frame/fill, command icons + .gitkeep
+│       ├── icons/                         # Ikon-Ikon UI
+│       │   ├── actions/                   # Skip icon, prompt tombol interaksi + .gitkeep
+│       │   └── skills/                    # Subfolder Ikon Skill per Karakter:
+│       │       ├── archer/                # Ikon skill Archer + .gitkeep
+│       │       ├── bandit/                # Ikon skill Bandit + .gitkeep
+│       │       ├── knight/                # Ikon skill Knight + .gitkeep
+│       │       └── mage/                  # Ikon skill Mage + .gitkeep
+│       └── menus/                         # Grafis Layar Menu
+│           ├── credits/                   # Frame credits, logo tim + .gitkeep
+│           ├── options_menu/              # Slider bar, grabber, checkbox + .gitkeep
+│           ├── pause_menu/                # Dim overlay, popup frame + .gitkeep
+│           ├── save_load/                 # Slot card, delete/save buttons + .gitkeep
+│           └── start_menu/                # Title logo, main button frames + .gitkeep
+│
+├── scene/                                 # IMPLEMENTASI GAME (SCENE & SCRIPT CO-LOCATION)
+│   ├── effect/                            # Prefab visual efek mandiri (run_dust.tscn/.gd)
+│   ├── enemy/                             # Prefab & Script Musuh (enemy.tscn/.gd)
+│   ├── player/                            # Prefab Hero Party (player_archer, knight, mage)
+│   ├── projectile/                        # Proyektil Fisik & Reticle Bidikan Dunia
+│   │   ├── arrow.tscn / .gd
+│   │   ├── magic_bolt.tscn / .gd
+│   │   ├── meteor_strike.tscn / .gd
+│   │   ├── meteor_indicator.tscn / .gd    # World-space reticle Node2D
+│   │   ├── skill_indicator.tscn / .gd     # World-space reticle Node2D
+│   │   ├── skill_aoe_effect.tscn / .gd    # Area2D damage hitbox
+│   │   └── impacts/                       # Prefab benturan (arrow, fireball, meteor)
+│   ├── ui/                                # IMPLEMENTASI SCENE GODOT UI (CONTROL / CANVASLAYER)
+│   │   ├── gameplay/                      # Scene UI Gameplay (.gitkeep)
+│   │   └── menus/                         # Scene UI Menu (.gitkeep)
+│   ├── world/                             # TileMapLayer (map_region_1.tscn)
+│   ├── game.gd                            # Controller utama party & kamera
+│   └── game.tscn                          # Main Entry Scene (uid://80uy3wgwk1dw)
+│
+├── PROJECT_CONTEXT.md                     # Dokumentasi Konteks Operasional Proyek
+├── README.md                              # Dokumentasi Publik dan Petunjuk Proyek
+└── project.godot                          # Konfigurasi Utama Godot Engine
 ```
 
-### Tanggung Jawab Komponen Kunci:
+### B. Prinsip Arsitektur & Aturan Kolaborasi:
+1. **Aturan `.gitkeep` untuk Folder Kosong:**  
+   Git secara bawaan tidak melacak direktori kosong. Seluruh folder baru yang belum memiliki file aset aktif (misal: `assets/enemies/`, subfolder `assets/ui/`, `assets/audio/`, dan `scene/ui/`) wajib diberi file penanda kosong bernama `.gitkeep` agar hierarki folder tetap terlacak dan konsisten saat di-clone oleh anggota tim lain.
+2. **Pemisahan `assets/ui/` vs. `scene/ui/`:**  
+   - `assets/ui/` khusus menampung aset visual mentah (PNG, SVG), tekstur 9-slice, ikon, dan file font tipografi (.ttf/.otf). Dilarang meletakkan script `.gd` atau scene `.tscn` di folder ini.
+   - `scene/ui/` khusus menampung implementasi node Godot UI berbasis `Control` atau `CanvasLayer` beserta logika interaksinya (`.gd`).
+3. **Status Entitas Reticle / Indicator Tempur:**  
+   `meteor_indicator.tscn` (Node2D) dan `skill_indicator.tscn` (Node2D) adalah *world-space reticle*, sedangkan `skill_aoe_effect.tscn` adalah *Area2D combat hitbox*. Ketiganya tetap berada di domain combat/proyektil (`scene/projectile/`) dan **dilarang dipindahkan ke `scene/ui/`**.
+4. **Alokasi Sprite Karakter:**  
+   `assets/characters/` digunakan untuk seluruh sprite animasi karakter (baik Hero Party maupun karakter musuh seperti Bandit). Aset Bandit tetap berada di `assets/characters/bandit/`. Folder `assets/enemies/` disiapkan kosong untuk musuh monster/non-humanoid di masa depan.
+
+### C. Tanggung Jawab Komponen Kunci:
 1. **`scene/game.gd` (Game & Party Manager):**
    - Root scene `game.tscn` terpusat pada origin `Vector2(0, 0)` sehingga menyelaraskan koordinat global entitas hero, musuh, pembatas map (`WorldBorders`), dan layer peta `map_region_1`.
    - Mendaftarkan 3 anggota party (`Knight_1`, `Mage_1`, `Archer_1`).
