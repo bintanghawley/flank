@@ -14,7 +14,7 @@ Dokumen ini merupakan ringkasan teknis operasional proyek game **"Flank"**. Doku
 - **Genre:** Top-Down Real-Time Tactical Party Action RPG / Crawler 2D.
 - **Perspektif & Gaya Visual:** 2D Top-Down Orthographic (Y-Sorted), Pixel Art 16x16 (Sprite karakter diskalakan 5x).
 - **Konsep Inti Permainan:** 
-  Pemain mengendalikan 1 *Leader* aktif dan 2 *Follower* otonom (total 3 hero: Knight, Mage, dan Archer). Anggota party mengekor di belakang Leader dalam barisan dinamis (*snake breadcrumb queue*). Pemain dapat menukar kendali Leader secara instan, mengubah mode komando taktis (*Follow / Attack*), melepaskan tebasan melee, serangan proyektil, dan skill khusus (Shield Guard, Meteor Strike, Line Snipe), serta memanfaatkan manuver melipir rintangan (*flanking*).
+  Pemain mengendalikan 1 *Leader* aktif dan 3 *Follower* otonom (total 4 hero: Knight, Bandit, Archer, dan Mage). Anggota party mengekor di belakang Leader dalam barisan dinamis (*snake breadcrumb queue*). Pemain dapat menukar kendali Leader secara instan, mengubah mode komando taktis (*Follow / Attack*), melepaskan tebasan melee, serangan proyektil, dan skill khusus (Shield Guard, Triple Slash, Line Snipe, Meteor Strike), serta memanfaatkan manuver melipir rintangan (*flanking*).
 
 ---
 
@@ -98,7 +98,7 @@ flank/
 ├── scene/                                 # IMPLEMENTASI GAME (SCENE & SCRIPT CO-LOCATION)
 │   ├── effect/                            # Prefab visual efek mandiri (run_dust.tscn/.gd)
 │   ├── enemy/                             # Prefab & Script Musuh (enemy.tscn/.gd)
-│   ├── player/                            # Prefab Hero Party (player_archer, knight, mage)
+│   ├── player/                            # Prefab Hero Party (player_knight, player_bandit, player_archer, player_mage)
 │   ├── projectile/                        # Proyektil Fisik & Reticle Bidikan Dunia
 │   │   ├── arrow.tscn / .gd
 │   │   ├── magic_bolt.tscn / .gd
@@ -133,8 +133,8 @@ flank/
 ### C. Tanggung Jawab Komponen Kunci:
 1. **`scene/game.gd` (Game & Party Manager):**
    - Root scene `game.tscn` terpusat pada origin `Vector2(0, 0)` sehingga menyelaraskan koordinat global entitas hero, musuh, pembatas map (`WorldBorders`), dan layer peta `map_region_1`.
-   - Mendaftarkan 3 anggota party (`Knight_1`, `Mage_1`, `Archer_1`).
-   - Mengelola pergantian Leader aktif (validasi hidup/mati siklis via Tab dan pemilihan langsung angka 1–3 dengan pengabaian hero yang gugur) dan penugasan slot antrean Follower (slot 1 dan 2).
+   - Mendaftarkan 4 anggota party (`Knight_1`, `Bandit_1`, `Archer_1`, `Mage_1`).
+   - Mengelola pergantian Leader aktif (validasi hidup/mati siklis via Tab dan pemilihan langsung angka 1–4 dengan pengabaian hero yang gugur) dan penugasan slot antrean Follower (slot 1, 2, dan 3).
    - Menghitung riwayat jejak langkah (*breadcrumbs queue*) dan pembalikan antrean 180° (*cascade swap*).
    - Mengendalikan pergerakan kamera halus (*position smoothing*), offset target (+45 px vertikal), dan screen shake.
    - Memindai Rect2 kamera (+50 px margin) setiap 0.15 detik untuk memicu aggro tempur saat musuh terlihat di layar.
@@ -168,20 +168,21 @@ flank/
 
 ## 4. DAFTAR KARAKTER & SKEMA KONTROL GAMEPLAY
 
-### Komposisi Party (Indeks 0–2):
-- **Slot 1 (Indeks 0):** `Knight_1` (Leader default saat game dimulai)
-- **Slot 2 (Indeks 1):** `Mage_1`
-- **Slot 3 (Indeks 2):** `Archer_1`
+### Komposisi Party (Indeks 0–3):
+- **Slot 1 (Indeks 0):** `Knight_1` (Leader default saat game dimulai, petarung melee & shield)
+- **Slot 2 (Indeks 1):** `Bandit_1` (Rogue lincah, tebasan melee double swing / double damage & skill Triple Slash)
+- **Slot 3 (Indeks 2):** `Archer_1` (Ranged sniper, tembakan panah lurus & skill Charged Line Snipe)
+- **Slot 4 (Indeks 3):** `Mage_1` (Ranged caster, tembakan bola sihir & skill Meteor Strike)
 
 ### Skema Input (Terverifikasi dalam Pengujian Manual):
 - `W`, `A`, `S`, `D` / Panah: Gerak manual Leader.
 - Tahan `Shift`: Sprint Leader dan Follower + memunculkan partikel debu lari.
-- `Tab`: Pergantian Leader berurutan secara siklis (1 ➔ 2 ➔ 3 ➔ 1).
-- Angka `1`, `2`, `3`: Memilih Leader secara langsung sesuai nomor slot (1: Knight, 2: Mage, 3: Archer).
+- `Tab`: Pergantian Leader berurutan secara siklis (1 ➔ 2 ➔ 3 ➔ 4 ➔ 1).
+- Angka `1`, `2`, `3`, `4`: Memilih Leader secara langsung sesuai nomor slot (1: Knight, 2: Bandit, 3: Archer, 4: Mage).
 - Tombol `C`: Komando **FOLLOW** (follower dilarang menyerang, wajib berada di barisan).
 - Tombol `V`: Komando **ATTACK** (follower diizinkan keluar barisan dan bertarung mandiri).
-- `Klik Kiri`: Serangan dasar (Tebasan Melee Knight / Bola Sihir Mage / Panah Archer).
-- Tombol `E`: Masuk ke mode skill khusus karakter aktif (Knight: Shield Guard, Mage: Meteor Strike, Archer: Charged Line Snipe).
+- `Klik Kiri`: Serangan dasar (Tebasan Melee Knight / Ayunan Ganda Double Damage Bandit / Panah Archer / Bola Sihir Mage).
+- Tombol `E`: Masuk ke mode skill khusus karakter aktif (Knight: Shield Guard, Bandit: Triple Slash, Archer: Charged Line Snipe, Mage: Meteor Strike).
 
 ---
 

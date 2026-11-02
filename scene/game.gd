@@ -1,7 +1,7 @@
 extends Node2D
 
 # =========================================================
-# GAME CONTROLLER & 3-CHARACTER PARTY MANAGER
+# GAME CONTROLLER & 4-CHARACTER PARTY MANAGER
 # =========================================================
 
 @onready var camera: Camera2D = $Camera2D
@@ -28,21 +28,21 @@ var shake_decay: float = 35.0
 
 
 func _ready() -> void:
-	# 1. Daftarkan 3 anggota party dari scene
-	# Urutan: Knight_1, Mage_1, Archer_1
-	var names: Array[String] = ["Knight_1", "Mage_1", "Archer_1"]
+	# 1. Daftarkan 4 anggota party dari scene
+	# Urutan: Knight_1, Bandit_1, Archer_1, Mage_1
+	var names: Array[String] = ["Knight_1", "Bandit_1", "Archer_1", "Mage_1"]
 	for n in names:
 		var node := get_node_or_null(n) as CharacterBody2D
 		if node:
 			party_members.append(node)
 
-	# Fallback pencarian fleksibel jika node bernama Player_Knight / Player_Mage / Player_Archer
+	# Fallback pencarian fleksibel jika node bernama Player_Knight / Player_Bandit / Player_Archer / Player_Mage
 	if party_members.is_empty():
 		for child in get_children():
 			if child.is_in_group("player") and child is CharacterBody2D:
 				party_members.append(child)
 
-	# 2. Nonaktifkan tabrakan fisik antar-seluruh anggota party (3 karakter)
+	# 2. Nonaktifkan tabrakan fisik antar-seluruh anggota party (4 karakter)
 	for i in range(party_members.size()):
 		for j in range(i + 1, party_members.size()):
 			party_members[i].add_collision_exception_with(party_members[j])
@@ -69,7 +69,7 @@ func setup_party_enemy_collision_exceptions() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Tombol pintasan pergantian karakter: Tab (siklis) atau angka 1, 2, 3
+	# Tombol pintasan pergantian karakter: Tab (siklis) atau angka 1, 2, 3, 4
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_TAB:
 			switch_to_next_character()
@@ -82,6 +82,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_3:
 			switch_to_character(2)
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_4:
+			switch_to_character(3)
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_C:
 			set_party_command(PartyCommand.FOLLOW)
@@ -374,7 +377,7 @@ func update_breadcrumbs() -> void:
 
 	if breadcrumbs.is_empty():
 		breadcrumbs.append({"pos": leader_pos, "dir": leader_dir})
-		for i in range(1, 45):
+		for i in range(1, 60):
 			breadcrumbs.append({
 				"pos": leader_pos - leader_dir * (i * BREADCRUMB_INTERVAL),
 				"dir": leader_dir
@@ -398,7 +401,7 @@ func update_breadcrumbs() -> void:
 			breadcrumbs.clear()
 			breadcrumbs.append({"pos": leader_pos, "dir": step_dir})
 			breadcrumbs.append({"pos": turn_pt, "dir": step_dir})
-			for k in range(1, 50):
+			for k in range(1, 60):
 				breadcrumbs.append({
 					"pos": turn_pt - step_dir * (k * BREADCRUMB_INTERVAL),
 					"dir": step_dir
@@ -406,7 +409,7 @@ func update_breadcrumbs() -> void:
 		else:
 			# Gerakan biasa atau belok 90° (Snake Corner Turn)
 			breadcrumbs.push_front({"pos": leader_pos, "dir": step_dir})
-			if breadcrumbs.size() > 65:
+			if breadcrumbs.size() > 80:
 				breadcrumbs.pop_back()
 
 

@@ -2,7 +2,7 @@
 
 **Flank** adalah prototipe game action RPG taktis 2D dengan perspektif *top-down* yang dikembangkan menggunakan Godot Engine 4 untuk proyek inkubasi game.
 
-Dalam game ini, pemain mengendalikan sebuah regu (*party*) beranggotakan tiga hero: **Knight**, **Mage**, dan **Archer**. Pemain mengendalikan satu **Leader** secara langsung, sementara dua **Follower** bergerak mengekor di belakang barisan atau bertempur mandiri sesuai perintah yang diberikan. Pemain dapat berganti Leader secara instan, mengatur formasi pergerakan, mengeksekusi serangan dasar terarah, serta melancarkan skill khusus pertahanan dan area secara *real-time*.
+Dalam game ini, pemain mengendalikan sebuah regu (*party*) beranggotakan empat hero: **Knight**, **Bandit**, **Archer**, dan **Mage**. Pemain mengendalikan satu **Leader** secara langsung, sementara tiga **Follower** bergerak mengekor di belakang barisan atau bertempur mandiri sesuai perintah yang diberikan. Pemain dapat berganti Leader secara instan, mengatur formasi pergerakan, mengeksekusi serangan dasar terarah, serta melancarkan skill khusus pertahanan dan area secara *real-time*.
 
 > **Status Proyek:** Flank saat ini berada pada tahap pengembangan prototipe awal (*early prototype*). Seluruh fitur inti gameplay telah dapat dimainkan dan diuji, sementara antarmuka visual (UI/HUD), tata suara (audio), dan variasi musuh lanjutan sedang dalam tahap persiapan.
 
@@ -12,18 +12,20 @@ Dalam game ini, pemain mengendalikan sebuah regu (*party*) beranggotakan tiga he
 
 Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 
-- **Sistem Party Tiga Hero:** Regu beranggotakan Knight (`Knight_1`), Mage (`Mage_1`), dan Archer (`Archer_1`). Tabrakan fisik antar-anggota regu dinonaktifkan (*collision exception*) sehingga pergerakan tetap leluasa tanpa saling dorong atau menghalangi.
-- **Pergantian Leader & Kamera:** Kendali aktif dapat dipindahkan secara instan ke hero mana pun menggunakan tombol `Tab` atau angka `1`–`3`. Kamera permainan secara otomatis mengikuti posisi Leader aktif dengan pergerakan yang halus (*position smoothing*).
+- **Sistem Party Empat Hero:** Regu beranggotakan Knight (`Knight_1`), Bandit (`Bandit_1`), Archer (`Archer_1`), dan Mage (`Mage_1`). Tabrakan fisik antar-anggota regu dinonaktifkan (*collision exception*) sehingga pergerakan tetap leluasa tanpa saling dorong atau menghalangi.
+- **Pergantian Leader & Kamera:** Kendali aktif dapat dipindahkan secara instan ke hero mana pun menggunakan tombol `Tab` atau angka `1`–`4`. Kamera permainan secara otomatis mengikuti posisi Leader aktif dengan pergerakan yang halus (*position smoothing*).
 - **Formasi Breadcrumb Queue & Cascade Swap 180°:** Saat bergerak, Follower mengikuti jejak langkah kaki Leader (*breadcrumbs*) secara teratur. Ketika Leader berputar balik 180°, formasi antrean follower langsung berbalik secara estafet (*cascade swap*) agar regu tidak bertumpuk.
 - **Sistem Komando Party (Follow & Attack):**
   - **Mode FOLLOW (`C`):** Follower merapatkan barisan di belakang Leader dan menahan serangan, berfokus penuh pada mobilitas dan reposisi regu.
   - **Mode ATTACK (`V`):** Follower diberi kebebasan untuk keluar dari barisan dan menyerang musuh terdekat dalam jangkauan tempur secara mandiri.
 - **Pertarungan Real-Time & Serangan Dasar:** Serangan diarahkan langsung ke posisi kursor mouse melalui klik kiri:
   - **Knight:** Tebasan pedang jarak dekat (*melee slash*) berdaya rusak 2 dengan area sapuan busur di depan karakter.
+  - **Bandit:** Tebasan ganda (*double swing melee*) berdaya rusak 2 untuk setiap ayunan senjata (total 4 damage per serangan dasar) dengan jeda serang lincah 0.85 detik.
   - **Archer:** Tembakan anak panah lurus berdaya rusak 1 dengan kecepatan proyektil 580 px/s dan jeda tembak 1.4 detik.
   - **Mage:** Tembakan bola sihir (*magic bolt*) berdaya rusak 1 dengan kecepatan proyektil 500 px/s dan jeda tembak 1.5 detik.
 - **Skill Khusus Hero (`E`):**
   - **Knight — *Shield Guard*:** Mengaktifkan perisai pelindung serentak untuk seluruh anggota party selama 3.5 detik (cooldown 6.0 detik). Memberikan kekebalan 100% dari seluruh serangan musuh dan tetap aktif saat pemain berganti karakter.
+  - **Bandit — *Triple Slash*:** Melancarkan 3 tebasan pedang beruntun berdaya rusak total 6 combo (2 per hit) dengan lunge maju dan getaran kamera (cooldown 5.0 detik).
   - **Archer — *Charged Line Snipe*:** Mengaktifkan mode bidik garis elastis. Pemain menahan klik kiri untuk mengisi jarak tembak dan melepasnya untuk meluncurkan panah penembus rintangan berdaya rusak area garis lurus (dapat ditembakkan hingga 3 kali dalam jendela waktu 10 detik). Klik kanan untuk membatalkan pengisian daya atau keluar dari mode bidik.
   - **Mage — *Meteor Strike*:** Mengaktifkan reticle lingkaran pada posisi kursor mouse. Klik kiri memanggil proyektil meteor yang jatuh dari langit dan meledak menghasilkan kerusakan area (*AoE*). Klik kanan untuk membatalkan bidikan.
 - **Sistem Musuh & Siklus Tempur:**
@@ -37,13 +39,13 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 ## Fitur Permainan
 
 ### Fitur yang Sudah Tersedia (Aktif & Terverifikasi)
-- [x] Kontrol regu 3 hero (Knight, Mage, Archer) dengan pengecualian tabrakan fisik antarkarakter.
-- [x] Pergantian Leader instan secara siklis (`Tab`) maupun langsung (`1`, `2`, `3`).
+- [x] Kontrol regu 4 hero (Knight, Bandit, Archer, Mage) dengan pengecualian tabrakan fisik antarkarakter.
+- [x] Pergantian Leader instan secara siklis (`Tab`) maupun langsung (`1`, `2`, `3`, `4`).
 - [x] Pelacakan kamera halus (*position smoothing*) yang terikat pada Leader aktif.
 - [x] Sistem pergerakan formasi barisan (*breadcrumb queue*) dan pembalikan barisan 180° (*cascade swap*).
 - [x] Perintah regu taktis: Mode **FOLLOW** (`C`) dan Mode **ATTACK** (`V`).
-- [x] Serangan dasar terarah mouse (tebasan pedang Knight, panah Archer, bola sihir Mage).
-- [x] Skill khusus per kelas hero (*Shield Guard*, *Charged Line Snipe*, *Meteor Strike*).
+- [x] Serangan dasar terarah mouse (tebasan pedang Knight, belati cepat Bandit, panah Archer, bola sihir Mage).
+- [x] Skill khusus per kelas hero (*Shield Guard*, *Triple Slash*, *Charged Line Snipe*, *Meteor Strike*).
 - [x] AI musuh dengan status patroli, pengejaran (*aggro/chase*), serangan kontak, dan tembakan panah.
 - [x] Sistem kesehatan, bilah darah musuh, durasi kebal singkat pasca-hit (*invulnerability frame*), dan siklus respawn otomatis.
 - [x] Efek partikel lari (*run dust*) dinamis saat sprint.
@@ -66,12 +68,12 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 | :--- | :--- | :--- |
 | `W`, `A`, `S`, `D` / Panah | Gerak Karakter | Menggerakkan Leader aktif ke 8 arah |
 | `Shift` (Tahan) | Sprint | Meningkatkan kecepatan jalan (128 px/s → 220 px/s) disertai efek debu |
-| `Tab` | Ganti Karakter Siklis | Berganti Leader secara berurutan (Knight → Mage → Archer → Knight) |
-| `1`, `2`, `3` | Ganti Karakter Langsung | Memilih Leader spesifik (1: Knight, 2: Mage, 3: Archer) |
+| `Tab` | Ganti Karakter Siklis | Berganti Leader secara berurutan (Knight → Bandit → Archer → Mage → Knight) |
+| `1`, `2`, `3`, `4` | Ganti Karakter Langsung | Memilih Leader spesifik (1: Knight, 2: Bandit, 3: Archer, 4: Mage) |
 | `C` | Perintah FOLLOW | Menginstruksikan regu untuk merapatkan barisan dan menahan tembakan |
 | `V` | Perintah ATTACK | Mengizinkan follower bertarung mandiri menyerang musuh terdekat |
-| `Klik Kiri` (Tap / Tahan) | Serangan Dasar | Menyerang ke arah kursor mouse (tebasan Knight, panah Archer, sihir Mage) |
-| `E` | Skill Khusus | **Knight:** Langsung merapalkan perisai *Shield Guard* (durasi 3.5s, cooldown 6s)<br>**Archer:** Masuk/keluar mode bidik *Charged Line Snipe*<br>**Mage:** Masuk mode bidik *Meteor Strike* |
+| `Klik Kiri` (Tap / Tahan) | Serangan Dasar | Menyerang ke arah kursor mouse (tebasan Knight, ayunan ganda Bandit, panah Archer, sihir Mage) |
+| `E` | Skill Khusus | **Knight:** Langsung merapalkan perisai *Shield Guard* (durasi 3.5s, cooldown 6s)<br>**Bandit:** Langsung melancarkan combo 3 tebasan *Triple Slash* (cooldown 5s)<br>**Archer:** Masuk/keluar mode bidik *Charged Line Snipe*<br>**Mage:** Masuk mode bidik *Meteor Strike* |
 | `Klik Kiri` (Saat Mode Skill) | Eksekusi Skill | **Archer:** Tahan untuk mengisi jarak tembak, lepas untuk menembak<br>**Mage:** Klik pada area sasaran untuk menjatuhkan meteor |
 | `Klik Kanan` (Saat Mode Skill) | Batal / Keluar Skill | **Archer:** Membatalkan pengisian daya atau keluar dari mode bidik<br>**Mage:** Membatalkan reticle sasaran meteor |
 
