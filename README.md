@@ -1,133 +1,175 @@
-# FLANK
+# Flank
 
-**Flank** adalah prototipe game RPG aksi taktis 2D dengan perspektif *top-down* yang dikembangkan menggunakan Godot Engine untuk tugas proyek inkubasi sekolah.
+**Flank** adalah prototipe game action RPG taktis 2D dengan perspektif *top-down* yang dikembangkan menggunakan Godot Engine 4 untuk proyek inkubasi game.
 
-Dalam game ini, pemain mengendalikan sebuah regu (*party*) beranggotakan tiga hero yang terdiri atas Knight, Mage, dan Archer. Pemain mengendalikan satu **Leader** secara langsung, sementara dua **Follower** bergerak mengekor di belakang atau bertempur secara mandiri sesuai perintah yang diberikan. Melalui kombinasi tombol, pemain dapat berganti Leader secara instan, mengatur formasi barisan, melancarkan serangan jarak dekat (melee) dan jarak jauh terarah, serta mengeksekusi skill khusus pertahanan dan area.
+Dalam game ini, pemain mengendalikan sebuah regu (*party*) beranggotakan tiga hero: **Knight**, **Mage**, dan **Archer**. Pemain mengendalikan satu **Leader** secara langsung, sementara dua **Follower** bergerak mengekor di belakang barisan atau bertempur mandiri sesuai perintah yang diberikan. Pemain dapat berganti Leader secara instan, mengatur formasi pergerakan, mengeksekusi serangan dasar terarah, serta melancarkan skill khusus pertahanan dan area secara *real-time*.
+
+> **Status Proyek:** Flank saat ini berada pada tahap pengembangan prototipe awal (*early prototype*). Seluruh fitur inti gameplay telah dapat dimainkan dan diuji, sementara antarmuka visual (UI/HUD), tata suara (audio), dan variasi musuh lanjutan sedang dalam tahap persiapan.
 
 ---
 
-## Fitur Utama
+## Gambaran Permainan
 
-- **Sistem Party Tiga Hero:** Regu beranggotakan Knight, Mage, dan Archer (`Knight_1`, `Mage_1`, `Archer_1`) dengan penonaktifan tabrakan fisik antarkarakter (*collision exception*) agar anggota regu tidak saling mendorong atau menghalangi pergerakan.
-- **Pergantian Leader dan Kamera:** Pengalihan kendali aktif secara instan ke hero mana pun dalam regu (melalui tombol `Tab` atau angka `1`–`3`), dengan kamera yang mengikuti posisi hero aktif secara halus (*position smoothing*).
-- **Formasi Breadcrumb Queue & Cascade Swap 180°:** Follower berbaris rapi mengikuti riwayat jejak langkah Leader (*breadcrumbs*), dilengkapi mekanisme pembalikan antrean estafet 180° (*cascade swap*) agar formasi langsung tertata ulang saat berputar balik.
-- **Perintah FOLLOW dan ATTACK:** Pengendalian perilaku regu secara cepat antara mode **Ikuti (FOLLOW)** (tombol `C`, menjaga follower tetap dalam barisan dan menahan tembakan) serta mode **Serang (ATTACK)** (tombol `V`, mengizinkan follower keluar barisan untuk menyerang musuh di sekitar secara mandiri).
-- **Serangan Dasar, Fire Rate, & Kecepatan Proyektil:** Serangan terarah melalui klik kiri—tebasan pedang melee untuk Knight, panah lurus untuk Archer, dan bola sihir (*magic bolt*) untuk Mage. Frekuensi tembakan dasar (*basic attack fire rate*) diselaraskan penuh antara karakter terkendali, follower, dan musuh archer: Archer (terkendali dan follower) serta musuh archer memiliki jeda tembakan 1.4 detik, sedangkan Mage (terkendali dan follower) memiliki jeda 1.5 detik. Kecepatan proyektil panah adalah 580 px/s (Archer dan musuh archer), sedangkan kecepatan proyektil bola sihir Mage adalah 500 px/s.
-- **Skill Khusus Hero:**
-  - **Knight:** *Shield Guard*, merapalkan perisai pelindung yang muncul serentak di tengah tubuh seluruh anggota party (Knight, Mage, Archer) setelah animasi selesai dengan efek fade in/fade out, tetap bertahan saat pergantian karakter hingga durasi 3.5 detik habis (cooldown 6.0 detik, kebal 100% terhadap serangan musuh untuk seluruh anggota tim).
-  - **Archer:** *Charged Line Snipe* dengan indikator garis elastis, melepaskan serangan berdaya rusak area berbentuk garis lurus (hingga 3 kali tembakan dalam jendela waktu 10 detik).
-  - **Mage:** *Meteor Strike* dengan indikator lingkaran area pada posisi kursor mouse, memanggil proyektil meteor yang jatuh dari langit dan menghasilkan ledakan area berdaya rusak tinggi.
-- **Sistem Combat, Damage, Kematian, dan Respawn:** Deteksi ancaman musuh (*aggro*) berbasis area pandang kamera (*viewport*), status patroli dan pengejaran musuh, pengurangan bar darah (*health*), efek dorongan fisik (*knockback*), serta siklus *respawn* otomatis saat unit gugur (3 detik untuk hero, 4 detik untuk musuh).
+Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 
-> *Catatan: Flank masih berada pada tahap prototipe awal. Fitur-fitur di atas adalah sistem yang telah terbukti berfungsi dalam skenario pengujian awal yang telah dilakukan; pengujian menyeluruh terhadap kasus ekstrem (edge cases) dan keseimbangan permainan masih memerlukan pengujian lanjutan.*
+- **Sistem Party Tiga Hero:** Regu beranggotakan Knight (`Knight_1`), Mage (`Mage_1`), dan Archer (`Archer_1`). Tabrakan fisik antar-anggota regu dinonaktifkan (*collision exception*) sehingga pergerakan tetap leluasa tanpa saling dorong atau menghalangi.
+- **Pergantian Leader & Kamera:** Kendali aktif dapat dipindahkan secara instan ke hero mana pun menggunakan tombol `Tab` atau angka `1`–`3`. Kamera permainan secara otomatis mengikuti posisi Leader aktif dengan pergerakan yang halus (*position smoothing*).
+- **Formasi Breadcrumb Queue & Cascade Swap 180°:** Saat bergerak, Follower mengikuti jejak langkah kaki Leader (*breadcrumbs*) secara teratur. Ketika Leader berputar balik 180°, formasi antrean follower langsung berbalik secara estafet (*cascade swap*) agar regu tidak bertumpuk.
+- **Sistem Komando Party (Follow & Attack):**
+  - **Mode FOLLOW (`C`):** Follower merapatkan barisan di belakang Leader dan menahan serangan, berfokus penuh pada mobilitas dan reposisi regu.
+  - **Mode ATTACK (`V`):** Follower diberi kebebasan untuk keluar dari barisan dan menyerang musuh terdekat dalam jangkauan tempur secara mandiri.
+- **Pertarungan Real-Time & Serangan Dasar:** Serangan diarahkan langsung ke posisi kursor mouse melalui klik kiri:
+  - **Knight:** Tebasan pedang jarak dekat (*melee slash*) berdaya rusak 2 dengan area sapuan busur di depan karakter.
+  - **Archer:** Tembakan anak panah lurus berdaya rusak 1 dengan kecepatan proyektil 580 px/s dan jeda tembak 1.4 detik.
+  - **Mage:** Tembakan bola sihir (*magic bolt*) berdaya rusak 1 dengan kecepatan proyektil 500 px/s dan jeda tembak 1.5 detik.
+- **Skill Khusus Hero (`E`):**
+  - **Knight — *Shield Guard*:** Mengaktifkan perisai pelindung serentak untuk seluruh anggota party selama 3.5 detik (cooldown 6.0 detik). Memberikan kekebalan 100% dari seluruh serangan musuh dan tetap aktif saat pemain berganti karakter.
+  - **Archer — *Charged Line Snipe*:** Mengaktifkan mode bidik garis elastis. Pemain menahan klik kiri untuk mengisi jarak tembak dan melepasnya untuk meluncurkan panah penembus rintangan berdaya rusak area garis lurus (dapat ditembakkan hingga 3 kali dalam jendela waktu 10 detik). Klik kanan untuk membatalkan pengisian daya atau keluar dari mode bidik.
+  - **Mage — *Meteor Strike*:** Mengaktifkan reticle lingkaran pada posisi kursor mouse. Klik kiri memanggil proyektil meteor yang jatuh dari langit dan meledak menghasilkan kerusakan area (*AoE*). Klik kanan untuk membatalkan bidikan.
+- **Sistem Musuh & Siklus Tempur:**
+  - AI musuh dilengkapi status patroli acak (*idle patrol*) dan pengejaran (*chase*) saat mendeteksi pemain.
+  - Musuh memiliki serangan kontak fisik (damage 1) serta serangan jarak jauh berupa tembakan panah (damage 1, kecepatan 580 px/s, jeda tembak 1.4 detik).
+  - Dilengkapi tampilan bar darah (*health bar*) di atas kepala, sistem prioritas ancaman (*threat target priority*), dan kemunculan kembali (*respawn*) otomatis setelah gugur (4 detik untuk musuh, 3 detik untuk hero).
+  - Efek dorongan fisik (*knockback*) dinonaktifkan pada hero pemain saat terkena damage agar kontrol pergerakan tetap responsif, sedangkan musuh tetap menerima dorongan knockback saat terkena serangan pemain.
+
+---
+
+## Fitur Permainan
+
+### Fitur yang Sudah Tersedia (Aktif & Terverifikasi)
+- [x] Kontrol regu 3 hero (Knight, Mage, Archer) dengan pengecualian tabrakan fisik antarkarakter.
+- [x] Pergantian Leader instan secara siklis (`Tab`) maupun langsung (`1`, `2`, `3`).
+- [x] Pelacakan kamera halus (*position smoothing*) yang terikat pada Leader aktif.
+- [x] Sistem pergerakan formasi barisan (*breadcrumb queue*) dan pembalikan barisan 180° (*cascade swap*).
+- [x] Perintah regu taktis: Mode **FOLLOW** (`C`) dan Mode **ATTACK** (`V`).
+- [x] Serangan dasar terarah mouse (tebasan pedang Knight, panah Archer, bola sihir Mage).
+- [x] Skill khusus per kelas hero (*Shield Guard*, *Charged Line Snipe*, *Meteor Strike*).
+- [x] AI musuh dengan status patroli, pengejaran (*aggro/chase*), serangan kontak, dan tembakan panah.
+- [x] Sistem kesehatan, bilah darah musuh, durasi kebal singkat pasca-hit (*invulnerability frame*), dan siklus respawn otomatis.
+- [x] Efek partikel lari (*run dust*) dinamis saat sprint.
+- [x] Peta lingkungan menggunakan sistem `TileMapLayer` Godot 4.
+
+### Fitur yang Sedang Dikembangkan & Direncanakan
+- [ ] Implementasi prefab dan AI musuh Bandit (aset sprite telah tersedia di `assets/characters/bandit/`).
+- [ ] Implementasi antarmuka pengguna visual (UI/HUD: bilah darah anggota party, indikator cooldown skill visual, inventaris, dialog).
+- [ ] Tata suara permainan (musik latar/BGM dan efek suara/SFX).
+- [ ] Menu permainan (Start Menu, Options, Pause Menu, Save/Load, Credits).
+- [ ] Variasi jenis musuh baru (monster non-humanoid pada folder cadangan `assets/enemies/`).
+- [ ] Penyempurnaan navigasi musuh (*raycasting flanking* dan penghindaran rintangan dinamis).
+- [ ] Konfigurasi preset ekspor aplikasi mandiri (*executable*).
 
 ---
 
 ## Kontrol Permainan
 
-| Input | Fungsi |
-|---|---|
-| `W`, `A`, `S`, `D` / Tombol Panah | Menggerakkan Leader aktif |
-| `Shift` | Sprint (meningkatkan kecepatan dari konstanta dasar 128 px/s menjadi 220 px/s pada kode sumber, disertai efek debu) |
-| `Tab` | Mengganti Leader aktif secara berurutan (1 → 2 → 3 → 1) |
-| `1`–`3` | Memilih Leader aktif secara langsung (1: Knight 1, 2: Mage 1, 3: Archer 1) |
-| `C` | Perintah Ikuti (FOLLOW): merapatkan formasi regu dan menahan tembakan |
-| `V` | Perintah Serang (ATTACK): mengizinkan follower bertempur secara mandiri |
-| Klik Kiri | Serangan dasar ke arah kursor mouse (tebasan melee untuk Knight, bola sihir untuk Mage, panah biasa untuk Archer) |
-| `E` | Mengaktifkan mode skill khusus untuk karakter aktif (Shield Guard, Meteor Strike, Charged Line Snipe) |
+| Tombol / Input | Fungsi | Cara Penggunaan |
+| :--- | :--- | :--- |
+| `W`, `A`, `S`, `D` / Panah | Gerak Karakter | Menggerakkan Leader aktif ke 8 arah |
+| `Shift` (Tahan) | Sprint | Meningkatkan kecepatan jalan (128 px/s → 220 px/s) disertai efek debu |
+| `Tab` | Ganti Karakter Siklis | Berganti Leader secara berurutan (Knight → Mage → Archer → Knight) |
+| `1`, `2`, `3` | Ganti Karakter Langsung | Memilih Leader spesifik (1: Knight, 2: Mage, 3: Archer) |
+| `C` | Perintah FOLLOW | Menginstruksikan regu untuk merapatkan barisan dan menahan tembakan |
+| `V` | Perintah ATTACK | Mengizinkan follower bertarung mandiri menyerang musuh terdekat |
+| `Klik Kiri` (Tap / Tahan) | Serangan Dasar | Menyerang ke arah kursor mouse (tebasan Knight, panah Archer, sihir Mage) |
+| `E` | Skill Khusus | **Knight:** Langsung merapalkan perisai *Shield Guard* (durasi 3.5s, cooldown 6s)<br>**Archer:** Masuk/keluar mode bidik *Charged Line Snipe*<br>**Mage:** Masuk mode bidik *Meteor Strike* |
+| `Klik Kiri` (Saat Mode Skill) | Eksekusi Skill | **Archer:** Tahan untuk mengisi jarak tembak, lepas untuk menembak<br>**Mage:** Klik pada area sasaran untuk menjatuhkan meteor |
+| `Klik Kanan` (Saat Mode Skill) | Batal / Keluar Skill | **Archer:** Membatalkan pengisian daya atau keluar dari mode bidik<br>**Mage:** Membatalkan reticle sasaran meteor |
 
 ---
 
 ## Teknologi yang Digunakan
 
-- **Godot Engine:** Proyek dikonfigurasi untuk Godot Engine 4 (file `project.godot` mencantumkan feature tag `"4.7"`). Pengujian sebelumnya dilakukan menggunakan Godot Engine v4.7.2-stable Win64 dengan renderer Forward+. Kompatibilitas terhadap versi engine lain belum diverifikasi.
-- **GDScript:** Bahasa pemrograman utama yang digunakan untuk seluruh logika permainan.
-- **Rendering 2D & Y-Sorting:** Tampilan grafis 2D dengan pengaturan pengurutan kedalaman (*Y-sorting*) dan konfigurasi driver Direct3D 12 di Windows (`rendering_device/driver.windows="d3d12"`).
-- **Godot 2D Physics:** Sistem fisika 2D bawaan Godot (Collision Layer 1 digunakan untuk rintangan dunia, dinding, dan pembatas map; tabrakan antar-hero dinonaktifkan melalui kode).
-- **Format Scene Godot 4 & TileMapLayer:** Seluruh scene menggunakan format scene Godot 4 (`format=4`), dengan peta lingkungan dibangun menggunakan node modern `TileMapLayer`.
+- **Game Engine:** Godot Engine 4 (konfigurasi proyek menggunakan feature tag `"4.7"`, diuji pada Godot Engine v4.7.2-stable Win64).
+- **Bahasa Pemrograman:** GDScript.
+- **Rendering:** Forward+ 2D dengan konfigurasi driver Direct3D 12 di Windows (`rendering_device/driver.windows="d3d12"`).
+- **Fisika 2D:** Godot 2D Physics bawaan (`CharacterBody2D`, `Area2D`, dengan `motion_mode = MOTION_MODE_FLOATING`).
+- **Format Scene & Map:** Format scene Godot 4 (`format=3`), dengan peta dunia berbasis node modern `TileMapLayer`.
 
 ---
 
-## Persyaratan dan Cara Menjalankan Proyek
+## Cara Menjalankan Proyek
 
-Berikut adalah panduan untuk mengunduh, membuka, dan menjalankan proyek Flank di perangkat lokal Anda.
+Berikut adalah langkah-langkah untuk mengunduh, membuka, dan menjalankan proyek Flank:
 
-### Persyaratan Sistem
-
-- **Godot Engine 4:** Proyek telah diuji menggunakan Godot Engine v4.7.2-stable Win64 (file `project.godot` mencantumkan feature tag `"4.7"`). Kompatibilitas terhadap versi engine lain belum diverifikasi.
-- **Git:** Terpasang untuk melakukan *clone* repositori.
-
-### Langkah Menjalankan Proyek
-
-1. **Clone repositori:**
+1. **Clone Repositori:**
    ```bash
    git clone https://github.com/bintanghawley/flank.git
    cd flank
    ```
 
-2. **Buka melalui Godot Project Manager:**
-   - Jalankan Godot Engine hingga jendela Project Manager terbuka.
-   - Klik tombol **Import** pada menu utama.
-   - Klik **Browse**, arahkan ke folder repositori `flank` hasil *clone*, lalu pilih file `project.godot`.
-   - Klik tombol **Import & Edit** untuk membuka proyek di dalam editor.
+2. **Buka Melalui Godot Engine:**
+   - Jalankan **Godot Engine 4** di komputer Anda.
+   - Pada jendela **Project Manager**, klik tombol **Import**.
+   - Klik **Browse**, arahkan ke folder repositori `flank` yang baru di-clone, lalu pilih file `project.godot`.
+   - Klik **Import & Edit** untuk membuka proyek ke dalam editor.
 
-3. **Jalankan Main Scene:**
-   - Tekan tombol `F5` pada keyboard (atau klik ikon **Play** di pojok kanan atas editor Godot).
-   - Editor akan secara otomatis memuat dan menjalankan scene utama permainan (`res://scene/game.tscn`).
+3. **Tunggu Proses Impor Selesai:**
+   - Saat pertama kali dibuka, editor Godot akan secara otomatis memindai dan mengompilasi metadata impor seluruh aset (file `.import`).
+
+4. **Jalankan Permainan:**
+   - Tekan tombol **F5** pada keyboard, atau klik tombol **Play** di pojok kanan atas editor.
+   - Editor akan memuat scene utama permainan: `res://scene/game.tscn`.
 
 ---
 
 ## Struktur Direktori
 
+Berikut adalah struktur direktori utama repositori Flank:
+
 ```text
 flank/
-├── .agents/skills/flank-godot-workflow/  # Prosedur kerja pengembangan dan pengujian agen Antigravity
-├── assets/                               # Aset visual permainan (karakter, partikel, proyektil, tileset)
-│   ├── characters/                       # Animasi 4-arah untuk Archer, Mage, dan Knight
-│   ├── particles/                        # Efek debu lari dan partikel benturan
-│   ├── projectile/                       # Sprite anak panah dan proyektil sihir
-│   ├── skills/                           # Indikator bidikan dan tekstur efek skill khusus (Archer, Mage, Knight)
-│   └── tileset/                          # Spritesheet lingkungan 16px SunnySide World
-├── scene/                                # Scene Godot (.tscn) dan script logika (.gd)
-│   ├── effect/                           # Efek visual mandiri (run_dust)
-│   ├── enemy/                            # Scene musuh dan script AI tempur
-│   ├── player/                           # Controller karakter Knight, Mage, dan Archer
-│   ├── projectile/                       # Entitas proyektil dan efek area
-│   ├── world/                            # Peta TileMapLayer (map_region_1.tscn)
-│   ├── game.gd                           # Controller utama regu, kamera, dan pembatas map
-│   └── game.tscn                         # Scene utama (titik masuk game)
-├── PROJECT_CONTEXT.md                    # Dokumentasi komprehensif arsitektur dan konteks teknis
-├── README.md                             # Gambaran umum proyek dan panduan pengenalan
-└── project.godot                         # File konfigurasi utama Godot Engine
+├── .agents/                               # Konfigurasi agen AI dan workflow proyek
+├── assets/                                # Seluruh aset visual, audio, dan font mentah
+│   ├── audio/                             # Aset suara (disiapkan dengan .gitkeep)
+│   │   ├── bgm/                           # Musik latar (.gitkeep)
+│   │   └── sfx/                           # Efek suara (.gitkeep)
+│   ├── characters/                        # Sprite karakter 4-arah (idle, walk, attack, skill)
+│   │   ├── archer/                        # Sprite animasi hero Archer
+│   │   ├── bandit/                        # Sprite animasi musuh Bandit (telah tersedia)
+│   │   ├── knight/                        # Sprite animasi hero Knight
+│   │   └── mage/                          # Sprite animasi hero Mage
+│   ├── enemies/                           # Folder cadangan musuh non-humanoid di masa depan (.gitkeep)
+│   ├── particles/                         # Tekstur partikel debu lari (dust.png, dust_puff.png)
+│   ├── projectile/                        # Tekstur proyektil panah dan bola sihir
+│   ├── skills/                            # Tekstur visual efek skill (Archer, Bandit, Knight, Mage)
+│   ├── tileset/                           # Spritesheet lingkungan SunnySide World 16px
+│   └── ui/                                # Aset grafis antarmuka mentah dan tipografi (.gitkeep)
+│       ├── fonts/                         # Tipografi pixel (.gitkeep)
+│       ├── gameplay/                      # Grafis UI in-game (dialog, inventaris, HUD) (.gitkeep)
+│       ├── icons/                         # Ikon aksi dan ikon skill per karakter (.gitkeep)
+│       └── menus/                         # Grafis menu (start, options, pause, save/load, credits) (.gitkeep)
+├── scene/                                 # Logika kode sumber (GDScript) dan scene Godot (.tscn)
+│   ├── effect/                            # Prefab efek visual mandiri (run_dust.tscn/.gd)
+│   ├── enemy/                             # Prefab dan AI musuh (enemy.tscn/.gd)
+│   ├── player/                            # Controller hero regu (player_archer, player_knight, player_mage)
+│   ├── projectile/                        # Proyektil fisik, benturan (impact), dan indikator reticle dunia
+│   ├── ui/                                # Folder persiapan scene Godot UI (menus & gameplay) (.gitkeep)
+│   ├── world/                             # Peta lingkungan TileMapLayer (map_region_1.tscn)
+│   ├── game.gd                            # Controller utama party manager dan kamera
+│   └── game.tscn                          # Main Scene permainan (titik masuk game)
+├── PROJECT_CONTEXT.md                     # Dokumentasi arsitektur dan konteks teknis proyek
+├── README.md                              # Dokumentasi umum dan panduan pengenalan proyek
+└── project.godot                          # Konfigurasi utama Godot Engine
 ```
+
+> **Catatan Struktur:**  
+> - Subfolder dengan penanda `.gitkeep` merupakan struktur hierarki kolaborasi yang telah disiapkan agar siap digunakan saat aset visual, audio, atau scene UI ditambahkan oleh tim.
+> - Keberadaan subfolder `scene/ui/` adalah persiapan struktur implementasi UI, bukan berarti sistem UI sudah selesai dibuat.
+> - Aset sprite Bandit berada di `assets/characters/bandit/`, sedangkan implementasi gameplay prefab musuh Bandit direncanakan terpisah.
+> - Folder `assets/enemies/` disiapkan sebagai folder cadangan untuk musuh jenis non-humanoid / monster di masa depan.
 
 ---
 
 ## Status Pengembangan
 
-Flank saat ini berstatus sebagai prototipe pada tahap pengembangan awal.
+Flank saat ini berstatus sebagai **prototipe aktif** dalam tahap implementasi awal:
+- **Fokus Utama Saat Ini:** Penyempurnaan mekanisme inti regu (*party core loop*), respon tempur real-time, dan pemantapan arsitektur repositori untuk kolaborasi tim.
+- **Pekerjaan yang Ditunda Sementara:** Navigasi musuh lanjutan berbasis *raycasting flanking* dan penggabungan duplikasi kode controller karakter ke dalam satu *base class* bersama (*technical debt*) sengaja ditunda agar fokus pada pengujian stabilitas gameplay.
 
-### Fitur yang Berhasil dalam Pengujian Awal
+---
 
-Sistem-sistem berikut telah berhasil dijalankan dalam skenario pengujian awal yang telah dilakukan (pengujian belum mencakup seluruh kemungkinan *edge case*):
-- **Sistem Party Tiga Hero:** Pergerakan tiga karakter (Knight, Mage, Archer) dalam satu barisan dengan pengecualian tabrakan fisik antarkarakter.
-- **Pergantian Leader & Kamera:** Pergantian kendali aktif antarhero secara instan melalui tombol `Tab` atau angka `1`–`3`, disinkronkan dengan pergerakan kamera halus.
-- **Formasi Breadcrumb Queue & Cascade Swap 180°:** Riwayat langkah kaki tercatat rapi dan formasi follower berputar balik secara estafet saat berbalik arah.
-- **Perintah FOLLOW dan ATTACK:** Transisi perilaku antara merapatkan barisan dan menahan tembakan (tombol `C`) serta bertarung mandiri di luar barisan (tombol `V`).
-- **Serangan Dasar & Skill Khusus:** Tebasan pedang Knight, proyektil sihir Mage, dan panah Archer ke arah kursor mouse, serta eksekusi skill khusus *Shield Guard*, *Meteor Strike*, dan *Charged Line Snipe*.
-- **Siklus Tempur Musuh & Respawn:** Deteksi musuh dalam viewport kamera, pengurangan darah saat terkena serangan, efek knockback, transisi kematian, dan kemunculan kembali karakter secara otomatis.
+## Kredit dan Atribusi Aset
 
-### Keterbatasan dan Pekerjaan yang Ditunda
-
-Fitur dan perbaikan berikut sengaja ditunda dari lingkup pengembangan saat ini dan **bukan** merupakan pekerjaan yang sedang aktif dikerjakan:
-- **Penyempurnaan AI Musuh dan Navigasi Flanking:** Algoritma raycasting untuk menghindari rintangan lingkungan dan penentuan titik pandu (*waypoints*) di sekitar dinding masih memerlukan perbaikan navigasi, namun sengaja ditunda.
-- **Refactoring Base Character:** Penggabungan duplikasi kode antara `player_knight.gd`, `player_archer.gd`, dan `player_mage.gd` ke dalam satu kelas dasar bersama (*base class*) telah dicatat sebagai *technical debt* dan sengaja ditunda.
-
-### Fitur yang Belum Diimplementasikan
-
-Fitur-fitur berikut belum tersedia di dalam repositori dan direncanakan untuk tahap pengembangan berikutnya:
-- **UI / HUD Pemain:** Tampilan bar HP anggota party di layar, indikator cooldown skill secara visual, dan ikon status perintah regu.
-- **Sistem Audio:** Musik latar belakang (BGM) dan efek suara (SFX tembakan panah, sihir, impak serangan, ledakan, dan langkah kaki).
-- **Menu Permainan:** Menu Pause, layar Game Over, serta layar Restart.
-- **Variasi Musuh:** Jenis musuh baru dengan variasi visual dan pola serangan yang berbeda.
-- **Export Presets:** Konfigurasi `export_presets.cfg` untuk mengekspor build permainan menjadi aplikasi mandiri (*executable*).
+- **Tileset Lingkungan:** Menggunakan spritesheet *SunnySide World 16px* (`spr_tileset_sunnysideworld_16px.png`).
+- **Aset Karakter, Efek Visual, dan Proyektil:** Dibuat dan dikembangkan secara internal untuk kebutuhan proyek inkubasi game ini.
+- Dokumentasi lisensi resmi pihak ketiga dan atribusi tambahan akan diperbarui secara berkala seiring integrasi aset baru oleh anggota tim.
