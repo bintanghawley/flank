@@ -1,3 +1,16 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# Local-only Antigravity customizations
+/.agents/rules/lead-*.md
+/.agents/rules/personal-*.md
+
+/.agents/skills/lead-*/
+/.agents/skills/personal-*/
+
+# Personal AI workspace
+/.agents/lead/
+/.agents/personal/
+/.agents/scratch/
+

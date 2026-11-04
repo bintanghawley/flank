@@ -2,6 +2,8 @@
 
 Dokumen ini merupakan ringkasan teknis operasional proyek game **"Flank"**. Dokumen ini berfungsi sebagai referensi kontekstual utama bagi pengembang dan agen asisten agar pengembangan fitur, perbaikan bug, dan pengujian dapat berjalan konsisten dengan arsitektur yang sudah ada tanpa mengulang inventarisasi dari awal.
 
+**Tanggal Audit Terakhir:** 2026-11-03
+
 > **PENTING — ATURAN VERIFIKASI SEBELUM BEKERJA:**  
 > Seluruh informasi dalam dokumen ini (struktur kode, ketersediaan fitur, dan konfigurasi proyek) mencerminkan kondisi pada saat audit dan pengujian awal dilakukan. Pengembang atau asisten **wajib memeriksa kembali kondisi file fisik repositori terbaru** sebelum memulai tugas baru, terutama setelah adanya pembaruan (*git pull*) dari anggota tim lain.
 
@@ -14,7 +16,7 @@ Dokumen ini merupakan ringkasan teknis operasional proyek game **"Flank"**. Doku
 - **Genre:** Top-Down Real-Time Tactical Party Action RPG / Crawler 2D.
 - **Perspektif & Gaya Visual:** 2D Top-Down Orthographic (Y-Sorted), Pixel Art 16x16 (Sprite karakter diskalakan 5x).
 - **Konsep Inti Permainan:** 
-  Pemain mengendalikan 1 *Leader* aktif dan 3 *Follower* otonom (total 4 hero: Knight, Bandit, Archer, dan Mage). Anggota party mengekor di belakang Leader dalam barisan dinamis (*snake breadcrumb queue*). Pemain dapat menukar kendali Leader secara instan, mengubah mode komando taktis (*Follow / Attack*), melepaskan tebasan melee, serangan proyektil, dan skill khusus (Shield Guard, Triple Slash, Line Snipe, Meteor Strike), serta memanfaatkan manuver melipir rintangan (*flanking*).
+  Pemain mengendalikan 1 *Leader* aktif dan 3 *Follower* otonom (total 4 hero: Knight, Bandit, Archer, dan Mage). Anggota party mengekor di belakang Leader dalam barisan dinamis (*snake breadcrumb queue*). Pemain dapat menukar kendali Leader secara instan, mengubah mode komando taktis (*Follow / Attack*), melepaskan tebasan melee, serangan proyektil, dan skill khusus (Shield Guard, Triple Slash, Charged Line Snipe, Meteor Strike). Sebagian unit memiliki navigasi flanking dasar untuk melipir rintangan, yaitu follower ranged (Archer dan Mage) saat berada dalam mode ATTACK dan terhalang rintangan, serta AI musuh saat berada dalam state CHASE dan terhalang rintangan.
 
 ---
 
@@ -24,18 +26,32 @@ Dokumen ini merupakan ringkasan teknis operasional proyek game **"Flank"**. Doku
 - **Persyaratan Versi Proyek:** 
   File konfigurasi `project.godot` mencantumkan feature tag `"4.7"` dan `"Forward Plus"`. Persyaratan engine resmi wajib selalu dikonfirmasi ulang melalui konfigurasi repositori terbaru.
 - **Titik Masuk Utama (`run/main_scene`):** `res://scene/game.tscn` (UID: `uid://80uy3wgwk1dw`).
-- **Format Scene:** Format 4 (menggunakan node modern `TileMapLayer`).
+- **Format Scene:** Format file scene format=3 (standar teks scene Godot 4 dengan node modern `TileMapLayer`).
 - **Pengaturan Display:** Stretch mode `canvas_items`, aspect `expand` (viewport default 1152x648).
 - **Sistem Fisika:** 
   - 2D Physics Engine bawaan Godot.
   - **Collision Layer 1:** Lingkungan dunia fisik, dinding, rintangan, dan pembatas map (*WorldBorders*).
-  - Pengecualian tabrakan (*collision exception*) diterapkan antar-seluruh anggota party (3 karakter) via `add_collision_exception_with()` agar tidak saling mendorong.
+  - Pengecualian tabrakan (*collision exception*) diterapkan secara timbal balik antaranggota party maupun antara hero dan musuh melalui `add_collision_exception_with()`, sehingga pasangan `PhysicsBody2D` tersebut tidak saling berkolisi melalui sistem fisika Godot. Pengaturan jarak antarunit dilakukan secara terpisah oleh sistem separasi dinamis.
 
 ---
 
 ## 3. STRUKTUR DIREKTORI & MODUL UTAMA
 
 ### A. Master Plan Struktur Direktori Final (Resmi Disetujui)
+
+> [!IMPORTANT]
+> **Status Target Migrasi Fase 2 vs Struktur Fisik Repositori Saat Ini:**<br>
+> Pohon direktori di bawah ini merupakan **Master Plan target migrasi arsitektur jangka panjang (Fase 2)** yang telah resmi disetujui, bukan struktur fisik repositori secara menyeluruh saat ini.<br>
+> Pemindahan folder fisik untuk Fase 2 **sengaja belum dieksekusi** guna mencegah kerusakan referensi UID scene Godot, path tekstur, dan dependensi impor aset sebelum ada jadwal refactoring aset khusus.
+>
+> | Komponen Aset | Lokasi Fisik Saat Ini | Target Master Plan (Fase 2) | Status Pemindahan |
+> | :--- | :--- | :--- | :--- |
+> | Tekstur Proyektil | `assets/projectile/` | `assets/projectiles/` | Ditunda ke Fase 2 |
+> | Tileset Lingkungan | `assets/tileset/` | `assets/environment/tileset/` | Ditunda ke Fase 2 |
+> | Tekstur Efek Meteor Mage | `assets/skills/mage/fireball/` | `assets/skills/mage/meteor/` | Ditunda ke Fase 2 |
+>
+> Seluruh folder baru dengan penanda `.gitkeep` (seperti `assets/audio/`, `assets/ui/`, `assets/enemies/`, dan `scene/ui/`) telah dibuat secara fisik pada Fase 1 untuk menyiapkan hierarki kerja tim.<br>
+> **Catatan Penggunaan Map Sementara:** Map yang digunakan saat ini (`map_region_1.tscn`) masih bersifat sementara untuk kebutuhan pengujian prototipe. Anggota tim sedang menyiapkan map pengganti, dan proses integrasinya akan dilakukan pada pekerjaan terpisah setelah aset peta tersedia. Penggantian tileset yang saat ini digunakan tidak dapat diasumsikan, karena yang sedang disiapkan dan direncanakan untuk diganti adalah susunan map permainan. Migrasi folder fisik Fase 2 tetap terpisah dan belum boleh dilaksanakan hanya berdasarkan rencana penggantian map ini.
 
 Struktur direktori resmi proyek game **Flank** yang disepakati sebagai acuan arsitektur jangka panjang dan panduan kolaborasi tim:
 
@@ -52,14 +68,14 @@ flank/
 │   │
 │   ├── characters/                        # Seluruh Sprite Karakter (Hero Party & Karakter Musuh)
 │   │   ├── archer/                        # Sprite 4-arah Archer (Hero)
-│   │   ├── bandit/                        # Sprite 4-arah Bandit (Karakter Musuh — Tetap di sini)
+│   │   ├── bandit/                        # Sprite 4-arah Bandit (Hero Party & Karakter Musuh — Tetap di sini)
 │   │   ├── knight/                        # Sprite 4-arah Knight (Hero)
 │   │   └── mage/                          # Sprite 4-arah Mage (Hero)
 │   │
 │   ├── enemies/                           # Folder Cadangan Musuh Non-Humanoid / Monster (.gitkeep)
 │   │
 │   ├── environment/                       # Aset Lingkungan & Map Dunia
-│   │   └── tileset/                       # Spritesheet SunnySide World 16px
+│   │   └── tileset/                       # Target lokasi tileset setelah migrasi Fase 2
 │   │
 │   ├── particles/                         # Tekstur Partikel (dust.png & dust_puff.png)
 │   │
@@ -132,47 +148,50 @@ flank/
 
 ### C. Tanggung Jawab Komponen Kunci:
 1. **`scene/game.gd` (Game & Party Manager):**
-   - Root scene `game.tscn` terpusat pada origin `Vector2(0, 0)` sehingga menyelaraskan koordinat global entitas hero, musuh, pembatas map (`WorldBorders`), dan layer peta `map_region_1`.
-   - Mendaftarkan 4 anggota party (`Knight_1`, `Bandit_1`, `Archer_1`, `Mage_1`).
-   - Mengelola pergantian Leader aktif (validasi hidup/mati siklis via Tab dan pemilihan langsung angka 1–4 dengan pengabaian hero yang gugur) dan penugasan slot antrean Follower (slot 1, 2, dan 3).
-   - Menghitung riwayat jejak langkah (*breadcrumbs queue*) dan pembalikan antrean 180° (*cascade swap*).
-   - Mengendalikan pergerakan kamera halus (*position smoothing*), offset target (+45 px vertikal), dan screen shake.
-   - Memindai Rect2 kamera (+50 px margin) setiap 0.15 detik untuk memicu aggro tempur saat musuh terlihat di layar.
-   - Menghasilkan dinding pembatas map (*WorldBorders*) secara dinamis saat runtime dari Rect layer `Ground`.
+   - Berfungsi sebagai orchestrator utama permainan dan pengelola sistem party di scene `game.tscn`.
+   - Menangani inisialisasi dan registrasi 4 anggota party (`Knight_1`, `Bandit_1`, `Archer_1`, `Mage_1`) serta layer peta `map_region_1`.
+   - Mengelola pergantian Leader aktif (siklis via Tab dan pemilihan langsung angka 1–4) serta penugasan slot antrean Follower (Slot 1–3).
+   - Menghitung riwayat jejak langkah (*breadcrumbs queue*), formasi barisan, dan pembalikan antrean 180° (*cascade swap*).
+   - Mengendalikan pergerakan kamera halus (*position smoothing*), offset target pandangan, evaluasi aggro tempur berbasis area kamera, dan efek screen shake.
+   - Menghasilkan batas fisik map (*WorldBorders*) secara dinamis dari layer `Ground`.
+   *(Rujukan silang: Detail mekanik formasi barisan dan mode tempur kamera dijelaskan pada Bab 5.1 & 5.2).*
 2. **`scene/player/player_knight.gd`:**
-   - Logika kontrol manual Leader (WASD, sprint) dan otonom Follower petarung melee.
-   - Serangan dasar tebasan pedang mouse-directed berbasis geometri sapuan busur (*direct arc sweep* 170° hingga 125 px sesuai skala sprite 5x) dan kontak dekat (*close-contact proximity* 65 px sekeliling badan Knight, damage 2, knockback 300 px/s, camera shake 7.0) yang berpusat presisi pada titik tengah torso karakter di ruang global (`SLASH_CENTER_OFFSET` / `VISUAL_CENTER_OFFSET = Vector2(0.0, 7.5)`, setara `y=1.5` lokal) sehingga jangkauan simetris ke 4 arah mata angin (North, South, East, West). Serangan disinkronkan presisi dengan jeda ancang-ancang visual (`SLASH_WINDUP_DELAY = 0.18s`, frame 0-2) sebelum mengaktifkan window deteksi dampak tebasan 200ms (`SLASH_ACTIVE_DURATION = 0.20s`), serta dapat diayunkan secara bebas tanpa penguncian target artifisial.
-   - Skill khusus tombol `E`: *Shield Guard* (durasi 3.5s, cooldown 6.0s; hanya dapat diaktifkan oleh pemain saat Knight menjadi Leader aktif. Merapalkan pelindung perisai ke seluruh anggota party sekaligus: Knight, Mage, dan Archer. Perisai muncul tegak presisi di tengah visual tubuh masing-masing karakter setelah animasi rapalan Knight selesai dengan transisi fade-in/fade-out, tetap aktif saat pergantian karakter hingga durasi habis, serta menahan 100% damage serangan musuh untuk seluruh party).
-   - Perilaku AI tempur Follower: mendekati musuh hingga jarak melee (85 px), menebas berulang setiap 1.2s saat mode komando ATTACK (V), dan dilarang mengaktifkan skill secara otomatis.
-   - Penanganan penerimaan damage (tanpa dorongan knockback saat karakter terkena hit), siklus kematian (fade-out merah, pelepasan grup `player`, auto-switch jika leader aktif, `visible = false`), dan respawn (3s) dengan pemulihan ke grup `player`, fade-in, serta sinkronisasi status party terkini (`party_command`, `in_party_combat`, dan `target_position`).
+   - Mengontrol logika karakter Knight sebagai petarung melee garda depan (Slot 1 / default Leader).
+   - Menangani kendali manual saat menjadi Leader (WASD, sprint) dan kendali tempur otonom saat menjadi Follower (mendekati musuh dan menyerang berulang pada mode ATTACK).
+   - Mengeksekusi serangan dasar tebasan pedang terarah kursor dengan area sapuan busur melee dan pengecekan kontak dekat di sekitar karakter.
+   - Mengelola skill khusus *Shield Guard* (tombol `E` saat menjadi Leader) yang merapalkan perisai pelindung untuk seluruh anggota party.
+   - Menangani integrasi partikel debu lari, logika separasi dinamis pada controller Knight sebagai bagian dari mekanisme yang juga diterapkan pada controller hero lainnya dan AI musuh, imunitas terhadap dorongan knockback saat menerima damage, siklus kematian, dan respawn.
+   - *(Rujukan silang: Detail geometri sapuan pedang dan penyelarasan visual dijelaskan pada Bab 5.8, sedangkan penyesuaian serangan dan peniadaan knockback dijelaskan pada Bab 5.9. Detail mekanik Shield Guard dijelaskan pada Bab 5.12).*
 3. **`scene/player/player_bandit.gd` & `scene/player/player_bandit.tscn`:**
-   - Logika kontrol manual Leader (WASD, sprint) dan otonom Follower petarung melee lincah (Slot 2).
-   - Serangan dasar *Double Slash Dagger* via klik kiri: dua tebasan berurutan (Swing 1 pada ~0.15s, Swing 2 pada ~0.40s) dengan area sapuan busur melee 160° hingga 130 px (dan adaptasi jangkauan tebasan South 140 px, 180°), masing-masing berdaya rusak 2 (total 4 damage per siklus), jeda cooldown 0.85s, dan terdistribusi ritmis selaras animasi `atk-[e|w|n|s].png`. Serangan tidak memberikan dorongan knockback horizontal pada musuh.
-   - Kemampuan pasif *Out-of-Combat Ambush Lunge*: aktif setelah 5 detik tanpa menerima maupun memberikan damage, ditandai visual aura berpendar halus (`modulate` cyan lembut). Saat aktif, serangan dasar pertama memperoleh jangkauan engage luas (260 px), Bandit meluncur lunge dengan kecepatan tinggi (680 px/s) ke arah musuh terdekat dari kursor, memberikan bonus damage +3 pada tebasan pembuka (total 5 damage pembuka), mengonsumsi status pasif, serta memicu screen shake. Dilengkapi perlindungan *Super Armor* (tidak dapat diinterupsi oleh serangan musuh, dan tidak terhalang buff perisai Knight).
-   - Skill khusus tombol `E`: *Dash, Knockup & Triple Slash* (hanya dapat diaktifkan saat Bandit menjadi Leader aktif; dilarang auto-cast saat menjadi follower):
-     1. Fase Dash: meluncur kencang (750 px/s) ke arah target kursor mouse hingga maksimal 0.35s dengan animasi skill `skill_[n|s|e|w]` aktif sepanjang luncuran. Jika dash tidak menabrak musuh (miss), animasi skill tetap dituntaskan secara mulus hingga frame terakhir sebelum bertransisi ke idle/run.
-     2. Fase Knockup & Triple Slash: dash berhenti seketika saat menabrak musuh pertama di jalurnya (`check_dash_collision_enemy()`). Seluruh visual dan sisa animasi dash dihentikan dan dibersihkan seketika (`animated_sprite.stop()`), lalu beralih 100% secara bersih ke animasi kombo `triple_slash` pada node `AnimatedSprite2D` utama tanpa adanya sprite ganda yang tertinggal. Musuh yang tertabrak terangkat vertikal di tempat (*knockup* ~40 px via tween parabolik) dan terkena stun selama 0.70s tanpa pergeseran horizontal. Seketika memicu kombo 3x tebasan beruntun (Step 1 pada 0.10s, Step 2 pada 0.26s, Step 3 pada 0.42s; masing-masing berdaya rusak 2, total 6 damage combo). Cooldown 5.0 detik baru mulai berjalan setelah rangkaian aksi tuntas.
-   - Status *Super Armor / Poise*: Selama eksekusi Ambush Lunge dan sepanjang rangkaian Skill 'E' (dash hingga tebasan ke-3 tuntas), Bandit kebal terhadap interupsi/pembatalan aksi dan knockback dari serangan musuh (HP tetap berkurang normal jika tidak memiliki perisai).
-   - Penyelarasan visual sprite: `offset = Vector2(0, 5)` pada sprite 96x96 untuk menyelaraskan baseline kaki (+60 px) presisi dengan Knight dan Mage, collision shape `Vector2(0, 5.6)`, dan integrasi debu lari 8-arah.
-   - Penanganan proteksi hit: knockback standar (`knockback_strength = 380.0`, `knockback_decay = 1400.0`), interupsi bersih saat bukan dalam aksi super armor tanpa freeze/deadlock via reset flag, dan safeguard `require_mouse_release`. Proteksi perisai Knight (Shield Guard) 100% menahan damage tanpa membatalkan serangan keluar atau mereset pasif Bandit.
+   - Mengontrol logika karakter Bandit sebagai rogue/petarung melee lincah (Slot 2).
+   - Menangani kendali manual Leader dan AI tempur otonom Follower (disiplin serangan dasar tanpa auto-cast skill).
+   - Mengeksekusi serangan dasar *Double Slash Dagger* via klik kiri dengan dua ayunan tebasan ritmis berturut-turut.
+   - Mengelola kemampuan pasif *Out-of-Combat Ambush Lunge* yang memberikan akselerasi serbu berkecepatan tinggi, bonus damage pembuka, dan proteksi *Super Armor* setelah jeda tanpa pertempuran.
+   - Mengelola skill aktif khusus Leader *Dash, Knockup & Triple Slash* (tombol `E`): fase luncuran dash, transisi presisi saat menabrak musuh pertama ke fase knockup & stun vertikal, serta eksekusi kombo 3 tebasan beruntun dengan proteksi *Super Armor*.
+   - Menangani offset visual kanvas sprite kaki agar sejajar dengan anggota party lain, respons knockback terukur saat bukan dalam aksi super armor, proteksi interupsi bersih, siklus kematian, dan respawn.
+   - *(Rujukan silang: Detail parameter serangan ganda, pasif ambush, dan rangkaian kombo skill dijelaskan pada Bab 5.11).*
 4. **`scene/player/player_mage.gd`:**
-   - Logika pergerakan dan formasi party (arsitektur serupa dengan Archer).
-   - Serangan dasar bola sihir (`magic_bolt.tscn`) via klik kiri yang diselaraskan presisi di tengah dan tepat di ujung kepala senjata tongkat sihir saat mengarah ke depan (`BASIC_ATTACK_STAFF_OFFSET = Vector2(0.0, 47.0)` di ruang global, offset maju 92 px), fungsi pemosisian spawn adaptif 8-arah (`get_magic_bolt_spawn_position()`) berbasis `match last_direction` dengan safeguard sinkronisasi arah hadap horizontal sprite (`flip_h`) agar proyektil tidak pernah spawn di belakang tubuh karakter saat menembak diagonal, serta timing pelepasan sihir instan (~0.34s, Frame 4) tepat saat tongkat mengarah ke depan bersamaan dengan letupan animasi efek sihir dan watchdog `attack_stuck_timer` (0.8s) agar seluruh animasi serangan selesai secara alami.
-   - Skill khusus tombol `E`: *Meteor Strike AoE* (indikator radius di kursor mouse, memanggil meteor jatuh).
+   - Mengontrol logika karakter Mage sebagai perapal sihir jarak jauh (Slot 4).
+   - Menangani kendali pergerakan manual Leader dan perilaku tempur otonom Follower jarak jauh dengan adaptasi formasi barisan.
+   - Mengeksekusi serangan dasar proyektil sihir (`magic_bolt.tscn`) dengan penentuan titik spawn dinamis di ujung tongkat sihir pada 8 arah hadap serta pembatalan instan jika terinterupsi.
+   - Mengelola skill khusus *Meteor Strike AoE* (tombol `E` saat menjadi Leader) melalui reticle bidikan area kursor mouse yang memanggil proyektil meteor jatuh dari langit.
+   - Mengimplementasikan navigasi flanking berbasis waypoint saat berada dalam mode tempur follower dan terhalang rintangan fisik.
+   - Menangani stabilitas posisi tanpa knockback saat menerima damage, siklus kematian, dan respawn.
+   - *(Rujukan silang: Detail parameter proyektil sihir dan fire rate dijelaskan pada Bab 5.5; navigasi flanking dijelaskan pada Bab 5.3).*
 5. **`scene/player/player_archer.gd`:**
-   - Logika kontrol manual Leader (WASD, sprint).
-   - Logika otonom Follower (mode menjelajah berbaris vs mode bertempur mandiri).
-   - Serangan dasar panah (`arrow.tscn`) via klik kiri.
-   - Skill khusus tombol `E`: *Charged Line Snipe* (kuota 3 tembakan, durasi 10s, indikator memanjang elastis).
-   - Penyelarasan visual sprite (`offset = Vector2(0, 4)`), titik torso/skill (`VISUAL_CENTER_OFFSET = Vector2(2.5, 26.0)`), serta titik spawn basic attack proyektil panah (`BASIC_ATTACK_ARROW_OFFSET = Vector2(2.5, 35.0)`) agar presisi sejajar dengan senjata busur di tangan dan baseline kaki sejajar dengan Knight dan Mage.
-   - Algoritma raycasting manuver melipir rintangan (*flanking waypoints*).
-   - Penanganan penerimaan damage (tanpa dorongan knockback saat karakter terkena hit), kematian (fade-out), dan respawn (3s).
+   - Mengontrol logika karakter Archer sebagai penembak panah jarak jauh (Slot 3).
+   - Menangani kendali pergerakan manual Leader dan perilaku tempur otonom Follower jarak jauh dalam mode jelajah maupun tempur mandiri.
+   - Mengeksekusi serangan dasar proyektil panah lurus (`arrow.tscn`) via klik kiri terarah ke posisi kursor mouse.
+   - Mengelola skill khusus *Charged Line Snipe* (tombol `E` saat menjadi Leader) berupa mode bidik garis elastis untuk serangan linear AoE yang dapat mengenai beberapa musuh di sepanjang jalur bidikan, tetapi tidak menembus dinding atau geometri lingkungan (kuota 3 tembakan dalam durasi 10 detik).
+   - Mengimplementasikan navigasi flanking berbasis waypoint saat berada dalam mode tempur follower dan terhalang rintangan fisik.
+   - Menangani stabilitas posisi tanpa knockback saat terkena hit, penanganan interupsi aman pada siklus charging skill untuk mencegah deadlock/freeze, siklus kematian, dan respawn.
+   - *(Rujukan silang: Detail kecepatan dan fire rate panah dijelaskan pada Bab 5.5; navigasi flanking dijelaskan pada Bab 5.3).*
 6. **`scene/enemy/enemy.gd`:**
-   - State AI musuh: `IDLE_PATROL` dan `CHASE`.
-   - Serangan panah jarak jauh (320 px) dan kontak fisik (1 damage) dengan pelacakan hitbox multi-hero yang aman (mempertahankan status kontak dan siklus cooldown selama setidaknya satu hero hidup berada di dalam hitbox).
-   - Bar HP ganda (merah untuk HP riil, kuning untuk animasi lag pengurangan damage).
-   - Sistem memori ancaman (*threat-aggro*) terhadap karakter yang melukainya.
-   - Respawn musuh otomatis setelah 4 detik.
+   - Mengontrol perilaku AI musuh penguji berbasis state machine (`IDLE_PATROL` dan `CHASE`).
+   - Mengeksekusi serangan panah jarak jauh dan serangan kontak fisik dengan pelacakan target multi-hero serta sinkronisasi cooldown untuk mencegah akumulasi damage ganda.
+   - Mengelola sistem navigasi flanking berbasis waypoint saat mengejar target melewati rintangan fisik.
+   - Menangani bar HP ganda (indikator riil dan pengurangan tertunda), sistem memori ancaman (*threat-aggro*) terhadap penyerang, separasi fisik dinamis, dan siklus respawn otomatis.
+   - *(Rujukan silang: Detail algoritma navigasi flanking, separasi fisik, dan proteksi double damage dijelaskan pada Bab 5.3, 5.6, dan 5.10).*
 
 ---
 
@@ -192,7 +211,7 @@ flank/
 - Tombol `C`: Komando **FOLLOW** (follower dilarang menyerang, wajib berada di barisan).
 - Tombol `V`: Komando **ATTACK** (follower diizinkan keluar barisan dan bertarung mandiri).
 - `Klik Kiri`: Serangan dasar (Tebasan Melee Knight / Ayunan Ganda Double Damage Bandit / Panah Archer / Bola Sihir Mage).
-- Tombol `E`: Masuk ke mode skill khusus karakter aktif (Knight: Shield Guard, Bandit: Triple Slash, Archer: Charged Line Snipe, Mage: Meteor Strike).
+- Tombol `E`: Mengaktifkan skill khusus karakter yang sedang menjadi Leader aktif (Knight: Shield Guard, Bandit: Triple Slash, Archer: masuk atau keluar dari mode bidik Charged Line Snipe sesuai state skill, Mage: masuk mode bidik Meteor Strike).
 
 ---
 
@@ -202,26 +221,37 @@ flank/
    Leader merekam koordinat setiap melangkah sejauh 8 px (maksimal 65 titik). Follower menempati slot dengan jarak `slot_index * 85.0 px`. Jika Leader berputar balik 180° melewati barisannya, antrean dibalik secara estafet agar follower langsung berada di belakang arah baru tanpa kusut.
 2. **Peralihan Mode Tempur Viewport:**
    Jika musuh masuk ke layar kamera, `game.gd` mengubah state ke `COMBAT` dan follower mulai menyerang mandiri (jika dalam komando `ATTACK`). Ketika musuh musnah atau keluar layar, ada jeda *wind-down* 0.4 detik sebelum kembali ke mode `EXPLORING`.
-3. **Flanking Navigasi:**
-   Unit melakukan raycast langsung ke target pada Collision Layer 1. Jika terhalang, sistem melakukan probe melintang (24–720 px) ke sisi kiri dan kanan untuk mencari celah tepi rintangan, lalu membuat dua titik pandu (*waypoints*) untuk melipir.
+3. **Flanking Navigasi (Algoritma Dasar & Status Deferred):**
+   - **Algoritma Waypoint Dasar:** Algoritma navigasi ini (`calculate_flank_waypoints`) hanya aktif pada **follower penyerang jarak jauh (`player_archer.gd` dan `player_mage.gd`)** saat berada dalam mode tempur follower (`in_party_combat` dengan komando `ATTACK`) dan terhalang rintangan, serta pada **AI musuh (`enemy.gd`)** saat mengejar target dalam state `CHASE` dan terhalang rintangan. Unit melakukan raycast langsung ke target pada Collision Layer 1 (`TileMapLayer` dan `StaticBody2D`). Jika terhalang, sistem melakukan probe melintang (rentang 24–720 px) ke sisi kiri dan kanan menggunakan vektor ortogonal untuk mencari celah tepi rintangan terdekat, lalu menyusun dua titik pandu (*waypoints*) untuk melipir rintangan. Algoritma ini **tidak digunakan oleh Leader** (karena dikendalikan manual oleh pemain) maupun oleh **karakter melee (Knight dan Bandit)**.
+   - **Status Penyempurnaan Lanjutan:** Penyempurnaan navigasi flanking berbasis raycast dan waypoint pada follower ranged (Archer, Mage) dan AI musuh, terutama untuk penanganan rintangan kompleks dan optimasi jalur pergerakan unit, saat ini berstatus **masalah yang sengaja ditunda (*deferred issue*)** pada Bab 6B, dan dilarang dikerjakan tanpa instruksi eksplisit.
 4. **Siklus Kematian & Respawn:**
    Unit hero yang mencapai HP 0 mematikan collision-nya, melepaskan keanggotaan grup `player` agar tidak ditarget musuh/proyektil saat gugur, memicu auto-switch kendali ke anggota party lain yang masih hidup jika berstatus Leader aktif, memudar (fade-out merah), disembunyikan (`visible = false`), menunggu timer respawn (3s untuk hero, 4s untuk musuh), lalu bangkit kembali di posisi awal dengan HP penuh, didaftarkan kembali ke grup `player`, ditampilkan kembali dengan fade-in halus, serta menyinkronkan status komando party (`party_command`, `in_party_combat`, `target_position`).
 5. **Sistem Kecepatan Proyektil Dasar & Penyeimbangan Fire Rate:**
    Kecepatan terbang proyektil panah dibuat seragam sebesar 580 px/s untuk Archer (baik terkendali maupun follower) serta musuh archer. Kecepatan proyektil bola sihir Mage disesuaikan dikurangi sedikit menjadi 500 px/s dan dibuat sama baik saat dikendalikan (Leader) maupun tidak dikendalikan (follower). Sedangkan *basic attack fire rate* diselaraskan secara konsisten antara karakter yang dikendalikan, follower, dan musuh model archer: frekuensi tembakan Archer (Leader dan follower) serta musuh archer sama-sama berjarak 1.4s, sementara Mage (Leader dan follower) sama-sama berjarak 1.5s.
 6. **Sistem Soft Collision & Separasi Dinamis:**
-   Seluruh karakter hero (`player_knight.gd`, `player_archer.gd`, `player_mage.gd`) dan unit musuh (`enemy.gd`) mengadopsi `motion_mode = CharacterBody2D.MOTION_MODE_FLOATING`, pengecualian tabrakan fisik timbal balik (*collision exceptions*) antar-hero dan musuh, serta fungsi `move_and_slide_with_separation()`. Pengecualian tabrakan fisik melenyapkan bug saling mengunci atau menyeret saat bertumpuk (*sticky collision lock*), sementara kalkulasi dorongan separasi (`min_sep_dist = 55.0 px`, dibatasi `limit_length(55.0) * 8.0`) memisahkan karakter secara halus dan natural. Pada musuh penembak, diterapkan batas henti jarak serang (berhenti pada `dist <= 140.0 px` atau `dist <= shoot_range`) serta manuver mundur (*kiting* jika `dist < 80.0 px`) sehingga tidak pernah menerobos menempel ke 0 px. Raycast garis pandang (*LoS*) dan navigasi celah menggunakan `Array[RID]` terfilter yang hanya diblokir oleh rintangan dunia nyata (`TileMapLayer` dan `StaticBody2D`).
+   Seluruh 4 karakter hero (`player_knight.gd`, `player_bandit.gd`, `player_archer.gd`, `player_mage.gd`) dan unit musuh (`enemy.gd`) mengadopsi `motion_mode = CharacterBody2D.MOTION_MODE_FLOATING`, pengecualian tabrakan fisik timbal balik (*collision exceptions*) baik antaranggota party maupun antara hero dan musuh, serta fungsi `move_and_slide_with_separation()`. Collision exception mengecualikan pasangan body yang didaftarkan dari collision satu sama lain melalui sistem fisika Godot. Sementara itu, pengaturan jarak antarunit dilakukan secara terpisah melalui kalkulasi `get_separation_vector()` di dalam `move_and_slide_with_separation()`, menggunakan parameter separasi yang telah ditentukan: dorongan separasi menggunakan `min_sep_dist = 55.0 px`; vektor hasil kalkulasi terlebih dahulu dibatasi menggunakan `limit_length(55.0)`, kemudian dikalikan dengan faktor `8.0`. Dengan demikian, collision exception mengatur pasangan yang tidak saling berkolisi, sedangkan sistem separasi mengatur jarak antarunit. Pada musuh penembak, diterapkan batas henti jarak serang (berhenti pada `dist <= 140.0 px` atau `dist <= shoot_range`) serta manuver mundur (*kiting* jika `dist < 80.0 px`) sehingga tidak pernah menerobos menempel ke 0 px. Raycast garis pandang (*LoS*) dan navigasi celah menggunakan `Array[RID]` terfilter yang hanya diblokir oleh rintangan dunia nyata (`TileMapLayer` dan `StaticBody2D`).
 7. **Sistem Partikel Debu Berlari (Run Dust):**
-   Partikel debu lari (`run_dust.tscn`) disinkronkan secara konsisten di seluruh 8 arah mata angin (East, West, South, North, NE, NW, SE, SW) untuk seluruh hero (`Knight`, `Mage`, `Archer`). Pemosisian kepulan debu menggunakan offset adaptif (`feet_y = 36–38 px` dan `lag_y = 10 px` untuk arah North/NE/NW) dengan `z_index = 3` tepat di bawah karakter (`z_index = 4`) dan di atas lantai/bayangan (`z_index = 0–2`), memastikan kepulan debu tidak tertutup jubah/baju zirah saat bergerak ke atas. Pemanggilan debu dieksekusi secara terpusat pada siklus fisika baik untuk Leader maupun Follower saat berlari sprint (`velocity.length() >= NORMAL_SPEED * 1.35`).
+   Partikel debu lari (`run_dust.tscn`) disinkronkan secara konsisten di seluruh 8 arah mata angin (East, West, South, North, NE, NW, SE, SW) untuk seluruh 4 hero (`Knight`, `Bandit`, `Archer`, `Mage`). Pemosisian kepulan debu menggunakan offset adaptif (`feet_y = 36–38 px` dan `lag_y = 10 px` untuk arah North/NE/NW) dengan `z_index = 3` tepat di bawah karakter (`z_index = 4`) dan di atas lantai/bayangan (`z_index = 0–2`), memastikan kepulan debu tidak tertutup jubah/baju zirah saat bergerak ke atas. Pemanggilan debu dieksekusi secara terpusat pada siklus fisika baik untuk Leader maupun Follower saat berlari sprint (`velocity.length() >= NORMAL_SPEED * 1.35`).
 8. **Penyelarasan Baseline Visual & Y-Sorting Karakter:**
-   Seluruh hero (`Knight`, `Mage`, `Archer`) diselaraskan memiliki batas bawah pijakan kaki (*visual feet baseline*) pada posisi origin dunia yang seragam (`+55.0 px` di bawah origin node). Pada Archer (`player_archer.tscn`), `AnimatedSprite2D` dikonfigurasi dengan `offset = Vector2(0, 4)` sehingga meniadakan masalah visual karakter mengambang/naik 20 px dibanding Knight dan Mage. Seluruh titik kalkulasi visual Archer (`CollisionShape2D` di `Vector2(0, 5.6)`, `SHIELD_CENTER_OFFSET = Vector2(0.0, 4.0)`, `VISUAL_CENTER_OFFSET = Vector2(2.5, 26.0)`, titik tembak panah `BASIC_ATTACK_ARROW_OFFSET = Vector2(2.5, 35.0)` sejajar senjata busur, serta titik pijakan partikel debu lari `feet_y = 36–38 px`) disinkronkan presisi agar Y-sorting dan proyeksi serangan panah tetap konsisten. Titik pusat tebasan dan LOS Knight juga disinkronkan secara simetris menggunakan `VISUAL_CENTER_OFFSET` / `SLASH_CENTER_OFFSET = Vector2(0.0, 7.5)` di ruang global (setara posisi perisai lokal `SHIELD_CENTER_OFFSET = Vector2(0.0, 1.5)`). Titik tembak dan bidikan dasar bola sihir Mage juga diselaraskan presisi dengan posisi tengah dan ujung senjata tongkat saat mengarah ke depan (`BASIC_ATTACK_STAFF_OFFSET = Vector2(0.0, 47.0)`, offset 92 px, timing rilis 0.34s bersamaan dengan letupan efek sabit sihir di Frame 4, dan watchdog 0.8s) agar proyektil keluar tepat di tengah dan ujung tongkat di seluruh arah.
+   Seluruh 4 hero (`Knight`, `Bandit`, `Archer`, `Mage`) memiliki hierarki scene root `CharacterBody2D` dengan origin `(0, 0)` dan skala root seragam `scale = Vector2(5, 5)`.
+   - **Geometri Collision & Offset Sprite:** Seluruh hero menggunakan `CollisionShape2D` dengan posisi seragam `Vector2(0, 5.6)`. Pada konfigurasi `AnimatedSprite2D`, Archer menggunakan `offset = Vector2(0, 4)`, sedangkan Knight, Bandit, dan Mage menggunakan `offset = Vector2(0, 5)`. Perbedaan satu unit lokal ini dipertahankan sebagai kompensasi proporsi kanvas sprite Archer untuk membantu menjaga keselarasan visual baseline kaki seluruh anggota party agar berpijak sejajar di lantai dunia tanpa ada karakter yang tampak mengambang.
+   - **Titik Jangkar Debu Lari (Run Dust Anchor):** Pemunculan partikel debu lari dihitung konsisten dari `global_position + Vector2(0, feet_y)` dengan `feet_y = 36.0 px` (dan `38.0 px` saat bergerak ke South) pada seluruh 4 hero.
+   - **Pusat Serangan & Skill:** Titik pusat tebasan pedang Knight berpusat pada `VISUAL_CENTER_OFFSET = Vector2(0.0, 7.5)` di ruang global (setara perisai lokal `SHIELD_CENTER_OFFSET = Vector2(0.0, 1.5)`). Titik torso Archer berada di `VISUAL_CENTER_OFFSET = Vector2(2.5, 26.0)` dengan titik tembak panah `BASIC_ATTACK_ARROW_OFFSET = Vector2(2.5, 35.0)` sejajar busur. Titik tembak bola sihir Mage berada di `BASIC_ATTACK_STAFF_OFFSET = Vector2(0.0, 47.0)` (offset maju 92 px) tepat di ujung tongkat sihir. Seluruh titik kalkulasi visual ini disinkronkan presisi agar Y-sorting dan proyeksi serangan proyektil/hitbox tetap konsisten di seluruh 8 arah mata angin.
 9. **Penyesuaian Geometri Tebasan Bawah Knight & Peniadaan Knockback Hero Saat Terkena Hit:**
-   Jangkauan tebasan Knight ke arah bawah (South / `attack_dir.y > 0.3`) diperluas menjadi `slash_range = 160.0 px`, `close_contact_radius = 85.0 px`, `slash_arc_deg = 180.0°`, serta titik pusat digeser ke bawah (`center_offset = Vector2(0.0, 32.0)`) sehingga proporsional dan selaras sempurna dengan animasi ayunan pedang ke bawah. Efek knockback dorongan mundur pada seluruh hero (`Knight`, `Archer`, `Mage`) saat menerima damage dari musuh (`take_damage()`) maupun saat memblokir dengan Shield Guard telah dihilangkan sepenuhnya (`knockback_strength = 0.0`), sehingga posisi hero tetap stabil dan tidak tersentak mundur saat diserang. Pembatalan status serang/skill (`cancel_attack()` / `cancel_skill()`), feedback visual kedip warna, dan proteksi i-frame tetap dipertahankan agar responsivitas kontrol tetap terjaga.
+   Jangkauan tebasan Knight ke arah bawah (South / `attack_dir.y > 0.3`) diperluas menjadi `slash_range = 160.0 px`, `close_contact_radius = 85.0 px`, `slash_arc_deg = 180.0°`, serta titik pusat digeser ke bawah (`center_offset = Vector2(0.0, 32.0)`) sehingga proporsional dan selaras sempurna dengan animasi ayunan pedang ke bawah. Efek knockback dorongan mundur pada hero `Knight`, `Archer`, dan `Mage` saat menerima damage dari musuh (`take_damage()`) maupun saat memblokir dengan Shield Guard telah dihilangkan sepenuhnya (`knockback_strength = 0.0`), sehingga posisi hero tetap stabil dan tidak tersentak mundur saat diserang (sedangkan pada `Bandit`, dorongan terukur `knockback_strength = 380.0` tetap diterapkan di luar status Super Armor/Poise). Pembatalan status serang/skill (`cancel_attack()` / `cancel_skill()`), feedback visual kedip warna, dan proteksi i-frame tetap dipertahankan agar responsivitas kontrol tetap terjaga.
 10. **Proteksi Double Damage & Invulnerability Frame (i-frame):**
-    Seluruh hero (`Knight`, `Mage`, `Archer`) dilengkapi dengan jeda kebal singkat (`invulnerability_duration = 0.25s`) pasca menerima hit untuk mencegah akumulasi damage ganda saat berdekatan/menempel dengan musuh. Pada `enemy.gd`, tembakan panah jarak dekat secara otomatis menyinkronkan cooldown kontak (`damage_timer = max(damage_timer, 0.6)`), memastikan tidak terjadi tumpang tindih antara damage panah instan dan damage kontak fisik dalam satu kali siklus serangan. Proyektil panah musuh (`arrow.gd`) juga memproyeksikan arah knockback selaras dengan vektor lintasannya (`direction`).
+    Seluruh 4 hero (`Knight`, `Bandit`, `Archer`, `Mage`) dilengkapi dengan jeda kebal singkat (`invulnerability_duration = 0.25s`) pasca menerima hit untuk mencegah akumulasi damage ganda saat berdekatan/menempel dengan musuh. Pada `enemy.gd`, tembakan panah jarak dekat secara otomatis menyinkronkan cooldown kontak (`damage_timer = max(damage_timer, 0.6)`), memastikan tidak terjadi tumpang tindih antara damage panah instan dan damage kontak fisik dalam satu kali siklus serangan. Proyektil panah musuh (`arrow.gd`) juga memproyeksikan arah knockback selaras dengan vektor lintasannya (`direction`).
 11. **Mekanik Khusus Hero Bandit (Double Slash, Ambush Passive, Dash Knockup Triple Slash):**
     - **Double Slash Dagger:** Serangan melee ritmis dua ayunan berurutan (jeda 0.15s dan 0.40s) selaras frame visual belati `atk-[e|w|n|s].png`. Menghasilkan 2 damage per tebasan (total 4 damage) dengan sapuan busur 160° hingga 130 px (dan adaptasi jangkauan bawah 140 px, 180°). Tidak memberikan dorongan knockback horizontal pada musuh.
     - **Out-of-Combat Ambush Lunge:** Timer 5 detik tanpa menerima maupun memberikan damage. Ditandai modulasi visual aura berpendar halus (`modulate` cyan lembut). Saat aktif, serangan dasar pertama memperoleh jangkauan *engage* luas (260 px), Bandit meluncur kencang (680 px/s) ke musuh terdekat dari kursor, memberikan bonus damage +3 pada tebasan pertama (total 5 damage pembuka), mengonsumsi status pasif, serta memicu screen shake. Dilengkapi *Super Armor* dan pengecualian perisai party sehingga damage 100% masuk tanpa terblokir collider/buff sendiri.
     - **Dash, Knockup & Triple Slash (Tombol E):** Skill aktif khusus Leader (follower Bandit dilarang auto-cast). Meluncur kencang (750 px/s) ke target kursor hingga 0.35s dengan animasi `skill_[n|s|e|w]` aktif sepanjang luncuran (dan menuntaskan frame visual jika miss sebelum kembali ke idle/run). Dash berhenti seketika saat menabrak musuh pertama di jalurnya (`check_dash_collision_enemy()`); seluruh visual dan sisa animasi dash dihentikan seketika (`animated_sprite.stop()`), lalu beralih 100% secara bersih ke animasi kombo `triple_slash` pada node `AnimatedSprite2D` utama tanpa adanya sprite ganda yang tertinggal. Musuh yang tertabrak terangkat melayang ke udara secara vertikal (*knockup* ~40 px via tween parabolik) dan terkena stun selama 0.70s tanpa pergeseran horizontal. Seketika memicu kombo 3x tebasan beruntun (Step 1 pada 0.10s, Step 2 pada 0.26s, Step 3 pada 0.42s; masing-masing berdaya rusak 2, total 6 damage combo). Dilengkapi *Super Armor* penuh (tidak dapat dibatalkan atau didorong knockback oleh serangan musuh). Cooldown 5.0 detik baru mulai berjalan setelah rangkaian aksi tuntas.
+12. **Sistem Shield Guard Knight:**
+    - **Kondisi Aktivasi:** Shield Guard (tombol `E`) hanya dapat diaktifkan ketika Knight menjadi Leader aktif yang dikendalikan langsung oleh pemain (`player_knight.gd`). Skill tidak dapat diaktifkan jika Knight sedang gugur (`is_dead`), sedang dalam animasi skill, atau jika perisai masih aktif. Follower Knight dilarang melakukan auto-cast skill ini.
+    - **Efek Perlindungan:** Saat rapalan animasi Knight selesai (`_deploy_shield()`), perisai pelindung diberikan secara serentak kepada seluruh anggota party yang hidup dalam grup `player` (Knight, Bandit, Archer, Mage) melalui fungsi `grant_shield(shield_duration)`.
+    - **Mitigasi Damage:** Menahan 100% damage dari seluruh serangan musuh (0 damage diterima, HP tidak berkurang). Karakter yang memblokir serangan musuh memicu kilatan visual putih-kebiruan halus (`modulate` flash) serta efek getaran kamera singkat (*camera shake* 3.0).
+    - **Durasi dan Cooldown:** Durasi perlindungan perisai aktif selama 3.5 detik (`shield_duration = 3.5s`). Cooldown skill berlangsung selama 6.0 detik (`skill_cooldown_max = 6.0s`) dan mulai dihitung sejak pemain menekan tombol E untuk mengaktifkan skill, bersamaan dengan dimulainya proses aktivasi dan animasi rapalan Knight.
+    - **Persistensi Efek:** Timer perisai (`shield_timer`) dan pembaruan visual diproses secara independen pada masing-masing hero, sehingga perlindungan tetap bertahan aktif pada seluruh anggota party ketika pemain menukar Leader di tengah durasi berlangsung hingga timer masing-masing hero habis. Efek perlindungan berakhir seketika jika karakter gugur (`is_dead`).
+    - **Transisi Visual:** Node perisai (`ShieldSprite`) muncul tegak tanpa rotasi di tengah tubuh karakter dengan posisi terpusat (`SHIELD_CENTER_OFFSET`). Pemunculan perisai menggunakan tween fade-in (`modulate.a` dari 0.0 ke 1.0 dalam 0.25 detik), melayang naik-turun halus secara dinamis (*floating oscillation*), serta denyut skala berkala (*pulsing scale*). Saat durasi perisai berakhir (`deactivate_shield()`), perisai memudar keluar secara mulus melalui tween fade-out (`modulate.a` menuju 0.0 dalam 0.35 detik) sebelum visibilitas dinonaktifkan (`visible = false`).
 
 ---
 
@@ -233,17 +263,17 @@ Klaim berikut dibatasi secara ketat pada skenario pengujian dasar yang telah dij
 - **Pergerakan Leader & Formasi Follower:** Berhasil via WASD; follower mengekor dan merespons U-turn 180° (*Diverifikasi via pengamatan manual user*).
 - **Pergantian Leader & Sinkronisasi Kamera:** Berhasil via tombol Tab dan angka 1–4 (*Diverifikasi via pengamatan manual user & log runtime*).
 - **Komando Party FOLLOW (C) dan ATTACK (V):** Berhasil mengubah perilaku kawal barisan vs serang mandiri (*Diverifikasi via pengamatan manual user & log runtime*).
-- **Implementasi Hero Bandit (Double Slash, Ambush Lunge, Dash Knockup Triple Slash & Super Armor):** Bandit berfungsi penuh sebagai anggota party ke-2 (Slot 2); double slash ritmis 2x hit (2 damage per ayunan), pasif ambush lunge out-of-combat 5s dengan aura visual dan bonus damage (+3) yang tetap memberikan damage 100% saat memiliki perisai Knight, dash cepat dengan animasi skill penuh bahkan saat meleset (miss), knockup vertikal di tempat & stun musuh tanpa pergeseran horizontal kombo triple slash 3x hit selaras visual sprite terpisah, perlindungan Super Armor/Poise selama aksi pasif dan skill 'E', follower Bandit disiplin basic attack, serta baseline visual kaki selaras dengan Knight dan Mage (*Diverifikasi via validasi headless engine & inspeksi kode sumber*).
-- **Serangan Dasar (Klik Kiri):** Tebasan pedang Knight (direct arc sweep & proximity check), panah Archer, dan bola sihir Mage berhasil diarahkan ke kursor dan mengenai musuh (*Diverifikasi via pengamatan manual user & validasi headless engine*).
-- **Sistem Soft Collision & Separasi Karakter:** Seluruh anggota party dan musuh saling mendorong secara elastis saat bertabrakan/menempel tanpa terjadi getaran macet atau penguncian posisi (*Diverifikasi via validasi headless engine*).
-- **Skill Khusus (Tombol E):** *Shield Guard* Knight (hanya aktif saat menjadi Leader), *Charged Line Snipe* Archer, dan *Meteor Strike* Mage berhasil diaktifkan dan memberikan dampak taktis (*Diverifikasi via pengamatan manual user*).
-- **Partikel Debu Berlari (Run Dust):** Partikel debu muncul konsisten di 8 arah mata angin saat sprint bagi Leader dan Follower pada Knight, Mage, dan Archer tanpa terhalang jubah karakter (*Diverifikasi via validasi headless engine*).
-- **Kesejajaran Baseline & Y-Sorting Party:** Seluruh karakter hero (Knight, Mage, Archer) berdiri sejajar secara horizontal dengan pijakan kaki menyentuh tanah pada baseline yang sama (+55 px) tanpa ada karakter yang tampak mengambang (*Diverifikasi via validasi headless engine*).
-- **Peniadaan Knockback Hero Saat Terkena Damage:** Seluruh karakter hero (Knight, Archer, Mage) tidak lagi terdorong/tersentak mundur saat menerima damage dari musuh maupun saat memblokir serangan dengan Shield Guard, menjaga stabilitas posisi tempur (*Diverifikasi via validasi headless engine & inspeksi kode sumber*).
-- **Jangkauan Tebasan Bawah Knight:** Tebasan pedang ke arah South konsisten mengenai musuh di area visual sapuan bilah pedang berkat penyesuaian offset pusat tebasan (+32 px) dan radius jangkauan 160 px (*Diverifikasi via validasi headless engine*).
-- **Peniadaan Double Damage Kontak Musuh:** Hero tidak lagi menerima damage ganda saat berdekatan/menempel dengan musuh berkat implementasi i-frame (0.25s) dan desinkronisasi tembakan jarak dekat di AI musuh (*Diverifikasi via validasi headless engine*).
-- **Interupsi Bersih Skill & Pencegahan Freeze Archer:** Archer tidak lagi mengalami deadlock/freeze ketika menerima damage/knockback saat sedang menahan charging skill 'E' berkat pemulihan state aman ke READY, token pembatalan serangan (`attack_token`), pencegahan penahanan klik mouse (`require_mouse_release`), serta timeout cadangan pada siklus animasi (*Diverifikasi via validasi headless engine*).
-- **Sinkronisasi Posisi & Pembatalan Peluncuran Sihir Mage:** Proyektil bola sihir Mage kini dihitung posisinya secara dinamis tepat di ujung tongkat sihir dan secara otomatis digugurkan jika Mage terinterupsi oleh serangan musuh/knockback di tengah jeda windup cast, menghilangkan kemunculan proyektil gaib pada koordinat usang (*Diverifikasi via validasi headless engine*).
+- **Implementasi Hero Bandit (Double Slash, Ambush Lunge, Dash Knockup Triple Slash & Super Armor):** Bandit berfungsi penuh sebagai anggota party ke-2 (Slot 2); double slash ritmis 2x hit (2 damage per ayunan), pasif ambush lunge out-of-combat 5s dengan aura visual dan bonus damage (+3) yang tetap memberikan damage 100% saat memiliki perisai Knight, dash cepat dengan animasi skill penuh bahkan saat meleset (miss), knockup vertikal di tempat & stun musuh tanpa pergeseran horizontal kombo triple slash 3x hit selaras visual sprite terpisah, perlindungan Super Armor/Poise selama aksi pasif dan skill 'E', follower Bandit disiplin basic attack, serta baseline visual kaki selaras dengan Knight dan Mage (*Diverifikasi via inspeksi kode sumber & validasi pemuatan scene headless; pengujian perilaku gameplay dinamis dan visual kombo telah diamati manual*).
+- **Serangan Dasar (Klik Kiri):** Tebasan pedang Knight (direct arc sweep & proximity check), ayunan ganda belati Bandit (double slash & out-of-combat ambush), panah Archer, dan bola sihir Mage berhasil diarahkan ke kursor dan mengenai musuh (*Diverifikasi via pengamatan manual user & inspeksi kode sumber*).
+- **Sistem Soft Collision & Separasi Karakter:** Collision exception dan sistem separasi dinamis telah ditemukan pada implementasi seluruh controller hero dan AI musuh. Inspeksi kode sumber dan validasi pemuatan scene secara headless memastikan keberadaan implementasi serta integritas pemuatan scene. Perilaku separasi dinamis saat runtime, khususnya pada skenario kompleks, masih memerlukan observasi dan pengujian lanjutan.
+- **Skill Khusus (Tombol E):** *Shield Guard* Knight (hanya aktif saat menjadi Leader), *Dash, Knockup & Triple Slash* Bandit, *Charged Line Snipe* Archer, dan *Meteor Strike* Mage berhasil diaktifkan dan memberikan dampak taktis (*Diverifikasi via pengamatan manual user*).
+- **Partikel Debu Berlari (Run Dust):** Partikel debu muncul konsisten di 8 arah mata angin saat sprint bagi Leader dan Follower pada seluruh 4 hero: Knight, Bandit, Archer, dan Mage tanpa terhalang jubah karakter (*Diverifikasi via inspeksi parameter kode/scene & pengamatan manual user; pemuatan headless hanya memvalidasi keberadaan node/tekstur*).
+- **Kesejajaran Baseline & Y-Sorting Party:** Seluruh 4 karakter hero (Knight, Bandit, Archer, Mage) berdiri sejajar secara horizontal dengan pijakan kaki menyentuh tanah pada baseline yang seragam tanpa ada karakter yang tampak mengambang (*Diverifikasi via inspeksi konfigurasi scene fisik & perhitungan offset sprite; validasi headless memastikan scene termuat tanpa error*).
+- **Peniadaan Knockback Hero Saat Terkena Damage:** Karakter hero Knight, Archer, dan Mage tidak lagi terdorong/tersentak mundur saat menerima damage dari musuh maupun saat memblokir serangan dengan Shield Guard, menjaga stabilitas posisi tempur (sedangkan Bandit mempertahankan dorongan terukur knockback_strength = 380.0 di luar kondisi Super Armor) (*Diverifikasi via inspeksi kode sumber & pengujian manual user; pemuatan headless mengonfirmasi integritas script*).
+- **Jangkauan Tebasan Bawah Knight:** Tebasan pedang ke arah South konsisten mengenai musuh di area visual sapuan bilah pedang berkat penyesuaian offset pusat tebasan (+32 px) dan radius jangkauan 160 px (*Diverifikasi via inspeksi kode sumber & pengamatan manual user*).
+- **Peniadaan Double Damage Kontak Musuh:** Hero tidak lagi menerima damage ganda saat berdekatan/menempel dengan musuh berkat implementasi i-frame (0.25s) dan desinkronisasi tembakan jarak dekat di AI musuh (*Diverifikasi via inspeksi kode sumber & validasi logika i-frame*).
+- **Interupsi Bersih Skill & Pencegahan Freeze Archer:** Archer tidak lagi mengalami deadlock/freeze ketika menerima damage/knockback saat sedang menahan charging skill 'E' berkat pemulihan state aman ke READY, token pembatalan serangan (`attack_token`), pencegahan penahanan klik mouse (`require_mouse_release`), serta timeout cadangan pada siklus animasi (*Diverifikasi via inspeksi kode sumber & validasi logika state*).
+- **Sinkronisasi Posisi & Pembatalan Peluncuran Sihir Mage:** Proyektil bola sihir Mage kini dihitung posisinya secara dinamis tepat di ujung tongkat sihir dan secara otomatis digugurkan jika Mage terinterupsi oleh serangan musuh/knockback di tengah jeda windup cast, menghilangkan kemunculan proyektil gaib pada koordinat usang (*Diverifikasi via inspeksi kode sumber & validasi pemuatan scene*).
 - **Siklus Kematian & Respawn:** Pengurangan HP saat terkena serangan musuh, transisi mati (fade-out), timer tunggu, dan kemunculan kembali karakter berhasil berjalan normal (*Diverifikasi via pengamatan manual user & log runtime*).
 
 > **Catatan Sumber Verifikasi Parameter:**  
@@ -251,13 +281,25 @@ Klaim berikut dibatasi secara ketat pada skenario pengujian dasar yang telah dij
 
 ### B. Masalah yang Sengaja Ditunda (*Deferred Issues*):
 - **Penyempurnaan AI Musuh & Flanking Navigasi:**
-  Algoritma perhitungan waypoint raycast musuh dan follower saat membentur objek lingkungan masih memerlukan perbaikan perilaku navigasi.
+  Penyempurnaan perilaku navigasi flanking berbasis raycast dan waypoint pada follower ranged (Archer, Mage) dan AI musuh, terutama saat menghadapi rintangan kompleks dan optimasi jalur pergerakan unit, masih berstatus *deferred issue*.
   > **PERINGATAN:** Catatan penundaan ini **BUKAN** merupakan izin untuk langsung mengerjakannya tanpa permintaan atau instruksi eksplisit dari pengguna.
 
 ### C. Technical Debt & Rencana Masa Depan (*Backlog*):
 *(Hanya dikerjakan jika secara spesifik diminta oleh pengguna)*
-1. **Refactoring Base Character:** Penggabungan duplikasi logika (~80%) antara `player_knight.gd`, `player_archer.gd`, dan `player_mage.gd` ke dalam kelas dasar bersama.
-2. **UI / HUD Pemain:** Tampilan bar HP party di layar, indikator cooldown skill visual, dan ikon status komando.
+1. **Refactoring Base Character:** Evaluasi dan penggabungan logika bersama yang berulang antara `player_knight.gd`, `player_bandit.gd`, `player_archer.gd`, dan `player_mage.gd` ke dalam kelas dasar bersama.
+2. **Sistem Antarmuka Pengguna (UI / Menus / HUD):**
+   Implementasi grafis antarmuka dan scene Godot (`scene/ui/`) berdasarkan hierarki folder yang telah disiapkan pada Fase 1:
+   - **Gameplay UI (`scene/ui/gameplay/`):**
+     - *Party HUD:* Tampilan bar HP 4 hero di layar secara real-time, portrait hero, indikator cooldown skill visual (Shield Guard, Triple Slash, Charged Line Snipe, Meteor Strike), dan ikon status mode komando (`FOLLOW` / `ATTACK`).
+     - *Inventory UI:* Tampilan slot grid inventaris barang, frame tooltip deskripsi item, dan status perlengkapan.
+     - *Dialogue UI:* Kotak dialog 9-slice box, portrait frame avatar NPC/Hero, dan penampil teks percakapan.
+   - **Menu UI (`scene/ui/menus/`):**
+     - *Start / Main Menu:* Layar pembuka, logo judul game, serta tombol navigasi utama (Play, Settings, Credits, Quit).
+     - *Options Menu:* Panel pengaturan audio (slider volume Master, BGM, SFX), resolusi layar, dan mode tampilan (Windowed/Fullscreen).
+     - *Pause Menu:* Layar jeda permainan semi-transparan (dim overlay), tombol resume, settings, dan kembali ke menu utama.
+     - *Save & Load Menu:* Tampilan slot kartu penyimpanan progres permainan, tombol simpan, dan muat data.
+     - *Credits Screen:* Panel apresiasi tim pengembang dan kontributor proyek inkubasi.
+   *(Status Implementasi: Struktur direktori dan penanda `.gitkeep` pada `assets/ui/` dan `scene/ui/` telah disiapkan pada Fase 1; pembuatan scene Godot `Control`/`CanvasLayer` dan script GDScript terkait saat ini berstatus backlog).*
 3. **Sistem Audio:** Integrasi BGM dan SFX (langkah, tembakan busur, sihir, ledakan, hit).
 4. **Sentralisasi InputMap:** Memindahkan konstanta fisik `KEY_*` di script ke action resmi di `project.godot`.
 5. **Variasi Musuh:** Penggantian spritesheet musuh agar tidak menduplikasi sprite Archer merah.
