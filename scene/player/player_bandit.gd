@@ -668,6 +668,7 @@ func find_ambush_target_in_range(target_pos: Vector2, max_range: float) -> Node2
 	var cam_rect := get_camera_world_rect()
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	var best_enemy: Node2D = null
+	var min_cursor_dist: float = 120.0
 	var min_dist: float = max_range
 
 	for e in enemies:
@@ -676,7 +677,11 @@ func find_ambush_target_in_range(target_pos: Vector2, max_range: float) -> Node2
 				var d_char: float = global_position.distance_to(e.global_position)
 				if d_char <= max_range:
 					var d_cursor: float = target_pos.distance_to(e.global_position)
-					if d_cursor < 120.0 or best_enemy == null:
+					if d_cursor < min_cursor_dist:
+						min_cursor_dist = d_cursor
+						min_dist = d_char
+						best_enemy = e
+					elif best_enemy == null and d_char < min_dist:
 						min_dist = d_char
 						best_enemy = e
 	return best_enemy
