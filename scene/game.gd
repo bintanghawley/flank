@@ -57,6 +57,9 @@ func _ready() -> void:
 	# 5. Inisialisasi kamera dan batasan map
 	setup_camera_and_boundaries.call_deferred()
 
+	# 6. Jalankan efek pembukaan Circular Mask (Iris Open) saat masuk arena game
+	play_iris_opening_transition()
+
 
 func setup_party_enemy_collision_exceptions() -> void:
 	var enemies := get_tree().get_nodes_in_group("enemy")
@@ -448,3 +451,37 @@ func get_follower_trail_slot(slot_index: int) -> Dictionary:
 		"pos": prev_pt - fallback_dir * needed,
 		"dir": fallback_dir
 	}
+
+
+func play_iris_opening_transition() -> void:
+	var transition_layer := get_node_or_null("TransitionLayer")
+	if not transition_layer:
+		return
+	var iris := transition_layer.get_node_or_null("IrisMask") as ColorRect
+	if not iris or not (iris.material is ShaderMaterial):
+		return
+
+	var mat := iris.material as ShaderMaterial
+	mat.set_shader_parameter("center", Vector2(0.5, 0.5))
+	mat.set_shader_parameter("radius", 0.0)
+	mat.set_shader_parameter("softness", 0.015)
+
+	# Tunggu inisialisasi engine dan scene stabil agar bebas dari frame-drop awal
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	# Kunci posisi kamera langsung ke leader tanpa lag smoothing awal
+	if is_instance_valid(camera):
+		camera.reset_smoothing()
+
+	# Jeda bernapas halus sebelum lingkaran mulai mekar
+	await get_tree().create_timer(0.08).timeout
+
+	# Buka circular mask dengan kurva sinusoidal alami (EASE_IN_OUT) yang sangat lembut
+	var tween := create_tween()
+	tween.tween_property(mat, "shader_parameter/radius", 1.5, 1.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tween.finished
+
+	# Hapus node transisi setelah selesai agar memori dan render pass bersih
+	if is_instance_valid(transition_layer):
+		transition_layer.queue_free()

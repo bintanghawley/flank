@@ -1,0 +1,617 @@
+[gd_scene format=3 uid="uid://bvy1kx5v1m8t1"]
+
+[ext_resource type="Script" path="res://scene/ui/menus/start_menu.gd" id="ext_script"]
+[ext_resource type="Texture2D" path="res://assets/ui/menus/start_menu/bg_start_sky.png" id="ext_bg_sky"]
+[ext_resource type="Texture2D" path="res://assets/ui/menus/start_menu/bg_start_grass.png" id="ext_bg_grass"]
+[ext_resource type="Texture2D" path="res://assets/ui/menus/start_menu/logo_flank.png" id="ext_logo"]
+[ext_resource type="FontFile" path="res://assets/ui/fonts/Beholden-Bold.ttf" id="ext_font"]
+[ext_resource type="Texture2D" path="res://assets/characters/knight/walk/walk-w.png" id="ext_knight_walk"]
+[ext_resource type="Texture2D" path="res://assets/characters/knight/skill/skill-w.png" id="ext_knight_skill"]
+[ext_resource type="Texture2D" path="res://assets/characters/mage/walk/walk-w.png" id="ext_mage_walk"]
+[ext_resource type="Texture2D" path="res://assets/characters/archer/walk/walk-w.png" id="ext_archer_walk"]
+[ext_resource type="Texture2D" path="res://assets/characters/bandit/walk/walk-w.png" id="ext_bandit_walk"]
+
+[sub_resource type="AtlasTexture" id="Atlas_logo"]
+atlas = ExtResource("ext_logo")
+region = Rect2(300, 330, 480, 215)
+
+[sub_resource type="AtlasTexture" id="Atlas_kw_0"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(0, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_kw_1"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(96, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_kw_2"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(192, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_kw_3"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(288, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_kw_4"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(384, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_kw_5"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(480, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_kw_6"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(576, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_kw_7"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(672, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_ks_0"]
+atlas = ExtResource("ext_knight_skill")
+region = Rect2(0, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_ks_1"]
+atlas = ExtResource("ext_knight_skill")
+region = Rect2(96, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_ks_2"]
+atlas = ExtResource("ext_knight_skill")
+region = Rect2(192, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_ks_3"]
+atlas = ExtResource("ext_knight_skill")
+region = Rect2(288, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_ks_4"]
+atlas = ExtResource("ext_knight_skill")
+region = Rect2(384, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_ks_5"]
+atlas = ExtResource("ext_knight_skill")
+region = Rect2(480, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_ks_6"]
+atlas = ExtResource("ext_knight_skill")
+region = Rect2(576, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_ks_7"]
+atlas = ExtResource("ext_knight_skill")
+region = Rect2(672, 0, 96, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_knight"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_7")
+}],
+"loop": true,
+"name": &"walk_w",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_ks_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_ks_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_ks_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_ks_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_ks_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_ks_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_ks_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_ks_7")
+}],
+"loop": false,
+"name": &"skill_w",
+"speed": 10.0
+}]
+
+[sub_resource type="AtlasTexture" id="Atlas_mw_0"]
+atlas = ExtResource("ext_mage_walk")
+region = Rect2(0, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_mw_1"]
+atlas = ExtResource("ext_mage_walk")
+region = Rect2(96, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_mw_2"]
+atlas = ExtResource("ext_mage_walk")
+region = Rect2(192, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_mw_3"]
+atlas = ExtResource("ext_mage_walk")
+region = Rect2(288, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_mw_4"]
+atlas = ExtResource("ext_mage_walk")
+region = Rect2(384, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_mw_5"]
+atlas = ExtResource("ext_mage_walk")
+region = Rect2(480, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_mw_6"]
+atlas = ExtResource("ext_mage_walk")
+region = Rect2(576, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_mw_7"]
+atlas = ExtResource("ext_mage_walk")
+region = Rect2(672, 0, 96, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_mage"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_mw_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_mw_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_mw_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_mw_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_mw_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_mw_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_mw_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_mw_7")
+}],
+"loop": true,
+"name": &"walk_w",
+"speed": 10.0
+}]
+
+[sub_resource type="AtlasTexture" id="Atlas_aw_0"]
+atlas = ExtResource("ext_archer_walk")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_aw_1"]
+atlas = ExtResource("ext_archer_walk")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_aw_2"]
+atlas = ExtResource("ext_archer_walk")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_aw_3"]
+atlas = ExtResource("ext_archer_walk")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_aw_4"]
+atlas = ExtResource("ext_archer_walk")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_aw_5"]
+atlas = ExtResource("ext_archer_walk")
+region = Rect2(160, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_aw_6"]
+atlas = ExtResource("ext_archer_walk")
+region = Rect2(192, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_aw_7"]
+atlas = ExtResource("ext_archer_walk")
+region = Rect2(224, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_archer"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_aw_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_aw_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_aw_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_aw_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_aw_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_aw_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_aw_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_aw_7")
+}],
+"loop": true,
+"name": &"walk_w",
+"speed": 10.0
+}]
+
+[sub_resource type="AtlasTexture" id="Atlas_bw_0"]
+atlas = ExtResource("ext_bandit_walk")
+region = Rect2(0, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="Atlas_bw_1"]
+atlas = ExtResource("ext_bandit_walk")
+region = Rect2(96, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="Atlas_bw_2"]
+atlas = ExtResource("ext_bandit_walk")
+region = Rect2(192, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="Atlas_bw_3"]
+atlas = ExtResource("ext_bandit_walk")
+region = Rect2(288, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="Atlas_bw_4"]
+atlas = ExtResource("ext_bandit_walk")
+region = Rect2(384, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="Atlas_bw_5"]
+atlas = ExtResource("ext_bandit_walk")
+region = Rect2(480, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="Atlas_bw_6"]
+atlas = ExtResource("ext_bandit_walk")
+region = Rect2(576, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="Atlas_bw_7"]
+atlas = ExtResource("ext_bandit_walk")
+region = Rect2(672, 0, 96, 96)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_bandit"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_bw_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_bw_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_bw_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_bw_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_bw_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_bw_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_bw_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_bw_7")
+}],
+"loop": true,
+"name": &"walk_w",
+"speed": 10.0
+}]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_normal"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hover"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_pressed"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_focus"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_disabled"]
+
+[sub_resource type="Shader" id="Shader_iris"]
+code = "shader_type canvas_item;
+
+uniform vec2 center = vec2(0.697, 0.488);
+uniform float radius : hint_range(0.0, 1.5) = 1.45;
+uniform float softness : hint_range(0.0, 0.1) = 0.008;
+
+void fragment() {
+	vec2 aspect = vec2(SCREEN_PIXEL_SIZE.y / SCREEN_PIXEL_SIZE.x, 1.0);
+	vec2 diff = (UV - center) * aspect;
+	float dist = length(diff);
+	float mask = smoothstep(radius - softness, radius + softness, dist);
+	COLOR = vec4(0.0, 0.0, 0.0, mask);
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_iris"]
+shader = SubResource("Shader_iris")
+shader_parameter/center = Vector2(0.697, 0.488)
+shader_parameter/radius = 1.45
+shader_parameter/softness = 0.008
+
+[node name="StartMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("ext_script")
+
+[node name="SkyContainer" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="BgSky1" type="TextureRect" parent="SkyContainer"]
+texture_filter = 1
+layout_mode = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+mouse_filter = 2
+texture = ExtResource("ext_bg_sky")
+expand_mode = 1
+
+[node name="BgSky2" type="TextureRect" parent="SkyContainer"]
+texture_filter = 1
+layout_mode = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+mouse_filter = 2
+texture = ExtResource("ext_bg_sky")
+expand_mode = 1
+
+[node name="BgSky3" type="TextureRect" parent="SkyContainer"]
+texture_filter = 1
+layout_mode = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+mouse_filter = 2
+texture = ExtResource("ext_bg_sky")
+expand_mode = 1
+
+[node name="GrassContainer" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="BgGrass1" type="TextureRect" parent="GrassContainer"]
+texture_filter = 1
+layout_mode = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+mouse_filter = 2
+texture = ExtResource("ext_bg_grass")
+expand_mode = 1
+
+[node name="BgGrass2" type="TextureRect" parent="GrassContainer"]
+texture_filter = 1
+layout_mode = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+mouse_filter = 2
+texture = ExtResource("ext_bg_grass")
+expand_mode = 1
+
+[node name="BgGrass3" type="TextureRect" parent="GrassContainer"]
+texture_filter = 1
+layout_mode = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+mouse_filter = 2
+texture = ExtResource("ext_bg_grass")
+expand_mode = 1
+
+[node name="Characters" type="Node2D" parent="."]
+
+[node name="Knight" type="AnimatedSprite2D" parent="Characters"]
+texture_filter = 1
+position = Vector2(820, 353)
+scale = Vector2(2.8, 2.8)
+sprite_frames = SubResource("SpriteFrames_knight")
+animation = &"walk_w"
+autoplay = "walk_w"
+offset = Vector2(0, 5)
+
+[node name="Mage" type="AnimatedSprite2D" parent="Characters"]
+texture_filter = 1
+position = Vector2(880, 353)
+scale = Vector2(2.8, 2.8)
+sprite_frames = SubResource("SpriteFrames_mage")
+animation = &"walk_w"
+autoplay = "walk_w"
+offset = Vector2(0, 5)
+
+[node name="Archer" type="AnimatedSprite2D" parent="Characters"]
+texture_filter = 1
+position = Vector2(940, 353)
+scale = Vector2(2.8, 2.8)
+sprite_frames = SubResource("SpriteFrames_archer")
+animation = &"walk_w"
+autoplay = "walk_w"
+offset = Vector2(0, 4)
+
+[node name="Bandit" type="AnimatedSprite2D" parent="Characters"]
+texture_filter = 1
+position = Vector2(1000, 353)
+scale = Vector2(2.8, 2.8)
+sprite_frames = SubResource("SpriteFrames_bandit")
+animation = &"walk_w"
+autoplay = "walk_w"
+offset = Vector2(0, 5)
+
+[node name="LogoRect" type="TextureRect" parent="."]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -275.0
+offset_top = 45.0
+offset_right = 275.0
+offset_bottom = 295.0
+grow_horizontal = 2
+mouse_filter = 2
+texture = SubResource("Atlas_logo")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MenuContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = 40.0
+offset_right = 250.0
+offset_bottom = 305.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="BtnStart" type="Button" parent="MenuContainer"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../BtnExit")
+focus_neighbor_bottom = NodePath("../BtnContinue")
+mouse_default_cursor_shape = 2
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("ext_font")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_normal")
+text = "▶ Mulai Permainan ◀"
+
+[node name="BtnContinue" type="Button" parent="MenuContainer"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../BtnStart")
+focus_neighbor_bottom = NodePath("../BtnSettings")
+mouse_default_cursor_shape = 2
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("ext_font")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_normal")
+text = "Lanjutkan"
+
+[node name="BtnSettings" type="Button" parent="MenuContainer"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../BtnContinue")
+focus_neighbor_bottom = NodePath("../BtnCredits")
+mouse_default_cursor_shape = 2
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("ext_font")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_normal")
+text = "Pengaturan"
+
+[node name="BtnCredits" type="Button" parent="MenuContainer"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../BtnSettings")
+focus_neighbor_bottom = NodePath("../BtnExit")
+mouse_default_cursor_shape = 2
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("ext_font")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_normal")
+text = "Credits"
+
+[node name="BtnExit" type="Button" parent="MenuContainer"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../BtnCredits")
+focus_neighbor_bottom = NodePath("../BtnStart")
+mouse_default_cursor_shape = 2
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("ext_font")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_normal")
+text = "Exit"
+
+[node name="IrisMask" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_iris")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
