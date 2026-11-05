@@ -1254,10 +1254,6 @@ func shoot_at(target: Node2D):
 		shoot_towards(target.global_position)
 
 
-func get_controlled_projectile_speed() -> float:
-	return controlled_projectile_speed
-
-
 func get_dynamic_projectile_speed() -> float:
 	if is_leader:
 		return controlled_projectile_speed

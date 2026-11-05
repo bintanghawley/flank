@@ -18,6 +18,7 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 - **Sistem Komando Party (Follow & Attack):**
   - **Mode FOLLOW (`C`):** Follower merapatkan barisan di belakang Leader dan tidak melakukan serangan, dengan fokus pada mobilitas serta menjaga formasi regu.
   - **Mode ATTACK (`V`):** Follower diberi kebebasan untuk keluar dari barisan dan menyerang musuh terdekat dalam jangkauan tempur secara mandiri.
+- **Start Menu Interaktif & Transisi Sinematik:** Permainan dimulai dari layar Start Menu interaktif dengan visual parallax dinamis (awan langit dan rumput berjalan) bersama animasi berjalan di tempat empat hero party, pemilihan tombol interaktif, dan transisi *Circular Mask* (Iris Wipe) yang menutup ke ujung pedang Knight sebelum masuk ke arena pertempuran.
 - **Pertarungan Real-Time & Serangan Dasar:** Serangan diarahkan langsung ke posisi kursor mouse melalui klik kiri:
   - **Knight:** Tebasan pedang jarak dekat (*melee slash*) dengan area sapuan busur di depan karakter.
   - **Bandit:** Tebasan ganda belati (*Double Slash Dagger*) secara ritmis untuk setiap siklus serangan. Dilengkapi kemampuan pasif *Out-of-Combat Ambush Lunge* setelah beberapa detik tanpa pertempuran: serangan pembuka memperoleh jangkauan serbu luas, Bandit meluncur cepat ke target, menghasilkan bonus damage pembuka, dan diperkuat perlindungan *Super Armor*.
@@ -39,6 +40,8 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 ## Fitur Permainan
 
 ### Fitur yang Sudah Diimplementasikan (Teruji pada Skenario Dasar)
+- [x] Titik masuk permainan: Start Menu interaktif (latar belakang parallax bergerak kontinu, animasi berjalan empat hero party, interaksi tombol dengan font Beholden, dan transisi circular mask / iris wipe).
+- [x] Efek pembukaan circular mask (iris open) saat memasuki arena gameplay.
 - [x] Kontrol regu 4 hero (Knight, Bandit, Archer, Mage) dengan pengecualian tabrakan fisik antaranggota party.
 - [x] Pergantian Leader instan secara siklis (`Tab`) maupun langsung (`1`, `2`, `3`, `4`).
 - [x] Pelacakan kamera halus (*position smoothing*) yang terikat pada Leader aktif.
@@ -55,7 +58,7 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 - [ ] Implementasi prefab dan AI Bandit sebagai musuh, terpisah dari karakter Bandit yang sudah dapat dimainkan (aset sprite telah tersedia di `assets/characters/bandit/`).
 - [ ] Implementasi antarmuka pengguna visual (UI/HUD: bilah darah anggota party, indikator cooldown skill visual, inventaris, dialog).
 - [ ] Tata suara permainan (musik latar/BGM dan efek suara/SFX).
-- [ ] Menu permainan (Start Menu, Options, Pause Menu, Save/Load, Credits).
+- [ ] Menu permainan lanjutan (Options Menu, Pause Menu, Save/Load, Credits Screen).
 - [ ] Variasi jenis musuh baru (monster non-humanoid pada folder cadangan `assets/enemies/`).
 - [ ] Penyempurnaan navigasi flanking berbasis raycast dan waypoint pada follower ranged (Archer, Mage) dan AI musuh, terutama untuk penanganan rintangan kompleks dan optimasi jalur pergerakan.
 - [ ] Konfigurasi preset ekspor aplikasi mandiri (*executable*).
@@ -82,6 +85,7 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 ## Teknologi yang Digunakan
 
 - **Game Engine:** Godot Engine 4 (konfigurasi proyek menggunakan feature tag `"4.7"`, diuji pada Godot Engine v4.7.2-stable Win64).
+- **Titik Masuk Utama (Main Scene):** `res://scene/ui/menus/start_menu.tscn` (beralih ke scene arena `res://scene/game.tscn` melalui transisi circular mask).
 - **Bahasa Pemrograman:** GDScript.
 - **Rendering:** Forward+ 2D dengan konfigurasi driver Direct3D 12 di Windows (`rendering_device/driver.windows="d3d12"`).
 - **Fisika 2D:** Godot 2D Physics bawaan (`CharacterBody2D`, `Area2D`, dengan `motion_mode = MOTION_MODE_FLOATING`).
@@ -110,7 +114,8 @@ Berikut adalah langkah-langkah untuk mengunduh, membuka, dan menjalankan proyek 
 
 4. **Jalankan Permainan:**
    - Tekan tombol **F5** pada keyboard, atau klik tombol **Play** di pojok kanan atas editor.
-   - Editor akan memuat scene utama permainan: `res://scene/game.tscn`.
+   - Editor akan memuat scene utama: `res://scene/ui/menus/start_menu.tscn`.
+   - Klik tombol **Mulai Permainan** pada menu untuk masuk ke scene arena pertempuran (`res://scene/game.tscn`) melalui transisi circular mask.
 
 ---
 
@@ -135,20 +140,27 @@ flank/
 │   ├── projectile/                        # Tekstur proyektil panah dan bola sihir
 │   ├── skills/                            # Tekstur visual efek skill (Archer, Bandit, Knight, Mage)
 │   ├── tileset/                           # Tileset lingkungan yang saat ini digunakan
-│   └── ui/                                # Aset grafis antarmuka mentah dan tipografi (.gitkeep)
-│       ├── fonts/                         # Tipografi pixel (.gitkeep)
+│   └── ui/                                # Aset grafis antarmuka mentah dan tipografi
+│       ├── fonts/                         # Tipografi pixel (Beholden-Bold.ttf)
 │       ├── gameplay/                      # Grafis UI in-game (dialog, inventaris, HUD) (.gitkeep)
 │       ├── icons/                         # Ikon aksi dan ikon skill per karakter (.gitkeep)
-│       └── menus/                         # Grafis menu (start, options, pause, save/load, credits) (.gitkeep)
+│       └── menus/                         # Grafis menu
+│           ├── credits/                   # Frame credits, logo tim (.gitkeep)
+│           ├── options_menu/              # Slider bar, grabber, checkbox (.gitkeep)
+│           ├── pause_menu/                # Dim overlay, popup frame (.gitkeep)
+│           ├── save_load/                 # Slot card, delete/save buttons (.gitkeep)
+│           └── start_menu/                # Logo flank, bg_start_sky, bg_start_grass
 ├── scene/                                 # Logika kode sumber (GDScript) dan scene Godot (.tscn)
 │   ├── effect/                            # Prefab efek visual mandiri (run_dust.tscn/.gd)
 │   ├── enemy/                             # Prefab dan AI musuh (enemy.tscn/.gd)
 │   ├── player/                            # Controller hero regu (player_archer, player_bandit, player_knight, player_mage)
 │   ├── projectile/                        # Proyektil fisik, benturan (impact), dan indikator reticle dunia
-│   ├── ui/                                # Folder persiapan scene Godot UI (menus & gameplay) (.gitkeep)
+│   ├── ui/                                # Implementasi scene Godot UI (menus & gameplay)
+│   │   ├── gameplay/                      # Scene UI gameplay (.gitkeep)
+│   │   └── menus/                         # Scene UI menu (start_menu.tscn / .gd)
 │   ├── world/                             # Peta lingkungan TileMapLayer (map_region_1.tscn)
-│   ├── game.gd                            # Controller utama party manager dan kamera
-│   └── game.tscn                          # Main Scene permainan (titik masuk game)
+│   ├── game.gd                            # Controller utama party manager, kamera, dan transisi iris open
+│   └── game.tscn                          # Scene arena gameplay utama (dimuat setelah start menu)
 ├── PROJECT_CONTEXT.md                     # Dokumentasi arsitektur dan konteks teknis proyek
 ├── README.md                              # Dokumentasi umum dan panduan pengenalan proyek
 └── project.godot                          # Konfigurasi utama Godot Engine

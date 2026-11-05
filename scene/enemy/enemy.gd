@@ -137,25 +137,47 @@ func get_closest_target() -> CharacterBody2D:
 	return closest
 
 
+# Shared static StyleBoxes untuk health bar & damage bar seluruh musuh
+static var _style_bg: StyleBoxFlat = null
+static var _style_damage_fill: StyleBoxFlat = null
+static var _style_empty: StyleBoxEmpty = null
+static var _style_fill: StyleBoxFlat = null
+
+
+static func _init_health_bar_styles() -> void:
+	if _style_bg != null:
+		return
+
+	# Background bar warna gelap
+	_style_bg = StyleBoxFlat.new()
+	_style_bg.bg_color = Color(0.1, 0.1, 0.1, 0.85)
+	_style_bg.set_corner_radius_all(1)
+
+	# Warna isi damage bar (kuning keemasan terang untuk indikator damage)
+	_style_damage_fill = StyleBoxFlat.new()
+	_style_damage_fill.bg_color = Color(1.0, 0.85, 0.3, 0.95)
+	_style_damage_fill.set_corner_radius_all(1)
+
+	# Background transparan agar damage bar di belakangnya kelihatan saat darah berkurang
+	_style_empty = StyleBoxEmpty.new()
+
+	# Isi bar warna merah terang
+	_style_fill = StyleBoxFlat.new()
+	_style_fill.bg_color = Color(0.9, 0.2, 0.2, 0.95)
+	_style_fill.set_corner_radius_all(1)
+
+
 func setup_health_bar():
+	_init_health_bar_styles()
+
 	# Konfigurasi Bar Belakang (Damage Bar / Buffer yang menunjukkan darah yang hilang)
 	if damage_bar:
 		damage_bar.max_value = max_health
 		damage_bar.value = current_health
 		damage_bar.show_percentage = false
 
-		# Background bar warna gelap
-		var style_bg = StyleBoxFlat.new()
-		style_bg.bg_color = Color(0.1, 0.1, 0.1, 0.85)
-		style_bg.set_corner_radius_all(1)
-
-		# Warna isi damage bar (kuning keemasan terang untuk indikator damage)
-		var style_damage_fill = StyleBoxFlat.new()
-		style_damage_fill.bg_color = Color(1.0, 0.85, 0.3, 0.95)
-		style_damage_fill.set_corner_radius_all(1)
-
-		damage_bar.add_theme_stylebox_override("background", style_bg)
-		damage_bar.add_theme_stylebox_override("fill", style_damage_fill)
+		damage_bar.add_theme_stylebox_override("background", _style_bg)
+		damage_bar.add_theme_stylebox_override("fill", _style_damage_fill)
 
 	# Konfigurasi Bar Depan (Health Bar utama warna merah)
 	if health_bar:
@@ -163,15 +185,8 @@ func setup_health_bar():
 		health_bar.value = current_health
 		health_bar.show_percentage = false
 
-		# Background transparan agar damage bar di belakangnya kelihatan saat darah berkurang
-		health_bar.add_theme_stylebox_override("background", StyleBoxEmpty.new())
-
-		# Isi bar warna merah terang
-		var style_fill = StyleBoxFlat.new()
-		style_fill.bg_color = Color(0.9, 0.2, 0.2, 0.95)
-		style_fill.set_corner_radius_all(1)
-
-		health_bar.add_theme_stylebox_override("fill", style_fill)
+		health_bar.add_theme_stylebox_override("background", _style_empty)
+		health_bar.add_theme_stylebox_override("fill", _style_fill)
 
 
 func _physics_process(delta):

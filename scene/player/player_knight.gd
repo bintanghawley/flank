@@ -19,11 +19,6 @@ var ai_attack_timer: float = 0.0
 enum PartyCommand { ATTACK, FOLLOW }
 var party_command: PartyCommand = PartyCommand.ATTACK
 const COMBAT_ATTACK_RANGE: float = 85.0 # Jangkauan serang melee petarung Knight
-var is_flanking: bool = false
-var flank_wp1: Vector2 = Vector2.ZERO
-var flank_wp2: Vector2 = Vector2.ZERO
-var flank_stage: int = 1
-var flank_timeout: float = 0.0
 var facing_debounce_timer: float = 0.0
 
 # =========================
@@ -131,11 +126,6 @@ func _setup_enemy_collision_exceptions() -> void:
 func set_party_command(cmd: int) -> void:
 	party_command = cmd as PartyCommand
 	if party_command == PartyCommand.FOLLOW:
-		is_flanking = false
-		flank_wp1 = Vector2.ZERO
-		flank_wp2 = Vector2.ZERO
-		flank_stage = 1
-		flank_timeout = 0.0
 		is_attacking = false
 		velocity = Vector2.ZERO
 		if not is_leader and not is_dead:
@@ -160,11 +150,6 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 	if is_leader:
 		in_party_combat = false
 		ai_attack_timer = 0.0
-		is_flanking = false
-		flank_wp1 = Vector2.ZERO
-		flank_wp2 = Vector2.ZERO
-		flank_stage = 1
-		flank_timeout = 0.0
 		facing_debounce_timer = 0.0
 		print(name, " maju sebagai Leader (Knight)!")
 	else:
@@ -190,11 +175,6 @@ func set_party_combat_mode(active: bool) -> void:
 		ai_attack_timer = randf_range(0.3, 0.7)
 	else:
 		ai_attack_timer = 0.0
-		is_flanking = false
-		flank_wp1 = Vector2.ZERO
-		flank_wp2 = Vector2.ZERO
-		flank_stage = 1
-		flank_timeout = 0.0
 		facing_debounce_timer = 0.0
 		if not is_leader and leader_node and is_instance_valid(leader_node) and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
@@ -390,17 +370,6 @@ func spawn_run_dust(move_dir: Vector2) -> void:
 # =========================================================
 # SERANGAN DASAR (MELEE SWORD SLASH)
 # =========================================================
-
-func has_valid_attack_target() -> bool:
-	var cam_rect := get_camera_world_rect()
-	var enemies := get_tree().get_nodes_in_group("enemy")
-	for e in enemies:
-		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
-			if cam_rect.has_point(e.global_position):
-				if global_position.distance_to(e.global_position) <= (attack_range * 1.5):
-					return true
-	return false
-
 
 func has_line_of_sight_to(target_node: Node2D) -> bool:
 	if not target_node or not is_instance_valid(target_node):
@@ -700,7 +669,6 @@ func process_follower_combat(delta: float) -> void:
 					target_enemy = e
 
 	if not target_enemy:
-		is_flanking = false
 		process_follower_exploring(delta)
 		return
 
@@ -708,7 +676,6 @@ func process_follower_combat(delta: float) -> void:
 
 	# Knight menyerang dalam jarak melee (COMBAT_ATTACK_RANGE)
 	if dist_to_enemy <= COMBAT_ATTACK_RANGE:
-		is_flanking = false
 		velocity = knockback_velocity
 		is_moving = false
 		move_and_slide_with_separation()
@@ -795,11 +762,6 @@ func die() -> void:
 	deactivate_shield()
 
 	ai_attack_timer = 0.0
-	is_flanking = false
-	flank_wp1 = Vector2.ZERO
-	flank_wp2 = Vector2.ZERO
-	flank_stage = 1
-	flank_timeout = 0.0
 	facing_debounce_timer = 0.0
 	attack_stuck_timer = 0.0
 	knockback_velocity = Vector2.ZERO
@@ -830,11 +792,6 @@ func die() -> void:
 
 func respawn() -> void:
 	deactivate_shield()
-	is_flanking = false
-	flank_wp1 = Vector2.ZERO
-	flank_wp2 = Vector2.ZERO
-	flank_stage = 1
-	flank_timeout = 0.0
 	facing_debounce_timer = 0.0
 	global_position = spawn_position
 	target_position = spawn_position
@@ -881,10 +838,6 @@ func respawn() -> void:
 	var respawn_tween = create_tween()
 	respawn_tween.tween_property(self, "modulate:a", 1.0, 0.4)
 	print("Knight berhasil respawn di titik awal! HP penuh: ", current_health)
-
-
-func _respawn() -> void:
-	respawn()
 
 
 # =========================================================
@@ -954,26 +907,6 @@ func get_4_direction_str(dir: Vector2) -> String:
 		return "e" if dir.x > 0 else "w"
 	else:
 		return "s" if dir.y > 0 else "n"
-
-
-func get_8_direction(dir: Vector2) -> Vector2:
-	if dir == Vector2.ZERO:
-		return Vector2.DOWN
-	var angle = dir.angle()
-	var octant = round(8 * angle / (2 * PI))
-	octant = int(octant) % 8
-	if octant < 0:
-		octant += 8
-	match octant:
-		0: return Vector2.RIGHT
-		1: return Vector2(1, 1).normalized()
-		2: return Vector2.DOWN
-		3: return Vector2(-1, 1).normalized()
-		4: return Vector2.LEFT
-		5: return Vector2(-1, -1).normalized()
-		6: return Vector2.UP
-		7: return Vector2(1, -1).normalized()
-	return Vector2.DOWN
 
 
 func get_camera_world_rect() -> Rect2:

@@ -792,10 +792,6 @@ func shoot_towards(target_pos: Vector2):
 	reset_attack_state(token)
 
 
-func get_controlled_projectile_speed() -> float:
-	return controlled_projectile_speed
-
-
 func get_dynamic_projectile_speed() -> float:
 	if is_leader:
 		return controlled_projectile_speed

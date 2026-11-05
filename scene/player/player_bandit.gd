@@ -20,7 +20,6 @@ var ai_attack_timer: float = 0.0
 enum PartyCommand { ATTACK, FOLLOW }
 var party_command: PartyCommand = PartyCommand.ATTACK
 const COMBAT_ATTACK_RANGE: float = 90.0 # Jarak serang melee Bandit
-var is_flanking: bool = false
 
 # =========================
 # MOVEMENT SETTINGS
@@ -148,7 +147,6 @@ func _setup_enemy_collision_exceptions() -> void:
 func set_party_command(cmd: int) -> void:
 	party_command = cmd as PartyCommand
 	if party_command == PartyCommand.FOLLOW:
-		is_flanking = false
 		if is_attacking or is_ambush_lunging:
 			cancel_attack()
 		if is_skill_active:
@@ -171,7 +169,6 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 
 	if is_leader:
 		in_party_combat = false
-		is_flanking = false
 		ai_attack_timer = 0.0
 		if not is_attacking and not is_skill_active and not is_ambush_lunging:
 			play_idle_animation()
@@ -222,7 +219,6 @@ func set_party_combat_mode(active: bool) -> void:
 		ai_attack_timer = randf_range(0.2, 0.5)
 	else:
 		ai_attack_timer = 0.0
-		is_flanking = false
 		if not is_leader and leader_node and is_instance_valid(leader_node) and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
 			play_idle_animation()
@@ -1271,10 +1267,6 @@ func play_attack_animation() -> void:
 		var dir_str := get_direction_string(attack_direction)
 		animated_sprite.flip_h = false
 		animated_sprite.play("attack_" + dir_str)
-
-
-func get_controlled_projectile_speed() -> float:
-	return 580.0
 
 
 # =========================================================

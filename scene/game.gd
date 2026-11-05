@@ -189,13 +189,6 @@ func get_active_leader() -> CharacterBody2D:
 	return null
 
 
-func get_controlled_projectile_speed() -> float:
-	var leader := get_active_leader()
-	if leader and is_instance_valid(leader) and leader.has_method("get_controlled_projectile_speed"):
-		return leader.get_controlled_projectile_speed()
-	return 580.0
-
-
 func _process(delta: float) -> void:
 	handle_camera_shake(delta)
 	update_camera_target()
