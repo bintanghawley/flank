@@ -34,6 +34,7 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
   - Musuh memiliki serangan kontak fisik (damage 1) serta serangan jarak jauh berupa tembakan panah (damage 1, kecepatan 580 px/s, jeda tembak 1.4 detik).
   - Dilengkapi tampilan bar darah (*health bar*) di atas kepala, sistem prioritas ancaman (*threat target priority*), dan kemunculan kembali (*respawn*) otomatis setelah gugur (4 detik untuk musuh, 3 detik untuk hero).
   - Efek dorongan fisik (*knockback*) dinonaktifkan pada hero pemain (Knight, Archer, Mage) saat terkena damage agar kontrol pergerakan tetap responsif (sedangkan Bandit mempertahankan dorongan knockback terukur di luar status Super Armor). Efek knockback yang diterima musuh mengikuti karakteristik masing-masing serangan pemain; beberapa serangan tidak memberikan dorongan knockback.
+- **Tata Suara & SFX Responsif:** Dilengkapi sistem efek suara (*one-shot AudioStreamPlayer*) terorganisir yang mencakup seluruh aksi: suara serangan dan skill 4 hero, langkah lari sprint, suara terkena damage, gugur, dan respawn hero maupun musuh, komando taktis party, hingga respon tombol dan transisi visual menu.
 
 ---
 
@@ -53,11 +54,12 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 - [x] Sistem kesehatan, bilah darah musuh, durasi kebal singkat pasca-hit (*invulnerability frame*), dan siklus respawn otomatis.
 - [x] Efek partikel lari (*run dust*) dinamis saat sprint.
 - [x] Peta lingkungan menggunakan sistem `TileMapLayer` Godot 4.
+- [x] Sistem efek suara (SFX) gameplay lengkap: suara serangan dan skill 4 hero, langkah kaki sprint, hit/death/respawn hero & musuh, komando taktis party, dan interaksi UI.
 
 ### Fitur yang Sedang Dikembangkan & Direncanakan
 - [ ] Implementasi prefab dan AI Bandit sebagai musuh, terpisah dari karakter Bandit yang sudah dapat dimainkan (aset sprite telah tersedia di `assets/characters/bandit/`).
 - [ ] Implementasi antarmuka pengguna visual (UI/HUD: bilah darah anggota party, indikator cooldown skill visual, inventaris, dialog).
-- [ ] Tata suara permainan (musik latar/BGM dan efek suara/SFX).
+- [ ] Musik latar permainan (BGM) untuk layar menu dan arena gameplay.
 - [ ] Menu permainan lanjutan (Options Menu, Pause Menu, Save/Load, Credits Screen).
 - [ ] Variasi jenis musuh baru (monster non-humanoid pada folder cadangan `assets/enemies/`).
 - [ ] Penyempurnaan navigasi flanking berbasis raycast dan waypoint pada follower ranged (Archer, Mage) dan AI musuh, terutama untuk penanganan rintangan kompleks dan optimasi jalur pergerakan.
@@ -127,9 +129,9 @@ Berikut adalah struktur direktori utama repositori Flank:
 flank/
 ├── .agents/                               # Konfigurasi agen AI dan workflow proyek
 ├── assets/                                # Seluruh aset visual, audio, dan font mentah
-│   ├── audio/                             # Aset suara (disiapkan dengan .gitkeep)
+│   ├── audio/                             # Aset suara (BGM & SFX)
 │   │   ├── bgm/                           # Musik latar (.gitkeep)
-│   │   └── sfx/                           # Efek suara (.gitkeep)
+│   │   └── sfx/                           # Efek suara (.wav) terorganisir (characters, enemy, party, ui)
 │   ├── characters/                        # Sprite karakter 4-arah (idle, walk, attack, skill)
 │   │   ├── archer/                        # Sprite animasi hero Archer
 │   │   ├── bandit/                        # Sprite animasi karakter Bandit (hero party & calon musuh)
@@ -167,7 +169,7 @@ flank/
 ```
 
 > **Catatan Struktur:**  
-> - Subfolder dengan penanda `.gitkeep` merupakan struktur hierarki kolaborasi yang telah disiapkan agar siap digunakan saat aset visual, audio, atau scene UI ditambahkan oleh tim.
+> - Subfolder dengan penanda `.gitkeep` merupakan struktur hierarki kolaborasi yang telah disiapkan agar siap digunakan saat aset visual, audio, atau scene UI ditambahkan oleh tim. File `.gitkeep` pada folder yang telah terisi aset aktif (seperti `assets/audio/sfx/` dan `scene/ui/menus/`) telah dibersihkan.
 > - Keberadaan subfolder `scene/ui/` adalah persiapan struktur implementasi UI, bukan berarti sistem UI sudah selesai dibuat.
 > - Aset sprite Bandit berada di `assets/characters/bandit/`, sedangkan implementasi prefab dan AI Bandit sebagai musuh direncanakan terpisah dari karakter Bandit yang sudah dapat dimainkan.
 > - Folder `assets/enemies/` disiapkan sebagai folder cadangan untuk musuh jenis non-humanoid / monster di masa depan.

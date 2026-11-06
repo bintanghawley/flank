@@ -2,7 +2,7 @@
 
 Dokumen ini merupakan ringkasan teknis operasional proyek game **"Flank"**. Dokumen ini berfungsi sebagai referensi kontekstual utama bagi pengembang dan agen asisten agar pengembangan fitur, perbaikan bug, dan pengujian dapat berjalan konsisten dengan arsitektur yang sudah ada tanpa mengulang inventarisasi dari awal.
 
-**Tanggal Audit Terakhir:** 2026-11-05
+**Tanggal Audit Terakhir:** 2026-11-06
 
 > **PENTING — ATURAN VERIFIKASI SEBELUM BEKERJA:**  
 > Seluruh informasi dalam dokumen ini (struktur kode, ketersediaan fitur, dan konfigurasi proyek) mencerminkan kondisi pada saat audit dan pengujian awal dilakukan. Pengembang atau asisten **wajib memeriksa kembali kondisi file fisik repositori terbaru** sebelum memulai tugas baru, terutama setelah adanya pembaruan (*git pull*) dari anggota tim lain.
@@ -62,9 +62,13 @@ flank/
 │   └── skills/
 │
 ├── assets/                                # ROOT SELURUH ASET GRAFIS, TEKSTUR, DAN AUDIO
-│   ├── audio/                             # Aset Suara (Disiapkan dengan .gitkeep)
-│   │   ├── bgm/                           # Musik latar (.ogg) + .gitkeep
-│   │   └── sfx/                           # Efek suara (.wav) + .gitkeep
+│   ├── audio/                             # Aset Suara (BGM & SFX)
+│   │   ├── bgm/                           # Musik latar (.ogg) + .gitkeep (Cadangan)
+│   │   └── sfx/                           # Efek suara (.wav) terorganisir per domain:
+│   │       ├── characters/                # SFX 4 hero (archer, bandit, knight, mage) & universal
+│   │       ├── enemy/                     # SFX aksi musuh (alert, shoot, hit, death, respawn)
+│   │       ├── party/                     # SFX taktis (ganti leader, follow, attack)
+│   │       └── ui/                        # SFX menu (hover, click, sword raise, transisi iris)
 │   │
 │   ├── characters/                        # Seluruh Sprite Karakter (Hero Party & Karakter Musuh)
 │   │   ├── archer/                        # Sprite 4-arah Archer (Hero)
@@ -137,7 +141,7 @@ flank/
 
 ### B. Prinsip Arsitektur & Aturan Kolaborasi:
 1. **Aturan `.gitkeep` untuk Folder Kosong:**  
-   Git secara bawaan tidak melacak direktori kosong. Seluruh folder baru yang belum memiliki file aset aktif (misal: `assets/enemies/`, subfolder `assets/ui/`, `assets/audio/`, dan `scene/ui/`) wajib diberi file penanda kosong bernama `.gitkeep` agar hierarki folder tetap terlacak dan konsisten saat di-clone oleh anggota tim lain.
+   Git secara bawaan tidak melacak direktori kosong. Seluruh folder yang belum memiliki file aset aktif (seperti `assets/enemies/`, subfolder `assets/ui/`, `assets/audio/bgm/`, dan `scene/ui/gameplay/`) diberi file penanda kosong bernama `.gitkeep` agar hierarki folder tetap terlacak saat di-clone. File `.gitkeep` pada folder yang telah terisi aset aktif (seperti `assets/audio/sfx/` dan `scene/ui/menus/`) dihapus untuk menjaga kebersihan repositori.
 2. **Pemisahan `assets/ui/` vs. `scene/ui/`:**  
    - `assets/ui/` khusus menampung aset visual mentah (PNG, SVG), tekstur 9-slice, ikon, dan file font tipografi (.ttf/.otf). Dilarang meletakkan script `.gd` atau scene `.tscn` di folder ini.
    - `scene/ui/` khusus menampung implementasi node Godot UI berbasis `Control` atau `CanvasLayer` beserta logika interaksinya (`.gd`).
@@ -263,6 +267,13 @@ flank/
 13. **Sistem Transisi Layar Circular Mask (Iris Wipe & Iris Open):**
     - **Transisi Start Menu (Iris Wipe):** Pada Start Menu (`start_menu.gd`), ketika tombol Mulai Permainan ditekan, posisi UV ujung pedang Knight yang terangkat ke atas dihitung secara dinamis (`sword_tip_pos = knight.position + Vector2(-17.0, -36.0)`). Shader circular mask (`IrisMask`) memusatkan titik fokus ke ujung pedang dan radius lingkaran mengecil secara kubik (`TRANS_CUBIC`, `EASE_IN` dari 1.45 ke 0.0 selama 0.85 detik) hingga layar hitam total sebelum scene beralih ke `game.tscn`.
     - **Transisi Masuk Arena (Iris Open):** Pada `scene/game.gd`, fungsi `play_iris_opening_transition()` dieksekusi melalui node `TransitionLayer` (CanvasLayer 100). Kamera mengunci posisi ke Leader seketika tanpa lag smoothing (`reset_smoothing()`), kemudian shader circular mask membuka dari radius 0.0 ke 1.5 secara sinusoidal (`TRANS_SINE`, `EASE_IN_OUT` selama 1.15 detik). Setelah transisi mekar penuh, node transisi langsung dibersihkan (`queue_free()`) dari scene tree demi optimalisasi performa render.
+14. **Sistem Efek Suara (Audio SFX) Gameplay & UI:**
+    Implementasi audio SFX menggunakan pemanggilan instan satu arah (*one-shot AudioStreamPlayer*) melalui fungsi pembantu `play_sfx()` yang secara otomatis membebaskan memori (`queue_free()`) setelah audio selesai diputar. Seluruh 46 file audio (.wav) dimuat via `preload()` / `load()` dan dipetakan ke 5 domain utama:
+    - **Hero Combat & Skills:** Ayunan pedang, hit, dan perisai (*cast, block, fade*) pada Knight; tebasan ganda, ambush (*lunge & hit*), dash, knockup, dan kombo triple slash pada Bandit; tembakan busur, aktivasi mode bidik, charging, pelepasan, dan benturan panah pada Archer; rapalan sihir, benturan bola sihir pada musuh/dinding, bidik meteor, serta luncuran dan ledakan meteor pada Mage.
+    - **Universal Hero:** Langkah kaki sprint berkala (*footstep run*), suara terkena hit (*hurt*), gugur (*death*), dan bangkit kembali (*respawn*).
+    - **AI Musuh:** Peringatan deteksi (*alert*), tembakan panah musuh, benturan kontak fisik, respon terluka, suara gugur, dan respawn.
+    - **Taktis Party:** Suara peralihan leader aktif (`party_switch_leader`), komando FOLLOW (`party_command_follow`), dan komando ATTACK (`party_command_attack`).
+    - **UI & Transisi Layar:** Interaksi tombol Start Menu (*hover, click*), animasi hunus pedang Knight (`start_sword_raise`), serta suara transisi circular mask iris wipe dan iris open.
 
 ---
 
@@ -289,6 +300,7 @@ Klaim berikut dibatasi secara ketat pada skenario pengujian dasar yang telah dij
 - **Penyelarasan Animasi 9-Frame Skill Knight:** Rangkaian animasi skill Knight (`skill_n`, `skill_s`, `skill_e`, `skill_w`) telah diselaraskan penuh dengan pembaruan aset 9-frame (frame 0–8) tanpa error atlas region (*Diverifikasi via inspeksi scene player_knight.tscn*).
 - **Presisi Targeting Ambush Lunge Bandit:** Logika targeting pasif ambush bandit memprioritaskan musuh terdekat dari posisi kursor mouse (radius 120 px) dengan fallback terukur ke musuh terdekat dalam jangkauan engage, serta membersihkan peringatan unused variable linter engine (*Diverifikasi via inspeksi kode sumber player_bandit.gd*).
 - **Siklus Kematian & Respawn:** Pengurangan HP saat terkena serangan musuh, transisi mati (fade-out), timer tunggu, dan kemunculan kembali karakter berhasil berjalan normal (*Diverifikasi via pengamatan manual user & log runtime*).
+- **Sistem Efek Suara (Audio SFX) Terintegrasi Penuh:** Seluruh 46 aset audio SFX (.wav) terdistribusi ke subfolder terstruktur (`characters/`, `enemy/`, `party/`, `ui/`) dan terverifikasi memutar suara dengan tepat pada seluruh aksi gameplay: serangan dasar dan skill 4 hero, langkah kaki lari, respons damage/death/respawn hero dan musuh, perintah taktis party, interaksi tombol start menu, serta transisi circular mask iris tanpa error pemuatan atau kebocoran memori (*Diverifikasi via inspeksi kode sumber, log runtime engine, dan validasi eksekusi headless*).
 
 > **Catatan Sumber Verifikasi Parameter:**  
 > Parameter numerik internal seperti kecepatan gerak (128 px/s normal, 220 px/s sprint), kecepatan dasar proyektil (panah 580 px/s untuk Archer dan musuh, magic bolt 500 px/s untuk Mage baik terkendali maupun tidak), rasio kesetaraan proyektil (1.0), durasi cooldown serangan dasar (1.4s untuk Archer Leader/follower/musuh archer, 1.5s untuk Mage Leader/follower) / skill, kekuatan dorongan knockback (`knockback_strength`), laju redaman (`knockback_decay = 1400.0`), jarak antrean (85 px), serta interval pemindaian aggro (0.15s) bersumber dari **inspeksi kode sumber dan log runtime**, bukan hasil pengukuran stopwatch manual pemain.
@@ -314,7 +326,7 @@ Klaim berikut dibatasi secara ketat pada skenario pengujian dasar yang telah dij
      - *Save & Load Menu:* Tampilan slot kartu penyimpanan progres permainan, tombol simpan, dan muat data.
      - *Credits Screen:* Panel apresiasi tim pengembang dan kontributor proyek inkubasi.
    *(Status Implementasi: Start Menu telah selesai diimplementasikan dan aktif sebagai titik masuk permainan; sub-menu lainnya dan Gameplay UI/HUD saat ini berstatus backlog).*
-3. **Sistem Audio:** Integrasi BGM dan SFX (langkah, tembakan busur, sihir, ledakan, hit).
+3. **Sistem Audio (Musik Latar / BGM):** Integrasi musik latar BGM permainan pada layar menu dan arena gameplay (efek suara / SFX telah selesai diimplementasikan secara komprehensif).
 4. **Sentralisasi InputMap:** Memindahkan konstanta fisik `KEY_*` di script ke action resmi di `project.godot`.
 5. **Variasi Musuh:** Penggantian spritesheet musuh agar tidak menduplikasi sprite Archer merah.
 6. **Preset Ekspor:** Pembuatan konfigurasi `export_presets.cfg` untuk build rilis.
