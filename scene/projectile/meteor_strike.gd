@@ -1,6 +1,7 @@
 extends Node2D
 
 const IMPACT_SCENE = preload("res://scene/projectile/meteor_impact.tscn")
+const SFX_METEOR_FALL = preload("res://assets/audio/sfx/characters/mage/mage_meteor_fall.wav")
 
 @export var speed: float = 750.0
 var target_position: Vector2 = Vector2.ZERO
@@ -12,6 +13,19 @@ var caster: CharacterBody2D = null
 func _ready() -> void:
 	if animated_sprite:
 		animated_sprite.play("default")
+	play_sfx(SFX_METEOR_FALL, 0.0)
+
+
+func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
+	if not stream or not get_parent():
+		return
+	var player := AudioStreamPlayer2D.new()
+	player.stream = stream
+	player.volume_db = volume_db
+	player.global_position = global_position
+	get_parent().add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
 
 
 func setup(target_pos: Vector2, p_caster: CharacterBody2D = null, custom_spawn_pos: Vector2 = Vector2.ZERO) -> void:

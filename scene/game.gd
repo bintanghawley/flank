@@ -22,6 +22,24 @@ const COMBAT_WINDDOWN_DELAY: float = 0.4
 enum PartyCommand { ATTACK, FOLLOW }
 var current_party_command: PartyCommand = PartyCommand.ATTACK
 
+# =========================
+# AUDIO SFX (TACTICAL PARTY)
+# =========================
+const SFX_PARTY_SWITCH_LEADER = preload("res://assets/audio/sfx/party/party_switch_leader.wav")
+const SFX_PARTY_COMMAND_FOLLOW = preload("res://assets/audio/sfx/party/party_command_follow.wav")
+const SFX_PARTY_COMMAND_ATTACK = preload("res://assets/audio/sfx/party/party_command_attack.wav")
+var _is_party_initialized: bool = false
+
+func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
+	if not stream:
+		return
+	var sfx_player := AudioStreamPlayer.new()
+	sfx_player.stream = stream
+	sfx_player.volume_db = volume_db
+	add_child(sfx_player)
+	sfx_player.finished.connect(sfx_player.queue_free)
+	sfx_player.play()
+
 # Pengaturan Camera Shake
 var shake_intensity: float = 0.0
 var shake_decay: float = 35.0
@@ -53,6 +71,7 @@ func _ready() -> void:
 
 	# 4. Tentukan karakter awal sebagai Leader (Knight_1 = index 0)
 	set_active_leader(0)
+	_is_party_initialized = true
 
 	# 5. Inisialisasi kamera dan batasan map
 	setup_camera_and_boundaries.call_deferred()
@@ -106,10 +125,12 @@ func set_party_command(cmd: PartyCommand) -> void:
 			member.set_party_command(cmd)
 
 	if cmd == PartyCommand.ATTACK:
+		play_sfx(SFX_PARTY_COMMAND_ATTACK, -2.0)
 		if not active_combat_targets.is_empty():
 			current_combat_state = PartyCombatState.COMBAT
 			notify_party_combat_state(true)
 	elif cmd == PartyCommand.FOLLOW:
+		play_sfx(SFX_PARTY_COMMAND_FOLLOW, -2.0)
 		notify_party_combat_state(false)
 
 	print("Party Command -> ", "FOLLOW (Tombol C)" if cmd == PartyCommand.FOLLOW else "ATTACK (Tombol V)")
@@ -179,6 +200,9 @@ func set_active_leader(idx: int) -> void:
 		notify_party_combat_state(true)
 	else:
 		notify_party_combat_state(false)
+
+	if _is_party_initialized:
+		play_sfx(SFX_PARTY_SWITCH_LEADER, -2.0)
 
 	print("Party Switch -> Leader aktif: [", active_leader_index + 1, "] ", leader.name)
 
@@ -471,6 +495,15 @@ func play_iris_opening_transition() -> void:
 	await get_tree().create_timer(0.08).timeout
 
 	# Buka circular mask dengan kurva sinusoidal alami (EASE_IN_OUT) yang sangat lembut
+	var sfx_iris_open: AudioStream = load("res://assets/audio/sfx/ui/transition_iris_open.wav")
+	if sfx_iris_open:
+		var sfx_player := AudioStreamPlayer.new()
+		sfx_player.stream = sfx_iris_open
+		sfx_player.volume_db = -3.0
+		add_child(sfx_player)
+		sfx_player.finished.connect(sfx_player.queue_free)
+		sfx_player.play()
+
 	var tween := create_tween()
 	tween.tween_property(mat, "shader_parameter/radius", 1.5, 1.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished

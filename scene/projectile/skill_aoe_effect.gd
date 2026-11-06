@@ -1,5 +1,7 @@
 extends Area2D
 
+const SFX_SKILL_IMPACT = preload("res://assets/audio/sfx/characters/archer/archer_skill_impact.wav")
+
 @export var damage: int = 3
 @export var shooter_group: String = "player"
 
@@ -90,10 +92,24 @@ func _process_target(node: Node):
 		if target.has_method("take_damage"):
 			target.take_damage(damage)
 
+		play_sfx(SFX_SKILL_IMPACT, -1.0)
+
 		# Kamera bergetar untuk memberikan dampak serangan yang memuaskan
 		var player_node = get_tree().get_first_node_in_group("player")
 		if player_node and is_instance_valid(player_node) and player_node.has_method("apply_camera_shake"):
 			player_node.apply_camera_shake(10.0)
+
+
+func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
+	if not stream or not get_parent():
+		return
+	var player := AudioStreamPlayer2D.new()
+	player.stream = stream
+	player.volume_db = volume_db
+	player.global_position = global_position
+	get_parent().add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
 
 
 func _is_target_in_hitbox(target: Node2D) -> bool:

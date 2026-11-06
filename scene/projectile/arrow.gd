@@ -1,6 +1,8 @@
 extends Area2D
 
 const IMPACT_SCENE = preload("res://scene/projectile/arrow_impact.tscn")
+const SFX_ARROW_HIT = preload("res://assets/audio/sfx/characters/archer/archer_arrow_hit.wav")
+const SFX_ARROW_HIT_WALL = preload("res://assets/audio/sfx/characters/archer/archer_arrow_hit_wall.wav")
 
 @export var speed: float = 580.0 # Kecepatan dasar panah (dipercepat menjadi 580.0 px/s)
 @export var damage: int = 1
@@ -125,12 +127,25 @@ func spawn_impact():
 	parent_node.add_child(impact)
 
 
+func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
+	if not stream or not get_parent():
+		return
+	var player := AudioStreamPlayer2D.new()
+	player.stream = stream
+	player.volume_db = volume_db
+	player.global_position = global_position
+	get_parent().add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
+
+
 func _on_body_entered(body):
 	if is_destroyed:
 		return
 
 	# Jika menabrak pembatas fisik peta (WorldBorders) atau tembok / rintangan map
 	if body is StaticBody2D or body is TileMapLayer:
+		play_sfx(SFX_ARROW_HIT_WALL, -2.0)
 		destroy(true)
 		return
 
@@ -150,6 +165,7 @@ func _on_body_entered(body):
 			if player_node and is_instance_valid(player_node) and player_node.has_method("apply_camera_shake"):
 				player_node.apply_camera_shake()
 
+			play_sfx(SFX_ARROW_HIT, -2.0)
 			destroy(true)
 
 	# Jika panah ditembakkan oleh musuh -> targetnya adalah player

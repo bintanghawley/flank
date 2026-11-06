@@ -37,6 +37,21 @@ var last_movement_direction := Vector2.DOWN
 # COMBAT & MELEE SETTINGS
 # =========================
 const DUST_SCENE = preload("res://scene/effect/run_dust.tscn")
+const SFX_FOOTSTEP = preload("res://assets/audio/sfx/characters/universal/footstep_run.wav")
+const SFX_HURT = preload("res://assets/audio/sfx/characters/universal/hero_hurt.wav")
+const SFX_DEATH = preload("res://assets/audio/sfx/characters/universal/hero_death.wav")
+const SFX_RESPAWN = preload("res://assets/audio/sfx/characters/universal/hero_respawn.wav")
+const SFX_BANDIT_SLASH_1 = preload("res://assets/audio/sfx/characters/bandit/bandit_slash_1.wav")
+const SFX_BANDIT_SLASH_2 = preload("res://assets/audio/sfx/characters/bandit/bandit_slash_2.wav")
+const SFX_BANDIT_SLASH_HIT = preload("res://assets/audio/sfx/characters/bandit/bandit_slash_hit.wav")
+const SFX_BANDIT_AMBUSH_LUNGE = preload("res://assets/audio/sfx/characters/bandit/bandit_ambush_lunge.wav")
+const SFX_BANDIT_AMBUSH_HIT = preload("res://assets/audio/sfx/characters/bandit/bandit_ambush_hit.wav")
+const SFX_BANDIT_SKILL_DASH = preload("res://assets/audio/sfx/characters/bandit/bandit_skill_dash.wav")
+const SFX_BANDIT_KNOCKUP = preload("res://assets/audio/sfx/characters/bandit/bandit_knockup.wav")
+const SFX_BANDIT_TRIPLE_SLASH_HIT = preload("res://assets/audio/sfx/characters/bandit/bandit_triple_slash_hit.wav")
+const SFX_BANDIT_TRIPLE_SLASH_FINISH = preload("res://assets/audio/sfx/characters/bandit/bandit_triple_slash_finish.wav")
+const SFX_SHIELD_BLOCK = preload("res://assets/audio/sfx/characters/knight/knight_shield_block.wav")
+var _footstep_toggle: bool = false
 const VISUAL_CENTER_OFFSET: Vector2 = Vector2(0.0, 7.5)
 
 @export var attack_range: float = 115.0     # Jarak jangkauan tebasan dasar
@@ -284,11 +299,13 @@ func _physics_process(delta: float) -> void:
 		# Ayunan 1 (Frame 2)
 		if attack_step == 0 and attack_elapsed_timer >= SWING_1_IMPACT_TIME:
 			attack_step = 1
+			play_sfx(SFX_BANDIT_SLASH_1, -3.0)
 			execute_slash_damage(attack_direction, 1)
 
 		# Ayunan 2 (Frame 6)
 		elif attack_step == 1 and attack_elapsed_timer >= SWING_2_IMPACT_TIME:
 			attack_step = 2
+			play_sfx(SFX_BANDIT_SLASH_2, -3.0)
 			execute_slash_damage(attack_direction, 2)
 
 		# Selesai setelah siklus 8 frame tuntas (~0.58s)
@@ -445,6 +462,7 @@ func activate_triple_slash(target_pos: Vector2 = Vector2.ZERO) -> void:
 
 	spawn_run_dust(skill_dash_dir)
 	apply_camera_shake(3.0)
+	play_sfx(SFX_BANDIT_SKILL_DASH, -1.0)
 	print(name, " memulai DASH TRIPLE SLASH dengan animasi skill_", dir_str, "!")
 
 
@@ -496,6 +514,7 @@ func process_triple_slash_skill(delta: float) -> void:
 				triple_slash_sprite.visible = false
 
 			apply_camera_shake(5.0)
+			play_sfx(SFX_BANDIT_KNOCKUP, 0.0)
 			print(name, " menabrak ", hit_enemy.name, " -> KNOCKUP & Memulai TRIPLE SLASH!")
 			return
 
@@ -622,6 +641,15 @@ func execute_triple_slash_step(step: int, damage: int, range_dist: float, shake_
 	if not skill_hit_enemies_step.is_empty():
 		passive_timer = 0.0
 		is_passive_ready = false
+		if step == 3:
+			play_sfx(SFX_BANDIT_TRIPLE_SLASH_FINISH, 0.0)
+		else:
+			play_sfx(SFX_BANDIT_TRIPLE_SLASH_HIT, -2.0)
+	else:
+		if step == 3:
+			play_sfx(SFX_BANDIT_SLASH_2, -2.0)
+		else:
+			play_sfx(SFX_BANDIT_SLASH_1, -3.0)
 
 	print(name, " [Triple Slash ", step, "/3] mengenai ", skill_hit_enemies_step.size(), " musuh (Damage: ", damage, ")")
 
@@ -696,6 +724,7 @@ func start_ambush_lunge(target_enemy: Node2D) -> void:
 	play_attack_animation()
 	spawn_run_dust(ambush_lunge_dir)
 	apply_camera_shake(3.0)
+	play_sfx(SFX_BANDIT_AMBUSH_LUNGE, -2.0)
 	print(name, " melancarkan AMBUSH LUNGE ke arah musuh!")
 
 
@@ -786,6 +815,10 @@ func execute_slash_damage(attack_dir: Vector2, swing_number: int = 1) -> void:
 	if not current_swing_hits.is_empty():
 		passive_timer = 0.0
 		is_passive_ready = false
+		if is_ambush_attack and swing_number == 1:
+			play_sfx(SFX_BANDIT_AMBUSH_HIT, -1.0)
+		else:
+			play_sfx(SFX_BANDIT_SLASH_HIT, -2.0)
 
 	print(name, " [Double Slash Swing ", swing_number, "/2] mengenai ", current_swing_hits.size(), " musuh (Damage: ", base_dmg, ")")
 
@@ -1000,6 +1033,7 @@ func take_damage(amount: int, source_position = null) -> void:
 		var shield_flash_tween = create_tween()
 		shield_flash_tween.tween_property(self, "modulate", Color.WHITE, 0.2)
 		apply_camera_shake(3.0)
+		play_sfx(SFX_SHIELD_BLOCK, 0.0)
 		# Jika sedang memiliki super armor atau sedang melancarkan serangan, dilarang knockback dan dilarang membatalkan aksi!
 		if not in_super_armor and not is_attacking:
 			apply_knockback(knockback_dir * 80.0)
@@ -1008,6 +1042,7 @@ func take_damage(amount: int, source_position = null) -> void:
 
 	# 2. DAMAGE NORMAL
 	current_health = max(0, current_health - amount)
+	play_sfx(SFX_HURT, -4.0)
 	print(name, " terkena serangan! Sisa HP: ", current_health)
 
 	# Efek kedip merah saat terkena serangan (Tween non-blocking)
@@ -1048,6 +1083,7 @@ func die() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	play_sfx(SFX_DEATH, -2.0)
 	velocity = Vector2.ZERO
 	is_moving = false
 	is_attacking = false
@@ -1092,6 +1128,7 @@ func respawn() -> void:
 	global_position = spawn_position
 	target_position = spawn_position
 	current_health = max_health
+	play_sfx(SFX_RESPAWN, -2.0)
 	is_moving = false
 	is_attacking = false
 	is_ambush_lunging = false
@@ -1115,6 +1152,17 @@ func respawn() -> void:
 	respawn_tween.tween_property(self, "modulate", Color.WHITE, 0.6)
 	play_idle_animation()
 	print(name, " bangkit kembali di arena pertarungan!")
+
+
+func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
+	if not stream:
+		return
+	var player := AudioStreamPlayer.new()
+	player.stream = stream
+	player.volume_db = volume_db
+	add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
 
 
 # =========================================================
@@ -1208,6 +1256,11 @@ func spawn_run_dust(move_dir: Vector2) -> void:
 	dust.scale = Vector2(randf_range(3.5, 4.5), randf_range(3.5, 4.5))
 	dust.z_index = 3
 	get_parent().add_child(dust)
+
+	if is_leader:
+		_footstep_toggle = not _footstep_toggle
+		if _footstep_toggle:
+			play_sfx(SFX_FOOTSTEP, -14.0)
 
 
 func apply_camera_shake(intensity: float = -1.0) -> void:

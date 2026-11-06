@@ -28,6 +28,11 @@ extends Control
 
 const GAME_SCENE_PATH := "res://scene/game.tscn"
 
+const SFX_HOVER = preload("res://assets/audio/sfx/ui/ui_hover.wav")
+const SFX_CLICK = preload("res://assets/audio/sfx/ui/ui_click.wav")
+const SFX_SWORD_RAISE = preload("res://assets/audio/sfx/ui/start_sword_raise.wav")
+const SFX_IRIS_CLOSE = preload("res://assets/audio/sfx/ui/transition_iris.wav")
+
 # Kecepatan dasar parallax
 const BASE_CLOUD_SPEED: float = 20.0
 const BASE_GROUND_SPEED: float = 75.0
@@ -66,6 +71,8 @@ func _ready() -> void:
 			btn.pivot_offset = Vector2(btn.size.x / 2.0, btn.size.y / 2.0)
 			btn.mouse_entered.connect(_on_button_hovered.bind(btn))
 			btn.focus_entered.connect(_on_button_hovered.bind(btn))
+			if btn != btn_start:
+				btn.pressed.connect(_on_regular_button_clicked)
 			_set_button_state(btn, false, true)
 	
 	btn_start.pressed.connect(_on_start_pressed)
@@ -113,6 +120,9 @@ func _select_button(btn: Button, instant: bool = false) -> void:
 		return
 	if _current_selected == btn and not instant:
 		return
+	
+	if not instant and _current_selected != null and _current_selected != btn:
+		_play_sfx(SFX_HOVER, -6.0)
 	
 	if _current_selected and is_instance_valid(_current_selected) and _current_selected != btn:
 		_set_button_state(_current_selected, false)
@@ -164,6 +174,8 @@ func _on_start_pressed() -> void:
 	if _is_starting:
 		return
 	_is_starting = true
+	_play_sfx(SFX_CLICK, -2.0)
+	_play_sfx(SFX_SWORD_RAISE, 0.0)
 	
 	# Matikan interaksi menu
 	for btn_name in BUTTON_TEXTS:
@@ -201,6 +213,7 @@ func _on_start_pressed() -> void:
 	await get_tree().create_timer(0.4).timeout
 	
 	# Mulai efek Circular Mask (Iris Wipe) menutup ke ujung pedang
+	_play_sfx(SFX_IRIS_CLOSE, -2.0)
 	if mat:
 		var iris_tween: Tween = create_tween()
 		iris_tween.tween_property(mat, "shader_parameter/radius", 0.0, 0.85).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
@@ -212,5 +225,20 @@ func _on_start_pressed() -> void:
 	await get_tree().create_timer(0.15).timeout
 	get_tree().change_scene_to_file(GAME_SCENE_PATH)
 
+func _on_regular_button_clicked() -> void:
+	_play_sfx(SFX_CLICK, -2.0)
+
 func _on_exit_pressed() -> void:
+	_play_sfx(SFX_CLICK, -2.0)
+	await get_tree().create_timer(0.12).timeout
 	get_tree().quit()
+
+func _play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
+	if not stream:
+		return
+	var player := AudioStreamPlayer.new()
+	player.stream = stream
+	player.volume_db = volume_db
+	add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()

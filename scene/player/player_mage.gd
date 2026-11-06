@@ -53,6 +53,15 @@ var last_movement_direction := Vector2.DOWN
 # =========================
 const MAGIC_BOLT_SCENE = preload("res://scene/projectile/magic_bolt.tscn")
 const DUST_SCENE = preload("res://scene/effect/run_dust.tscn")
+const SFX_FOOTSTEP = preload("res://assets/audio/sfx/characters/universal/footstep_run.wav")
+const SFX_HURT = preload("res://assets/audio/sfx/characters/universal/hero_hurt.wav")
+const SFX_DEATH = preload("res://assets/audio/sfx/characters/universal/hero_death.wav")
+const SFX_RESPAWN = preload("res://assets/audio/sfx/characters/universal/hero_respawn.wav")
+const SFX_MAGE_CAST = preload("res://assets/audio/sfx/characters/mage/mage_cast.wav")
+const SFX_MAGE_SKILL_METEOR_AIM = preload("res://assets/audio/sfx/characters/mage/mage_skill_meteor_aim.wav")
+const SFX_MAGE_SKILL_METEOR_CAST = preload("res://assets/audio/sfx/characters/mage/mage_skill_meteor_cast.wav")
+const SFX_SHIELD_BLOCK = preload("res://assets/audio/sfx/characters/knight/knight_shield_block.wav")
+var _footstep_toggle: bool = false
 
 @export var controlled_projectile_speed: float = 500.0 # Kecepatan magic bolt saat Mage dikendalikan pemain (Leader - disesuaikan dikurangi sedikit menjadi 500.0 px/s)
 @export var follower_projectile_ratio: float = 1.0   # Rasio kecepatan magic bolt saat Mage menjadi follower (disamakan 1.0 dengan Leader)
@@ -854,6 +863,7 @@ func reset_attack_state(token: int):
 	bolt.shooter_node = self
 	bolt.speed = get_dynamic_projectile_speed()
 	get_tree().current_scene.add_child(bolt)
+	play_sfx(SFX_MAGE_CAST, -2.0)
 
 	# Tunggu sampai animasi attack selesai seutuhnya (frame 7 recovery) dengan timeout cadangan
 	var timer := get_tree().create_timer(0.4)
@@ -1046,6 +1056,11 @@ func spawn_run_dust(move_dir: Vector2) -> void:
 	dust.z_index = 3 # Di bawah tubuh karakter (z_index 4) namun di atas lantai & bayangan
 	get_parent().add_child(dust)
 
+	if is_leader:
+		_footstep_toggle = not _footstep_toggle
+		if _footstep_toggle:
+			play_sfx(SFX_FOOTSTEP, -14.0)
+
 
 func apply_camera_shake(intensity: float = 7.0):
 	var leader = get_tree().get_first_node_in_group("player")
@@ -1079,10 +1094,12 @@ func take_damage(amount: int, _source_position = null):
 		var tween = create_tween()
 		tween.tween_property(self, "modulate", Color.WHITE, 0.2)
 		apply_camera_shake(3.0)
+		play_sfx(SFX_SHIELD_BLOCK, 0.0)
 		print(name, " memblok serangan dengan perisai! 0 damage diterima.")
 		return
 
 	current_health -= amount
+	play_sfx(SFX_HURT, -4.0)
 	print("Mage terkena serangan! Sisa HP: ", current_health)
 
 	modulate = Color(2.5, 0.3, 0.3)
@@ -1101,6 +1118,7 @@ func die():
 	if is_dead:
 		return
 	is_dead = true
+	play_sfx(SFX_DEATH, -2.0)
 	is_moving = false
 	is_attacking = false
 	in_party_combat = false
@@ -1150,6 +1168,7 @@ func respawn():
 	global_position = spawn_position
 	target_position = spawn_position
 	current_health = max_health
+	play_sfx(SFX_RESPAWN, -2.0)
 	is_moving = false
 	is_attacking = false
 	velocity = Vector2.ZERO
@@ -1183,6 +1202,17 @@ func respawn():
 	var respawn_tween = create_tween()
 	respawn_tween.tween_property(self, "modulate:a", 1.0, 0.4)
 	print("Mage berhasil respawn!")
+
+
+func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
+	if not stream:
+		return
+	var player := AudioStreamPlayer.new()
+	player.stream = stream
+	player.volume_db = volume_db
+	add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
 
 
 # =========================================================
@@ -1280,6 +1310,7 @@ func start_skill_aiming() -> void:
 
 	animated_sprite.flip_h = false
 	animated_sprite.play("skill_start_" + skill_facing_dir)
+	play_sfx(SFX_MAGE_SKILL_METEOR_AIM, -1.0)
 
 	spawn_skill_indicator()
 
@@ -1354,6 +1385,7 @@ func execute_meteor_strike() -> void:
 
 	animated_sprite.flip_h = false
 	animated_sprite.play("skill_release_" + skill_facing_dir)
+	play_sfx(SFX_MAGE_SKILL_METEOR_CAST, 0.0)
 
 	spawn_falling_meteor(strike_pos)
 

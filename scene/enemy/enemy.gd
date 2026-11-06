@@ -17,6 +17,30 @@ extends CharacterBody2D
 const ARROW_SCENE = preload("res://scene/projectile/arrow.tscn")
 const TRACE_SCENE = preload("res://scene/projectile/arrow_trace.tscn")
 
+# =========================
+# AUDIO SFX
+# =========================
+const SFX_ALERT = preload("res://assets/audio/sfx/enemy/enemy_alert.wav")
+const SFX_BOW_SHOOT = preload("res://assets/audio/sfx/enemy/enemy_bow_shoot.wav")
+const SFX_CONTACT_HIT = preload("res://assets/audio/sfx/enemy/enemy_contact_hit.wav")
+const SFX_HURT = preload("res://assets/audio/sfx/enemy/enemy_hurt.wav")
+const SFX_DEATH = preload("res://assets/audio/sfx/enemy/enemy_death.wav")
+const SFX_RESPAWN = preload("res://assets/audio/sfx/enemy/enemy_respawn.wav")
+
+func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
+	if not stream:
+		return
+	var player_sfx := AudioStreamPlayer2D.new()
+	player_sfx.stream = stream
+	player_sfx.volume_db = volume_db
+	player_sfx.global_position = global_position
+	if get_parent():
+		get_parent().add_child(player_sfx)
+	else:
+		add_child(player_sfx)
+	player_sfx.finished.connect(player_sfx.queue_free)
+	player_sfx.play()
+
 @export var shoot_range: float = 320.0       # Jarak tembak musuh (pixel)
 @export var shoot_cooldown: float = 1.4     # Cooldown tembakan musuh (disamakan 1.4s dengan basic attack fire rate Archer pemain)
 @export var projectile_damage: int = 1      # Damage panah musuh
@@ -106,11 +130,14 @@ func _setup_player_collision_exceptions() -> void:
 func alert_to_combat(target: CharacterBody2D = null) -> void:
 	if is_dead:
 		return
+	var was_patrolling: bool = (current_state == State.IDLE_PATROL)
 	if current_state != State.CHASE:
 		current_state = State.CHASE
 	var chosen: CharacterBody2D = target if target else get_best_target()
 	if chosen:
 		player = chosen
+	if was_patrolling:
+		play_sfx(SFX_ALERT, -2.0)
 
 func get_best_target() -> CharacterBody2D:
 	# 1. Prioritaskan karakter yang baru saja memberi damage (threat/aggro priority)
@@ -336,9 +363,11 @@ func _physics_process(delta):
 		if current_state == State.IDLE_PATROL:
 			current_state = State.CHASE
 			player = target_touching
+			play_sfx(SFX_ALERT, -2.0)
 		if damage_timer <= 0.0:
 			if target_touching.has_method("take_damage"):
 				target_touching.take_damage(contact_damage, global_position)
+			play_sfx(SFX_CONTACT_HIT, 0.0)
 			damage_timer = attack_cooldown
 
 
@@ -594,6 +623,7 @@ func shoot_at_player():
 	else:
 		arrow.get_node("Sprite2D").z_index = 5
 	get_parent().add_child(arrow)
+	play_sfx(SFX_BOW_SHOOT, -2.0)
 
 	# Munculkan trace indicator panah musuh tepat di titik lepas (dihilangkan jika menghadap North)
 	if last_direction != Vector2.UP and animated_sprite.animation != "atk_n":
@@ -792,6 +822,7 @@ func take_damage(amount: int, attacker: CharacterBody2D = null):
 		return
 
 	current_health -= amount
+	play_sfx(SFX_HURT, -2.0)
 
 	# Kamera bergetar (camera shake) saat player mengenai musuh
 	var player_node = get_tree().get_first_node_in_group("player")
@@ -818,9 +849,8 @@ func take_damage(amount: int, attacker: CharacterBody2D = null):
 	# Efek kedip putih saat kena hit
 	if animated_sprite:
 		animated_sprite.modulate = Color(3.0, 3.0, 3.0)
-		await get_tree().create_timer(0.1).timeout
-		if is_instance_valid(animated_sprite) and not is_dead:
-			animated_sprite.modulate = Color(1.3, 0.4, 0.4) # Kembali ke warna merah musuh
+		var flash_tween := create_tween()
+		flash_tween.tween_property(animated_sprite, "modulate", Color(1.3, 0.4, 0.4), 0.1)
 
 	# Multi-Target Aggro: Prioritaskan penyerang yang baru memberi damage
 	if attacker != null and is_instance_valid(attacker) and attacker.is_in_group("player") and not ("is_dead" in attacker and attacker.is_dead):
@@ -850,6 +880,7 @@ func take_damage(amount: int, attacker: CharacterBody2D = null):
 
 func die():
 	is_dead = true
+	play_sfx(SFX_DEATH, 0.0)
 	is_shooting = false
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO
@@ -941,6 +972,7 @@ func respawn():
 	modulate.a = 0.2
 	var tween = create_tween()
 	tween.tween_property(self, "modulate:a", 1.0, 0.35)
+	play_sfx(SFX_RESPAWN, -2.0)
 
 
 # =========================================================
@@ -951,9 +983,12 @@ func _on_detection_area_body_entered(body):
 	if is_dead:
 		return
 	if body.is_in_group("player") and not ("is_dead" in body and body.is_dead):
+		var was_patrolling: bool = (current_state == State.IDLE_PATROL)
 		var target := get_closest_target()
 		player = target if target else body
 		current_state = State.CHASE
+		if was_patrolling:
+			play_sfx(SFX_ALERT, -2.0)
 
 
 func _on_detection_area_body_exited(body):
@@ -1023,6 +1058,7 @@ func _on_hitbox_body_entered(body: Node2D) -> void:
 			if damage_timer <= 0.0:
 				if target_player.has_method("take_damage"):
 					target_player.take_damage(contact_damage, global_position)
+				play_sfx(SFX_CONTACT_HIT, 0.0)
 				damage_timer = attack_cooldown
 
 

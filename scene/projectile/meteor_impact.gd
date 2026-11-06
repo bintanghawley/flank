@@ -1,5 +1,7 @@
 extends AnimatedSprite2D
 
+const SFX_METEOR_IMPACT = preload("res://assets/audio/sfx/characters/mage/mage_meteor_impact.wav")
+
 const AOE_RADIUS: float = 210.0
 const DAMAGE: int = 4
 const KNOCKBACK_FORCE: float = 450.0
@@ -12,6 +14,19 @@ func _ready() -> void:
 	animation_finished.connect(queue_free)
 	apply_aoe_damage()
 	trigger_camera_shake()
+	play_sfx(SFX_METEOR_IMPACT, 1.0)
+
+
+func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
+	if not stream or not get_parent():
+		return
+	var player := AudioStreamPlayer2D.new()
+	player.stream = stream
+	player.volume_db = volume_db
+	player.global_position = global_position
+	get_parent().add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
 
 
 func apply_aoe_damage() -> void:

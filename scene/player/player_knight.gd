@@ -37,6 +37,16 @@ var last_movement_direction := Vector2.DOWN
 # COMBAT & MELEE SLASH SETTINGS
 # =========================
 const DUST_SCENE = preload("res://scene/effect/run_dust.tscn")
+const SFX_FOOTSTEP = preload("res://assets/audio/sfx/characters/universal/footstep_run.wav")
+const SFX_HURT = preload("res://assets/audio/sfx/characters/universal/hero_hurt.wav")
+const SFX_DEATH = preload("res://assets/audio/sfx/characters/universal/hero_death.wav")
+const SFX_RESPAWN = preload("res://assets/audio/sfx/characters/universal/hero_respawn.wav")
+const SFX_KNIGHT_SLASH = preload("res://assets/audio/sfx/characters/knight/knight_slash.wav")
+const SFX_KNIGHT_SLASH_HIT = preload("res://assets/audio/sfx/characters/knight/knight_slash_hit.wav")
+const SFX_KNIGHT_SHIELD_CAST = preload("res://assets/audio/sfx/characters/knight/knight_shield_cast.wav")
+const SFX_KNIGHT_SHIELD_BLOCK = preload("res://assets/audio/sfx/characters/knight/knight_shield_block.wav")
+const SFX_KNIGHT_SHIELD_FADE = preload("res://assets/audio/sfx/characters/knight/knight_shield_fade.wav")
+var _footstep_toggle: bool = false
 const VISUAL_CENTER_OFFSET: Vector2 = Vector2(0.0, 7.5) # Pusat visual torso Knight di ruang global (skala 5x, setara y=1.5 lokal)
 const SLASH_CENTER_OFFSET: Vector2 = VISUAL_CENTER_OFFSET
 
@@ -235,6 +245,7 @@ func _physics_process(delta: float) -> void:
 				# Fase windup selesai, bilah pedang mengayun ke depan (impact frame)
 				is_slash_active = true
 				slash_active_timer = SLASH_ACTIVE_DURATION
+				play_sfx(SFX_KNIGHT_SLASH, -2.0)
 				execute_slash_damage(attack_direction)
 		elif is_slash_active:
 			slash_active_timer -= delta
@@ -366,6 +377,11 @@ func spawn_run_dust(move_dir: Vector2) -> void:
 	dust.z_index = 3 # Di bawah tubuh karakter (z_index 4) namun di atas lantai & bayangan
 	get_parent().add_child(dust)
 
+	if is_leader:
+		_footstep_toggle = not _footstep_toggle
+		if _footstep_toggle:
+			play_sfx(SFX_FOOTSTEP, -14.0)
+
 
 # =========================================================
 # SERANGAN DASAR (MELEE SWORD SLASH)
@@ -471,6 +487,7 @@ func execute_slash_damage(attack_dir: Vector2) -> void:
 				e.knockback_velocity = knock_dir * 300.0
 
 	if hit_any:
+		play_sfx(SFX_KNIGHT_SLASH_HIT, -2.0)
 		apply_camera_shake(camera_shake_strength)
 
 
@@ -518,6 +535,7 @@ func grant_shield(duration: float) -> void:
 		shield_sprite.visible = true
 		shield_sprite.modulate.a = 0.0
 		update_shield_visual()
+		play_sfx(SFX_KNIGHT_SHIELD_CAST, 0.0)
 		if shield_tween and shield_tween.is_valid():
 			shield_tween.kill()
 		shield_tween = create_tween()
@@ -535,6 +553,7 @@ func deactivate_shield() -> void:
 	shield_timer = 0.0
 
 	if shield_sprite and shield_sprite.visible:
+		play_sfx(SFX_KNIGHT_SHIELD_FADE, -3.0)
 		if shield_tween and shield_tween.is_valid():
 			shield_tween.kill()
 		shield_tween = create_tween()
@@ -727,10 +746,12 @@ func take_damage(amount: int, _source_position = null) -> void:
 		var shield_flash_tween = create_tween()
 		shield_flash_tween.tween_property(self, "modulate", Color.WHITE, 0.2)
 		apply_camera_shake(3.0)
+		play_sfx(SFX_KNIGHT_SHIELD_BLOCK, 0.0)
 		print(name, " memblok serangan dengan perisai! 0 damage diterima.")
 		return
 
 	current_health -= amount
+	play_sfx(SFX_HURT, -4.0)
 	print("Knight terkena serangan! Sisa HP: ", current_health)
 
 	modulate = Color(1.8, 0.4, 0.4)
@@ -752,6 +773,7 @@ func die() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	play_sfx(SFX_DEATH, -2.0)
 	velocity = Vector2.ZERO
 	is_moving = false
 	is_attacking = false
@@ -796,6 +818,7 @@ func respawn() -> void:
 	global_position = spawn_position
 	target_position = spawn_position
 	current_health = max_health
+	play_sfx(SFX_RESPAWN, -2.0)
 	is_moving = false
 	is_attacking = false
 	is_slash_active = false
@@ -838,6 +861,17 @@ func respawn() -> void:
 	var respawn_tween = create_tween()
 	respawn_tween.tween_property(self, "modulate:a", 1.0, 0.4)
 	print("Knight berhasil respawn di titik awal! HP penuh: ", current_health)
+
+
+func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
+	if not stream:
+		return
+	var player := AudioStreamPlayer.new()
+	player.stream = stream
+	player.volume_db = volume_db
+	add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
 
 
 # =========================================================

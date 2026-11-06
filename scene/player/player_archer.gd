@@ -133,6 +133,16 @@ var last_movement_direction := Vector2.DOWN
 const ARROW_SCENE = preload("res://scene/projectile/arrow.tscn")
 const TRACE_SCENE = preload("res://scene/projectile/arrow_trace.tscn")
 const DUST_SCENE = preload("res://scene/effect/run_dust.tscn")
+const SFX_FOOTSTEP = preload("res://assets/audio/sfx/characters/universal/footstep_run.wav")
+const SFX_HURT = preload("res://assets/audio/sfx/characters/universal/hero_hurt.wav")
+const SFX_DEATH = preload("res://assets/audio/sfx/characters/universal/hero_death.wav")
+const SFX_RESPAWN = preload("res://assets/audio/sfx/characters/universal/hero_respawn.wav")
+const SFX_ARCHER_BOW_SHOOT = preload("res://assets/audio/sfx/characters/archer/archer_bow_shoot.wav")
+const SFX_ARCHER_SKILL_MODE_ACTIVATE = preload("res://assets/audio/sfx/characters/archer/archer_skill_mode_activate.wav")
+const SFX_ARCHER_SKILL_CHARGE = preload("res://assets/audio/sfx/characters/archer/archer_skill_charge.wav")
+const SFX_ARCHER_SKILL_RELEASE = preload("res://assets/audio/sfx/characters/archer/archer_skill_release.wav")
+const SFX_SHIELD_BLOCK = preload("res://assets/audio/sfx/characters/knight/knight_shield_block.wav")
+var _footstep_toggle: bool = false
 
 # =========================
 # BASIC ATTACK PROJECTILE SETTINGS
@@ -528,6 +538,11 @@ func spawn_run_dust(move_dir: Vector2) -> void:
 	dust.scale = Vector2(randf_range(3.5, 4.5), randf_range(3.5, 4.5))
 	dust.z_index = 3 # Di bawah tubuh karakter (z_index 4) namun di atas lantai & bayangan
 	get_parent().add_child(dust)
+
+	if is_leader:
+		_footstep_toggle = not _footstep_toggle
+		if _footstep_toggle:
+			play_sfx(SFX_FOOTSTEP, -14.0)
 
 
 # =========================================================
@@ -1284,6 +1299,7 @@ func reset_attack_state(token: int):
 	else:
 		arrow.get_node("Sprite2D").z_index = 5
 	get_parent().add_child(arrow)
+	play_sfx(SFX_ARCHER_BOW_SHOOT, -2.0)
 
 	# Spawn indicator trace arrow tepat di posisi spawn panah (dihilangkan jika menghadap North)
 	if last_direction != Vector2.UP and animated_sprite.animation != "atk_n":
@@ -1328,10 +1344,12 @@ func take_damage(amount: int, _source_position = null):
 		var tween = create_tween()
 		tween.tween_property(self, "modulate", Color.WHITE, 0.2)
 		apply_camera_shake(3.0)
+		play_sfx(SFX_SHIELD_BLOCK, 0.0)
 		print(name, " memblok serangan dengan perisai! 0 damage diterima.")
 		return
 
 	current_health -= amount
+	play_sfx(SFX_HURT, -4.0)
 	print("Archer terkena serangan! Sisa HP: ", current_health)
 
 	# Efek kedip merah saat terkena serangan (Tween non-blocking)
@@ -1360,6 +1378,7 @@ func die():
 		deactivate_skill_mode()
 
 	is_dead = true
+	play_sfx(SFX_DEATH, -2.0)
 	is_moving = false
 	is_attacking = false
 	in_party_combat = false
@@ -1420,6 +1439,7 @@ func respawn():
 	global_position = spawn_position
 	target_position = spawn_position
 	current_health = max_health
+	play_sfx(SFX_RESPAWN, -2.0)
 	is_moving = false
 	is_attacking = false
 	velocity = Vector2.ZERO
@@ -1462,6 +1482,17 @@ func respawn():
 	respawn_tween.tween_property(self, "modulate:a", 1.0, 0.4)
 
 	print("Archer berhasil respawn di titik awal! HP penuh: ", current_health)
+
+
+func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
+	if not stream:
+		return
+	var player := AudioStreamPlayer.new()
+	player.stream = stream
+	player.volume_db = volume_db
+	add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
 
 
 func apply_knockback(force: Vector2):
@@ -1513,6 +1544,7 @@ func activate_skill_mode():
 		skill_indicator_instance.visible = false
 
 	print("Special Skill Mode Aktif! Kuota tembakan: ", skill_charges, " | Durasi: ", skill_mode_duration, " detik")
+	play_sfx(SFX_ARCHER_SKILL_MODE_ACTIVATE, -1.0)
 
 
 func deactivate_skill_mode():
@@ -1575,6 +1607,7 @@ func start_skill_charge():
 	# Putar animasi karakter: skill_start_{direction}
 	animated_sprite.flip_h = false
 	animated_sprite.play("skill_start_" + skill_facing_dir)
+	play_sfx(SFX_ARCHER_SKILL_CHARGE, -2.0)
 
 
 func execute_skill_release():
@@ -1623,6 +1656,7 @@ func execute_skill_release():
 
 	# Efek getaran kamera saat skill dilepaskan
 	apply_camera_shake(6.0)
+	play_sfx(SFX_ARCHER_SKILL_RELEASE, 0.0)
 
 
 func on_skill_release_finished():

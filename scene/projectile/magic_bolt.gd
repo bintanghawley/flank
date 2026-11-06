@@ -5,6 +5,8 @@ extends Area2D
 # =========================================================
 
 const FIREBALL_IMPACT_SCENE = preload("res://scene/projectile/fireball_impact.tscn")
+const SFX_BOLT_HIT = preload("res://assets/audio/sfx/characters/mage/mage_bolt_hit.wav")
+const SFX_BOLT_HIT_WALL = preload("res://assets/audio/sfx/characters/mage/mage_bolt_hit_wall.wav")
 
 @export var speed: float = 500.0 # Kecepatan dasar magic bolt (disesuaikan dikurangi sedikit menjadi 500.0 px/s)
 @export var damage: int = 1 # Rebalanced: seimbang dengan panah Archer
@@ -89,6 +91,18 @@ func is_outside_camera_or_limits() -> bool:
 	return false
 
 
+func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
+	if not stream or not get_parent():
+		return
+	var player := AudioStreamPlayer2D.new()
+	player.stream = stream
+	player.volume_db = volume_db
+	player.global_position = global_position
+	get_parent().add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
+
+
 func _on_body_entered(body: Node2D) -> void:
 	if is_destroyed or body == null:
 		return
@@ -99,6 +113,7 @@ func _on_body_entered(body: Node2D) -> void:
 
 	# Tabrakan fisik dengan rintangan dunia (TileMap dinding, pagar, batu, WorldBorders)
 	if body is StaticBody2D or body is TileMapLayer:
+		play_sfx(SFX_BOLT_HIT_WALL, -2.0)
 		destroy(true)
 		return
 
@@ -118,6 +133,7 @@ func _on_body_entered(body: Node2D) -> void:
 			if leader and is_instance_valid(leader) and leader.has_method("apply_camera_shake"):
 				leader.apply_camera_shake(6.0)
 
+			play_sfx(SFX_BOLT_HIT, -2.0)
 			destroy(true)
 
 	# Serangan musuh -> Mengenai player
