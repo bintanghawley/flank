@@ -5,6 +5,7 @@ extends Node2D
 # =========================================================
 
 @onready var camera: Camera2D = $Camera2D
+@onready var gameplay_hud = get_node_or_null("GameplayHud")
 
 var party_members: Array[CharacterBody2D] = []
 var active_leader_index: int = 0
@@ -73,6 +74,12 @@ func _ready() -> void:
 	set_active_leader(0)
 	_is_party_initialized = true
 
+	# Hubungkan Gameplay HUD
+	if gameplay_hud:
+		gameplay_hud.setup(party_members, active_leader_index)
+		gameplay_hud.skill_activated.connect(_on_hud_skill_activated)
+		gameplay_hud.leader_switch_requested.connect(_on_hud_leader_switch_requested)
+
 	# 5. Inisialisasi kamera dan batasan map
 	setup_camera_and_boundaries.call_deferred()
 
@@ -91,22 +98,22 @@ func setup_party_enemy_collision_exceptions() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Tombol pintasan pergantian karakter: Tab (siklis) atau angka 1, 2, 3, 4
+	# Tombol pintasan pergantian karakter: Tab / Q (siklis) atau angka 1, 2, 3, 4 (auto-switch + cast skill)
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_TAB:
+		if event.keycode == KEY_TAB or event.keycode == KEY_Q:
 			switch_to_next_character()
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_1:
-			switch_to_character(0)
+			trigger_hero_skill_by_slot(0)
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_2:
-			switch_to_character(1)
+			trigger_hero_skill_by_slot(1)
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_3:
-			switch_to_character(2)
+			trigger_hero_skill_by_slot(2)
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_4:
-			switch_to_character(3)
+			trigger_hero_skill_by_slot(3)
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_C:
 			set_party_command(PartyCommand.FOLLOW)
@@ -116,6 +123,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			set_party_command(PartyCommand.ATTACK)
 			if get_viewport():
 				get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_ESCAPE:
+			if gameplay_hud:
+				gameplay_hud.toggle_pause_menu()
+				if get_viewport():
+					get_viewport().set_input_as_handled()
 
 
 func set_party_command(cmd: PartyCommand) -> void:
@@ -126,11 +138,15 @@ func set_party_command(cmd: PartyCommand) -> void:
 
 	if cmd == PartyCommand.ATTACK:
 		play_sfx(SFX_PARTY_COMMAND_ATTACK, -2.0)
+		if gameplay_hud:
+			gameplay_hud.show_speech_bubble("Serang")
 		if not active_combat_targets.is_empty():
 			current_combat_state = PartyCombatState.COMBAT
 			notify_party_combat_state(true)
 	elif cmd == PartyCommand.FOLLOW:
 		play_sfx(SFX_PARTY_COMMAND_FOLLOW, -2.0)
+		if gameplay_hud:
+			gameplay_hud.show_speech_bubble("Ikuti")
 		notify_party_combat_state(false)
 
 	print("Party Command -> ", "FOLLOW (Tombol C)" if cmd == PartyCommand.FOLLOW else "ATTACK (Tombol V)")
@@ -204,7 +220,59 @@ func set_active_leader(idx: int) -> void:
 	if _is_party_initialized:
 		play_sfx(SFX_PARTY_SWITCH_LEADER, -2.0)
 
+	if gameplay_hud:
+		gameplay_hud.set_active_leader(idx)
+
 	print("Party Switch -> Leader aktif: [", active_leader_index + 1, "] ", leader.name)
+
+
+func trigger_hero_skill_by_slot(slot_idx: int) -> void:
+	if slot_idx < 0 or slot_idx >= party_members.size():
+		return
+	var target_hero := party_members[slot_idx]
+	if not is_instance_valid(target_hero) or not is_character_alive(target_hero):
+		return
+
+	# Jika karakter yang dipilih belum menjadi leader aktif, beralih kendali seketika
+	if active_leader_index != slot_idx:
+		switch_to_character(slot_idx)
+
+	# Segera eksekusi skill / ultimate hero tersebut
+	execute_hero_skill(target_hero)
+
+
+func execute_hero_skill(hero: CharacterBody2D) -> void:
+	if not is_instance_valid(hero) or not is_character_alive(hero):
+		return
+
+	if hero.has_method("activate_shield"):
+		hero.activate_shield()
+	elif hero.has_method("activate_triple_slash"):
+		var cd: float = hero.get("skill_cooldown_timer") if "skill_cooldown_timer" in hero else 0.0
+		var is_att: bool = hero.get("is_attacking") if "is_attacking" in hero else false
+		var is_sk: bool = hero.get("is_skill_active") if "is_skill_active" in hero else false
+		var is_lunge: bool = hero.get("is_ambush_lunging") if "is_ambush_lunging" in hero else false
+		if cd <= 0.0 and not is_att and not is_sk and not is_lunge:
+			hero.activate_triple_slash()
+	elif hero.has_method("activate_skill_mode"):
+		if hero.has_method("can_activate_skill") and hero.can_activate_skill():
+			hero.activate_skill_mode()
+	elif hero.has_method("start_skill_aiming"):
+		var cd_m: float = hero.get("skill_cooldown_timer") if "skill_cooldown_timer" in hero else 0.0
+		var is_aim: bool = hero.get("is_aiming_skill") if "is_aiming_skill" in hero else false
+		var is_rel: bool = hero.get("is_skill_releasing") if "is_skill_releasing" in hero else false
+		var is_att_m: bool = hero.get("is_attacking") if "is_attacking" in hero else false
+		if not is_aim and not is_rel and not is_att_m and cd_m <= 0.0:
+			hero.start_skill_aiming()
+
+
+func _on_hud_skill_activated(slot_idx: int) -> void:
+	trigger_hero_skill_by_slot(slot_idx)
+
+
+func _on_hud_leader_switch_requested(hero_idx: int) -> void:
+	if hero_idx >= 0 and hero_idx < party_members.size() and is_character_alive(party_members[hero_idx]):
+		switch_to_character(hero_idx)
 
 
 func get_active_leader() -> CharacterBody2D:

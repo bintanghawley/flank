@@ -1,0 +1,879 @@
+[gd_scene format=3 uid="uid://b5k8vyg6w3xqm"]
+
+[ext_resource type="Script" path="res://scene/ui/gameplay/gameplay_hud.gd" id="1_hud_script"]
+[ext_resource type="FontFile" uid="uid://cvw11s6o3mflp" path="res://assets/ui/fonts/Beholden-Bold.ttf" id="2_font"]
+[ext_resource type="Texture2D" uid="uid://bg5ekbflw16f7" path="res://assets/ui/menus/pause_menu/btn_pause_menu.png" id="3_book"]
+[ext_resource type="Texture2D" uid="uid://bhv6dswl8v1k3" path="res://assets/ui/gameplay/location/location_banner.png" id="4_banner"]
+[ext_resource type="Texture2D" uid="uid://cwvx7m6o78o0q" path="res://assets/ui/icons/actions/action_buttons.png" id="5_action_buttons"]
+[ext_resource type="Texture2D" uid="uid://dr6o4fl8w0p8y" path="res://assets/ui/gameplay/party_hud/hud_frame_character.png" id="6_card_frame"]
+[ext_resource type="Texture2D" uid="uid://chf88e1q656m2" path="res://assets/ui/gameplay/party_hud/portrait_arthur.png" id="7_port_arthur"]
+[ext_resource type="Texture2D" uid="uid://1p116y6w3x4m" path="res://assets/ui/gameplay/party_hud/portrait_magnus.png" id="8_port_magnus"]
+[ext_resource type="Texture2D" uid="uid://cj7g2w6o78p9y" path="res://assets/ui/gameplay/party_hud/portrait_anastasya.png" id="9_port_anastasya"]
+[ext_resource type="Texture2D" uid="uid://bfv8m4ol8v2k4" path="res://assets/ui/gameplay/party_hud/portrait_hellene.png" id="10_port_hellene"]
+[ext_resource type="Texture2D" uid="uid://dmv7o2fl9w1m5" path="res://assets/ui/gameplay/party_hud/life_bar_empty.png" id="11_hp_empty"]
+[ext_resource type="Texture2D" uid="uid://e4x7b8ol9v3m6" path="res://assets/ui/gameplay/party_hud/life_bar_filled.png" id="12_hp_filled"]
+[ext_resource type="Texture2D" uid="uid://c6v11s6o3mflq" path="res://assets/ui/icons/skills/skill.png" id="13_skills"]
+[ext_resource type="Texture2D" uid="uid://b8v12s6o4mf2r" path="res://assets/ui/gameplay/dialogue/bubble_talk_left-sheet.png" id="14_bubble"]
+
+[sub_resource type="AtlasTexture" id="Atlas_quest_icon"]
+atlas = ExtResource("5_action_buttons")
+region = Rect2(0, 272, 16, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_btn_v"]
+atlas = ExtResource("5_action_buttons")
+region = Rect2(0, 256, 16, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_btn_c"]
+atlas = ExtResource("5_action_buttons")
+region = Rect2(32, 208, 16, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_btn_q"]
+atlas = ExtResource("5_action_buttons")
+region = Rect2(32, 240, 16, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_btn_1"]
+atlas = ExtResource("5_action_buttons")
+region = Rect2(0, 288, 16, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_btn_2"]
+atlas = ExtResource("5_action_buttons")
+region = Rect2(16, 288, 16, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_btn_3"]
+atlas = ExtResource("5_action_buttons")
+region = Rect2(32, 288, 16, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_btn_4"]
+atlas = ExtResource("5_action_buttons")
+region = Rect2(48, 288, 16, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_skill_1"]
+atlas = ExtResource("13_skills")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_skill_2"]
+atlas = ExtResource("13_skills")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_skill_3"]
+atlas = ExtResource("13_skills")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_skill_4"]
+atlas = ExtResource("13_skills")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_skill_bg"]
+bg_color = Color(0.12, 0.12, 0.14, 0.85)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.72, 0.45, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pause_panel"]
+bg_color = Color(0.121569, 0.109804, 0.152941, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.85, 0.72, 0.45, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="SystemFont" id="SystemFont_serif"]
+font_names = PackedStringArray("Georgia", "Times New Roman", "Palatino Linotype", "serif")
+font_weight = 400
+subpixel_positioning = 0
+
+[node name="GameplayHud" type="CanvasLayer"]
+process_mode = 3
+layer = 15
+script = ExtResource("1_hud_script")
+
+[node name="RootControl" type="Control" parent="."]
+texture_filter = 1
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="BtnPauseMenu" type="TextureButton" parent="RootControl"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 30.0
+offset_top = 36.0
+offset_right = 78.0
+offset_bottom = 74.0
+scale = Vector2(2.2, 2.2)
+texture_normal = ExtResource("3_book")
+stretch_mode = 3
+
+[node name="QuestContainer" type="HBoxContainer" parent="RootControl"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 250.0
+offset_right = 320.0
+offset_bottom = 310.0
+theme_override_constants/separation = 10
+
+[node name="QuestIcon" type="TextureRect" parent="RootControl/QuestContainer"]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_vertical = 0
+texture = SubResource("Atlas_quest_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TextContainer" type="VBoxContainer" parent="RootControl/QuestContainer"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="QuestTitle" type="Label" parent="RootControl/QuestContainer/TextContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = SubResource("SystemFont_serif")
+theme_override_font_sizes/font_size = 18
+text = "Judul utama misi"
+
+[node name="QuestObjective" type="Label" parent="RootControl/QuestContainer/TextContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = SubResource("SystemFont_serif")
+theme_override_font_sizes/font_size = 15
+text = "objektif misi"
+
+[node name="LocationBanner" type="TextureRect" parent="RootControl"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -180.0
+offset_top = 32.0
+offset_right = 180.0
+offset_bottom = 102.0
+grow_horizontal = 2
+texture = ExtResource("4_banner")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LocationLabel" type="Label" parent="RootControl/LocationBanner"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -2.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.18, 0.12, 0.1, 1)
+theme_override_fonts/font = SubResource("SystemFont_serif")
+theme_override_font_sizes/font_size = 18
+text = "📍 Istana Kerajaan"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ControlsPrompt" type="VBoxContainer" parent="RootControl"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -260.0
+offset_right = 180.0
+offset_bottom = -180.0
+grow_vertical = 0
+theme_override_constants/separation = 5
+
+[node name="ActionV" type="HBoxContainer" parent="RootControl/ControlsPrompt"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionV"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+texture = SubResource("Atlas_btn_v")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="RootControl/ControlsPrompt/ActionV"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = SubResource("SystemFont_serif")
+theme_override_font_sizes/font_size = 14
+text = "Serang"
+
+[node name="ActionC" type="HBoxContainer" parent="RootControl/ControlsPrompt"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionC"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+texture = SubResource("Atlas_btn_c")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="RootControl/ControlsPrompt/ActionC"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = SubResource("SystemFont_serif")
+theme_override_font_sizes/font_size = 14
+text = "Ikuti"
+
+[node name="ActionQ" type="HBoxContainer" parent="RootControl/ControlsPrompt"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionQ"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+texture = SubResource("Atlas_btn_q")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="RootControl/ControlsPrompt/ActionQ"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = SubResource("SystemFont_serif")
+theme_override_font_sizes/font_size = 14
+text = "Beralih Karakter"
+
+[node name="PartyContainer" type="HBoxContainer" parent="RootControl"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -92.0
+offset_right = 670.0
+offset_bottom = -24.0
+grow_vertical = 0
+theme_override_constants/separation = 30
+
+[node name="CardArthur" type="Control" parent="RootControl/PartyContainer"]
+custom_minimum_size = Vector2(136, 58)
+layout_mode = 2
+mouse_filter = 0
+
+[node name="Frame" type="TextureRect" parent="RootControl/PartyContainer/CardArthur"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 136.0
+offset_bottom = 56.0
+texture = ExtResource("6_card_frame")
+expand_mode = 1
+
+[node name="Portrait" type="TextureRect" parent="RootControl/PartyContainer/CardArthur"]
+texture_filter = 1
+layout_mode = 0
+offset_left = -18.0
+offset_top = -26.0
+offset_right = 66.0
+offset_bottom = 54.0
+texture = ExtResource("7_port_arthur")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="RootControl/PartyContainer/CardArthur"]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 12.0
+offset_right = 130.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_fonts/font = SubResource("SystemFont_serif")
+theme_override_font_sizes/font_size = 13
+text = "Arthur"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LifeBar" type="TextureProgressBar" parent="RootControl/PartyContainer/CardArthur"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 34.0
+offset_top = 32.0
+offset_right = 130.0
+offset_bottom = 48.0
+value = 100.0
+nine_patch_stretch = true
+texture_under = ExtResource("11_hp_empty")
+texture_progress = ExtResource("12_hp_filled")
+
+[node name="LeaderIndicator" type="Label" parent="RootControl/PartyContainer/CardArthur"]
+layout_mode = 0
+offset_left = 72.0
+offset_top = -28.0
+offset_right = 96.0
+offset_bottom = -10.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "▼"
+horizontal_alignment = 1
+
+[node name="CardMagnus" type="Control" parent="RootControl/PartyContainer"]
+custom_minimum_size = Vector2(136, 58)
+layout_mode = 2
+mouse_filter = 0
+
+[node name="Frame" type="TextureRect" parent="RootControl/PartyContainer/CardMagnus"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 136.0
+offset_bottom = 56.0
+texture = ExtResource("6_card_frame")
+expand_mode = 1
+
+[node name="Portrait" type="TextureRect" parent="RootControl/PartyContainer/CardMagnus"]
+texture_filter = 1
+layout_mode = 0
+offset_left = -34.0
+offset_top = -16.0
+offset_right = 78.0
+offset_bottom = 52.0
+texture = ExtResource("8_port_magnus")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="RootControl/PartyContainer/CardMagnus"]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 12.0
+offset_right = 130.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_fonts/font = SubResource("SystemFont_serif")
+theme_override_font_sizes/font_size = 13
+text = "Magnus"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LifeBar" type="TextureProgressBar" parent="RootControl/PartyContainer/CardMagnus"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 34.0
+offset_top = 32.0
+offset_right = 130.0
+offset_bottom = 48.0
+value = 100.0
+nine_patch_stretch = true
+texture_under = ExtResource("11_hp_empty")
+texture_progress = ExtResource("12_hp_filled")
+
+[node name="LeaderIndicator" type="Label" parent="RootControl/PartyContainer/CardMagnus"]
+visible = false
+layout_mode = 0
+offset_left = 72.0
+offset_top = -28.0
+offset_right = 96.0
+offset_bottom = -10.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "▼"
+horizontal_alignment = 1
+
+[node name="CardAnastasya" type="Control" parent="RootControl/PartyContainer"]
+custom_minimum_size = Vector2(136, 58)
+layout_mode = 2
+mouse_filter = 0
+
+[node name="Frame" type="TextureRect" parent="RootControl/PartyContainer/CardAnastasya"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 136.0
+offset_bottom = 56.0
+texture = ExtResource("6_card_frame")
+expand_mode = 1
+
+[node name="Portrait" type="TextureRect" parent="RootControl/PartyContainer/CardAnastasya"]
+texture_filter = 1
+layout_mode = 0
+offset_left = -10.0
+offset_top = -14.0
+offset_right = 70.0
+offset_bottom = 50.0
+texture = ExtResource("9_port_anastasya")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="RootControl/PartyContainer/CardAnastasya"]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 12.0
+offset_right = 130.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_fonts/font = SubResource("SystemFont_serif")
+theme_override_font_sizes/font_size = 13
+text = "Anastasya"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LifeBar" type="TextureProgressBar" parent="RootControl/PartyContainer/CardAnastasya"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 34.0
+offset_top = 32.0
+offset_right = 130.0
+offset_bottom = 48.0
+value = 100.0
+nine_patch_stretch = true
+texture_under = ExtResource("11_hp_empty")
+texture_progress = ExtResource("12_hp_filled")
+
+[node name="LeaderIndicator" type="Label" parent="RootControl/PartyContainer/CardAnastasya"]
+visible = false
+layout_mode = 0
+offset_left = 72.0
+offset_top = -28.0
+offset_right = 96.0
+offset_bottom = -10.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "▼"
+horizontal_alignment = 1
+
+[node name="CardHellene" type="Control" parent="RootControl/PartyContainer"]
+custom_minimum_size = Vector2(136, 58)
+layout_mode = 2
+mouse_filter = 0
+
+[node name="Frame" type="TextureRect" parent="RootControl/PartyContainer/CardHellene"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 136.0
+offset_bottom = 56.0
+texture = ExtResource("6_card_frame")
+expand_mode = 1
+
+[node name="Portrait" type="TextureRect" parent="RootControl/PartyContainer/CardHellene"]
+texture_filter = 1
+layout_mode = 0
+offset_left = -6.0
+offset_top = -10.0
+offset_right = 58.0
+offset_bottom = 50.0
+texture = ExtResource("10_port_hellene")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="RootControl/PartyContainer/CardHellene"]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 12.0
+offset_right = 130.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_fonts/font = SubResource("SystemFont_serif")
+theme_override_font_sizes/font_size = 13
+text = "Hellene"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LifeBar" type="TextureProgressBar" parent="RootControl/PartyContainer/CardHellene"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 34.0
+offset_top = 32.0
+offset_right = 130.0
+offset_bottom = 48.0
+value = 100.0
+nine_patch_stretch = true
+texture_under = ExtResource("11_hp_empty")
+texture_progress = ExtResource("12_hp_filled")
+
+[node name="LeaderIndicator" type="Label" parent="RootControl/PartyContainer/CardHellene"]
+visible = false
+layout_mode = 0
+offset_left = 72.0
+offset_top = -28.0
+offset_right = 96.0
+offset_bottom = -10.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "▼"
+horizontal_alignment = 1
+
+[node name="SkillContainer" type="HBoxContainer" parent="RootControl"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -260.0
+offset_top = -98.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/separation = 14
+alignment = 2
+
+[node name="SkillSlot1" type="VBoxContainer" parent="RootControl/SkillContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="SkillBtn" type="TextureButton" parent="RootControl/SkillContainer/SkillSlot1"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+texture_normal = SubResource("Atlas_skill_1")
+stretch_mode = 5
+
+[node name="Panel" type="Panel" parent="RootControl/SkillContainer/SkillSlot1/SkillBtn"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_skill_bg")
+
+[node name="CooldownOverlay" type="ColorRect" parent="RootControl/SkillContainer/SkillSlot1/SkillBtn"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="CooldownLabel" type="Label" parent="RootControl/SkillContainer/SkillSlot1/SkillBtn"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "5"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Hotkey" type="TextureRect" parent="RootControl/SkillContainer/SkillSlot1"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = SubResource("Atlas_btn_1")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SkillSlot2" type="VBoxContainer" parent="RootControl/SkillContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="SkillBtn" type="TextureButton" parent="RootControl/SkillContainer/SkillSlot2"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+texture_normal = SubResource("Atlas_skill_2")
+stretch_mode = 5
+
+[node name="Panel" type="Panel" parent="RootControl/SkillContainer/SkillSlot2/SkillBtn"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_skill_bg")
+
+[node name="CooldownOverlay" type="ColorRect" parent="RootControl/SkillContainer/SkillSlot2/SkillBtn"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="CooldownLabel" type="Label" parent="RootControl/SkillContainer/SkillSlot2/SkillBtn"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "5"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Hotkey" type="TextureRect" parent="RootControl/SkillContainer/SkillSlot2"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = SubResource("Atlas_btn_2")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SkillSlot3" type="VBoxContainer" parent="RootControl/SkillContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="SkillBtn" type="TextureButton" parent="RootControl/SkillContainer/SkillSlot3"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+texture_normal = SubResource("Atlas_skill_3")
+stretch_mode = 5
+
+[node name="Panel" type="Panel" parent="RootControl/SkillContainer/SkillSlot3/SkillBtn"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_skill_bg")
+
+[node name="CooldownOverlay" type="ColorRect" parent="RootControl/SkillContainer/SkillSlot3/SkillBtn"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="CooldownLabel" type="Label" parent="RootControl/SkillContainer/SkillSlot3/SkillBtn"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "5"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Hotkey" type="TextureRect" parent="RootControl/SkillContainer/SkillSlot3"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = SubResource("Atlas_btn_3")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SkillSlot4" type="VBoxContainer" parent="RootControl/SkillContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="SkillBtn" type="TextureButton" parent="RootControl/SkillContainer/SkillSlot4"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+texture_normal = SubResource("Atlas_skill_4")
+stretch_mode = 5
+
+[node name="Panel" type="Panel" parent="RootControl/SkillContainer/SkillSlot4/SkillBtn"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_skill_bg")
+
+[node name="CooldownOverlay" type="ColorRect" parent="RootControl/SkillContainer/SkillSlot4/SkillBtn"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="CooldownLabel" type="Label" parent="RootControl/SkillContainer/SkillSlot4/SkillBtn"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "5"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Hotkey" type="TextureRect" parent="RootControl/SkillContainer/SkillSlot4"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = SubResource("Atlas_btn_4")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SpeechBubble" type="Control" parent="RootControl"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 92.0
+offset_bottom = 52.0
+pivot_offset = Vector2(28, 52)
+mouse_filter = 2
+
+[node name="BubblePanel" type="NinePatchRect" parent="RootControl/SpeechBubble"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("14_bubble")
+region_rect = Rect2(8, 0, 176, 108)
+patch_margin_left = 14
+patch_margin_top = 12
+patch_margin_right = 14
+patch_margin_bottom = 24
+
+[node name="BubbleLabel" type="Label" parent="RootControl/SpeechBubble/BubblePanel"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 6.0
+offset_top = 2.0
+offset_right = -6.0
+offset_bottom = 32.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.1, 0.08, 0.15, 1)
+theme_override_fonts/font = SubResource("SystemFont_serif")
+theme_override_font_sizes/font_size = 14
+text = "Serang"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PauseOverlay" type="ColorRect" parent="RootControl"]
+process_mode = 2
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="PausePanel" type="PanelContainer" parent="RootControl/PauseOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -140.0
+offset_top = -90.0
+offset_right = 140.0
+offset_bottom = 90.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_pause_panel")
+
+[node name="VBox" type="VBoxContainer" parent="RootControl/PauseOverlay/PausePanel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="Title" type="Label" parent="RootControl/PauseOverlay/PausePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.85, 0.65, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "Jeda Permainan"
+horizontal_alignment = 1
+
+[node name="BtnResume" type="Button" parent="RootControl/PauseOverlay/PausePanel/VBox"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 15
+text = "Lanjutkan"
+
+[node name="BtnMainMenu" type="Button" parent="RootControl/PauseOverlay/PausePanel/VBox"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 15
+text = "Menu Utama"
+
