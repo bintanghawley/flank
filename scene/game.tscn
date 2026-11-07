@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://80uy3wgwk1dw"]
+ [gd_scene format=3 uid="uid://80uy3wgwk1dw"]
 
 [ext_resource type="Script" path="res://scene/game.gd" id="1_game_script"]
 [ext_resource type="PackedScene" uid="uid://bwrcpv48t8r6w" path="res://scene/player/player_archer.tscn" id="1_33cqm"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scene/player/player_mage.tscn" id="4_mage"]
 [ext_resource type="PackedScene" path="res://scene/player/player_knight.tscn" id="5_knight"]
 [ext_resource type="PackedScene" uid="uid://df7k2m9b1nd1t" path="res://scene/player/player_bandit.tscn" id="6_bandit"]
+[ext_resource type="PackedScene" uid="uid://b5k8vyg6w3xqm" path="res://scene/ui/gameplay/gameplay_hud.tscn" id="8_hud"]
 
 [sub_resource type="Shader" id="Shader_iris"]
 code = "shader_type canvas_item;
@@ -69,6 +70,8 @@ z_index = 4
 position = Vector2(2557, 527.0001)
 
 [node name="map_region1" parent="." unique_id=1420594985 instance=ExtResource("3_p1ry8")]
+
+[node name="GameplayHud" parent="." instance=ExtResource("8_hud")]
 
 [node name="TransitionLayer" type="CanvasLayer" parent="." unique_id=98127341]
 layer = 100
