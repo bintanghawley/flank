@@ -395,19 +395,28 @@ func setup_camera_and_boundaries() -> void:
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 7.0
 
-	var ground := get_node_or_null("map_region1/Ground") as TileMapLayer
+	var ground := get_node_or_null("map_region1/Ground")
 	if not ground:
-		ground = find_child("Ground", true, false) as TileMapLayer
+		ground = find_child("Ground", true, false)
 
 	if not ground:
 		return
 
-	var rect: Rect2i = ground.get_used_rect()
-	if rect.size == Vector2i.ZERO:
-		return
+	var map_min := Vector2.ZERO
+	var map_max := Vector2.ZERO
 
-	var map_min: Vector2 = ground.to_global(Vector2(rect.position.x * 16.0, rect.position.y * 16.0))
-	var map_max: Vector2 = ground.to_global(Vector2((rect.position.x + rect.size.x) * 16.0, (rect.position.y + rect.size.y) * 16.0))
+	if ground is Sprite2D and ground.texture:
+		var tex_size: Vector2 = ground.texture.get_size() * ground.scale
+		map_min = ground.global_position
+		map_max = ground.global_position + tex_size
+	elif ground is TileMapLayer:
+		var rect: Rect2i = ground.get_used_rect()
+		if rect.size == Vector2i.ZERO:
+			return
+		map_min = ground.to_global(Vector2(rect.position.x * 16.0, rect.position.y * 16.0))
+		map_max = ground.to_global(Vector2((rect.position.x + rect.size.x) * 16.0, (rect.position.y + rect.size.y) * 16.0))
+	else:
+		return
 
 	camera.limit_left = int(map_min.x)
 	camera.limit_top = int(map_min.y)

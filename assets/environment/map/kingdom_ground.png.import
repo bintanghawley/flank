@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dobxe7k1opy3"
-path="res://.godot/imported/spr_tileset_sunnysideworld_16px.png-d36aee9af5892a7b91ee5a5d87468cd6.ctex"
+uid="uid://cmiwxvmh4j1bw"
+path="res://.godot/imported/kingdom_ground.png-c35b59e3fbb79daa427aeac4d25c01ce.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tileset/spr_tileset_sunnysideworld_16px.png"
-dest_files=["res://.godot/imported/spr_tileset_sunnysideworld_16px.png-d36aee9af5892a7b91ee5a5d87468cd6.ctex"]
+source_file="res://assets/environment/map/kingdom_ground.png"
+dest_files=["res://.godot/imported/kingdom_ground.png-c35b59e3fbb79daa427aeac4d25c01ce.ctex"]
 
 [params]
 
