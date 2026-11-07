@@ -2,7 +2,7 @@
 
 Dokumen ini merupakan ringkasan teknis operasional proyek game **"Flank"**. Dokumen ini berfungsi sebagai referensi kontekstual utama bagi pengembang dan agen asisten agar pengembangan fitur, perbaikan bug, dan pengujian dapat berjalan konsisten dengan arsitektur yang sudah ada tanpa mengulang inventarisasi dari awal.
 
-**Tanggal Audit Terakhir:** 2026-11-06
+**Tanggal Audit Terakhir:** 2026-11-07
 
 > **PENTING — ATURAN VERIFIKASI SEBELUM BEKERJA:**  
 > Seluruh informasi dalam dokumen ini (struktur kode, ketersediaan fitur, dan konfigurasi proyek) mencerminkan kondisi pada saat audit dan pengujian awal dilakukan. Pengembang atau asisten **wajib memeriksa kembali kondisi file fisik repositori terbaru** sebelum memulai tugas baru, terutama setelah adanya pembaruan (*git pull*) dari anggota tim lain.
@@ -98,22 +98,22 @@ flank/
 │   └── ui/                                # SELURUH ASET GRAFIS MENTAH UI & FONT
 │       ├── fonts/                         # Tipografi pixel (Beholden-Bold.ttf)
 │       ├── gameplay/                      # Grafis Antarmuka In-Game
-│       │   ├── dialogue/                  # 9-slice box dialog, frame avatar + .gitkeep
-│       │   ├── inventory/                 # Grid cell slot, frame tooltip + .gitkeep
-│       │   └── party_hud/                 # HP bar frame/fill, command icons + .gitkeep
+│       │   ├── dialogue/                  # Balon dialog (bubble_talk_left-sheet.png)
+│       │   ├── location/                  # Banner lokasi (location_banner.png)
+│       │   └── party_hud/                 # Frame kartu hero, portrait 4 hero, life bar empty/filled
 │       ├── icons/                         # Ikon-Ikon UI
-│       │   ├── actions/                   # Skip icon, prompt tombol interaksi + .gitkeep
-│       │   └── skills/                    # Subfolder Ikon Skill per Karakter:
-│       │       ├── archer/                # Ikon skill Archer + .gitkeep
-│       │       ├── bandit/                # Ikon skill Bandit + .gitkeep
-│       │       ├── knight/                # Ikon skill Knight + .gitkeep
-│       │       └── mage/                  # Ikon skill Mage + .gitkeep
+│       │   ├── actions/                   # Tombol aksi prompt kontrol (action_buttons.png)
+│       │   ├── cursor/                    # Tekstur kursor kustom (cursor.png)
+│       │   └── skills/                    # Spritesheet ikon skill hero (skill.png)
 │       └── menus/                         # Grafis Layar Menu
+│           ├── character_stats/           # Menu status karakter (.gitkeep)
 │           ├── credits/                   # Frame credits, logo tim + .gitkeep
+│           ├── inventory/                 # Menu inventaris (.gitkeep)
 │           ├── options_menu/              # Slider bar, grabber, checkbox + .gitkeep
-│           ├── pause_menu/                # Dim overlay, popup frame + .gitkeep
+│           ├── pause_menu/                # Tombol pause in-game (btn_pause_menu.png)
+│           ├── quests/                    # Menu quest (.gitkeep)
 │           ├── save_load/                 # Slot card, delete/save buttons + .gitkeep
-│           └── start_menu/                # Logo flank, bg_start_sky, bg_start_grass
+│           └── start_menu/                # Logo flank, bg_start_sky, bg_start_grass, start-menu.png
 │
 ├── scene/                                 # IMPLEMENTASI GAME (SCENE & SCRIPT CO-LOCATION)
 │   ├── effect/                            # Prefab visual efek mandiri (run_dust.tscn/.gd)
@@ -128,7 +128,7 @@ flank/
 │   │   ├── skill_aoe_effect.tscn / .gd    # Area2D damage hitbox
 │   │   └── impacts/                       # Prefab benturan (arrow, fireball, meteor)
 │   ├── ui/                                # IMPLEMENTASI SCENE GODOT UI (CONTROL / CANVASLAYER)
-│   │   ├── gameplay/                      # Scene UI Gameplay (.gitkeep)
+│   │   ├── gameplay/                      # Scene UI Gameplay (gameplay_hud.tscn / .gd)
 │   │   └── menus/                         # Scene UI Menu (start_menu.tscn / .gd)
 │   ├── world/                             # TileMapLayer (map_region_1.tscn)
 │   ├── game.gd                            # Controller utama party & kamera (transisi iris open)
@@ -141,7 +141,7 @@ flank/
 
 ### B. Prinsip Arsitektur & Aturan Kolaborasi:
 1. **Aturan `.gitkeep` untuk Folder Kosong:**  
-   Git secara bawaan tidak melacak direktori kosong. Seluruh folder yang belum memiliki file aset aktif (seperti `assets/enemies/`, subfolder `assets/ui/`, `assets/audio/bgm/`, dan `scene/ui/gameplay/`) diberi file penanda kosong bernama `.gitkeep` agar hierarki folder tetap terlacak saat di-clone. File `.gitkeep` pada folder yang telah terisi aset aktif (seperti `assets/audio/sfx/` dan `scene/ui/menus/`) dihapus untuk menjaga kebersihan repositori.
+   Git secara bawaan tidak melacak direktori kosong. Seluruh folder yang belum memiliki file aset aktif (seperti `assets/enemies/`, subfolder cadangan `assets/ui/menus/`, dan `assets/audio/bgm/`) diberi file penanda kosong bernama `.gitkeep` agar hierarki folder tetap terlacak saat di-clone. File `.gitkeep` pada folder yang telah terisi aset aktif (seperti `assets/audio/sfx/`, subfolder `assets/ui/gameplay/`, `assets/ui/icons/`, `assets/ui/menus/pause_menu/`, `assets/ui/menus/start_menu/`, serta `scene/ui/`) dihapus untuk menjaga kebersihan repositori.
 2. **Pemisahan `assets/ui/` vs. `scene/ui/`:**  
    - `assets/ui/` khusus menampung aset visual mentah (PNG, SVG), tekstur 9-slice, ikon, dan file font tipografi (.ttf/.otf). Dilarang meletakkan script `.gd` atau scene `.tscn` di folder ini.
    - `scene/ui/` khusus menampung implementasi node Godot UI berbasis `Control` atau `CanvasLayer` beserta logika interaksinya (`.gd`).
@@ -153,13 +153,15 @@ flank/
 ### C. Tanggung Jawab Komponen Kunci:
 1. **`scene/game.gd` (Game & Party Manager):**
    - Berfungsi sebagai orchestrator utama permainan dan pengelola sistem party di scene arena `game.tscn`.
-   - Menangani inisialisasi dan registrasi 4 anggota party (`Knight_1`, `Bandit_1`, `Archer_1`, `Mage_1`) serta layer peta `map_region_1`.
+   - Menangani inisialisasi dan registrasi 4 anggota party (`Knight_1`, `Bandit_1`, `Archer_1`, `Mage_1`), layer peta `map_region_1`, serta menghubungkan interface antarmuka in-game `gameplay_hud`.
    - Mengeksekusi transisi pembukaan circular mask (`play_iris_opening_transition()`) saat masuk dari Start Menu, mengunci kamera awal ke Leader, lalu menghapus layer transisi setelah selesai.
-   - Mengelola pergantian Leader aktif (siklis via Tab dan pemilihan langsung angka 1–4) serta penugasan slot antrean Follower (Slot 1–3).
+   - Mengelola pergantian Leader aktif (siklis via Tab / Q dan pemilihan langsung via angka 1–4 atau klik kartu party HUD) serta penugasan slot antrean Follower (Slot 1–3).
+   - Menangani eksekusi skill instan berbasis slot (`trigger_hero_skill_by_slot`) ketika pemain menekan angka 1–4 atau mengklik slot skill pada HUD (melakukan auto-switch ke hero yang bersangkutan sekaligus melancarkan skill-nya).
    - Menghitung riwayat jejak langkah (*breadcrumbs queue*), formasi barisan, dan pembalikan antrean 180° (*cascade swap*).
-   - Mengendalikan pergerakan kamera halus (*position smoothing*), offset target pandangan, evaluasi aggro tempur berbasis area kamera, dan efek screen shake.
+   - Mengendalikan pergerakan kamera halus (*position smoothing*), offset target pandangan, evaluasi aggro tempur berbasis area kamera, efek screen shake, dan memicu balon dialog perintah taktis ("Ikuti" / "Serang") di atas kepala Leader.
+   - Menghubungkan pembukaan menu jeda (*Pause Menu*) in-game melalui penekanan tombol `ESC` ke `gameplay_hud.toggle_pause_menu()`.
    - Menghasilkan batas fisik map (*WorldBorders*) secara dinamis dari layer `Ground`.
-   *(Rujukan silang: Detail mekanik formasi barisan dan mode tempur kamera dijelaskan pada Bab 5.1 & 5.2; transisi iris mask dijelaskan pada Bab 5.13).*
+   *(Rujukan silang: Detail mekanik formasi barisan dan mode tempur kamera dijelaskan pada Bab 5.1 & 5.2; transisi iris mask dijelaskan pada Bab 5.13; Gameplay HUD dan Pause Menu dijelaskan pada Bab 5.15).*
 2. **`scene/player/player_knight.gd` & `scene/player/player_knight.tscn`:**
    - Mengontrol logika karakter Knight sebagai petarung melee garda depan (Slot 1 / default Leader).
    - Menangani kendali manual saat menjadi Leader (WASD, sprint) dan kendali tempur otonom saat menjadi Follower (mendekati musuh dan menyerang berulang pada mode ATTACK).
@@ -204,26 +206,37 @@ flank/
    - Mengelola umpan balik visual tombol (hover/focus scaling 1.18x, penambahan penanda panah `▶ ... ◀`, dan kursor tangan).
    - Mengeksekusi transisi sinematik *Circular Mask* (Iris Wipe) saat tombol "Mulai Permainan" ditekan: hero berhenti melangkah, Knight memainkan animasi mengangkat pedang ke atas (`skill_w`), shader iris menutup memusat ke ujung pedang Knight, lalu berpindah scene ke `res://scene/game.tscn`.
    *(Rujukan silang: Detail teknis transisi iris mask dijelaskan pada Bab 5.13).*
+8. **`scene/ui/gameplay/gameplay_hud.gd` & `scene/ui/gameplay/gameplay_hud.tscn` (Gameplay HUD & In-Game UI Controller):**
+   - Mengontrol seluruh antarmuka in-game berbasis CanvasLayer (layer 15) di atas dunia permainan dan di bawah TransitionLayer.
+   - Mengelola kontainer status party (kiri bawah): menampilkan 4 kartu hero (Arthur/Knight, Hellene/Bandit, Anastasya/Archer, Magnus/Mage) dengan portrait, bar HP real-time (`TextureProgressBar`), penanda Leader aktif (`LeaderIndicator`), serta mendukung klik mouse langsung pada kartu hero untuk berpindah kendali Leader seketika.
+   - Mengelola bar skill (kanan bawah): 4 slot skill dengan ikon, hotkey angka (1–4), overlay cooldown gelap, serta penghitung waktu mundur angka digital. Klik slot memicu switch karakter sekaligus eksekusi skill.
+   - Menampilkan Speech Bubble dinamis di atas kepala Leader aktif di ruang layar (*screen-space*) saat pemain memberi instruksi komando (`C` = "Ikuti", `V` = "Serang") dengan animasi pop-in dan fade-out halus.
+   - Menampilkan prompt kontrol pergerakan/aksi di kiri bawah, banner nama lokasi di tengah atas, dan pelacak quest di kiri atas.
+   - Mengelola overlay jeda (*Pause Menu*): dapat dibuka melalui tombol ESC atau klik ikon pause kiri atas (`btn_pause_menu.png`), menghentikan sementara proses scene tree (`get_tree().paused = true`), serta menyediakan tombol Lanjutkan (Resume) dan Menu Utama (kembali ke `start_menu.tscn`).
+   *(Rujukan silang: Detail mekanik Gameplay HUD dan Pause Menu dijelaskan pada Bab 5.15).*
 
 ---
 
 ## 4. DAFTAR KARAKTER & SKEMA KONTROL GAMEPLAY
 
 ### Komposisi Party (Indeks 0–3):
-- **Slot 1 (Indeks 0):** `Knight_1` (Leader default saat game dimulai, petarung melee & shield)
-- **Slot 2 (Indeks 1):** `Bandit_1` (Rogue lincah, tebasan melee double swing / double damage & skill Triple Slash)
-- **Slot 3 (Indeks 2):** `Archer_1` (Ranged sniper, tembakan panah lurus & skill Charged Line Snipe)
-- **Slot 4 (Indeks 3):** `Mage_1` (Ranged caster, tembakan bola sihir & skill Meteor Strike)
+- **Slot 1 (Indeks 0):** `Knight_1` (Arthur — Leader default saat game dimulai, petarung melee & shield)
+- **Slot 2 (Indeks 1):** `Bandit_1` (Hellene — Rogue lincah, tebasan melee double swing / double damage & skill Triple Slash)
+- **Slot 3 (Indeks 2):** `Archer_1` (Anastasya — Ranged sniper, tembakan panah lurus & skill Charged Line Snipe)
+- **Slot 4 (Indeks 3):** `Mage_1` (Magnus — Ranged caster, tembakan bola sihir & skill Meteor Strike)
 
 ### Skema Input (Terverifikasi dalam Pengujian Manual):
 - `W`, `A`, `S`, `D` / Panah: Gerak manual Leader.
 - Tahan `Shift`: Sprint Leader dan Follower + memunculkan partikel debu lari.
-- `Tab`: Pergantian Leader berurutan secara siklis (1 ➔ 2 ➔ 3 ➔ 4 ➔ 1).
-- Angka `1`, `2`, `3`, `4`: Memilih Leader secara langsung sesuai nomor slot (1: Knight, 2: Bandit, 3: Archer, 4: Mage).
-- Tombol `C`: Komando **FOLLOW** (follower dilarang menyerang, wajib berada di barisan).
-- Tombol `V`: Komando **ATTACK** (follower diizinkan keluar barisan dan bertarung mandiri).
+- `Tab` / `Q`: Pergantian Leader berurutan secara siklis (1 ➔ 2 ➔ 3 ➔ 4 ➔ 1).
+- Angka `1`, `2`, `3`, `4`: Auto-switch ke karakter yang bersangkutan sekaligus langsung melancarkan skill khususnya (1: Arthur/Knight Shield Guard, 2: Hellene/Bandit Triple Slash, 3: Anastasya/Archer Line Snipe, 4: Magnus/Mage Meteor Strike).
+- Tombol `ESC` (atau klik ikon pause kiri atas): Membuka/menutup overlay Pause Menu di tengah permainan (`get_tree().paused = true/false`) dengan tombol Lanjutkan dan Menu Utama.
+- Tombol `C`: Komando **FOLLOW** (follower merapatkan barisan dan dilarang menyerang) + memunculkan balon ucapan "Ikuti" di atas kepala Leader.
+- Tombol `V`: Komando **ATTACK** (follower diizinkan keluar barisan dan bertarung mandiri) + memunculkan balon ucapan "Serang" di atas kepala Leader.
 - `Klik Kiri`: Serangan dasar (Tebasan Melee Knight / Ayunan Ganda Double Damage Bandit / Panah Archer / Bola Sihir Mage).
-- Tombol `E`: Mengaktifkan skill khusus karakter yang sedang menjadi Leader aktif (Knight: Shield Guard, Bandit: Triple Slash, Archer: masuk atau keluar dari mode bidik Charged Line Snipe sesuai state skill, Mage: masuk mode bidik Meteor Strike).
+- Tombol `E`: Mengaktifkan skill khusus karakter yang sedang menjadi Leader aktif (Knight: Shield Guard, Bandit: Triple Slash, Archer: masuk/keluar mode bidik Charged Line Snipe, Mage: masuk mode bidik Meteor Strike).
+- `Klik Kiri pada Kartu Party HUD`: Beralih kendali Leader seketika ke hero yang diklik.
+- `Klik Kiri pada Slot Skill HUD`: Auto-switch ke hero pemilik skill dan langsung melancarkan skill tersebut.
 
 ---
 
@@ -274,6 +287,12 @@ flank/
     - **AI Musuh:** Peringatan deteksi (*alert*), tembakan panah musuh, benturan kontak fisik, respon terluka, suara gugur, dan respawn.
     - **Taktis Party:** Suara peralihan leader aktif (`party_switch_leader`), komando FOLLOW (`party_command_follow`), dan komando ATTACK (`party_command_attack`).
     - **UI & Transisi Layar:** Interaksi tombol Start Menu (*hover, click*), animasi hunus pedang Knight (`start_sword_raise`), serta suara transisi circular mask iris wipe dan iris open.
+15. **Sistem Gameplay HUD & Pause Menu Overlay:**
+    Implementasi antarmuka in-game dikendalikan secara modular melalui `gameplay_hud.gd` (CanvasLayer 15):
+    - **Pemantauan HP & Kartu Party:** Bar HP pada 4 kartu hero (`TextureProgressBar`) diperbarui secara real-time pada loop `_process` membaca `current_health` masing-masing hero. Indikator `LeaderIndicator` otomatis menyala pada kartu hero yang sedang dikendalikan. Klik langsung pada kartu memancarkan sinyal `leader_switch_requested` ke `game.gd` untuk menukar Leader secara mulus.
+    - **Slot Skill & Cooldown Numeric Display:** Slot skill membaca `skill_cooldown_timer` hero aktif dan menampilkan countdown angka bulat (`ceil(cd)`) beserta overlay gelap transparan saat cooldown berlangsung. Klik pada slot memicu `trigger_hero_skill_by_slot()`.
+    - **Balon Ucapan Taktis (Screen-Space Speech Bubble):** Menggunakan node `bubble_talk_left-sheet.png` yang posisinya dihitung setiap frame berdasarkan transformasi kanvas viewport terhadap koordinat global Leader aktif (`canvas_transform * leader.global_position + Vector2(-28, -96)`). Muncul dengan animasi skala pop-in (`TRANS_BACK`, `EASE_OUT`), bertahan 1.2 detik, lalu memudar keluar secara otomatis saat komando `C` ("Ikuti") atau `V` ("Serang") diaktifkan.
+    - **Pause Menu Overlay In-Game:** Menekan `ESC` atau tombol pause kiri atas memunculkan panel jeda semi-transparan (`pause_overlay`) dan menghentikan engine tree (`get_tree().paused = true`). Tombol "Lanjutkan" mengembalikan jalannya permainan, sedangkan "Menu Utama" mematikan pause dan memuat ulang `start_menu.tscn`.
 
 ---
 
@@ -301,6 +320,8 @@ Klaim berikut dibatasi secara ketat pada skenario pengujian dasar yang telah dij
 - **Presisi Targeting Ambush Lunge Bandit:** Logika targeting pasif ambush bandit memprioritaskan musuh terdekat dari posisi kursor mouse (radius 120 px) dengan fallback terukur ke musuh terdekat dalam jangkauan engage, serta membersihkan peringatan unused variable linter engine (*Diverifikasi via inspeksi kode sumber player_bandit.gd*).
 - **Siklus Kematian & Respawn:** Pengurangan HP saat terkena serangan musuh, transisi mati (fade-out), timer tunggu, dan kemunculan kembali karakter berhasil berjalan normal (*Diverifikasi via pengamatan manual user & log runtime*).
 - **Sistem Efek Suara (Audio SFX) Terintegrasi Penuh:** Seluruh 46 aset audio SFX (.wav) terdistribusi ke subfolder terstruktur (`characters/`, `enemy/`, `party/`, `ui/`) dan terverifikasi memutar suara dengan tepat pada seluruh aksi gameplay: serangan dasar dan skill 4 hero, langkah kaki lari, respons damage/death/respawn hero dan musuh, perintah taktis party, interaksi tombol start menu, serta transisi circular mask iris tanpa error pemuatan atau kebocoran memori (*Diverifikasi via inspeksi kode sumber, log runtime engine, dan validasi eksekusi headless*).
+- **Gameplay HUD Terintegrasi Penuh (`gameplay_hud.tscn`):** Kartu status party 4 hero (Arthur, Hellene, Anastasya, Magnus) dengan bar HP real-time, penanda leader aktif, fungsionalitas klik kartu untuk switch leader, bar 4 skill dengan countdown cooldown angka bulat, balon ucapan komando taktis ("Ikuti"/"Serang") di atas kepala leader, banner lokasi, pelacak quest, serta overlay pause menu in-game via tombol pause atau ESC yang menghentikan sementara jalannya game (`get_tree().paused`) dan menyediakan navigasi kembali ke start menu (*Diverifikasi via inspeksi scene & kode gameplay_hud.gd/game.gd*).
+- **Pembaruan Animasi Knight Start Menu:** Spritesheet dan frame animasi Knight pada start menu telah diperbarui (*Diverifikasi via git log commit d76fd4d & inspeksi aset start-menu.png*).
 
 > **Catatan Sumber Verifikasi Parameter:**  
 > Parameter numerik internal seperti kecepatan gerak (128 px/s normal, 220 px/s sprint), kecepatan dasar proyektil (panah 580 px/s untuk Archer dan musuh, magic bolt 500 px/s untuk Mage baik terkendali maupun tidak), rasio kesetaraan proyektil (1.0), durasi cooldown serangan dasar (1.4s untuk Archer Leader/follower/musuh archer, 1.5s untuk Mage Leader/follower) / skill, kekuatan dorongan knockback (`knockback_strength`), laju redaman (`knockback_decay = 1400.0`), jarak antrean (85 px), serta interval pemindaian aggro (0.15s) bersumber dari **inspeksi kode sumber dan log runtime**, bukan hasil pengukuran stopwatch manual pemain.
@@ -314,18 +335,17 @@ Klaim berikut dibatasi secara ketat pada skenario pengujian dasar yang telah dij
 *(Hanya dikerjakan jika secara spesifik diminta oleh pengguna)*
 1. **Refactoring Base Character:** Evaluasi dan penggabungan logika bersama yang berulang antara `player_knight.gd`, `player_bandit.gd`, `player_archer.gd`, dan `player_mage.gd` ke dalam kelas dasar bersama.
 2. **Sistem Antarmuka Pengguna (UI / Menus / HUD):**
-   Implementasi grafis antarmuka dan scene Godot (`scene/ui/`) berdasarkan hierarki folder yang telah disiapkan pada Fase 1:
    - **Gameplay UI (`scene/ui/gameplay/`):**
-     - *Party HUD:* Tampilan bar HP 4 hero di layar secara real-time, portrait hero, indikator cooldown skill visual (Shield Guard, Triple Slash, Charged Line Snipe, Meteor Strike), dan ikon status mode komando (`FOLLOW` / `ATTACK`).
-     - *Inventory UI:* Tampilan slot grid inventaris barang, frame tooltip deskripsi item, dan status perlengkapan.
-     - *Dialogue UI:* Kotak dialog 9-slice box, portrait frame avatar NPC/Hero, dan penampil teks percakapan.
+     - *Party HUD (`gameplay_hud.tscn`):* **SUDAH SELESAI & TERINTEGRASI** (bar HP real-time 4 hero, indikator leader aktif, bar skill dengan countdown cooldown, bubble ucapan komando, banner lokasi, prompt kontrol, dan pause menu overlay).
+     - *Inventory UI:* Tampilan slot grid inventaris barang, frame tooltip deskripsi item, dan status perlengkapan (aset grafis telah disiapkan di `assets/ui/`).
+     - *Dialogue UI:* Sistem dialog percakapan NPC penuh dan penampil teks cerita (aset balon dialog telah disiapkan di `assets/ui/gameplay/dialogue/`).
    - **Menu UI (`scene/ui/menus/`):**
      - *Start / Main Menu (`start_menu.tscn`):* **SUDAH SELESAI & TERINTEGRASI** sebagai `run/main_scene` dengan latar parallax, animasi party, font Beholden, dan transisi circular mask.
+     - *Pause Menu:* **SUDAH SELESAI & TERINTEGRASI** sebagai overlay in-game di `gameplay_hud.tscn` (dapat diakses via tombol ESC atau ikon pause).
      - *Options Menu:* Panel pengaturan audio (slider volume Master, BGM, SFX), resolusi layar, dan mode tampilan (Windowed/Fullscreen).
-     - *Pause Menu:* Layar jeda permainan semi-transparan (dim overlay), tombol resume, settings, dan kembali ke menu utama.
      - *Save & Load Menu:* Tampilan slot kartu penyimpanan progres permainan, tombol simpan, dan muat data.
      - *Credits Screen:* Panel apresiasi tim pengembang dan kontributor proyek inkubasi.
-   *(Status Implementasi: Start Menu telah selesai diimplementasikan dan aktif sebagai titik masuk permainan; sub-menu lainnya dan Gameplay UI/HUD saat ini berstatus backlog).*
+   *(Status Implementasi: Start Menu, Gameplay HUD, dan Pause Menu telah selesai diimplementasikan dan aktif; sub-menu lainnya dan dialog/inventaris penuh saat ini berstatus backlog).*
 3. **Sistem Audio (Musik Latar / BGM):** Integrasi musik latar BGM permainan pada layar menu dan arena gameplay (efek suara / SFX telah selesai diimplementasikan secara komprehensif).
 4. **Sentralisasi InputMap:** Memindahkan konstanta fisik `KEY_*` di script ke action resmi di `project.godot`.
 5. **Variasi Musuh:** Penggantian spritesheet musuh agar tidak menduplikasi sprite Archer merah.

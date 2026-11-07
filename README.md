@@ -12,12 +12,13 @@ Dalam game ini, pemain mengendalikan sebuah regu (*party*) beranggotakan empat h
 
 Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 
-- **Sistem Party Empat Hero:** Regu beranggotakan Knight (`Knight_1`), Bandit (`Bandit_1`), Archer (`Archer_1`), dan Mage (`Mage_1`). Pengecualian tabrakan (*collision exception*) diterapkan antaranggota party sehingga mereka tidak saling berkolisi melalui sistem fisika bawaan Godot. Pengaturan jarak antarunit tetap dilakukan secara terpisah menggunakan sistem separasi dinamis.
-- **Pergantian Leader & Kamera:** Kendali aktif dapat dipindahkan secara instan ke hero mana pun menggunakan tombol `Tab` atau angka `1`–`4`. Kamera permainan secara otomatis mengikuti posisi Leader aktif dengan pergerakan yang halus (*position smoothing*).
+- **Sistem Party Empat Hero:** Regu beranggotakan Knight (`Knight_1` / Arthur), Bandit (`Bandit_1` / Hellene), Archer (`Archer_1` / Anastasya), dan Mage (`Mage_1` / Magnus). Pengecualian tabrakan (*collision exception*) diterapkan antaranggota party sehingga mereka tidak saling berkolisi melalui sistem fisika bawaan Godot. Pengaturan jarak antarunit tetap dilakukan secara terpisah menggunakan sistem separasi dinamis.
+- **Pergantian Leader & Kamera:** Kendali aktif dapat dipindahkan secara instan ke hero mana pun menggunakan tombol `Tab`, `Q`, angka `1`–`4` (auto-switch & cast skill), maupun klik langsung pada kartu potret hero di HUD. Kamera permainan secara otomatis mengikuti posisi Leader aktif dengan pergerakan yang halus (*position smoothing*).
 - **Formasi Breadcrumb Queue & Cascade Swap 180°:** Saat bergerak, Follower mengikuti jejak langkah kaki Leader (*breadcrumbs*) secara teratur. Ketika Leader berputar balik 180°, formasi antrean follower langsung berbalik secara estafet (*cascade swap*) agar regu tidak bertumpuk.
 - **Sistem Komando Party (Follow & Attack):**
-  - **Mode FOLLOW (`C`):** Follower merapatkan barisan di belakang Leader dan tidak melakukan serangan, dengan fokus pada mobilitas serta menjaga formasi regu.
-  - **Mode ATTACK (`V`):** Follower diberi kebebasan untuk keluar dari barisan dan menyerang musuh terdekat dalam jangkauan tempur secara mandiri.
+  - **Mode FOLLOW (`C`):** Follower merapatkan barisan di belakang Leader dan tidak melakukan serangan, disertai balon ucapan *"Ikuti"* di atas kepala Leader.
+  - **Mode ATTACK (`V`):** Follower diberi kebebasan untuk keluar dari barisan dan menyerang musuh terdekat dalam jangkauan tempur secara mandiri, disertai balon ucapan *"Serang"* di atas kepala Leader.
+- **Gameplay HUD & Menu Jeda (Pause Menu):** Antarmuka in-game lengkap berbasis CanvasLayer yang menyajikan 4 kartu status party dengan bilah HP real-time, bar 4 skill dengan countdown cooldown numerik, balon ucapan dinamis di ruang layar (*screen-space*), banner lokasi, prompt kontrol, serta overlay Menu Jeda (*Pause Menu*) via tombol `ESC` atau ikon pause untuk melanjutkan atau kembali ke Start Menu.
 - **Start Menu Interaktif & Transisi Sinematik:** Permainan dimulai dari layar Start Menu interaktif dengan visual parallax dinamis (awan langit dan rumput berjalan) bersama animasi berjalan di tempat empat hero party, pemilihan tombol interaktif, dan transisi *Circular Mask* (Iris Wipe) yang menutup ke ujung pedang Knight sebelum masuk ke arena pertempuran.
 - **Pertarungan Real-Time & Serangan Dasar:** Serangan diarahkan langsung ke posisi kursor mouse melalui klik kiri:
   - **Knight:** Tebasan pedang jarak dekat (*melee slash*) dengan area sapuan busur di depan karakter.
@@ -55,12 +56,14 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 - [x] Efek partikel lari (*run dust*) dinamis saat sprint.
 - [x] Peta lingkungan menggunakan sistem `TileMapLayer` Godot 4.
 - [x] Sistem efek suara (SFX) gameplay lengkap: suara serangan dan skill 4 hero, langkah kaki sprint, hit/death/respawn hero & musuh, komando taktis party, dan interaksi UI.
+- [x] Gameplay HUD in-game: kartu status 4 hero dengan bilah darah real-time, penanda leader aktif, bar 4 skill dengan countdown cooldown numerik, balon ucapan komando di atas kepala leader, dan banner lokasi.
+- [x] Menu Jeda (Pause Menu) overlay in-game: toggle via tombol ESC atau ikon pause, dengan penghentian game (`get_tree().paused`) dan opsi Lanjutkan atau Kembali ke Start Menu.
 
 ### Fitur yang Sedang Dikembangkan & Direncanakan
 - [ ] Implementasi prefab dan AI Bandit sebagai musuh, terpisah dari karakter Bandit yang sudah dapat dimainkan (aset sprite telah tersedia di `assets/characters/bandit/`).
-- [ ] Implementasi antarmuka pengguna visual (UI/HUD: bilah darah anggota party, indikator cooldown skill visual, inventaris, dialog).
+- [ ] Implementasi sistem dialog interaktif penuh dan kisi inventaris barang (aset grafis telah disiapkan di `assets/ui/gameplay/`).
 - [ ] Musik latar permainan (BGM) untuk layar menu dan arena gameplay.
-- [ ] Menu permainan lanjutan (Options Menu, Pause Menu, Save/Load, Credits Screen).
+- [ ] Menu permainan lanjutan (Options Menu, Save/Load, Credits Screen).
 - [ ] Variasi jenis musuh baru (monster non-humanoid pada folder cadangan `assets/enemies/`).
 - [ ] Penyempurnaan navigasi flanking berbasis raycast dan waypoint pada follower ranged (Archer, Mage) dan AI musuh, terutama untuk penanganan rintangan kompleks dan optimasi jalur pergerakan.
 - [ ] Konfigurasi preset ekspor aplikasi mandiri (*executable*).
@@ -73,14 +76,17 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 | :--- | :--- | :--- |
 | `W`, `A`, `S`, `D` / Panah | Gerak Karakter | Menggerakkan Leader aktif ke 8 arah |
 | `Shift` (Tahan) | Sprint | Meningkatkan kecepatan jalan (128 px/s → 220 px/s) disertai efek debu |
-| `Tab` | Ganti Karakter Siklis | Berganti Leader secara berurutan (Knight → Bandit → Archer → Mage → Knight) |
-| `1`, `2`, `3`, `4` | Ganti Karakter Langsung | Memilih Leader spesifik (1: Knight, 2: Bandit, 3: Archer, 4: Mage) |
-| `C` | Perintah FOLLOW | Menginstruksikan regu untuk merapatkan barisan dan tidak melakukan serangan |
-| `V` | Perintah ATTACK | Mengizinkan follower bertarung mandiri menyerang musuh terdekat |
-| `Klik Kiri` (Tap / Tahan) | Serangan Dasar | Menyerang ke arah kursor mouse (tebasan Knight, ayunan ganda Bandit, panah Archer, sihir Mage) |
-| `E` | Skill Khusus | **Knight:** Hanya saat menjadi Leader aktif: merapalkan perisai *Shield Guard* serentak ke seluruh regu (durasi 3.5s, cooldown 6s)<br>**Bandit:** Hanya saat menjadi Leader aktif: melesat dash menabrak musuh, knockup & stun musuh, lalu melancarkan combo 3 tebasan *Triple Slash* (cooldown 5s)<br>**Archer:** Saat skill belum aktif, masuk ke mode bidik *Charged Line Snipe*. Saat berada dalam state `READY`, tekan kembali `E` untuk keluar dari mode bidik<br>**Mage:** Masuk mode bidik *Meteor Strike* |
-| `Klik Kiri` (Saat Mode Skill) | Eksekusi Skill | **Archer:** Tahan klik kiri untuk mengisi daya dan lepaskan untuk meluncurkan panah<br>**Mage:** Klik pada area sasaran untuk menjatuhkan meteor |
-| `Klik Kanan` (Saat Mode Skill) | Batal / Keluar Skill | **Archer:** Saat state `STARTING` atau `CHARGING`, membatalkan pengisian daya dan mengembalikan skill ke state `READY`. Saat state `READY`, keluar dari mode bidik<br>**Mage:** Membatalkan reticle sasaran meteor |
+| `Tab` / `Q` | Ganti Karakter Siklis | Berganti Leader secara berurutan (Knight → Bandit → Archer → Mage → Knight) |
+| `1`, `2`, `3`, `4` | Auto-Switch & Skill Hero | Berganti kendali langsung ke hero terkait sekaligus melancarkan skill-nya (1: Arthur, 2: Hellene, 3: Anastasya, 4: Magnus) |
+| `ESC` / Klik Ikon Pause | Buka / Tutup Pause Menu | Menghentikan sementara permainan dan menampilkan panel jeda (Lanjutkan / Menu Utama) |
+| `C` | Perintah FOLLOW | Menginstruksikan regu merapatkan barisan + memunculkan balon ucapan *"Ikuti"* |
+| `V` | Perintah ATTACK | Mengizinkan follower bertarung mandiri + memunculkan balon ucapan *"Serang"* |
+| `Klik Kiri` (Kartu Party HUD) | Ganti Leader Langsung | Klik pada kartu potret hero di HUD kiri bawah untuk berpindah kendali |
+| `Klik Kiri` (Slot Skill HUD) | Eksekusi Skill | Klik pada slot skill di HUD kanan bawah untuk melancarkan skill hero terkait |
+| `Klik Kiri` (Di Arena Dunia) | Serangan Dasar | Menyerang ke arah kursor mouse (tebasan Knight, ayunan ganda Bandit, panah Archer, sihir Mage) |
+| `E` | Skill Khusus Leader | Melancarkan skill khusus dari karakter yang sedang aktif menjadi Leader |
+| `Klik Kiri` (Saat Mode Skill) | Eksekusi Skill Bidik | **Archer:** Tahan klik kiri untuk mengisi daya dan lepaskan untuk meluncurkan panah<br>**Mage:** Klik pada area sasaran untuk menjatuhkan meteor |
+| `Klik Kanan` (Saat Mode Skill) | Batal / Keluar Skill | **Archer:** Membatalkan pengisian daya / keluar dari mode bidik<br>**Mage:** Membatalkan reticle sasaran meteor |
 
 ---
 
@@ -144,21 +150,16 @@ flank/
 │   ├── tileset/                           # Tileset lingkungan yang saat ini digunakan
 │   └── ui/                                # Aset grafis antarmuka mentah dan tipografi
 │       ├── fonts/                         # Tipografi pixel (Beholden-Bold.ttf)
-│       ├── gameplay/                      # Grafis UI in-game (dialog, inventaris, HUD) (.gitkeep)
-│       ├── icons/                         # Ikon aksi dan ikon skill per karakter (.gitkeep)
-│       └── menus/                         # Grafis menu
-│           ├── credits/                   # Frame credits, logo tim (.gitkeep)
-│           ├── options_menu/              # Slider bar, grabber, checkbox (.gitkeep)
-│           ├── pause_menu/                # Dim overlay, popup frame (.gitkeep)
-│           ├── save_load/                 # Slot card, delete/save buttons (.gitkeep)
-│           └── start_menu/                # Logo flank, bg_start_sky, bg_start_grass
+│       ├── gameplay/                      # Grafis UI in-game (dialogue, location, party_hud)
+│       ├── icons/                         # Ikon-Ikon UI (actions, cursor, skills)
+│       └── menus/                         # Grafis menu (character_stats, credits, inventory, options, pause, quests, save_load, start)
 ├── scene/                                 # Logika kode sumber (GDScript) dan scene Godot (.tscn)
 │   ├── effect/                            # Prefab efek visual mandiri (run_dust.tscn/.gd)
 │   ├── enemy/                             # Prefab dan AI musuh (enemy.tscn/.gd)
 │   ├── player/                            # Controller hero regu (player_archer, player_bandit, player_knight, player_mage)
 │   ├── projectile/                        # Proyektil fisik, benturan (impact), dan indikator reticle dunia
 │   ├── ui/                                # Implementasi scene Godot UI (menus & gameplay)
-│   │   ├── gameplay/                      # Scene UI gameplay (.gitkeep)
+│   │   ├── gameplay/                      # Scene UI gameplay (gameplay_hud.tscn / .gd)
 │   │   └── menus/                         # Scene UI menu (start_menu.tscn / .gd)
 │   ├── world/                             # Peta lingkungan TileMapLayer (map_region_1.tscn)
 │   ├── game.gd                            # Controller utama party manager, kamera, dan transisi iris open
@@ -169,8 +170,8 @@ flank/
 ```
 
 > **Catatan Struktur:**  
-> - Subfolder dengan penanda `.gitkeep` merupakan struktur hierarki kolaborasi yang telah disiapkan agar siap digunakan saat aset visual, audio, atau scene UI ditambahkan oleh tim. File `.gitkeep` pada folder yang telah terisi aset aktif (seperti `assets/audio/sfx/` dan `scene/ui/menus/`) telah dibersihkan.
-> - Keberadaan subfolder `scene/ui/` adalah persiapan struktur implementasi UI, bukan berarti sistem UI sudah selesai dibuat.
+> - Subfolder dengan penanda `.gitkeep` merupakan struktur hierarki kolaborasi yang telah disiapkan agar siap digunakan saat aset visual atau menu lanjutan ditambahkan oleh tim. File `.gitkeep` pada folder yang telah terisi aset aktif (seperti `assets/audio/sfx/`, subfolder `assets/ui/gameplay/`, `assets/ui/icons/`, `assets/ui/menus/pause_menu/`, `assets/ui/menus/start_menu/`, dan `scene/ui/`) telah dibersihkan.
+> - Keberadaan subfolder `scene/ui/gameplay/` kini telah memuat implementasi `gameplay_hud.tscn`, sedangkan subfolder menu lanjutan lainnya disiapkan untuk pengembangan bertahap.
 > - Aset sprite Bandit berada di `assets/characters/bandit/`, sedangkan implementasi prefab dan AI Bandit sebagai musuh direncanakan terpisah dari karakter Bandit yang sudah dapat dimainkan.
 > - Folder `assets/enemies/` disiapkan sebagai folder cadangan untuk musuh jenis non-humanoid / monster di masa depan.
 
