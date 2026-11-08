@@ -80,6 +80,7 @@ var require_mouse_release: bool = false
 # =========================
 const METEOR_INDICATOR_SCENE = preload("res://scene/projectile/meteor_indicator.tscn")
 const METEOR_STRIKE_SCENE = preload("res://scene/projectile/meteor_strike.tscn")
+const METEOR_MAX_CAST_RADIUS: float = 480.0 # Batas radius maksimum casting reticle meteor dari posisi Magnus
 
 @export var skill_cooldown_max: float = 6.0
 var skill_cooldown_timer: float = 0.0
@@ -1388,6 +1389,10 @@ func spawn_skill_indicator() -> void:
 		cam_rect = Rect2(global_position - Vector2(640, 360), Vector2(1280, 720))
 
 	var mouse_world := get_global_mouse_position()
+	var to_mouse := mouse_world - global_position
+	if to_mouse.length() > METEOR_MAX_CAST_RADIUS:
+		mouse_world = global_position + to_mouse.normalized() * METEOR_MAX_CAST_RADIUS
+
 	var target_pos := Vector2(
 		clampf(mouse_world.x, cam_rect.position.x + 24.0, cam_rect.end.x - 24.0),
 		clampf(mouse_world.y, cam_rect.position.y + 24.0, cam_rect.end.y - 24.0)
@@ -1409,6 +1414,10 @@ func process_skill_aiming() -> void:
 		cam_rect = Rect2(global_position - Vector2(640, 360), Vector2(1280, 720))
 
 	var mouse_world := get_global_mouse_position()
+	var to_mouse := mouse_world - global_position
+	if to_mouse.length() > METEOR_MAX_CAST_RADIUS:
+		mouse_world = global_position + to_mouse.normalized() * METEOR_MAX_CAST_RADIUS
+
 	var target_pos := Vector2(
 		clampf(mouse_world.x, cam_rect.position.x + 24.0, cam_rect.end.x - 24.0),
 		clampf(mouse_world.y, cam_rect.position.y + 24.0, cam_rect.end.y - 24.0)
@@ -1512,25 +1521,28 @@ func get_4_direction_vector(dir_str: String) -> Vector2:
 func get_separation_vector() -> Vector2:
 	var separation := Vector2.ZERO
 	var min_sep_dist: float = 55.0 # Jarak personal aman antar karakter
+	var diff: Vector2 = Vector2.ZERO
+	var d: float = 0.0
+	var push_dir: Vector2 = Vector2.ZERO
 
 	# 1. Pisahkan diri dari musuh terdekat jika saling menempel
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	for e in enemies:
 		if e != self and is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
-			var diff: Vector2 = global_position - e.global_position
-			var d: float = diff.length()
+			diff = global_position - e.global_position
+			d = diff.length()
 			if d < min_sep_dist:
-				var push_dir: Vector2 = diff.normalized() if d > 0.5 else Vector2(1.0, 0.0)
+				push_dir = diff.normalized() if d > 0.5 else Vector2(1.0, 0.0)
 				separation += push_dir * (min_sep_dist - d)
 
 	# 2. Pisahkan diri dari anggota tim terdekat jika saling menumpuk
 	var players := get_tree().get_nodes_in_group("player")
 	for p in players:
 		if p != self and is_instance_valid(p) and not ("is_dead" in p and p.is_dead):
-			var diff: Vector2 = global_position - p.global_position
-			var d: float = diff.length()
+			diff = global_position - p.global_position
+			d = diff.length()
 			if d < 35.0:
-				var push_dir: Vector2 = diff.normalized() if d > 0.5 else Vector2(-1.0, 0.0)
+				push_dir = diff.normalized() if d > 0.5 else Vector2(-1.0, 0.0)
 				separation += push_dir * ((35.0 - d) * 0.5)
 
 	return separation

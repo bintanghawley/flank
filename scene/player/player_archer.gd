@@ -396,8 +396,8 @@ func _physics_process(delta: float):
 		# Update indikator: pangkal selalu menempel di center_pos dan memanjang ke arah depan
 		if skill_indicator_instance and is_instance_valid(skill_indicator_instance):
 			skill_target_pos = center_pos + skill_aim_dir * skill_current_range
-			var max_allowed := get_max_allowed_range()
-			var prog: float = (skill_current_range - min_skill_range) / max(1.0, max_allowed - min_skill_range)
+			var allowed_range := get_max_allowed_range()
+			var prog: float = (skill_current_range - min_skill_range) / max(1.0, allowed_range - min_skill_range)
 			if skill_indicator_instance.has_method("update_indicator"):
 				skill_indicator_instance.update_indicator(center_pos, skill_aim_dir, skill_current_range, prog)
 			else:
@@ -1877,25 +1877,28 @@ func update_shield_visual() -> void:
 func get_separation_vector() -> Vector2:
 	var separation := Vector2.ZERO
 	var min_sep_dist: float = 55.0 # Jarak personal aman antar karakter
+	var diff: Vector2 = Vector2.ZERO
+	var d: float = 0.0
+	var push_dir: Vector2 = Vector2.ZERO
 
 	# 1. Pisahkan diri dari musuh terdekat jika saling menempel
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	for e in enemies:
 		if e != self and is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
-			var diff: Vector2 = global_position - e.global_position
-			var d: float = diff.length()
+			diff = global_position - e.global_position
+			d = diff.length()
 			if d < min_sep_dist:
-				var push_dir: Vector2 = diff.normalized() if d > 0.5 else Vector2(1.0, 0.0)
+				push_dir = diff.normalized() if d > 0.5 else Vector2(1.0, 0.0)
 				separation += push_dir * (min_sep_dist - d)
 
 	# 2. Pisahkan diri dari anggota tim terdekat jika saling menumpuk
 	var players := get_tree().get_nodes_in_group("player")
 	for p in players:
 		if p != self and is_instance_valid(p) and not ("is_dead" in p and p.is_dead):
-			var diff: Vector2 = global_position - p.global_position
-			var d: float = diff.length()
+			diff = global_position - p.global_position
+			d = diff.length()
 			if d < 35.0:
-				var push_dir: Vector2 = diff.normalized() if d > 0.5 else Vector2(-1.0, 0.0)
+				push_dir = diff.normalized() if d > 0.5 else Vector2(-1.0, 0.0)
 				separation += push_dir * ((35.0 - d) * 0.5)
 
 	return separation

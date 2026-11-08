@@ -62,6 +62,7 @@ var is_slash_active: bool = false
 var slash_active_timer: float = 0.0
 var slash_windup_timer: float = 0.0
 var slash_hit_enemies: Array[Node2D] = []
+var attack_lunge_velocity: Vector2 = Vector2.ZERO
 const SLASH_WINDUP_DELAY: float = 0.18    # Jeda ancang-ancang (~180ms, frame 0-2) sebelum bilah mengayun ke depan
 const SLASH_ACTIVE_DURATION: float = 0.20 # Window aktif sapuan tebasan pedang saat bilah memotong ke depan (200ms)
 
@@ -237,6 +238,10 @@ func _physics_process(delta: float) -> void:
 				deactivate_shield()
 		update_shield_visual()
 
+	# Peluruhan halus hentakan tebasan pedang ke depan (attack lunge)
+	if attack_lunge_velocity != Vector2.ZERO:
+		attack_lunge_velocity = attack_lunge_velocity.move_toward(Vector2.ZERO, 900.0 * delta)
+
 	# Penanganan timing tebasan pedang: Windup (ancang-ancang) -> Active Slash Window (impact)
 	if is_attacking:
 		if slash_windup_timer > 0.0:
@@ -246,6 +251,7 @@ func _physics_process(delta: float) -> void:
 				is_slash_active = true
 				slash_active_timer = SLASH_ACTIVE_DURATION
 				play_sfx(SFX_KNIGHT_SLASH, -2.0)
+				attack_lunge_velocity = attack_direction * 140.0
 				execute_slash_damage(attack_direction)
 		elif is_slash_active:
 			slash_active_timer -= delta
@@ -260,6 +266,7 @@ func _physics_process(delta: float) -> void:
 		if attack_stuck_timer >= 0.75:
 			is_attacking = false
 			is_slash_active = false
+			attack_lunge_velocity = Vector2.ZERO
 			slash_windup_timer = 0.0
 			slash_active_timer = 0.0
 			slash_hit_enemies.clear()
@@ -318,7 +325,7 @@ func process_leader_movement(_delta: float) -> void:
 		last_movement_direction = input_dir
 
 		if is_attacking or is_skill_animating:
-			move_velocity = Vector2.ZERO
+			move_velocity = attack_lunge_velocity
 		else:
 			move_velocity = input_dir * current_speed
 			update_direction_animation(input_dir)
@@ -326,6 +333,8 @@ func process_leader_movement(_delta: float) -> void:
 		is_moving = false
 		if not is_attacking and not is_skill_animating and animated_sprite.animation.begins_with("walk_"):
 			play_idle_animation()
+		if is_attacking:
+			move_velocity = attack_lunge_velocity
 
 	velocity = move_velocity + knockback_velocity
 	move_and_slide_with_separation()
@@ -708,7 +717,7 @@ func process_follower_combat(delta: float) -> void:
 	if not in_party_combat:
 		return
 	if is_attacking or is_skill_animating:
-		velocity = knockback_velocity
+		velocity = attack_lunge_velocity + knockback_velocity
 		move_and_slide_with_separation()
 		return
 
@@ -1039,25 +1048,28 @@ func apply_camera_shake(intensity: float = -1.0) -> void:
 func get_separation_vector() -> Vector2:
 	var separation := Vector2.ZERO
 	var min_sep_dist: float = 55.0 # Jarak personal aman antar karakter
+	var diff: Vector2 = Vector2.ZERO
+	var d: float = 0.0
+	var push_dir: Vector2 = Vector2.ZERO
 
 	# 1. Pisahkan diri dari musuh terdekat jika saling menempel
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	for e in enemies:
 		if e != self and is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
-			var diff: Vector2 = global_position - e.global_position
-			var d: float = diff.length()
+			diff = global_position - e.global_position
+			d = diff.length()
 			if d < min_sep_dist:
-				var push_dir: Vector2 = diff.normalized() if d > 0.5 else Vector2(1.0, 0.0)
+				push_dir = diff.normalized() if d > 0.5 else Vector2(1.0, 0.0)
 				separation += push_dir * (min_sep_dist - d)
 
 	# 2. Pisahkan diri dari anggota tim terdekat jika saling menumpuk
 	var players := get_tree().get_nodes_in_group("player")
 	for p in players:
 		if p != self and is_instance_valid(p) and not ("is_dead" in p and p.is_dead):
-			var diff: Vector2 = global_position - p.global_position
-			var d: float = diff.length()
+			diff = global_position - p.global_position
+			d = diff.length()
 			if d < 35.0:
-				var push_dir: Vector2 = diff.normalized() if d > 0.5 else Vector2(-1.0, 0.0)
+				push_dir = diff.normalized() if d > 0.5 else Vector2(-1.0, 0.0)
 				separation += push_dir * ((35.0 - d) * 0.5)
 
 	return separation

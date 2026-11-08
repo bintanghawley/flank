@@ -483,6 +483,19 @@ func process_triple_slash_skill(delta: float) -> void:
 		velocity = skill_dash_dir * SKILL_DASH_SPEED
 		move_and_slide_with_separation()
 
+		# Deteksi benturan dinding/struktur solid selama dash untuk mencegah jittering di depan dinding
+		if get_slide_collision_count() > 0:
+			for i in range(get_slide_collision_count()):
+				var col := get_slide_collision(i)
+				var collider = col.get_collider()
+				if collider is StaticBody2D or collider is TileMapLayer:
+					var normal := col.get_normal()
+					if skill_dash_dir.dot(normal) < -0.4:
+						velocity = Vector2.ZERO
+						skill_dash_time = MAX_DASH_DURATION
+						apply_camera_shake(2.0)
+						break
+
 		# Deteksi apakah ada musuh yang tertabrak di jalur dash
 		var hit_enemy := check_dash_collision_enemy()
 		if hit_enemy:
@@ -1400,23 +1413,26 @@ func play_attack_animation() -> void:
 func get_separation_vector() -> Vector2:
 	var separation := Vector2.ZERO
 	const min_sep_dist: float = 38.0
+	var diff: Vector2 = Vector2.ZERO
+	var d: float = 0.0
+	var push_dir: Vector2 = Vector2.ZERO
 
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	for e in enemies:
 		if e != self and is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
-			var diff: Vector2 = global_position - e.global_position
-			var d: float = diff.length()
+			diff = global_position - e.global_position
+			d = diff.length()
 			if d < min_sep_dist:
-				var push_dir: Vector2 = diff.normalized() if d > 0.5 else Vector2(1.0, 0.0)
+				push_dir = diff.normalized() if d > 0.5 else Vector2(1.0, 0.0)
 				separation += push_dir * (min_sep_dist - d)
 
 	var players := get_tree().get_nodes_in_group("player")
 	for p in players:
 		if p != self and is_instance_valid(p) and not ("is_dead" in p and p.is_dead):
-			var diff: Vector2 = global_position - p.global_position
-			var d: float = diff.length()
+			diff = global_position - p.global_position
+			d = diff.length()
 			if d < 35.0:
-				var push_dir: Vector2 = diff.normalized() if d > 0.5 else Vector2(-1.0, 0.0)
+				push_dir = diff.normalized() if d > 0.5 else Vector2(-1.0, 0.0)
 				separation += push_dir * ((35.0 - d) * 0.5)
 
 	return separation

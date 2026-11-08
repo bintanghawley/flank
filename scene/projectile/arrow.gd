@@ -122,8 +122,9 @@ func spawn_impact():
 		return
 
 	var impact = IMPACT_SCENE.instantiate()
-	impact.global_position = global_position
+	impact.global_position = global_position + direction * 16.0
 	impact.global_rotation = global_rotation
+	impact.z_index = 10
 	parent_node.add_child(impact)
 
 
