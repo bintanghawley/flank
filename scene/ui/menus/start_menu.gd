@@ -189,10 +189,10 @@ func _on_start_pressed() -> void:
 	fade_tween.tween_property(menu_container, "modulate:a", 0.0, 0.3)
 	fade_tween.tween_property(logo_rect, "modulate:a", 0.0, 0.3)
 	
-	# Hentikan langkah berjalan kawan-kawan party
-	mage.pause()
-	archer.pause()
-	bandit.pause()
+	# Ubah animasi kawan-kawan party menjadi idle saat Knight cast skill
+	mage.play("idle_w")
+	archer.play("idle_w")
+	bandit.play("idle_w")
 	
 	# Knight memainkan animasi mengangkat pedang ke atas
 	knight.play("skill_w")

@@ -8,8 +8,11 @@
 [ext_resource type="Texture2D" path="res://assets/characters/knight/walk/walk-w.png" id="ext_knight_walk"]
 [ext_resource type="Texture2D" path="res://assets/characters/knight/skill/skill-w.png" id="ext_knight_skill"]
 [ext_resource type="Texture2D" path="res://assets/characters/mage/walk/walk-w.png" id="ext_mage_walk"]
+[ext_resource type="Texture2D" path="res://assets/characters/mage/idle/idle-w.png" id="ext_mage_idle"]
 [ext_resource type="Texture2D" path="res://assets/characters/archer/walk/walk-w.png" id="ext_archer_walk"]
+[ext_resource type="Texture2D" path="res://assets/characters/archer/idle/idle-w.png" id="ext_archer_idle"]
 [ext_resource type="Texture2D" path="res://assets/characters/bandit/walk/walk-w.png" id="ext_bandit_walk"]
+[ext_resource type="Texture2D" path="res://assets/characters/bandit/idle/idle-w.png" id="ext_bandit_idle"]
 
 [sub_resource type="AtlasTexture" id="Atlas_logo"]
 atlas = ExtResource("ext_logo")
@@ -172,8 +175,41 @@ region = Rect2(576, 0, 96, 64)
 atlas = ExtResource("ext_mage_walk")
 region = Rect2(672, 0, 96, 64)
 
+[sub_resource type="AtlasTexture" id="Atlas_mi_0"]
+atlas = ExtResource("ext_mage_idle")
+region = Rect2(0, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_mi_1"]
+atlas = ExtResource("ext_mage_idle")
+region = Rect2(96, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_mi_2"]
+atlas = ExtResource("ext_mage_idle")
+region = Rect2(192, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_mi_3"]
+atlas = ExtResource("ext_mage_idle")
+region = Rect2(288, 0, 96, 64)
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_mage"]
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_mi_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_mi_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_mi_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_mi_3")
+}],
+"loop": true,
+"name": &"idle_w",
+"speed": 6.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("Atlas_mw_0")
@@ -236,8 +272,41 @@ region = Rect2(192, 0, 32, 32)
 atlas = ExtResource("ext_archer_walk")
 region = Rect2(224, 0, 32, 32)
 
+[sub_resource type="AtlasTexture" id="Atlas_ai_0"]
+atlas = ExtResource("ext_archer_idle")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_ai_1"]
+atlas = ExtResource("ext_archer_idle")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_ai_2"]
+atlas = ExtResource("ext_archer_idle")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_ai_3"]
+atlas = ExtResource("ext_archer_idle")
+region = Rect2(96, 0, 32, 32)
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_archer"]
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_ai_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_ai_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_ai_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_ai_3")
+}],
+"loop": true,
+"name": &"idle_w",
+"speed": 6.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("Atlas_aw_0")
@@ -300,8 +369,41 @@ region = Rect2(576, 0, 96, 96)
 atlas = ExtResource("ext_bandit_walk")
 region = Rect2(672, 0, 96, 96)
 
+[sub_resource type="AtlasTexture" id="Atlas_bi_0"]
+atlas = ExtResource("ext_bandit_idle")
+region = Rect2(0, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="Atlas_bi_1"]
+atlas = ExtResource("ext_bandit_idle")
+region = Rect2(96, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="Atlas_bi_2"]
+atlas = ExtResource("ext_bandit_idle")
+region = Rect2(192, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="Atlas_bi_3"]
+atlas = ExtResource("ext_bandit_idle")
+region = Rect2(288, 0, 96, 96)
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_bandit"]
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_bi_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_bi_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_bi_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_bi_3")
+}],
+"loop": true,
+"name": &"idle_w",
+"speed": 6.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("Atlas_bw_0")
@@ -507,9 +609,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -250.0
-offset_top = 40.0
+offset_top = 67.0
 offset_right = 250.0
-offset_bottom = 305.0
+offset_bottom = 317.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 12
