@@ -1125,10 +1125,31 @@ func die() -> void:
 
 func respawn() -> void:
 	deactivate_shield()
-	global_position = spawn_position
-	target_position = spawn_position
+	var game_node = get_tree().current_scene
+
+	# Tentukan posisi respawn: muncul di dekat Leader yang masih hidup
+	var respawn_pos := spawn_position
+	var target_leader: CharacterBody2D = null
+	if leader_node and is_instance_valid(leader_node) and not ("is_dead" in leader_node and leader_node.is_dead):
+		target_leader = leader_node
+	elif game_node and game_node.has_method("get_active_leader"):
+		var active_lead = game_node.get_active_leader()
+		if active_lead and is_instance_valid(active_lead) and active_lead != self and not ("is_dead" in active_lead and active_lead.is_dead):
+			target_leader = active_lead
+
+	if target_leader:
+		var offset_dir := Vector2.UP
+		if "last_direction" in target_leader and target_leader.last_direction != Vector2.ZERO:
+			offset_dir = -target_leader.last_direction
+		elif "last_movement_direction" in target_leader and target_leader.last_movement_direction != Vector2.ZERO:
+			offset_dir = -target_leader.last_movement_direction
+		respawn_pos = target_leader.global_position + offset_dir * 70.0
+
+	global_position = respawn_pos
+	target_position = respawn_pos
 	current_health = max_health
 	play_sfx(SFX_RESPAWN, -2.0)
+	invulnerability_timer = 1.5
 	is_moving = false
 	is_attacking = false
 	is_ambush_lunging = false
@@ -1148,6 +1169,7 @@ func respawn() -> void:
 		collision_shape.set_deferred("disabled", false)
 
 	modulate = Color(1.0, 1.0, 1.0, 0.0)
+	visible = true
 	var respawn_tween = create_tween()
 	respawn_tween.tween_property(self, "modulate", Color.WHITE, 0.6)
 	play_idle_animation()

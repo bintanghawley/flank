@@ -286,6 +286,13 @@ func _process(delta: float) -> void:
 	update_camera_target()
 	handle_viewport_aggro_detection(delta)
 	update_breadcrumbs()
+	check_active_leader_status()
+
+
+func check_active_leader_status() -> void:
+	var leader := get_active_leader()
+	if is_instance_valid(leader) and not is_character_alive(leader):
+		switch_to_next_character()
 
 
 # =========================================================

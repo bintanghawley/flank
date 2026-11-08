@@ -130,16 +130,32 @@ func _setup_party_card_clicks() -> void:
 	_connect_card_click(card_hellene, 1)
 
 
+const HERO_NAMES: Dictionary = {
+	0: "Arthur",
+	1: "Hellene",
+	2: "Anastasya",
+	3: "Magnus"
+}
+
+
 func _connect_card_click(card: Control, hero_idx: int) -> void:
 	if not card:
 		return
 	card.gui_input.connect(func(event: InputEvent):
 		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			if hero_idx < party_members.size() and is_instance_valid(party_members[hero_idx]):
+				var hero = party_members[hero_idx]
+				if "is_dead" in hero and hero.is_dead:
+					return
 			leader_switch_requested.emit(hero_idx)
 	)
 
 
 func trigger_skill_slot(hero_idx: int) -> void:
+	if hero_idx < party_members.size() and is_instance_valid(party_members[hero_idx]):
+		var hero = party_members[hero_idx]
+		if "is_dead" in hero and hero.is_dead:
+			return
 	skill_activated.emit(hero_idx)
 
 
@@ -165,10 +181,26 @@ func _update_hp_bars() -> void:
 			continue
 		if h_idx < party_members.size() and is_instance_valid(party_members[h_idx]):
 			var hero = party_members[h_idx]
+			var cur_hp: int = hero.get("current_health") if "current_health" in hero else 0
+			var is_dead: bool = hero.get("is_dead") if "is_dead" in hero else (cur_hp <= 0)
+
 			var hp_bar = card.get_node_or_null("LifeBar") as TextureProgressBar
 			if hp_bar:
-				var cur_hp = hero.get("current_health") if "current_health" in hero else 0
 				hp_bar.value = cur_hp
+
+			var portrait = card.get_node_or_null("Portrait") as TextureRect
+			if portrait:
+				portrait.modulate = Color(0.35, 0.35, 0.35, 0.55) if is_dead else Color.WHITE
+
+			var name_label = card.get_node_or_null("NameLabel") as Label
+			if name_label:
+				var def_name: String = HERO_NAMES.get(h_idx, hero.name)
+				if is_dead:
+					name_label.text = "KO"
+					name_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1.0))
+				else:
+					name_label.text = def_name
+					name_label.remove_theme_color_override("font_color")
 
 
 func _update_skill_cooldowns() -> void:
@@ -183,8 +215,13 @@ func _update_skill_cooldowns() -> void:
 
 		if h_idx < party_members.size() and is_instance_valid(party_members[h_idx]):
 			var hero = party_members[h_idx]
+			var is_dead: bool = hero.get("is_dead") if "is_dead" in hero else false
 			var cd: float = hero.get("skill_cooldown_timer") if "skill_cooldown_timer" in hero else 0.0
-			if cd > 0.05:
+			if is_dead:
+				cd_overlay.visible = true
+				if cd_label:
+					cd_label.visible = false
+			elif cd > 0.05:
 				cd_overlay.visible = true
 				if cd_label:
 					cd_label.visible = true
