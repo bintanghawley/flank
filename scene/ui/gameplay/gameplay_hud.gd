@@ -261,6 +261,7 @@ func _on_btn_pause_menu_pressed() -> void:
 
 
 func toggle_pause_menu() -> void:
+	pause_menu_requested.emit()
 	var is_paused := not pause_overlay.visible
 	pause_overlay.visible = is_paused
 	get_tree().paused = is_paused
