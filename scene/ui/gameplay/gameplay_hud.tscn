@@ -49,11 +49,11 @@ region = Rect2(48, 288, 16, 16)
 
 [sub_resource type="AtlasTexture" id="Atlas_skill_1"]
 atlas = ExtResource("13_skills")
-region = Rect2(0, 0, 16, 16)
+region = Rect2(16, 0, 16, 16)
 
 [sub_resource type="AtlasTexture" id="Atlas_skill_2"]
 atlas = ExtResource("13_skills")
-region = Rect2(16, 0, 16, 16)
+region = Rect2(0, 0, 16, 16)
 
 [sub_resource type="AtlasTexture" id="Atlas_skill_3"]
 atlas = ExtResource("13_skills")

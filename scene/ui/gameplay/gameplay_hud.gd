@@ -225,7 +225,7 @@ func _update_skill_cooldowns() -> void:
 				cd_overlay.visible = true
 				if cd_label:
 					cd_label.visible = true
-					cd_label.text = str(ceil(cd))
+					cd_label.text = "%.1f" % cd
 			else:
 				cd_overlay.visible = false
 				if cd_label:

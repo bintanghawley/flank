@@ -191,6 +191,7 @@ var skill_facing_dir: String = "e"
 var skill_target_pos: Vector2 = Vector2.ZERO
 var skill_indicator_instance: Node2D = null
 var skill_release_queued: bool = false
+var skill_stuck_timer: float = 0.0
 
 @export var attack_range: float = 520.0    # Jarak jangkauan tembak ranged (pixel)
 var attack_stuck_timer: float = 0.0
@@ -309,6 +310,13 @@ func _physics_process(delta: float):
 	if attack_timer > 0.0:
 		attack_timer -= delta
 
+	# Cooldown timer skill aktif untuk SEMUA kondisi (Leader maupun Follower)
+	if skill_cooldown_timer > 0.0:
+		skill_cooldown_timer -= delta
+
+	if skill_interval_timer > 0.0:
+		skill_interval_timer -= delta
+
 	# Shield timer & visual update (aktif konsisten baik sebagai Leader maupun Follower)
 	if is_shield_active or (shield_sprite and shield_sprite.visible):
 		if is_shield_active:
@@ -342,11 +350,14 @@ func _physics_process(delta: float):
 	# =====================================================
 	# SKILL MODE TIMERS & STATE UPDATES
 	# =====================================================
-	if skill_cooldown_timer > 0.0:
-		skill_cooldown_timer -= delta
-
-	if skill_interval_timer > 0.0:
-		skill_interval_timer -= delta
+	# Watchdog anti-stuck animasi rilis skill Archer
+	if current_skill_state == SkillState.RELEASING:
+		skill_stuck_timer += delta
+		if skill_stuck_timer >= 0.8:
+			skill_stuck_timer = 0.0
+			on_skill_release_finished()
+	else:
+		skill_stuck_timer = 0.0
 
 	if current_skill_state != SkillState.INACTIVE:
 		skill_mode_timer -= delta
@@ -355,6 +366,20 @@ func _physics_process(delta: float):
 				deactivate_skill_mode()
 			elif current_skill_state == SkillState.STARTING or current_skill_state == SkillState.CHARGING:
 				execute_skill_release()
+
+	# Hardware polling penanganan input skill Archer
+	if current_skill_state == SkillState.READY:
+		if require_mouse_release:
+			if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+				require_mouse_release = false
+
+		if not require_mouse_release and skill_interval_timer <= 0.0 and skill_charges > 0:
+			if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+				start_skill_charge()
+
+	elif current_skill_state == SkillState.STARTING or current_skill_state == SkillState.CHARGING:
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+			cancel_skill()
 
 	# Pembaruan saat sedang menahan pengecasan skill
 	if current_skill_state == SkillState.CHARGING or current_skill_state == SkillState.STARTING:
@@ -1592,6 +1617,9 @@ func activate_skill_mode():
 	skill_interval_timer = 0.0
 	skill_release_queued = false
 
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		require_mouse_release = true
+
 	# Buat/instansiasi node indikator namun sembunyikan sampai klik kiri ditekan
 	if skill_indicator_instance == null or not is_instance_valid(skill_indicator_instance):
 		skill_indicator_instance = SKILL_INDICATOR_SCENE.instantiate()
@@ -1672,6 +1700,7 @@ func execute_skill_release():
 		return
 
 	current_skill_state = SkillState.RELEASING
+	require_mouse_release = true
 
 	# Pastikan saat quick-tap, nilai skill_current_range benar-benar terkunci pada min_skill_range
 	if skill_release_queued:

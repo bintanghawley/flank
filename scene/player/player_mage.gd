@@ -86,6 +86,7 @@ const METEOR_MAX_CAST_RADIUS: float = 480.0 # Batas radius maksimum casting reti
 var skill_cooldown_timer: float = 0.0
 var is_aiming_skill: bool = false
 var is_skill_releasing: bool = false
+var skill_stuck_timer: float = 0.0
 var skill_facing_dir: String = "s"
 var active_indicator: Node2D = null
 
@@ -246,6 +247,17 @@ func _physics_process(delta: float) -> void:
 	# Pembaruan saat sedang membidik skill
 	if is_aiming_skill:
 		process_skill_aiming()
+
+	# Watchdog anti-stuck animasi rilis skill (maksimal 0.8 detik)
+	if is_skill_releasing:
+		skill_stuck_timer += delta
+		if skill_stuck_timer >= 0.8:
+			skill_stuck_timer = 0.0
+			is_skill_releasing = false
+			if not is_dead and not is_moving:
+				play_idle_animation()
+	else:
+		skill_stuck_timer = 0.0
 
 	# Watchdog anti-stuck is_attacking (maksimal 0.8 detik agar animasi attack 0.67s selesai alami)
 	if is_attacking:
@@ -1365,6 +1377,9 @@ func start_skill_aiming() -> void:
 	is_moving = false
 	velocity = knockback_velocity
 
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		require_mouse_release = true
+
 	var mouse_pos := get_global_mouse_position()
 	var aim_dir := (mouse_pos - global_position).normalized()
 	if aim_dir != Vector2.ZERO:
@@ -1434,6 +1449,21 @@ func process_skill_aiming() -> void:
 			if animated_sprite.animation.begins_with("skill_loop_"):
 				animated_sprite.play("skill_loop_" + skill_facing_dir)
 
+	# Reset require_mouse_release jika tombol mouse kiri telah dilepas
+	if require_mouse_release:
+		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			require_mouse_release = false
+
+	# Eksekusi Meteor Strike langsung lewat hardware polling klik kiri
+	if not require_mouse_release and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		execute_meteor_strike()
+		return
+
+	# Pembatalan skill lewat klik kanan
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+		cancel_skill()
+		return
+
 
 func execute_meteor_strike() -> void:
 	if not is_aiming_skill:
@@ -1447,6 +1477,7 @@ func execute_meteor_strike() -> void:
 
 	is_aiming_skill = false
 	is_skill_releasing = true
+	require_mouse_release = true
 	skill_cooldown_timer = skill_cooldown_max
 
 	var aim_dir := (strike_pos - global_position).normalized()

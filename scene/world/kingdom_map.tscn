@@ -197,6 +197,7 @@ size = Vector2(720, 320)
 z_index = -2
 offset_right = 7215.0
 offset_bottom = 4090.0
+mouse_filter = 2
 color = Color(0.443137, 0.666667, 0.203922, 1)
 
 [node name="Ground" type="Sprite2D" parent="."]
