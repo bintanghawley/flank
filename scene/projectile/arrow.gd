@@ -18,8 +18,9 @@ var has_been_on_screen: bool = false
 
 
 func _ready():
-	# Sambungkan deteksi tabrakan
+	# Sambungkan deteksi tabrakan fisik & hurtbox
 	body_entered.connect(_on_body_entered)
+	area_entered.connect(_on_area_entered)
 
 	# Cek apakah saat muncul sudah berada di layar pandangan kamera
 	var vp := get_viewport()
@@ -140,8 +141,22 @@ func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 	player.play()
 
 
-func _on_body_entered(body):
-	if is_destroyed:
+func _on_area_entered(area: Area2D) -> void:
+	if is_destroyed or area == null:
+		return
+
+	# Jangan tabrak area deteksi atau hitbox kontak musuh
+	if area.name == "DetectionArea" or area.name == "Hitbox":
+		return
+
+	# Tangani tabrakan dengan Hurtbox karakter atau musuh
+	var target = area.get_parent()
+	if target and target is Node2D:
+		_process_hit(target)
+
+
+func _on_body_entered(body: Node2D) -> void:
+	if is_destroyed or body == null:
 		return
 
 	# Jika menabrak pembatas fisik peta (WorldBorders) atau tembok / rintangan map
@@ -150,14 +165,23 @@ func _on_body_entered(body):
 		destroy(true)
 		return
 
-	var target = body
+	_process_hit(body)
+
+
+func _process_hit(target_node: Node2D) -> void:
+	if is_destroyed or target_node == null:
+		return
+
+	var target: Node2D = target_node
 
 	# Jika panah ditembakkan oleh player -> targetnya adalah musuh
 	if shooter_group == "player":
 		if not target.is_in_group("enemy") and target.get_parent() != null and target.get_parent().is_in_group("enemy"):
-			target = target.get_parent()
+			target = target.get_parent() as Node2D
 
-		if target.is_in_group("enemy"):
+		if target and target.is_in_group("enemy"):
+			if "is_dead" in target and target.is_dead:
+				return
 			if target.has_method("take_damage"):
 				target.take_damage(damage, shooter_node)
 
@@ -172,9 +196,9 @@ func _on_body_entered(body):
 	# Jika panah ditembakkan oleh musuh -> targetnya adalah player
 	elif shooter_group == "enemy":
 		if not target.is_in_group("player") and target.get_parent() != null and target.get_parent().is_in_group("player"):
-			target = target.get_parent()
+			target = target.get_parent() as Node2D
 
-		if target.is_in_group("player"):
+		if target and target.is_in_group("player"):
 			if "is_dead" in target and target.is_dead:
 				return
 			if target.has_method("take_damage"):

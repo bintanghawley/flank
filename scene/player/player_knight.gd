@@ -860,6 +860,8 @@ func die() -> void:
 	# Matikan tabrakan dan keluarkan sementara dari grup player
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
+	if has_node("Hurtbox/CollisionShape2D"):
+		$Hurtbox/CollisionShape2D.set_deferred("disabled", true)
 	remove_from_group("player")
 
 	var death_tween = create_tween()
@@ -910,6 +912,8 @@ func respawn() -> void:
 
 	if collision_shape:
 		collision_shape.set_deferred("disabled", false)
+	if has_node("Hurtbox/CollisionShape2D"):
+		$Hurtbox/CollisionShape2D.set_deferred("disabled", false)
 	add_to_group("player")
 
 	modulate = Color(1.0, 1.0, 1.0, 0.0)

@@ -992,6 +992,9 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bandit"]
 size = Vector2(14.0, 5.6)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox_bandit"]
+size = Vector2(22, 20)
+
 [node name="Player_Bandit" type="CharacterBody2D" unique_id=1680987111]
 z_index = 4
 scale = Vector2(5, 5)
@@ -1015,3 +1018,10 @@ texture_filter = 1
 texture = ExtResource("ext_shield")
 position = Vector2(0, 1.5)
 scale = Vector2(0.85, 0.85)
+
+[node name="Hurtbox" type="Area2D" parent="." groups=["hurtbox"]]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, 5)
+shape = SubResource("RectangleShape2D_hurtbox_bandit")
+

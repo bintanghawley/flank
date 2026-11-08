@@ -139,6 +139,18 @@ func alert_to_combat(target: CharacterBody2D = null) -> void:
 	if was_patrolling:
 		play_sfx(SFX_ALERT, -2.0)
 
+func get_enemy_center() -> Vector2:
+	if has_node("Hurtbox/CollisionShape2D"):
+		return $Hurtbox/CollisionShape2D.global_position
+	return global_position + Vector2(0.0, 10.0)
+
+func get_target_center(target: Node2D) -> Vector2:
+	if not target or not is_instance_valid(target):
+		return global_position
+	if target.has_node("Hurtbox/CollisionShape2D"):
+		return target.get_node("Hurtbox/CollisionShape2D").global_position
+	return target.global_position
+
 func get_best_target() -> CharacterBody2D:
 	# 1. Prioritaskan karakter yang baru saja memberi damage (threat/aggro priority)
 	if threat_timer > 0.0 and threat_target != null and is_instance_valid(threat_target):
@@ -155,9 +167,10 @@ func get_closest_target() -> CharacterBody2D:
 	var party := get_tree().get_nodes_in_group("player")
 	var closest: CharacterBody2D = null
 	var min_d := INF
+	var enemy_center := get_enemy_center()
 	for p in party:
 		if p is CharacterBody2D and is_instance_valid(p) and not ("is_dead" in p and p.is_dead):
-			var d := global_position.distance_to(p.global_position)
+			var d := enemy_center.distance_to(get_target_center(p))
 			if d < min_d:
 				min_d = d
 				closest = p
@@ -251,7 +264,9 @@ func _physics_process(delta):
 			return
 		player = target
 
-		var dist = global_position.distance_to(player.global_position)
+		var target_center := get_target_center(player)
+		var enemy_center := get_enemy_center()
+		var dist := enemy_center.distance_to(target_center)
 		# Jika pemain kabur terlalu jauh di luar layar (leash limit), musuh kembali patroli
 		if dist > 850.0:
 			player = null
@@ -264,13 +279,15 @@ func _physics_process(delta):
 			current_state = State.IDLE_PATROL
 			return
 
-		var dir: Vector2 = global_position.direction_to(player.global_position)
+		var dir: Vector2 = (target_center - enemy_center).normalized()
+		if dir == Vector2.ZERO:
+			dir = last_direction
 
 		# Hitung mundur cooldown tembak
 		shoot_timer -= delta
 
 		var has_los := has_clear_projectile_los_to(player, 12.0)
-		var dist_to_player: float = global_position.distance_to(player.global_position)
+		var dist_to_player: float = dist
 
 		# 1. Jarak tembak dan manuver penembak jarak jauh
 		if dist_to_player <= shoot_range and has_los:
@@ -400,8 +417,8 @@ func handle_idle_patrol(delta):
 # =========================================================
 
 func get_arrow_spawn_position(dir: Vector2) -> Vector2:
-	# Titik visual tengah tubuh archer (skala 5x, texture center 16.0, 16.0)
-	var center_pos := global_position + Vector2(2.5, 6.0)
+	# Titik visual tengah tubuh archer musuh
+	var center_pos := get_enemy_center()
 
 	# Posisi kemunculan panah tepat di depan busur keluar dari tubuh musuh
 	var forward_dist := 28.0 if last_direction == Vector2.UP else 20.0
@@ -412,8 +429,8 @@ func calculate_flank_waypoints(target_node: Node2D) -> bool:
 	if not target_node or not is_instance_valid(target_node):
 		return false
 	var space_state := get_world_2d().direct_space_state
-	var my_pos: Vector2 = global_position
-	var target_pos: Vector2 = target_node.global_position
+	var my_pos: Vector2 = get_enemy_center()
+	var target_pos: Vector2 = get_target_center(target_node)
 	
 	var exclude_rids: Array[RID] = [get_rid()]
 	if target_node is CollisionObject2D:
@@ -527,8 +544,8 @@ func has_clear_projectile_los_to(target_node: Node2D, clearance_radius: float = 
 	if not target_node or not is_instance_valid(target_node):
 		return false
 	var space_state := get_world_2d().direct_space_state
-	var from_pos: Vector2 = global_position
-	var to_pos: Vector2 = target_node.global_position
+	var from_pos: Vector2 = get_enemy_center()
+	var to_pos: Vector2 = get_target_center(target_node)
 	
 	var exclude_rids: Array[RID] = [get_rid()]
 	if target_node is CollisionObject2D:
@@ -599,8 +616,11 @@ func shoot_at_player():
 		return
 
 	is_shooting = true
-	var center_pos = global_position + Vector2(2.5, 6.0)
-	var dir = center_pos.direction_to(player.global_position)
+	var enemy_center := get_enemy_center()
+	var target_center := get_target_center(player)
+	var dir := (target_center - enemy_center).normalized()
+	if dir == Vector2.ZERO:
+		dir = last_direction
 
 	# Arah hadap ke player dan mainkan animasi serang sesuai arah
 	last_direction = get_8_direction(dir)
@@ -644,8 +664,9 @@ func shoot_at_player():
 	if is_instance_valid(self) and not is_dead:
 		is_shooting = false
 		if current_state == State.CHASE and player != null and is_instance_valid(player):
-			var chase_dir = global_position.direction_to(player.global_position)
-			last_direction = get_8_direction(chase_dir)
+			var chase_dir := (get_target_center(player) - get_enemy_center()).normalized()
+			if chase_dir != Vector2.ZERO:
+				last_direction = get_8_direction(chase_dir)
 		play_idle_animation()
 
 
@@ -904,6 +925,8 @@ func die():
 		$Hitbox/CollisionShape2D.set_deferred("disabled", true)
 	if detection_area and detection_area.has_node("CollisionShape2D"):
 		$DetectionArea/CollisionShape2D.set_deferred("disabled", true)
+	if has_node("Hurtbox/CollisionShape2D"):
+		$Hurtbox/CollisionShape2D.set_deferred("disabled", true)
 
 	# Keluarkan dari grup enemy sementara agar tidak bisa ditembak saat mati
 	remove_from_group("enemy")
@@ -958,6 +981,8 @@ func respawn():
 		$Hitbox/CollisionShape2D.set_deferred("disabled", false)
 	if detection_area and detection_area.has_node("CollisionShape2D"):
 		$DetectionArea/CollisionShape2D.set_deferred("disabled", false)
+	if has_node("Hurtbox/CollisionShape2D"):
+		$Hurtbox/CollisionShape2D.set_deferred("disabled", false)
 
 	# Daftarkan kembali ke grup enemy
 	add_to_group("enemy")
