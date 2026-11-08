@@ -618,17 +618,41 @@ func process_follower_exploring(delta: float) -> void:
 	if animated_sprite.animation.begins_with("atk_") and not is_attacking:
 		play_idle_animation()
 
-	var slot_info: Dictionary = {}
 	var game_node = get_tree().current_scene
-	if game_node and game_node.has_method("get_follower_trail_slot"):
-		slot_info = game_node.get_follower_trail_slot(queue_slot_index)
+	var nav_info: Dictionary = {}
+	if game_node and game_node.has_method("get_follower_nav_target"):
+		var space_state := get_world_2d().direct_space_state
+		nav_info = game_node.get_follower_nav_target(queue_slot_index, global_position, space_state)
+	elif game_node and game_node.has_method("get_follower_trail_slot"):
+		var slot_info = game_node.get_follower_trail_slot(queue_slot_index)
+		if not slot_info.is_empty():
+			nav_info = {
+				"target_pos": slot_info["pos"],
+				"final_slot": slot_info["pos"],
+				"dir": slot_info.get("dir", Vector2.DOWN),
+				"is_corner_waypoint": false
+			}
 
-	if slot_info.is_empty():
+	if nav_info.is_empty():
 		return
 
-	var follow_slot: Vector2 = slot_info["pos"]
-	var target_facing: Vector2 = slot_info.get("dir", leader_node.last_direction)
+	var target_pos: Vector2 = nav_info["target_pos"]
+	var follow_slot: Vector2 = nav_info["final_slot"]
+	var target_facing: Vector2 = nav_info.get("dir", leader_node.last_direction if (leader_node and is_instance_valid(leader_node) and "last_direction" in leader_node) else Vector2.DOWN)
+	var dist_to_target := global_position.distance_to(target_pos)
 	var dist_to_slot := global_position.distance_to(follow_slot)
+
+	# --- PROTEKSI ANTI-STUCK & CATCH-UP ---
+	if leader_node and is_instance_valid(leader_node):
+		var dist_to_leader := global_position.distance_to(leader_node.global_position)
+		if dist_to_leader > 650.0:
+			global_position = follow_slot
+			velocity = Vector2.ZERO
+			is_moving = false
+			modulate.a = 0.3
+			var tw = create_tween()
+			tw.tween_property(self, "modulate:a", 1.0, 0.3)
+			return
 
 	var leader_is_moving := false
 	if leader_node and is_instance_valid(leader_node):
@@ -675,7 +699,11 @@ func process_follower_exploring(delta: float) -> void:
 		if not is_attacking:
 			play_idle_animation()
 	else:
-		var move_dir := global_position.direction_to(follow_slot)
+		var aim_pos: Vector2 = target_pos
+		if nav_info.get("is_corner_waypoint", false) and dist_to_target <= 20.0:
+			aim_pos = follow_slot
+
+		var move_dir := global_position.direction_to(aim_pos)
 		var follow_speed := NORMAL_SPEED
 		if Input.is_key_pressed(KEY_SHIFT) or (leader_node and leader_node.velocity.length() > NORMAL_SPEED + 10.0):
 			follow_speed = SPRINT_SPEED
@@ -685,10 +713,21 @@ func process_follower_exploring(delta: float) -> void:
 			follow_speed = NORMAL_SPEED * 1.15
 
 		# 1. Pencegahan Overshoot Jitter (Arrival Clamping)
-		var current_speed: float = min(follow_speed, dist_to_slot / max(delta, 0.001))
+		var current_speed: float = min(follow_speed, dist_to_target / max(delta, 0.001))
 
 		velocity = (move_dir * current_speed) + knockback_velocity
 		move_and_slide_with_separation()
+
+		# Corner-Slide Assist: jika terhalang dinding saat berbelok, meluncur di sepanjang bidang normal
+		if get_slide_collision_count() > 0 and velocity.length() < current_speed * 0.4:
+			var col := get_slide_collision(0)
+			var n := col.get_normal()
+			var tangent := Vector2(-n.y, n.x)
+			if move_dir.dot(tangent) < 0.0:
+				tangent = -tangent
+			velocity = tangent * (current_speed * 0.8) + knockback_velocity
+			move_and_slide()
+
 		is_moving = true
 		last_movement_direction = move_dir
 		update_direction_animation(move_dir)
@@ -1123,15 +1162,18 @@ func calculate_flank_waypoints(target_node: Node2D) -> bool:
 		chosen_dir = dir_right
 		chosen_dist = open_dist_right
 	else:
-		var pos_left := hit_pos + dir_left * 80.0
-		var pos_right := hit_pos + dir_right * 80.0
-		chosen_dir = dir_left if my_pos.distance_to(pos_left) < my_pos.distance_to(pos_right) else dir_right
-		chosen_dist = 120.0
+		return false
 		
-	# Waypoint 1: 40 px di luar ujung pagar, tetap di sisi karakter (-to_target * 24.0)
+	# Waypoint 1: 40 px di luar ujung rintangan, tetap di sisi karakter (-to_target * 24.0)
 	flank_wp1 = hit_pos + (chosen_dir * (chosen_dist + 40.0)) - (to_target * 24.0)
-	# Waypoint 2: Melangkah menyeberang ke area seberang (+to_target * 65.0)
-	flank_wp2 = flank_wp1 + (to_target * 65.0)
+	# Waypoint 2: Melangkah menyeberang ke area seberang jika jalur seberang bersih dari rintangan
+	var candidate_wp2: Vector2 = flank_wp1 + (to_target * 65.0)
+	var ray_wp2 := PhysicsRayQueryParameters2D.create(flank_wp1, candidate_wp2)
+	ray_wp2.collision_mask = 1
+	if space_state.intersect_ray(ray_wp2).is_empty():
+		flank_wp2 = candidate_wp2
+	else:
+		flank_wp2 = flank_wp1
 	flank_stage = 1
 	is_flanking = true
 	flank_timeout = 5.0
@@ -1852,9 +1894,9 @@ func get_separation_vector() -> Vector2:
 		if p != self and is_instance_valid(p) and not ("is_dead" in p and p.is_dead):
 			var diff: Vector2 = global_position - p.global_position
 			var d: float = diff.length()
-			if d < min_sep_dist:
+			if d < 35.0:
 				var push_dir: Vector2 = diff.normalized() if d > 0.5 else Vector2(-1.0, 0.0)
-				separation += push_dir * (min_sep_dist - d)
+				separation += push_dir * ((35.0 - d) * 0.5)
 
 	return separation
 
@@ -1862,5 +1904,5 @@ func get_separation_vector() -> Vector2:
 func move_and_slide_with_separation() -> void:
 	var sep := get_separation_vector()
 	if sep != Vector2.ZERO:
-		velocity += sep.limit_length(55.0) * 8.0
+		velocity += sep.limit_length(35.0) * 4.0
 	move_and_slide()

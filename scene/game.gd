@@ -513,7 +513,7 @@ func update_breadcrumbs() -> void:
 		else:
 			# Gerakan biasa atau belok 90° (Snake Corner Turn)
 			breadcrumbs.push_front({"pos": leader_pos, "dir": step_dir})
-			if breadcrumbs.size() > 80:
+			if breadcrumbs.size() > 300:
 				breadcrumbs.pop_back()
 
 
@@ -551,6 +551,75 @@ func get_follower_trail_slot(slot_index: int) -> Dictionary:
 	return {
 		"pos": prev_pt - fallback_dir * needed,
 		"dir": fallback_dir
+	}
+
+
+func get_follower_nav_target(slot_index: int, follower_pos: Vector2, space_state: PhysicsDirectSpaceState2D = null) -> Dictionary:
+	var slot_info := get_follower_trail_slot(slot_index)
+	if slot_info.is_empty():
+		return {}
+
+	var final_pos: Vector2 = slot_info["pos"]
+	var facing_dir: Vector2 = slot_info.get("dir", Vector2.DOWN)
+
+	# Jika jarak sudah sangat dekat atau tidak ada space_state, langsung ke final_pos
+	if follower_pos.distance_to(final_pos) <= 24.0 or not space_state:
+		return {
+			"target_pos": final_pos,
+			"final_slot": final_pos,
+			"dir": facing_dir,
+			"is_corner_waypoint": false
+		}
+
+	# Cek apakah garis langsung ke final_pos terhalang oleh Collision Layer 1 (dinding / bangunan)
+	var ray := PhysicsRayQueryParameters2D.create(follower_pos, final_pos)
+	ray.collision_mask = 1
+	var hit := space_state.intersect_ray(ray)
+
+	if hit.is_empty():
+		# Jalur langsung bersih tanpa rintangan
+		return {
+			"target_pos": final_pos,
+			"final_slot": final_pos,
+			"dir": facing_dir,
+			"is_corner_waypoint": false
+		}
+
+	# Jalur terhalang rintangan/sudut bangunan:
+	# Cari titik sudut pada breadcrumbs yang terlihat jelas oleh follower (Clear LoS)
+	var best_waypoint := final_pos
+	var found_clear := false
+
+	var target_dist: float = slot_index * QUEUE_DIST
+	var accumulated: float = 0.0
+	var prev := party_members[active_leader_index].global_position if (active_leader_index < party_members.size() and is_instance_valid(party_members[active_leader_index])) else Vector2.ZERO
+	var slot_bc_index: int = 0
+
+	for i in range(breadcrumbs.size()):
+		var cur: Vector2 = breadcrumbs[i]["pos"]
+		accumulated += prev.distance_to(cur)
+		prev = cur
+		if accumulated >= target_dist:
+			slot_bc_index = i
+			break
+
+	var start_idx: int = clampi(slot_bc_index + 12, 0, breadcrumbs.size() - 1)
+	for i in range(start_idx, -1, -1):
+		var candidate: Vector2 = breadcrumbs[i]["pos"]
+		if candidate.distance_to(follower_pos) < 20.0:
+			continue
+		var check_ray := PhysicsRayQueryParameters2D.create(follower_pos, candidate)
+		check_ray.collision_mask = 1
+		if space_state.intersect_ray(check_ray).is_empty():
+			best_waypoint = candidate
+			found_clear = true
+			break
+
+	return {
+		"target_pos": best_waypoint if found_clear else final_pos,
+		"final_slot": final_pos,
+		"dir": facing_dir,
+		"is_corner_waypoint": found_clear
 	}
 
 
