@@ -178,7 +178,7 @@ flank/
 ```
 
 > **Catatan Struktur:**  
-> - Subfolder dengan penanda `.gitkeep` merupakan struktur hierarki kolaborasi yang telah disiapkan agar siap digunakan saat aset visual atau menu lanjutan ditambahkan oleh tim. File `.gitkeep` pada folder yang telah terisi aset aktif (seperti `assets/audio/sfx/`, subfolder `assets/ui/gameplay/`, `assets/ui/icons/`, `assets/ui/menus/pause_menu/`, `assets/ui/menus/start_menu/`, dan `scene/ui/`) telah dibersihkan.
+> - Subfolder dengan penanda `.gitkeep` merupakan struktur hierarki kolaborasi yang telah disiapkan agar siap digunakan saat aset visual atau menu lanjutan ditambahkan oleh tim. File `.gitkeep` pada folder yang telah terisi aset aktif (seperti `assets/audio/sfx/`, subfolder `assets/ui/gameplay/`, `assets/ui/icons/`, `assets/ui/menus/credits/`, `assets/ui/menus/pause_menu/`, `assets/ui/menus/start_menu/`, dan `scene/ui/`) telah dibersihkan.
 > - Keberadaan subfolder `scene/ui/gameplay/` kini telah memuat implementasi `gameplay_hud.tscn`, sedangkan subfolder menu lanjutan lainnya disiapkan untuk pengembangan bertahap.
 > - Peta arena pertempuran aktif menggunakan prefab `scene/world/kingdom_map.tscn` dengan layer tekstur `assets/environment/map/`, sedangkan `assets/tileset/` bertindak sebagai folder cadangan bertanda `.gitkeep`.
 > - Aset sprite Bandit berada di `assets/characters/bandit/`, sedangkan implementasi prefab dan AI Bandit sebagai musuh direncanakan terpisah dari karakter Bandit yang sudah dapat dimainkan.

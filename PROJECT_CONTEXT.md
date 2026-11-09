@@ -111,7 +111,8 @@ flank/
 │       │   └── skills/                    # Spritesheet ikon skill hero (skill.png)
 │       └── menus/                         # Grafis Layar Menu
 │           ├── character_stats/           # Menu status karakter (.gitkeep)
-│           ├── credits/                   # Frame credits, logo tim + .gitkeep
+│           ├── common/                    # Spritesheet UI menu bersama (ui_menu_sheet.png)
+│           ├── credits/                   # Frame menu kredit (menu-kredit.png)
 │           ├── inventory/                 # Menu inventaris (.gitkeep)
 │           ├── options_menu/              # Slider bar, grabber, checkbox + .gitkeep
 │           ├── pause_menu/                # Tombol pause in-game (btn_pause_menu.png)
@@ -146,7 +147,7 @@ flank/
 
 ### B. Prinsip Arsitektur & Aturan Kolaborasi:
 1. **Aturan `.gitkeep` untuk Folder Kosong:**  
-   Git secara bawaan tidak melacak direktori kosong. Seluruh folder yang belum memiliki file aset aktif (seperti `assets/enemies/`, subfolder cadangan `assets/ui/menus/`, dan `assets/audio/bgm/`) diberi file penanda kosong bernama `.gitkeep` agar hierarki folder tetap terlacak saat di-clone. File `.gitkeep` pada folder yang telah terisi aset aktif (seperti `assets/audio/sfx/`, subfolder `assets/ui/gameplay/`, `assets/ui/icons/`, `assets/ui/menus/pause_menu/`, `assets/ui/menus/start_menu/`, serta `scene/ui/`) dihapus untuk menjaga kebersihan repositori.
+   Git secara bawaan tidak melacak direktori kosong. Seluruh folder yang belum memiliki file aset aktif (seperti `assets/enemies/`, subfolder cadangan `assets/ui/menus/`, dan `assets/audio/bgm/`) diberi file penanda kosong bernama `.gitkeep` agar hierarki folder tetap terlacak saat di-clone. File `.gitkeep` pada folder yang telah terisi aset aktif (seperti `assets/audio/sfx/`, subfolder `assets/ui/gameplay/`, `assets/ui/icons/`, `assets/ui/menus/credits/`, `assets/ui/menus/pause_menu/`, `assets/ui/menus/start_menu/`, serta `scene/ui/`) dihapus untuk menjaga kebersihan repositori.
 2. **Pemisahan `assets/ui/` vs. `scene/ui/`:**  
    - `assets/ui/` khusus menampung aset visual mentah (PNG, SVG), tekstur 9-slice, ikon, dan file font tipografi (.ttf/.otf). Dilarang meletakkan script `.gd` atau scene `.tscn` di folder ini.
    - `scene/ui/` khusus menampung implementasi node Godot UI berbasis `Control` atau `CanvasLayer` beserta logika interaksinya (`.gd`).
