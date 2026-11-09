@@ -1,55 +1,19 @@
 [gd_scene format=3 uid="uid://bvy1kx5v1m8t1"]
 
-[ext_resource type="Script" path="res://scene/ui/menus/start_menu.gd" id="ext_script"]
-[ext_resource type="Texture2D" path="res://assets/ui/menus/start_menu/bg_start_sky.png" id="ext_bg_sky"]
-[ext_resource type="Texture2D" path="res://assets/ui/menus/start_menu/bg_start_grass.png" id="ext_bg_grass"]
-[ext_resource type="Texture2D" path="res://assets/ui/menus/start_menu/logo_flank.png" id="ext_logo"]
-[ext_resource type="FontFile" path="res://assets/ui/fonts/Beholden-Bold.ttf" id="ext_font"]
-[ext_resource type="Texture2D" path="res://assets/characters/knight/walk/walk-w.png" id="ext_knight_walk"]
+[ext_resource type="Texture2D" uid="uid://yftayexeqq0c" path="res://assets/characters/archer/idle/idle-w.png" id="ext_archer_idle"]
+[ext_resource type="Texture2D" uid="uid://cfmhxxlegrfwe" path="res://assets/characters/archer/walk/walk-w.png" id="ext_archer_walk"]
+[ext_resource type="Texture2D" uid="uid://c6yoxwexffh82" path="res://assets/characters/bandit/idle/idle-w.png" id="ext_bandit_idle"]
+[ext_resource type="Texture2D" uid="uid://dou7gsh2yjwn7" path="res://assets/characters/bandit/walk/walk-w.png" id="ext_bandit_walk"]
+[ext_resource type="Texture2D" uid="uid://cgurjjnmvt5ur" path="res://assets/ui/menus/start_menu/bg_start_grass.png" id="ext_bg_grass"]
+[ext_resource type="Texture2D" uid="uid://cp58aae0xdagq" path="res://assets/ui/menus/start_menu/bg_start_sky.png" id="ext_bg_sky"]
+[ext_resource type="FontFile" uid="uid://cj7yrpsuc400b" path="res://assets/ui/fonts/Beholden-Bold.ttf" id="ext_font"]
 [ext_resource type="Texture2D" uid="uid://b58tofbfo88ww" path="res://assets/ui/menus/start_menu/start-menu.png" id="ext_knight_skill"]
-[ext_resource type="Texture2D" path="res://assets/characters/mage/walk/walk-w.png" id="ext_mage_walk"]
-[ext_resource type="Texture2D" path="res://assets/characters/mage/idle/idle-w.png" id="ext_mage_idle"]
-[ext_resource type="Texture2D" path="res://assets/characters/archer/walk/walk-w.png" id="ext_archer_walk"]
-[ext_resource type="Texture2D" path="res://assets/characters/archer/idle/idle-w.png" id="ext_archer_idle"]
-[ext_resource type="Texture2D" path="res://assets/characters/bandit/walk/walk-w.png" id="ext_bandit_walk"]
-[ext_resource type="Texture2D" path="res://assets/characters/bandit/idle/idle-w.png" id="ext_bandit_idle"]
-[ext_resource type="Texture2D" path="res://assets/ui/menus/start_menu/sword_glint.png" id="ext_sword_glint"]
-
-[sub_resource type="AtlasTexture" id="Atlas_logo"]
-atlas = ExtResource("ext_logo")
-region = Rect2(300, 330, 480, 215)
-
-[sub_resource type="AtlasTexture" id="Atlas_kw_0"]
-atlas = ExtResource("ext_knight_walk")
-region = Rect2(0, 0, 96, 64)
-
-[sub_resource type="AtlasTexture" id="Atlas_kw_1"]
-atlas = ExtResource("ext_knight_walk")
-region = Rect2(96, 0, 96, 64)
-
-[sub_resource type="AtlasTexture" id="Atlas_kw_2"]
-atlas = ExtResource("ext_knight_walk")
-region = Rect2(192, 0, 96, 64)
-
-[sub_resource type="AtlasTexture" id="Atlas_kw_3"]
-atlas = ExtResource("ext_knight_walk")
-region = Rect2(288, 0, 96, 64)
-
-[sub_resource type="AtlasTexture" id="Atlas_kw_4"]
-atlas = ExtResource("ext_knight_walk")
-region = Rect2(384, 0, 96, 64)
-
-[sub_resource type="AtlasTexture" id="Atlas_kw_5"]
-atlas = ExtResource("ext_knight_walk")
-region = Rect2(480, 0, 96, 64)
-
-[sub_resource type="AtlasTexture" id="Atlas_kw_6"]
-atlas = ExtResource("ext_knight_walk")
-region = Rect2(576, 0, 96, 64)
-
-[sub_resource type="AtlasTexture" id="Atlas_kw_7"]
-atlas = ExtResource("ext_knight_walk")
-region = Rect2(672, 0, 96, 64)
+[ext_resource type="Texture2D" uid="uid://cqpevylg4p1t6" path="res://assets/characters/knight/walk/walk-w.png" id="ext_knight_walk"]
+[ext_resource type="Texture2D" uid="uid://bctg8sbt5ujvu" path="res://assets/ui/menus/start_menu/logo_flank.png" id="ext_logo"]
+[ext_resource type="Texture2D" uid="uid://c8gj0bl32iuub" path="res://assets/characters/mage/idle/idle-w.png" id="ext_mage_idle"]
+[ext_resource type="Texture2D" uid="uid://dks64vtnlnofq" path="res://assets/characters/mage/walk/walk-w.png" id="ext_mage_walk"]
+[ext_resource type="Script" uid="uid://ckp1euf4sauox" path="res://scene/ui/menus/start_menu.gd" id="ext_script"]
+[ext_resource type="Texture2D" uid="uid://de4tvp0x6mi2c" path="res://assets/ui/menus/start_menu/sword_glint.png" id="ext_sword_glint"]
 
 [sub_resource type="AtlasTexture" id="Atlas_ks_0"]
 atlas = ExtResource("ext_knight_skill")
@@ -87,37 +51,40 @@ region = Rect2(672, 0, 96, 64)
 atlas = ExtResource("ext_knight_skill")
 region = Rect2(768, 0, 96, 64)
 
+[sub_resource type="AtlasTexture" id="Atlas_kw_0"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(0, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_kw_1"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(96, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_kw_2"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(192, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_kw_3"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(288, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_kw_4"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(384, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_kw_5"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(480, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_kw_6"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(576, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_kw_7"]
+atlas = ExtResource("ext_knight_walk")
+region = Rect2(672, 0, 96, 64)
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_knight"]
 animations = [{
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("Atlas_kw_0")
-}, {
-"duration": 1.0,
-"texture": SubResource("Atlas_kw_1")
-}, {
-"duration": 1.0,
-"texture": SubResource("Atlas_kw_2")
-}, {
-"duration": 1.0,
-"texture": SubResource("Atlas_kw_3")
-}, {
-"duration": 1.0,
-"texture": SubResource("Atlas_kw_4")
-}, {
-"duration": 1.0,
-"texture": SubResource("Atlas_kw_5")
-}, {
-"duration": 1.0,
-"texture": SubResource("Atlas_kw_6")
-}, {
-"duration": 1.0,
-"texture": SubResource("Atlas_kw_7")
-}],
-"loop": true,
-"name": &"walk_w",
-"speed": 10.0
-}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("Atlas_ks_0")
@@ -146,10 +113,55 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("Atlas_ks_8")
 }],
-"loop": false,
+"loop": 0,
 "name": &"skill_w",
 "speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_kw_7")
+}],
+"loop": 1,
+"name": &"walk_w",
+"speed": 10.0
 }]
+
+[sub_resource type="AtlasTexture" id="Atlas_mi_0"]
+atlas = ExtResource("ext_mage_idle")
+region = Rect2(0, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_mi_1"]
+atlas = ExtResource("ext_mage_idle")
+region = Rect2(96, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_mi_2"]
+atlas = ExtResource("ext_mage_idle")
+region = Rect2(192, 0, 96, 64)
+
+[sub_resource type="AtlasTexture" id="Atlas_mi_3"]
+atlas = ExtResource("ext_mage_idle")
+region = Rect2(288, 0, 96, 64)
 
 [sub_resource type="AtlasTexture" id="Atlas_mw_0"]
 atlas = ExtResource("ext_mage_walk")
@@ -183,22 +195,6 @@ region = Rect2(576, 0, 96, 64)
 atlas = ExtResource("ext_mage_walk")
 region = Rect2(672, 0, 96, 64)
 
-[sub_resource type="AtlasTexture" id="Atlas_mi_0"]
-atlas = ExtResource("ext_mage_idle")
-region = Rect2(0, 0, 96, 64)
-
-[sub_resource type="AtlasTexture" id="Atlas_mi_1"]
-atlas = ExtResource("ext_mage_idle")
-region = Rect2(96, 0, 96, 64)
-
-[sub_resource type="AtlasTexture" id="Atlas_mi_2"]
-atlas = ExtResource("ext_mage_idle")
-region = Rect2(192, 0, 96, 64)
-
-[sub_resource type="AtlasTexture" id="Atlas_mi_3"]
-atlas = ExtResource("ext_mage_idle")
-region = Rect2(288, 0, 96, 64)
-
 [sub_resource type="SpriteFrames" id="SpriteFrames_mage"]
 animations = [{
 "frames": [{
@@ -214,7 +210,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("Atlas_mi_3")
 }],
-"loop": true,
+"loop": 1,
 "name": &"idle_w",
 "speed": 6.0
 }, {
@@ -243,10 +239,26 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("Atlas_mw_7")
 }],
-"loop": true,
+"loop": 1,
 "name": &"walk_w",
 "speed": 10.0
 }]
+
+[sub_resource type="AtlasTexture" id="Atlas_ai_0"]
+atlas = ExtResource("ext_archer_idle")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_ai_1"]
+atlas = ExtResource("ext_archer_idle")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_ai_2"]
+atlas = ExtResource("ext_archer_idle")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_ai_3"]
+atlas = ExtResource("ext_archer_idle")
+region = Rect2(96, 0, 32, 32)
 
 [sub_resource type="AtlasTexture" id="Atlas_aw_0"]
 atlas = ExtResource("ext_archer_walk")
@@ -280,22 +292,6 @@ region = Rect2(192, 0, 32, 32)
 atlas = ExtResource("ext_archer_walk")
 region = Rect2(224, 0, 32, 32)
 
-[sub_resource type="AtlasTexture" id="Atlas_ai_0"]
-atlas = ExtResource("ext_archer_idle")
-region = Rect2(0, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="Atlas_ai_1"]
-atlas = ExtResource("ext_archer_idle")
-region = Rect2(32, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="Atlas_ai_2"]
-atlas = ExtResource("ext_archer_idle")
-region = Rect2(64, 0, 32, 32)
-
-[sub_resource type="AtlasTexture" id="Atlas_ai_3"]
-atlas = ExtResource("ext_archer_idle")
-region = Rect2(96, 0, 32, 32)
-
 [sub_resource type="SpriteFrames" id="SpriteFrames_archer"]
 animations = [{
 "frames": [{
@@ -311,7 +307,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("Atlas_ai_3")
 }],
-"loop": true,
+"loop": 1,
 "name": &"idle_w",
 "speed": 6.0
 }, {
@@ -340,10 +336,26 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("Atlas_aw_7")
 }],
-"loop": true,
+"loop": 1,
 "name": &"walk_w",
 "speed": 10.0
 }]
+
+[sub_resource type="AtlasTexture" id="Atlas_bi_0"]
+atlas = ExtResource("ext_bandit_idle")
+region = Rect2(0, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="Atlas_bi_1"]
+atlas = ExtResource("ext_bandit_idle")
+region = Rect2(96, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="Atlas_bi_2"]
+atlas = ExtResource("ext_bandit_idle")
+region = Rect2(192, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="Atlas_bi_3"]
+atlas = ExtResource("ext_bandit_idle")
+region = Rect2(288, 0, 96, 96)
 
 [sub_resource type="AtlasTexture" id="Atlas_bw_0"]
 atlas = ExtResource("ext_bandit_walk")
@@ -377,22 +389,6 @@ region = Rect2(576, 0, 96, 96)
 atlas = ExtResource("ext_bandit_walk")
 region = Rect2(672, 0, 96, 96)
 
-[sub_resource type="AtlasTexture" id="Atlas_bi_0"]
-atlas = ExtResource("ext_bandit_idle")
-region = Rect2(0, 0, 96, 96)
-
-[sub_resource type="AtlasTexture" id="Atlas_bi_1"]
-atlas = ExtResource("ext_bandit_idle")
-region = Rect2(96, 0, 96, 96)
-
-[sub_resource type="AtlasTexture" id="Atlas_bi_2"]
-atlas = ExtResource("ext_bandit_idle")
-region = Rect2(192, 0, 96, 96)
-
-[sub_resource type="AtlasTexture" id="Atlas_bi_3"]
-atlas = ExtResource("ext_bandit_idle")
-region = Rect2(288, 0, 96, 96)
-
 [sub_resource type="SpriteFrames" id="SpriteFrames_bandit"]
 animations = [{
 "frames": [{
@@ -408,7 +404,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("Atlas_bi_3")
 }],
-"loop": true,
+"loop": 1,
 "name": &"idle_w",
 "speed": 6.0
 }, {
@@ -437,42 +433,10 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("Atlas_bw_7")
 }],
-"loop": true,
+"loop": 1,
 "name": &"walk_w",
 "speed": 10.0
 }]
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_normal"]
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hover"]
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_pressed"]
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_focus"]
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_disabled"]
-
-[sub_resource type="Shader" id="Shader_iris"]
-code = "shader_type canvas_item;
-
-uniform vec2 center = vec2(0.697, 0.488);
-uniform float radius : hint_range(0.0, 1.5) = 1.45;
-uniform float softness : hint_range(0.0, 0.1) = 0.008;
-
-void fragment() {
-	vec2 aspect = vec2(SCREEN_PIXEL_SIZE.y / SCREEN_PIXEL_SIZE.x, 1.0);
-	vec2 diff = (UV - center) * aspect;
-	float dist = length(diff);
-	float mask = smoothstep(radius - softness, radius + softness, dist);
-	COLOR = vec4(0.0, 0.0, 0.0, mask);
-}
-"
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_iris"]
-shader = SubResource("Shader_iris")
-shader_parameter/center = Vector2(0.697, 0.488)
-shader_parameter/radius = 1.45
-shader_parameter/softness = 0.008
 
 [sub_resource type="AtlasTexture" id="Atlas_glint_0"]
 atlas = ExtResource("ext_sword_glint")
@@ -520,7 +484,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("Atlas_glint_4")
 }],
-"loop": false,
+"loop": 0,
 "name": &"glint",
 "speed": 16.0
 }, {
@@ -537,12 +501,48 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("Atlas_glint_6")
 }],
-"loop": true,
+"loop": 1,
 "name": &"shimmer",
 "speed": 10.0
 }]
 
-[node name="StartMenu" type="Control"]
+[sub_resource type="AtlasTexture" id="Atlas_logo"]
+atlas = ExtResource("ext_logo")
+region = Rect2(300, 330, 480, 215)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_normal"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_pressed"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hover"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_disabled"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_focus"]
+
+[sub_resource type="Shader" id="Shader_iris"]
+code = "shader_type canvas_item;
+
+uniform vec2 center = vec2(0.697, 0.488);
+uniform float radius : hint_range(0.0, 1.5) = 1.45;
+uniform float softness : hint_range(0.0, 0.1) = 0.008;
+
+void fragment() {
+	vec2 aspect = vec2(SCREEN_PIXEL_SIZE.y / SCREEN_PIXEL_SIZE.x, 1.0);
+	vec2 diff = (UV - center) * aspect;
+	float dist = length(diff);
+	float mask = smoothstep(radius - softness, radius + softness, dist);
+	COLOR = vec4(0.0, 0.0, 0.0, mask);
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_iris"]
+shader = SubResource("Shader_iris")
+shader_parameter/center = Vector2(0.697, 0.488)
+shader_parameter/radius = 1.45
+shader_parameter/softness = 0.008
+
+[node name="StartMenu" type="Control" unique_id=1318475891]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -551,7 +551,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("ext_script")
 
-[node name="SkyContainer" type="Control" parent="."]
+[node name="SkyContainer" type="Control" parent="." unique_id=622530029]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -560,7 +560,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="BgSky1" type="TextureRect" parent="SkyContainer"]
+[node name="BgSky1" type="TextureRect" parent="SkyContainer" unique_id=1749014244]
 texture_filter = 1
 layout_mode = 0
 offset_right = 1152.0
@@ -569,7 +569,7 @@ mouse_filter = 2
 texture = ExtResource("ext_bg_sky")
 expand_mode = 1
 
-[node name="BgSky2" type="TextureRect" parent="SkyContainer"]
+[node name="BgSky2" type="TextureRect" parent="SkyContainer" unique_id=755208791]
 texture_filter = 1
 layout_mode = 0
 offset_right = 1152.0
@@ -578,7 +578,7 @@ mouse_filter = 2
 texture = ExtResource("ext_bg_sky")
 expand_mode = 1
 
-[node name="BgSky3" type="TextureRect" parent="SkyContainer"]
+[node name="BgSky3" type="TextureRect" parent="SkyContainer" unique_id=1942193049]
 texture_filter = 1
 layout_mode = 0
 offset_right = 1152.0
@@ -587,7 +587,7 @@ mouse_filter = 2
 texture = ExtResource("ext_bg_sky")
 expand_mode = 1
 
-[node name="GrassContainer" type="Control" parent="."]
+[node name="GrassContainer" type="Control" parent="." unique_id=831915843]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -596,7 +596,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="BgGrass1" type="TextureRect" parent="GrassContainer"]
+[node name="BgGrass1" type="TextureRect" parent="GrassContainer" unique_id=627631497]
 texture_filter = 1
 layout_mode = 0
 offset_right = 1152.0
@@ -605,7 +605,7 @@ mouse_filter = 2
 texture = ExtResource("ext_bg_grass")
 expand_mode = 1
 
-[node name="BgGrass2" type="TextureRect" parent="GrassContainer"]
+[node name="BgGrass2" type="TextureRect" parent="GrassContainer" unique_id=1475649907]
 texture_filter = 1
 layout_mode = 0
 offset_right = 1152.0
@@ -614,7 +614,7 @@ mouse_filter = 2
 texture = ExtResource("ext_bg_grass")
 expand_mode = 1
 
-[node name="BgGrass3" type="TextureRect" parent="GrassContainer"]
+[node name="BgGrass3" type="TextureRect" parent="GrassContainer" unique_id=530795489]
 texture_filter = 1
 layout_mode = 0
 offset_right = 1152.0
@@ -623,9 +623,9 @@ mouse_filter = 2
 texture = ExtResource("ext_bg_grass")
 expand_mode = 1
 
-[node name="Characters" type="Node2D" parent="."]
+[node name="Characters" type="Node2D" parent="." unique_id=1262562343]
 
-[node name="Knight" type="AnimatedSprite2D" parent="Characters"]
+[node name="Knight" type="AnimatedSprite2D" parent="Characters" unique_id=666930068]
 texture_filter = 1
 position = Vector2(820, 353)
 scale = Vector2(2.8, 2.8)
@@ -634,7 +634,7 @@ animation = &"walk_w"
 autoplay = "walk_w"
 offset = Vector2(0, 5)
 
-[node name="Mage" type="AnimatedSprite2D" parent="Characters"]
+[node name="Mage" type="AnimatedSprite2D" parent="Characters" unique_id=1744606467]
 texture_filter = 1
 position = Vector2(880, 353)
 scale = Vector2(2.8, 2.8)
@@ -643,7 +643,7 @@ animation = &"walk_w"
 autoplay = "walk_w"
 offset = Vector2(0, 5)
 
-[node name="Archer" type="AnimatedSprite2D" parent="Characters"]
+[node name="Archer" type="AnimatedSprite2D" parent="Characters" unique_id=1694042012]
 texture_filter = 1
 position = Vector2(940, 353)
 scale = Vector2(2.8, 2.8)
@@ -652,7 +652,7 @@ animation = &"walk_w"
 autoplay = "walk_w"
 offset = Vector2(0, 4)
 
-[node name="Bandit" type="AnimatedSprite2D" parent="Characters"]
+[node name="Bandit" type="AnimatedSprite2D" parent="Characters" unique_id=715033999]
 texture_filter = 1
 position = Vector2(1000, 353)
 scale = Vector2(2.8, 2.8)
@@ -661,8 +661,7 @@ animation = &"walk_w"
 autoplay = "walk_w"
 offset = Vector2(0, 5)
 
-[node name="SwordGlint" type="AnimatedSprite2D" parent="Characters"]
-visible = false
+[node name="SwordGlint" type="AnimatedSprite2D" parent="Characters" unique_id=308706327]
 z_index = 5
 texture_filter = 1
 position = Vector2(803, 317)
@@ -670,7 +669,7 @@ scale = Vector2(2.8, 2.8)
 sprite_frames = SubResource("SpriteFrames_sword_glint")
 animation = &"glint"
 
-[node name="LogoRect" type="TextureRect" parent="."]
+[node name="LogoRect" type="TextureRect" parent="." unique_id=1965233869]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 5
@@ -686,7 +685,7 @@ texture = SubResource("Atlas_logo")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="MenuContainer" type="VBoxContainer" parent="."]
+[node name="MenuContainer" type="VBoxContainer" parent="." unique_id=1582788180]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -702,97 +701,97 @@ grow_vertical = 2
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="BtnStart" type="Button" parent="MenuContainer"]
+[node name="BtnStart" type="Button" parent="MenuContainer" unique_id=1022362368]
 layout_mode = 2
 focus_neighbor_top = NodePath("../BtnExit")
 focus_neighbor_bottom = NodePath("../BtnContinue")
 mouse_default_cursor_shape = 2
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.85, 0.85, 0.85, 1)
-theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("ext_font")
 theme_override_font_sizes/font_size = 32
-theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
-theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
 theme_override_styles/normal = SubResource("StyleBoxEmpty_normal")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
 text = "▶ Mulai Permainan ◀"
 
-[node name="BtnContinue" type="Button" parent="MenuContainer"]
+[node name="BtnContinue" type="Button" parent="MenuContainer" unique_id=2132203668]
 layout_mode = 2
 focus_neighbor_top = NodePath("../BtnStart")
 focus_neighbor_bottom = NodePath("../BtnSettings")
 mouse_default_cursor_shape = 2
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.85, 0.85, 0.85, 1)
-theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("ext_font")
 theme_override_font_sizes/font_size = 32
-theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
-theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
 theme_override_styles/normal = SubResource("StyleBoxEmpty_normal")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
 text = "Lanjutkan"
 
-[node name="BtnSettings" type="Button" parent="MenuContainer"]
+[node name="BtnSettings" type="Button" parent="MenuContainer" unique_id=1311299384]
 layout_mode = 2
 focus_neighbor_top = NodePath("../BtnContinue")
 focus_neighbor_bottom = NodePath("../BtnCredits")
 mouse_default_cursor_shape = 2
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.85, 0.85, 0.85, 1)
-theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("ext_font")
 theme_override_font_sizes/font_size = 32
-theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
-theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
 theme_override_styles/normal = SubResource("StyleBoxEmpty_normal")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
 text = "Pengaturan"
 
-[node name="BtnCredits" type="Button" parent="MenuContainer"]
+[node name="BtnCredits" type="Button" parent="MenuContainer" unique_id=780982734]
 layout_mode = 2
 focus_neighbor_top = NodePath("../BtnSettings")
 focus_neighbor_bottom = NodePath("../BtnExit")
 mouse_default_cursor_shape = 2
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.85, 0.85, 0.85, 1)
-theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("ext_font")
 theme_override_font_sizes/font_size = 32
-theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
-theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
 theme_override_styles/normal = SubResource("StyleBoxEmpty_normal")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
 text = "Credits"
 
-[node name="BtnExit" type="Button" parent="MenuContainer"]
+[node name="BtnExit" type="Button" parent="MenuContainer" unique_id=776174996]
 layout_mode = 2
 focus_neighbor_top = NodePath("../BtnCredits")
 focus_neighbor_bottom = NodePath("../BtnStart")
 mouse_default_cursor_shape = 2
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.85, 0.85, 0.85, 1)
-theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("ext_font")
 theme_override_font_sizes/font_size = 32
-theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
-theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
 theme_override_styles/normal = SubResource("StyleBoxEmpty_normal")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
 text = "Exit"
 
-[node name="IrisMask" type="ColorRect" parent="."]
+[node name="IrisMask" type="ColorRect" parent="." unique_id=550409636]
 material = SubResource("ShaderMaterial_iris")
 layout_mode = 1
 anchors_preset = 15
