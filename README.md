@@ -19,7 +19,7 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
   - **Mode FOLLOW (`C`):** Follower merapatkan barisan di belakang Leader dan tidak melakukan serangan, disertai balon ucapan *"Ikuti"* di atas kepala Leader.
   - **Mode ATTACK (`V`):** Follower diberi kebebasan untuk keluar dari barisan dan menyerang musuh terdekat dalam jangkauan tempur secara mandiri, disertai balon ucapan *"Serang"* di atas kepala Leader.
 - **Gameplay HUD & Menu Jeda (Pause Menu):** Antarmuka in-game lengkap berbasis CanvasLayer yang menyajikan 4 kartu status party dengan bilah HP real-time, indikator status KO (potret meredup gelap dan label nama berubah menjadi teks merah "KO"), bar 4 skill dengan countdown cooldown berpresisi satu desimal (`"%.1f"`), balon ucapan dinamis di ruang layar (*screen-space*), banner lokasi, prompt kontrol, serta overlay Menu Jeda (*Pause Menu*) via tombol `ESC` atau ikon pause untuk melanjutkan atau kembali ke Start Menu.
-- **Start Menu Interaktif & Transisi Sinematik:** Permainan dimulai dari layar Start Menu interaktif dengan visual parallax dinamis (awan langit dan rumput berjalan), penempatan teks tombol yang seimbang di area rumput hijau, animasi berjalan di tempat empat hero party, pemilihan tombol interaktif, dan transisi *Circular Mask* (Iris Wipe) yang menutup ke ujung pedang Knight sementara kawan-kawan party beralih ke animasi `idle_w` sebelum masuk ke arena pertempuran.
+- **Start Menu Interaktif & Transisi Sinematik:** Permainan dimulai dari layar Start Menu interaktif dengan visual parallax dinamis (awan langit dan rumput berjalan), penempatan teks tombol yang seimbang di area rumput hijau, animasi berjalan di tempat empat hero party, pemilihan tombol interaktif, efek kilau bintang (*sword glint sparkle*) di ujung pedang Knight, dan transisi *Circular Mask* (Iris Wipe) yang menutup ke ujung pedang Knight sementara kawan-kawan party beralih ke animasi `idle_w` sebelum masuk ke arena pertempuran.
 - **Pertarungan Real-Time & Serangan Dasar:** Serangan diarahkan langsung ke posisi kursor mouse melalui klik kiri:
   - **Knight:** Tebasan pedang jarak dekat (*melee slash*) dengan area sapuan busur di depan karakter serta dorongan hentakan halus ke depan (*attack lunge* 140 px/s terurai halus).
   - **Bandit:** Tebasan ganda belati (*Double Slash Dagger*) secara ritmis untuk setiap siklus serangan. Dilengkapi kemampuan pasif *Out-of-Combat Ambush Lunge* setelah beberapa detik tanpa pertempuran: serangan pembuka memperoleh jangkauan serbu luas, Bandit meluncur cepat ke target, menghasilkan bonus damage pembuka, dan diperkuat perlindungan *Super Armor*.
@@ -43,7 +43,7 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 ## Fitur Permainan
 
 ### Fitur yang Sudah Diimplementasikan (Teruji pada Skenario Dasar)
-- [x] Titik masuk permainan: Start Menu interaktif (latar belakang parallax bergerak kontinu, animasi berjalan empat hero party, interaksi tombol dengan font Beholden, dan transisi circular mask / iris wipe).
+- [x] Titik masuk permainan: Start Menu interaktif (latar belakang parallax bergerak kontinu, animasi berjalan empat hero party, interaksi tombol dengan font Beholden, efek kilau bintang kuning emas di ujung pedang Knight, dan transisi circular mask / iris wipe).
 - [x] Efek pembukaan circular mask (iris open) saat memasuki arena gameplay.
 - [x] Kontrol regu 4 hero (Knight, Bandit, Archer, Mage) dengan pengecualian tabrakan fisik antaranggota party.
 - [x] Pergantian Leader instan secara siklis (`Tab`) maupun langsung (`1`, `2`, `3`, `4`).
@@ -149,7 +149,7 @@ flank/
 │   │   └── mage/                          # Sprite animasi hero Mage
 │   ├── enemies/                           # Folder cadangan musuh non-humanoid di masa depan (.gitkeep)
 │   ├── environment/                       # Aset lingkungan & peta kerajaan (kingdom_ground.png, kingdom_structures.png)
-│   ├── particles/                         # Tekstur partikel debu lari (dust.png, dust_puff.png)
+│   ├── particles/                         # Tekstur partikel debu lari (dust_puff.png)
 │   ├── projectile/                        # Tekstur proyektil panah dan bola sihir
 │   ├── skills/                            # Tekstur visual efek skill (Archer, Bandit, Knight, Mage)
 │   ├── tileset/                           # Folder cadangan tileset lama (.gitkeep)

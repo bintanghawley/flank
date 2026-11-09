@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bpolrs4dv6kd0"
-path="res://.godot/imported/dust.png-0afd62fdcc249f054601cddd7a6fda67.ctex"
+uid="uid://de4tvp0x6mi2c"
+path="res://.godot/imported/sword_glint.png-23343269c83e60f4385feaaf49e49671.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/particles/dust.png"
-dest_files=["res://.godot/imported/dust.png-0afd62fdcc249f054601cddd7a6fda67.ctex"]
+source_file="res://assets/ui/menus/start_menu/sword_glint.png"
+dest_files=["res://.godot/imported/sword_glint.png-23343269c83e60f4385feaaf49e49671.ctex"]
 
 [params]
 

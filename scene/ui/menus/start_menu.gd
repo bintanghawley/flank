@@ -15,6 +15,7 @@ extends Control
 @onready var mage: AnimatedSprite2D = $Characters/Mage
 @onready var archer: AnimatedSprite2D = $Characters/Archer
 @onready var bandit: AnimatedSprite2D = $Characters/Bandit
+@onready var sword_glint: AnimatedSprite2D = $Characters/SwordGlint
 
 @onready var logo_rect: TextureRect = $LogoRect
 @onready var menu_container: VBoxContainer = $MenuContainer
@@ -60,6 +61,11 @@ func _ready() -> void:
 	var mat: ShaderMaterial = iris_mask.material as ShaderMaterial
 	if mat:
 		mat.set_shader_parameter("radius", 1.45)
+	
+	if sword_glint:
+		sword_glint.visible = false
+		if not sword_glint.animation_finished.is_connected(_on_sword_glint_animation_finished):
+			sword_glint.animation_finished.connect(_on_sword_glint_animation_finished)
 	
 	# Tunggu 1 frame agar ukuran container terkalkulasi sempurna
 	await get_tree().process_frame
@@ -212,8 +218,14 @@ func _on_start_pressed() -> void:
 	# Tunggu jeda agar pedang terangkat penuh ke atas (sekitar frame 5-6 pada 10 FPS = ~0.4 detik)
 	await get_tree().create_timer(0.4).timeout
 	
-	# Mulai efek Circular Mask (Iris Wipe) menutup ke ujung pedang
+	# Mulai efek Circular Mask (Iris Wipe) menutup ke ujung pedang bersamaan dengan kilau senjata
 	_play_sfx(SFX_IRIS_CLOSE, -2.0)
+	if sword_glint:
+		sword_glint.position = sword_tip_pos
+		sword_glint.visible = true
+		sword_glint.frame = 0
+		sword_glint.play("glint")
+
 	if mat:
 		var iris_tween: Tween = create_tween()
 		iris_tween.tween_property(mat, "shader_parameter/radius", 0.0, 0.85).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
@@ -221,9 +233,18 @@ func _on_start_pressed() -> void:
 	else:
 		await get_tree().create_timer(0.85).timeout
 	
+	if sword_glint:
+		sword_glint.stop()
+		sword_glint.visible = false
+	
 	# Jeda sejenak saat layar sudah hitam total sebelum masuk ke scene game utama
 	await get_tree().create_timer(0.15).timeout
 	get_tree().change_scene_to_file(GAME_SCENE_PATH)
+
+func _on_sword_glint_animation_finished() -> void:
+	# Setelah intro kilau mencapai puncak, beralih ke animasi shimmer berulang agar terus berkilauan
+	if sword_glint and sword_glint.visible and sword_glint.animation == "glint":
+		sword_glint.play("shimmer")
 
 func _on_regular_button_clicked() -> void:
 	_play_sfx(SFX_CLICK, -2.0)

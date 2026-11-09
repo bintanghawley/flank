@@ -6,13 +6,14 @@
 [ext_resource type="Texture2D" path="res://assets/ui/menus/start_menu/logo_flank.png" id="ext_logo"]
 [ext_resource type="FontFile" path="res://assets/ui/fonts/Beholden-Bold.ttf" id="ext_font"]
 [ext_resource type="Texture2D" path="res://assets/characters/knight/walk/walk-w.png" id="ext_knight_walk"]
-[ext_resource type="Texture2D" path="res://assets/characters/knight/skill/skill-w.png" id="ext_knight_skill"]
+[ext_resource type="Texture2D" uid="uid://b58tofbfo88ww" path="res://assets/ui/menus/start_menu/start-menu.png" id="ext_knight_skill"]
 [ext_resource type="Texture2D" path="res://assets/characters/mage/walk/walk-w.png" id="ext_mage_walk"]
 [ext_resource type="Texture2D" path="res://assets/characters/mage/idle/idle-w.png" id="ext_mage_idle"]
 [ext_resource type="Texture2D" path="res://assets/characters/archer/walk/walk-w.png" id="ext_archer_walk"]
 [ext_resource type="Texture2D" path="res://assets/characters/archer/idle/idle-w.png" id="ext_archer_idle"]
 [ext_resource type="Texture2D" path="res://assets/characters/bandit/walk/walk-w.png" id="ext_bandit_walk"]
 [ext_resource type="Texture2D" path="res://assets/characters/bandit/idle/idle-w.png" id="ext_bandit_idle"]
+[ext_resource type="Texture2D" path="res://assets/ui/menus/start_menu/sword_glint.png" id="ext_sword_glint"]
 
 [sub_resource type="AtlasTexture" id="Atlas_logo"]
 atlas = ExtResource("ext_logo")
@@ -82,6 +83,10 @@ region = Rect2(576, 0, 96, 64)
 atlas = ExtResource("ext_knight_skill")
 region = Rect2(672, 0, 96, 64)
 
+[sub_resource type="AtlasTexture" id="Atlas_ks_8"]
+atlas = ExtResource("ext_knight_skill")
+region = Rect2(768, 0, 96, 64)
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_knight"]
 animations = [{
 "frames": [{
@@ -137,6 +142,9 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("Atlas_ks_7")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_ks_8")
 }],
 "loop": false,
 "name": &"skill_w",
@@ -466,6 +474,74 @@ shader_parameter/center = Vector2(0.697, 0.488)
 shader_parameter/radius = 1.45
 shader_parameter/softness = 0.008
 
+[sub_resource type="AtlasTexture" id="Atlas_glint_0"]
+atlas = ExtResource("ext_sword_glint")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_glint_1"]
+atlas = ExtResource("ext_sword_glint")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_glint_2"]
+atlas = ExtResource("ext_sword_glint")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_glint_3"]
+atlas = ExtResource("ext_sword_glint")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_glint_4"]
+atlas = ExtResource("ext_sword_glint")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_glint_5"]
+atlas = ExtResource("ext_sword_glint")
+region = Rect2(160, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_glint_6"]
+atlas = ExtResource("ext_sword_glint")
+region = Rect2(192, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_sword_glint"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_glint_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_glint_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_glint_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_glint_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_glint_4")
+}],
+"loop": false,
+"name": &"glint",
+"speed": 16.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("Atlas_glint_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_glint_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_glint_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("Atlas_glint_6")
+}],
+"loop": true,
+"name": &"shimmer",
+"speed": 10.0
+}]
+
 [node name="StartMenu" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -584,6 +660,15 @@ sprite_frames = SubResource("SpriteFrames_bandit")
 animation = &"walk_w"
 autoplay = "walk_w"
 offset = Vector2(0, 5)
+
+[node name="SwordGlint" type="AnimatedSprite2D" parent="Characters"]
+visible = false
+z_index = 5
+texture_filter = 1
+position = Vector2(803, 317)
+scale = Vector2(2.8, 2.8)
+sprite_frames = SubResource("SpriteFrames_sword_glint")
+animation = &"glint"
 
 [node name="LogoRect" type="TextureRect" parent="."]
 texture_filter = 1
