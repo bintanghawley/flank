@@ -37,6 +37,7 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
   - Dilengkapi tampilan bar darah (*health bar*) di atas kepala, sistem prioritas ancaman (*threat target priority*), dan kemunculan kembali (*respawn*) dinamis setelah gugur (4 detik untuk musuh, 3 detik untuk hero).
   - Efek dorongan fisik (*knockback*) dinonaktifkan pada hero pemain (Knight, Archer, Mage) saat terkena damage agar kontrol pergerakan tetap responsif (sedangkan Bandit mempertahankan dorongan knockback terukur di luar status Super Armor). Efek knockback yang diterima musuh mengikuti karakteristik masing-masing serangan pemain; beberapa serangan tidak memberikan dorongan knockback.
 - **Tata Suara & SFX Responsif:** Dilengkapi sistem efek suara (*one-shot AudioStreamPlayer*) terorganisir yang mencakup seluruh aksi: suara serangan dan skill 4 hero, langkah lari sprint, suara terkena damage, gugur, dan respawn hero maupun musuh, komando taktis party, hingga respon tombol dan transisi visual menu.
+- **Kursor Kustom & Animasi Umpan Balik Klik (*Tactile Click Feedback*):** Menggunakan kursor mouse kustom pixel art panah keemasan proporsional (15x20 px) berbasis API kursor perangkat keras (*zero input lag*) dengan Autoload Singleton `CursorManager`. Saat diklik, kursor memberikan respon visual taktis berupa pergeseran maju halus 1 px ke arah target tanpa menyusut, perubahan warna menggelap terukur yang hangat (terracotta/chestnut), jeda penahanan visual minimum (0.08 detik) untuk ketukan kilat, dan efek riak lingkaran warna dinamis pada lapisan kanvas teratas yang berpusat presisi di ujung panah.
 
 ---
 
@@ -62,6 +63,7 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 - [x] Sistem efek suara (SFX) gameplay lengkap: suara serangan dan skill 4 hero, langkah kaki sprint, hit/death/respawn hero & musuh, komando taktis party, dan interaksi UI.
 - [x] Gameplay HUD in-game: kartu status 4 hero dengan bilah darah real-time, penanda leader aktif, indikator status KO, bar 4 skill dengan countdown cooldown berpresisi satu desimal (`"%.1f"`), balon ucapan komando di atas kepala leader, dan banner lokasi.
 - [x] Menu Jeda (Pause Menu) overlay in-game: toggle via tombol ESC atau ikon pause, dengan penghentian game (`get_tree().paused`) dan opsi Lanjutkan atau Kembali ke Start Menu.
+- [x] Sistem kursor kustom pixel art dengan animasi *tactile click feedback* (iluminasi hangat menggelap terukur saat ditekan, gerak maju halus 1 px ke target, dan riak bayangan berpusat presisi pada ujung panah saat diklik) serta respon *zero lag* menyeluruh di seluruh layar game.
 
 ### Fitur yang Sedang Dikembangkan & Direncanakan
 - [ ] Implementasi prefab dan AI Bandit sebagai musuh, terpisah dari karakter Bandit yang sudah dapat dimainkan (aset sprite telah tersedia di `assets/characters/bandit/`).
@@ -164,6 +166,7 @@ flank/
 │   ├── player/                            # Controller hero regu (player_archer, player_bandit, player_knight, player_mage)
 │   ├── projectile/                        # Proyektil fisik, benturan (impact), dan indikator reticle dunia
 │   ├── ui/                                # Implementasi scene Godot UI (menus & gameplay)
+│   │   ├── cursor/                        # Autoload controller kursor global & animasi klik (cursor_manager.gd)
 │   │   ├── gameplay/                      # Scene UI gameplay (gameplay_hud.tscn / .gd)
 │   │   └── menus/                         # Scene UI menu (start_menu.tscn / .gd)
 │   ├── world/                             # Peta lingkungan kerajaan (kingdom_map.tscn)
