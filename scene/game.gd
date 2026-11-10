@@ -9,6 +9,10 @@ extends Node2D
 
 var party_members: Array[CharacterBody2D] = []
 var active_leader_index: int = 0
+var inventory_items: Array[Dictionary] = []
+var quest_list: Array[Dictionary] = []
+var tracked_quest_id: String = "main_01"
+var total_playtime: float = 0.0
 
 # State Tempur Party ala Guardian Tales
 enum PartyCombatState { EXPLORING, COMBAT }
@@ -35,6 +39,7 @@ func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 	if not stream:
 		return
 	var sfx_player := AudioStreamPlayer.new()
+	sfx_player.bus = &"SFX"
 	sfx_player.stream = stream
 	sfx_player.volume_db = volume_db
 	add_child(sfx_player)
@@ -48,8 +53,8 @@ var shake_decay: float = 35.0
 
 func _ready() -> void:
 	# 1. Daftarkan 4 anggota party dari scene
-	# Urutan: Knight_1, Bandit_1, Archer_1, Mage_1
-	var names: Array[String] = ["Knight_1", "Bandit_1", "Archer_1", "Mage_1"]
+	# Urutan default: Knight_1 (Arthur), Mage_1 (Magnus), Archer_1 (Anastasya), Bandit_1 (Hellene)
+	var names: Array[String] = ["Knight_1", "Mage_1", "Archer_1", "Bandit_1"]
 	for n in names:
 		var node := get_node_or_null(n) as CharacterBody2D
 		if node:
@@ -74,11 +79,34 @@ func _ready() -> void:
 	set_active_leader(0)
 	_is_party_initialized = true
 
+	# Inisialisasi item inventory & quest starter
+	_init_starter_inventory()
+	_init_starter_quests()
+
 	# Hubungkan Gameplay HUD
 	if gameplay_hud:
-		gameplay_hud.setup(party_members, active_leader_index)
+		gameplay_hud.setup(party_members, active_leader_index, inventory_items, quest_list)
 		gameplay_hud.skill_activated.connect(_on_hud_skill_activated)
 		gameplay_hud.leader_switch_requested.connect(_on_hud_leader_switch_requested)
+		if gameplay_hud.has_signal("party_reordered"):
+			gameplay_hud.party_reordered.connect(_on_hud_party_reordered)
+		if gameplay_hud.has_signal("item_used"):
+			gameplay_hud.item_used.connect(_on_hud_item_used)
+		if gameplay_hud.has_signal("quest_tracked"):
+			gameplay_hud.quest_tracked.connect(_on_hud_quest_tracked)
+		if gameplay_hud.has_signal("quest_navigation_requested"):
+			gameplay_hud.quest_navigation_requested.connect(_on_hud_quest_navigation_requested)
+		if gameplay_hud.has_signal("save_game_requested"):
+			gameplay_hud.save_game_requested.connect(_on_hud_save_game_requested)
+		if gameplay_hud.has_signal("load_game_requested"):
+			gameplay_hud.load_game_requested.connect(_on_hud_load_game_requested)
+		if gameplay_hud.has_signal("return_to_title_requested"):
+			gameplay_hud.return_to_title_requested.connect(_on_hud_return_to_title_requested)
+
+		# Sinkronisasi quest aktif pertama ke overlay HUD
+		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
+		if not tracked_q.is_empty():
+			gameplay_hud.update_hud_quest_display(tracked_q)
 
 	# 5. Inisialisasi kamera dan batasan map
 	setup_camera_and_boundaries.call_deferred()
@@ -98,28 +126,28 @@ func setup_party_enemy_collision_exceptions() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Tombol pintasan pergantian karakter: Tab / Q (siklis) atau angka 1, 2, 3, 4 (auto-switch + cast skill)
+	# Tombol pintasan pergantian karakter, skill, dan perintah party berbasis action mapping
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_TAB or event.keycode == KEY_Q:
+		if event.is_action_pressed("switch_character"):
 			switch_to_next_character()
 			get_viewport().set_input_as_handled()
-		elif event.keycode == KEY_1:
+		elif event.is_action_pressed("skill_1"):
 			trigger_hero_skill_by_slot(0)
 			get_viewport().set_input_as_handled()
-		elif event.keycode == KEY_2:
+		elif event.is_action_pressed("skill_2"):
 			trigger_hero_skill_by_slot(1)
 			get_viewport().set_input_as_handled()
-		elif event.keycode == KEY_3:
+		elif event.is_action_pressed("skill_3"):
 			trigger_hero_skill_by_slot(2)
 			get_viewport().set_input_as_handled()
-		elif event.keycode == KEY_4:
+		elif event.is_action_pressed("skill_4"):
 			trigger_hero_skill_by_slot(3)
 			get_viewport().set_input_as_handled()
-		elif event.keycode == KEY_C:
+		elif event.is_action_pressed("party_follow"):
 			set_party_command(PartyCommand.FOLLOW)
 			if get_viewport():
 				get_viewport().set_input_as_handled()
-		elif event.keycode == KEY_V:
+		elif event.is_action_pressed("party_attack"):
 			set_party_command(PartyCommand.ATTACK)
 			if get_viewport():
 				get_viewport().set_input_as_handled()
@@ -275,6 +303,318 @@ func _on_hud_leader_switch_requested(hero_idx: int) -> void:
 		switch_to_character(hero_idx)
 
 
+func _on_hud_party_reordered(new_party: Array[CharacterBody2D]) -> void:
+	party_members = new_party
+	# Karakter di slot pertama otomatis menjadi leader
+	set_active_leader(0)
+
+
+func _init_starter_inventory() -> void:
+	inventory_items = [
+		# Kategori 0: Consumable (13 item untuk menguji scrollbar > 12 slot)
+		{
+			"id": "potion_hp",
+			"name": "Ramuan Pemulihan",
+			"category": 0,
+			"icon_rect": Rect2(164, 516, 9, 9),
+			"description": "Ramuan ajaib merah yang dapat memulihkan 5 HP karakter saat digunakan.",
+			"quantity": 5,
+			"max_stack": 99,
+			"usable": true,
+			"heal_amount": 5
+		},
+		{
+			"id": "apple",
+			"name": "Apel Hutan",
+			"category": 0,
+			"icon_rect": Rect2(212, 532, 8, 8),
+			"description": "Buah apel segar manis dari perkebunan, memulihkan 2 HP karakter.",
+			"quantity": 8,
+			"max_stack": 99,
+			"usable": true,
+			"heal_amount": 2
+		},
+		{
+			"id": "bread",
+			"name": "Roti Gandum",
+			"category": 0,
+			"icon_rect": Rect2(195, 533, 7, 7),
+			"description": "Roti gandum padat yang mengenyangkan, memulihkan 3 HP karakter.",
+			"quantity": 4,
+			"max_stack": 99,
+			"usable": true,
+			"heal_amount": 3
+		},
+		{
+			"id": "meat",
+			"name": "Daging Panggang",
+			"category": 0,
+			"icon_rect": Rect2(181, 500, 8, 9),
+			"description": "Daging panggang lezat kaya protein, memulihkan 6 HP karakter.",
+			"quantity": 3,
+			"max_stack": 99,
+			"usable": true,
+			"heal_amount": 6
+		},
+		{
+			"id": "holy_water",
+			"name": "Air Suci",
+			"category": 0,
+			"icon_rect": Rect2(164, 516, 9, 9),
+			"description": "Air berkah dari kuil agung, memulihkan 4 HP dan menyegarkan raga.",
+			"quantity": 2,
+			"max_stack": 99,
+			"usable": true,
+			"heal_amount": 4
+		},
+		{
+			"id": "herb",
+			"name": "Herba Hijau",
+			"category": 0,
+			"icon_rect": Rect2(212, 532, 8, 8),
+			"description": "Tanaman obat liar berkhasiat herbal, memulihkan 1 HP karakter.",
+			"quantity": 10,
+			"max_stack": 99,
+			"usable": true,
+			"heal_amount": 1
+		},
+		{
+			"id": "honey",
+			"name": "Madu Hutan",
+			"category": 0,
+			"icon_rect": Rect2(195, 533, 7, 7),
+			"description": "Madu murni dari lebah liar hutan, memulihkan 3 HP karakter.",
+			"quantity": 5,
+			"max_stack": 99,
+			"usable": true,
+			"heal_amount": 3
+		},
+		{
+			"id": "cheese",
+			"name": "Keju Tua",
+			"category": 0,
+			"icon_rect": Rect2(195, 533, 7, 7),
+			"description": "Keju asin yang diawetkan cukup lama, memulihkan 2 HP karakter.",
+			"quantity": 6,
+			"max_stack": 99,
+			"usable": true,
+			"heal_amount": 2
+		},
+		{
+			"id": "soup",
+			"name": "Sup Jamur",
+			"category": 0,
+			"icon_rect": Rect2(181, 500, 8, 9),
+			"description": "Semangkuk sup hangat lezat beraroma jamur, memulihkan 4 HP karakter.",
+			"quantity": 3,
+			"max_stack": 99,
+			"usable": true,
+			"heal_amount": 4
+		},
+		{
+			"id": "big_potion",
+			"name": "Ramuan Besar",
+			"category": 0,
+			"icon_rect": Rect2(164, 516, 9, 9),
+			"description": "Konsentrat ramuan pemulih tingkat tinggi, memulihkan 10 HP karakter.",
+			"quantity": 2,
+			"max_stack": 99,
+			"usable": true,
+			"heal_amount": 10
+		},
+		{
+			"id": "berry",
+			"name": "Buah Beri",
+			"category": 0,
+			"icon_rect": Rect2(212, 532, 8, 8),
+			"description": "Segenggam buah beri merah manis, memulihkan 1 HP karakter.",
+			"quantity": 12,
+			"max_stack": 99,
+			"usable": true,
+			"heal_amount": 1
+		},
+		{
+			"id": "soul_elixir",
+			"name": "Eliksir Jiwa",
+			"category": 0,
+			"icon_rect": Rect2(164, 516, 9, 9),
+			"description": "Eliksir langka pemurni energi spiritual, memulihkan 8 HP karakter.",
+			"quantity": 1,
+			"max_stack": 99,
+			"usable": true,
+			"heal_amount": 8
+		},
+		{
+			"id": "pumpkin_pie",
+			"name": "Pai Labu",
+			"category": 0,
+			"icon_rect": Rect2(195, 533, 7, 7),
+			"description": "Pai labu manis hangat buatan koki istana, memulihkan 5 HP karakter.",
+			"quantity": 3,
+			"max_stack": 99,
+			"usable": true,
+			"heal_amount": 5
+		},
+
+		# Kategori 1: Kunci
+		{
+			"id": "palace_key",
+			"name": "Kunci Istana",
+			"category": 1,
+			"icon_rect": Rect2(164, 533, 9, 6),
+			"description": "Kunci kuno berkarat yang dapat membuka gerbang utama istana kerajaan.",
+			"quantity": 1,
+			"max_stack": 1,
+			"usable": false
+		},
+		{
+			"id": "dungeon_key",
+			"name": "Kunci Bawah Tanah",
+			"category": 1,
+			"icon_rect": Rect2(164, 533, 9, 6),
+			"description": "Kunci besi berat untuk membuka pintu sel tahanan di bawah tanah.",
+			"quantity": 1,
+			"max_stack": 1,
+			"usable": false
+		},
+
+		# Kategori 2: Collectible
+		{
+			"id": "ancient_coin",
+			"name": "Koin Kuno Emas",
+			"category": 2,
+			"icon_rect": Rect2(195, 533, 7, 7),
+			"description": "Mata uang kuno era kerajaan masa lalu yang bernilai sangat tinggi.",
+			"quantity": 15,
+			"max_stack": 999,
+			"usable": false
+		},
+		{
+			"id": "honor_chalice",
+			"name": "Piala Kehormatan",
+			"category": 2,
+			"icon_rect": Rect2(195, 533, 7, 7),
+			"description": "Piala perak bertatahkan permata yang dihadiahkan untuk pahlawan kerajaan.",
+			"quantity": 1,
+			"max_stack": 1,
+			"usable": false
+		},
+
+		# Kategori 3: Notes
+		{
+			"id": "intel_report",
+			"name": "Laporan Intelijen",
+			"category": 3,
+			"icon_rect": Rect2(213, 500, 7, 9),
+			"description": "Gulungan dokumen rahasia mengenai pergerakan bandit di sekitar perbatasan.",
+			"quantity": 1,
+			"max_stack": 1,
+			"usable": false
+		},
+		{
+			"id": "soldier_diary",
+			"name": "Catatan Harian Prajurit",
+			"category": 3,
+			"icon_rect": Rect2(213, 500, 7, 9),
+			"description": "Catatan usang yang menceritakan pertempuran sengit di benteng utara.",
+			"quantity": 1,
+			"max_stack": 1,
+			"usable": false
+		}
+	]
+
+
+func _on_hud_item_used(item_data: Dictionary) -> void:
+	if item_data.has("heal_amount"):
+		var heal_val: int = item_data.get("heal_amount", 5)
+		if active_leader_index >= 0 and active_leader_index < party_members.size():
+			var leader = party_members[active_leader_index]
+			if is_instance_valid(leader) and "current_health" in leader and "max_health" in leader:
+				var old_hp: int = leader.current_health
+				leader.current_health = mini(leader.max_health, leader.current_health + heal_val)
+				var healed: int = leader.current_health - old_hp
+				print("ITEM DIGUNAKAN: %s | +%d HP | Sisa HP: %d/%d" % [item_data.get("name", "Item"), healed, leader.current_health, leader.max_health])
+				if gameplay_hud:
+					gameplay_hud.show_speech_bubble("+%d HP" % healed)
+
+
+func _init_starter_quests() -> void:
+	quest_list = [
+		{
+			"id": "main_01",
+			"category": "main",
+			"title": "Penyelidikan Istana",
+			"location": "Istana Kerajaan",
+			"objective": "Temui penjaga gerbang istana.",
+			"description": "Raja memanggil pasukan kesatria untuk menyelidiki gangguan misterius di perbatasan timur kerajaan.",
+			"status": "active",
+			"target_position": Vector2(3000, 1000)
+		},
+		{
+			"id": "main_02",
+			"category": "main",
+			"title": "Patroli Perbatasan",
+			"location": "Gerbang Selatan",
+			"objective": "Periksa pos penjagaan gerbang selatan.",
+			"description": "Laporan pengintai menyebutkan adanya pergerakan mencurigakan di luar tembok kota.",
+			"status": "active",
+			"target_position": Vector2(3500, 2500)
+		},
+		{
+			"id": "main_03",
+			"category": "main",
+			"title": "Persiapan Pasukan",
+			"location": "Barak Militer",
+			"objective": "Kumpulkan perlengkapan senjata dan ramuan.",
+			"description": "Pastikan seluruh anggota pasukan dilengkapi perlengkapan tempur yang memadai sebelum ekspedisi.",
+			"status": "active",
+			"target_position": Vector2(2500, 1500)
+		},
+		{
+			"id": "world_01",
+			"category": "world",
+			"title": "Bantuan Warga Desa",
+			"location": "Desa Oakhaven",
+			"objective": "Bicara dengan tetua desa mengenai suplai gandum.",
+			"description": "Warga desa membutuhkan perlindungan dari gangguan monster liar di sekitar lumbung pangan.",
+			"status": "active",
+			"target_position": Vector2(1500, 3000)
+		},
+		{
+			"id": "world_02",
+			"category": "world",
+			"title": "Perburuan Bandit",
+			"location": "Lembah Berkabut",
+			"objective": "Tumpas komplotan bandit di lembah.",
+			"description": "Kafilah dagang kerajaan dihadang bandit. Pulihkan keamanan jalur perdagangan dari ancaman penjahat.",
+			"status": "active",
+			"target_position": Vector2(5000, 1800)
+		}
+	]
+
+
+func _get_quest_by_id(q_id: String) -> Dictionary:
+	for q in quest_list:
+		if q.get("id", "") == q_id:
+			return q
+	return {}
+
+
+func _on_hud_quest_tracked(quest: Dictionary) -> void:
+	tracked_quest_id = quest.get("id", "")
+	if gameplay_hud:
+		gameplay_hud.update_hud_quest_display(quest)
+
+
+func _on_hud_quest_navigation_requested(quest: Dictionary) -> void:
+	tracked_quest_id = quest.get("id", "")
+	if gameplay_hud:
+		gameplay_hud.update_hud_quest_display(quest)
+		var loc: String = quest.get("location", "")
+		if loc != "":
+			gameplay_hud.show_speech_bubble("Navigasi: " + loc)
+
+
 func get_active_leader() -> CharacterBody2D:
 	if not party_members.is_empty() and active_leader_index >= 0 and active_leader_index < party_members.size():
 		return party_members[active_leader_index]
@@ -282,6 +622,7 @@ func get_active_leader() -> CharacterBody2D:
 
 
 func _process(delta: float) -> void:
+	total_playtime += delta
 	handle_camera_shake(delta)
 	update_camera_target()
 	handle_viewport_aggro_detection(delta)
@@ -664,3 +1005,262 @@ func play_iris_opening_transition() -> void:
 	# Hapus node transisi setelah selesai agar memori dan render pass bersih
 	if is_instance_valid(transition_layer):
 		transition_layer.queue_free()
+
+
+# ==========================================
+# SAVE & LOAD GAME SYSTEM (TASK 05C)
+# ==========================================
+
+func _on_hud_save_game_requested(slot_id: int) -> void:
+	save_game_to_slot(slot_id)
+
+
+func _on_hud_load_game_requested(slot_id: int) -> void:
+	load_game_from_slot(slot_id)
+
+
+func _on_hud_return_to_title_requested() -> void:
+	get_tree().paused = false
+	if gameplay_hud and is_instance_valid(gameplay_hud.pause_overlay):
+		gameplay_hud.pause_overlay.visible = false
+	get_tree().change_scene_to_file("res://scene/ui/menus/start_menu.tscn")
+
+
+func save_game_to_slot(slot_id: int) -> bool:
+	var path_tmp := "user://save_slot_%d.json.tmp" % slot_id
+	var path_final := "user://save_slot_%d.json" % slot_id
+
+	var data := _collect_save_data(slot_id)
+	var json_str := JSON.stringify(data, "\t")
+
+	var f := FileAccess.open(path_tmp, FileAccess.WRITE)
+	if not f:
+		push_error("Gagal membuka file temporary save: " + path_tmp)
+		return false
+	f.store_string(json_str)
+	f.close()
+
+	var dir := DirAccess.open("user://")
+	if dir:
+		if dir.file_exists("save_slot_%d.json" % slot_id):
+			dir.remove("save_slot_%d.json" % slot_id)
+		var err := dir.rename("save_slot_%d.json.tmp" % slot_id, "save_slot_%d.json" % slot_id)
+		if err != OK:
+			push_error("Gagal rename save file: %d" % err)
+			return false
+
+	print("GAME SAVED: Slot %d | %s | %s" % [slot_id, data.get("chapter"), data.get("save_time_str")])
+	if gameplay_hud and gameplay_hud.has_method("on_save_completed"):
+		gameplay_hud.on_save_completed(slot_id, data)
+	return true
+
+
+func load_game_from_slot(slot_id: int) -> bool:
+	var path := "user://save_slot_%d.json" % slot_id
+	if not FileAccess.file_exists(path):
+		push_error("File save tidak ditemukan: " + path)
+		return false
+
+	var f := FileAccess.open(path, FileAccess.READ)
+	if not f:
+		push_error("Gagal membuka file save: " + path)
+		return false
+	var text := f.get_as_text()
+	f.close()
+
+	var json := JSON.new()
+	var err := json.parse(text)
+	if err != OK or not (json.data is Dictionary):
+		push_error("Data save rusak atau tidak valid pada Slot %d" % slot_id)
+		return false
+
+	var data: Dictionary = json.data
+	if not data.has("party") or not data.has("chapter"):
+		push_error("Struktur data save tidak lengkap pada Slot %d" % slot_id)
+		return false
+
+	# Restore Playtime
+	total_playtime = float(data.get("playtime", 0.0))
+
+	# Restore Party Order, Positions, Health
+	var restored_party: Array[CharacterBody2D] = []
+	for p_info in data.get("party", []):
+		var char_name: String = p_info.get("name", "")
+		for child in get_children():
+			if child is CharacterBody2D and child.name == char_name:
+				restored_party.append(child)
+				if p_info.has("position"):
+					var pos_dict: Dictionary = p_info["position"]
+					child.global_position = Vector2(float(pos_dict.get("x", child.global_position.x)), float(pos_dict.get("y", child.global_position.y)))
+				if "target_position" in child:
+					child.target_position = child.global_position
+				if "velocity" in child:
+					child.velocity = Vector2.ZERO
+				if "max_health" in child and p_info.has("max_hp"):
+					child.max_health = int(p_info["max_hp"])
+				if "current_health" in child and p_info.has("hp"):
+					child.current_health = int(p_info["hp"])
+				if "current_health" in child and "is_dead" in child:
+					if child.current_health <= 0:
+						child.is_dead = true
+						child.visible = false
+						child.modulate = Color(0.8, 0.2, 0.2, 0.0)
+						if "collision_shape" in child and child.collision_shape:
+							child.collision_shape.set_deferred("disabled", true)
+						if child.has_node("Hurtbox/CollisionShape2D"):
+							child.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", true)
+					else:
+						child.is_dead = false
+						child.visible = true
+						child.modulate = Color.WHITE
+						if "collision_shape" in child and child.collision_shape:
+							child.collision_shape.set_deferred("disabled", false)
+						if child.has_node("Hurtbox/CollisionShape2D"):
+							child.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", false)
+						if not child.is_in_group("player"):
+							child.add_to_group("player")
+				if "skill_cooldown_timer" in child:
+					child.skill_cooldown_timer = 0.0
+				break
+
+	if not restored_party.is_empty():
+		party_members = restored_party
+
+	# Restore Leader
+	var lead_idx: int = clampi(int(data.get("active_leader_index", 0)), 0, party_members.size() - 1)
+	set_active_leader(lead_idx)
+
+	# Reset breadcrumbs and camera smoothing around restored leader position
+	var leader := get_active_leader()
+	if is_instance_valid(leader):
+		breadcrumbs.clear()
+		if is_instance_valid(camera):
+			camera.reset_smoothing()
+
+	# Restore Inventory
+	if data.has("inventory_items") and data["inventory_items"] is Array:
+		inventory_items = _deserialize_inventory(data["inventory_items"])
+
+	# Restore Quests
+	if data.has("quest_list") and data["quest_list"] is Array:
+		quest_list = _deserialize_quests(data["quest_list"])
+	if data.has("tracked_quest_id"):
+		tracked_quest_id = str(data["tracked_quest_id"])
+
+	# Sync HUD & Unpause
+	get_tree().paused = false
+	if gameplay_hud:
+		gameplay_hud.setup(party_members, active_leader_index, inventory_items, quest_list)
+		gameplay_hud.set_quests(quest_list, tracked_quest_id)
+		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
+		if not tracked_q.is_empty():
+			gameplay_hud.update_hud_quest_display(tracked_q)
+		gameplay_hud.pause_overlay.visible = false
+		gameplay_hud.on_load_completed(slot_id, data)
+
+	print("GAME LOADED: Slot %d | Leader: %s | HP: %d | Playtime: %f" % [slot_id, leader.name if leader else "None", leader.current_health if leader and "current_health" in leader else 0, total_playtime])
+	return true
+
+
+func _collect_save_data(slot_id: int) -> Dictionary:
+	var party_data: Array = []
+	for p in party_members:
+		if is_instance_valid(p):
+			var hp_val: int = 100
+			var max_hp_val: int = 100
+			if "current_health" in p:
+				hp_val = p.current_health
+			if "max_health" in p:
+				max_hp_val = p.max_health
+			party_data.append({
+				"name": p.name,
+				"hp": hp_val,
+				"max_hp": max_hp_val,
+				"position": {
+					"x": p.global_position.x,
+					"y": p.global_position.y
+				}
+			})
+
+	var now_dict := Time.get_datetime_dict_from_system()
+	const MONTH_NAMES_ID: Array[String] = [
+		"", "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"
+	]
+	var month_idx: int = clampi(int(now_dict.get("month", 1)), 1, 12)
+	var month_str: String = MONTH_NAMES_ID[month_idx]
+	var time_str := "%d %s %d, %02d.%02d" % [
+		now_dict.get("day", 1),
+		month_str,
+		now_dict.get("year", 2026),
+		now_dict.get("hour", 0),
+		now_dict.get("minute", 0)
+	]
+
+	var current_location: String = "Istana Kerajaan"
+	var cur_q := _get_quest_by_id(tracked_quest_id)
+	if not cur_q.is_empty() and cur_q.get("location", "") != "":
+		current_location = cur_q.get("location")
+
+	return {
+		"slot_id": slot_id,
+		"chapter": "Chapter 1.1",
+		"location": current_location,
+		"playtime": total_playtime,
+		"save_time_str": time_str,
+		"timestamp": int(Time.get_unix_time_from_system()),
+		"active_leader_index": active_leader_index,
+		"party": party_data,
+		"inventory_items": _serialize_inventory(inventory_items),
+		"quest_list": _serialize_quests(quest_list),
+		"tracked_quest_id": tracked_quest_id
+	}
+
+
+func _serialize_inventory(items: Array) -> Array:
+	var out: Array = []
+	for it in items:
+		var d: Dictionary = it.duplicate(true)
+		if d.has("icon_rect") and d["icon_rect"] is Rect2:
+			var r: Rect2 = d["icon_rect"]
+			d["icon_rect"] = [r.position.x, r.position.y, r.size.x, r.size.y]
+		out.append(d)
+	return out
+
+
+func _deserialize_inventory(items: Array) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for it in items:
+		if not (it is Dictionary):
+			continue
+		var d: Dictionary = it.duplicate(true)
+		if d.has("icon_rect"):
+			if d["icon_rect"] is Array and d["icon_rect"].size() == 4:
+				var a = d["icon_rect"]
+				d["icon_rect"] = Rect2(a[0], a[1], a[2], a[3])
+		out.append(d)
+	return out
+
+
+func _serialize_quests(quests: Array) -> Array:
+	var out: Array = []
+	for q in quests:
+		var d: Dictionary = q.duplicate(true)
+		if d.has("target_position") and d["target_position"] is Vector2:
+			var v: Vector2 = d["target_position"]
+			d["target_position"] = [v.x, v.y]
+		out.append(d)
+	return out
+
+
+func _deserialize_quests(quests: Array) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for q in quests:
+		if not (q is Dictionary):
+			continue
+		var d: Dictionary = q.duplicate(true)
+		if d.has("target_position"):
+			if d["target_position"] is Array and d["target_position"].size() == 2:
+				var a = d["target_position"]
+				d["target_position"] = Vector2(a[0], a[1])
+		out.append(d)
+	return out

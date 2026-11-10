@@ -28,6 +28,7 @@ extends Control
 @onready var iris_mask: ColorRect = $IrisMask
 
 const GAME_SCENE_PATH := "res://scene/game.tscn"
+const GAMEPLAY_HUD_SCENE := preload("res://scene/ui/gameplay/gameplay_hud.tscn")
 
 const SFX_HOVER = preload("res://assets/audio/sfx/ui/ui_hover.wav")
 const SFX_CLICK = preload("res://assets/audio/sfx/ui/ui_click.wav")
@@ -44,6 +45,8 @@ var _cloud_offset: float = 0.0
 var _ground_offset: float = 0.0
 
 var _is_starting: bool = false
+var _is_settings_open: bool = false
+var _settings_overlay_hud: CanvasLayer = null
 
 const BUTTON_TEXTS := {
 	"BtnStart": "Mulai Permainan",
@@ -66,6 +69,14 @@ func _ready() -> void:
 		sword_glint.visible = false
 		if not sword_glint.animation_finished.is_connected(_on_sword_glint_animation_finished):
 			sword_glint.animation_finished.connect(_on_sword_glint_animation_finished)
+
+	_settings_overlay_hud = GAMEPLAY_HUD_SCENE.instantiate() as CanvasLayer
+	if _settings_overlay_hud:
+		add_child(_settings_overlay_hud)
+		if _settings_overlay_hud.has_method("enable_start_menu_mode"):
+			_settings_overlay_hud.call("enable_start_menu_mode")
+		if _settings_overlay_hud.has_signal("start_menu_settings_closed"):
+			_settings_overlay_hud.connect("start_menu_settings_closed", _on_settings_closed)
 	
 	# Tunggu 1 frame agar ukuran container terkalkulasi sempurna
 	await get_tree().process_frame
@@ -77,11 +88,12 @@ func _ready() -> void:
 			btn.pivot_offset = Vector2(btn.size.x / 2.0, btn.size.y / 2.0)
 			btn.mouse_entered.connect(_on_button_hovered.bind(btn))
 			btn.focus_entered.connect(_on_button_hovered.bind(btn))
-			if btn != btn_start:
+			if btn != btn_start and btn != btn_settings and btn != btn_exit:
 				btn.pressed.connect(_on_regular_button_clicked)
 			_set_button_state(btn, false, true)
 	
 	btn_start.pressed.connect(_on_start_pressed)
+	btn_settings.pressed.connect(_on_settings_pressed)
 	btn_exit.pressed.connect(_on_exit_pressed)
 	
 	# Set pilihan awal ke tombol Mulai Permainan
@@ -122,7 +134,7 @@ func _update_parallax_movement(delta: float) -> void:
 		bg_grass_3.position.x = _ground_offset + w
 
 func _select_button(btn: Button, instant: bool = false) -> void:
-	if _is_starting:
+	if _is_starting or _is_settings_open:
 		return
 	if _current_selected == btn and not instant:
 		return
@@ -140,7 +152,7 @@ func _select_button(btn: Button, instant: bool = false) -> void:
 			_current_selected.grab_focus()
 
 func _on_button_hovered(btn: Button) -> void:
-	if not _is_starting:
+	if not _is_starting and not _is_settings_open:
 		_select_button(btn)
 
 func _set_button_state(btn: Button, is_selected: bool, instant: bool = false) -> void:
@@ -177,7 +189,7 @@ func _set_button_state(btn: Button, is_selected: bool, instant: bool = false) ->
 		tween.tween_property(btn, "modulate", target_modulate, 0.12)
 
 func _on_start_pressed() -> void:
-	if _is_starting:
+	if _is_starting or _is_settings_open:
 		return
 	_is_starting = true
 	_play_sfx(SFX_CLICK, -2.0)
@@ -249,7 +261,34 @@ func _on_sword_glint_animation_finished() -> void:
 func _on_regular_button_clicked() -> void:
 	_play_sfx(SFX_CLICK, -2.0)
 
+func _on_settings_pressed() -> void:
+	if _is_starting or _is_settings_open:
+		return
+	_is_settings_open = true
+	_play_sfx(SFX_CLICK, -2.0)
+
+	for btn_name in BUTTON_TEXTS:
+		var btn: Button = get_node_or_null("MenuContainer/" + btn_name)
+		if btn:
+			btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			btn.focus_mode = Control.FOCUS_NONE
+	get_viewport().gui_release_focus()
+
+	if is_instance_valid(_settings_overlay_hud) and _settings_overlay_hud.has_method("open_as_start_menu_settings"):
+		_settings_overlay_hud.call("open_as_start_menu_settings")
+
+func _on_settings_closed() -> void:
+	_is_settings_open = false
+	for btn_name in BUTTON_TEXTS:
+		var btn: Button = get_node_or_null("MenuContainer/" + btn_name)
+		if btn:
+			btn.mouse_filter = Control.MOUSE_FILTER_STOP
+			btn.focus_mode = Control.FOCUS_ALL
+	_select_button(btn_settings, true)
+
 func _on_exit_pressed() -> void:
+	if _is_starting or _is_settings_open:
+		return
 	_play_sfx(SFX_CLICK, -2.0)
 	await get_tree().create_timer(0.12).timeout
 	get_tree().quit()
@@ -258,6 +297,8 @@ func _play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 	if not stream:
 		return
 	var player := AudioStreamPlayer.new()
+	if AudioServer.get_bus_index("SFX") != -1:
+		player.bus = "SFX"
 	player.stream = stream
 	player.volume_db = volume_db
 	add_child(player)

@@ -15,6 +15,108 @@
 [ext_resource type="Texture2D" uid="uid://v16ihw7j2one" path="res://assets/ui/icons/skills/skill.png" id="13_skills"]
 [ext_resource type="Texture2D" uid="uid://fncqxrchs5er" path="res://assets/ui/gameplay/dialogue/bubble_talk_left-sheet.png" id="14_bubble"]
 
+[ext_resource type="Texture2D" uid="uid://c8dldu13jie8e" path="res://assets/ui/menus/common/ui_menu_sheet.png" id="15_ui_sheet"]
+[ext_resource type="Texture2D" uid="uid://bfwgtr40gwji" path="res://assets/characters/knight/walk/walk-s.png" id="16_knight_walk"]
+[ext_resource type="Texture2D" uid="uid://b6j5wh2jatmow" path="res://assets/characters/bandit/walk/walk-s.png" id="17_bandit_walk"]
+[ext_resource type="Texture2D" uid="uid://bdyj61h46bqwa" path="res://assets/characters/archer/walk/walk-s.png" id="18_archer_walk"]
+[ext_resource type="Texture2D" uid="uid://cst6aqpo0oxeo" path="res://assets/characters/mage/walk/walk-s.png" id="19_mage_walk"]
+
+[sub_resource type="AtlasTexture" id="Atlas_pause_header"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(64, 208, 224, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_pause_book_cover"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(64, 32, 224, 160)
+
+[sub_resource type="AtlasTexture" id="Atlas_pause_page_left"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(304, 32, 104, 147)
+
+[sub_resource type="AtlasTexture" id="Atlas_pause_page_right"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(432, 32, 104, 147)
+
+[sub_resource type="AtlasTexture" id="Atlas_pause_bookmark"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(321, 178, 17, 23)
+
+[sub_resource type="AtlasTexture" id="Atlas_tab_parchment"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(70, 273, 20, 14)
+
+[sub_resource type="AtlasTexture" id="Atlas_tab_inactive"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(70, 273, 20, 14)
+
+[sub_resource type="AtlasTexture" id="Atlas_tab_active"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(70, 273, 20, 14)
+
+[sub_resource type="AtlasTexture" id="Atlas_tab_icon_inventory"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(181, 500, 8, 9)
+
+[sub_resource type="AtlasTexture" id="Atlas_tab_icon_journal"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(213, 500, 7, 9)
+
+[sub_resource type="AtlasTexture" id="Atlas_tab_icon_info"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(164, 500, 9, 9)
+
+[sub_resource type="AtlasTexture" id="Atlas_tab_icon_settings"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(196, 500, 9, 9)
+
+[sub_resource type="AtlasTexture" id="Atlas_tab_icon_credits"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(181, 533, 7, 7)
+
+[sub_resource type="AtlasTexture" id="Atlas_dots_divider"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(65, 263, 30, 3)
+
+[sub_resource type="AtlasTexture" id="Atlas_round_btn_left"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(70, 547, 8, 8)
+
+[sub_resource type="AtlasTexture" id="Atlas_round_btn_right"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(102, 547, 8, 8)
+
+[sub_resource type="AtlasTexture" id="Atlas_name_box"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(65, 417, 62, 14)
+
+[sub_resource type="AtlasTexture" id="Atlas_skill_panel"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(146, 403, 62, 24)
+
+[sub_resource type="AtlasTexture" id="Atlas_party_frame"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(65, 289, 30, 29)
+
+[sub_resource type="AtlasTexture" id="Atlas_port_magnus_slot"]
+atlas = ExtResource("8_port_magnus")
+region = Rect2(3, 1, 20, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_char_knight"]
+atlas = ExtResource("16_knight_walk")
+region = Rect2(39, 18, 18, 22)
+
+[sub_resource type="AtlasTexture" id="Atlas_char_bandit"]
+atlas = ExtResource("17_bandit_walk")
+region = Rect2(38, 40, 21, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_char_archer"]
+atlas = ExtResource("18_archer_walk")
+region = Rect2(10, 7, 14, 23)
+
+[sub_resource type="AtlasTexture" id="Atlas_char_mage"]
+atlas = ExtResource("19_mage_walk")
+region = Rect2(40, 21, 17, 20)
+
 [sub_resource type="AtlasTexture" id="Atlas_quest_icon"]
 atlas = ExtResource("5_action_buttons")
 region = Rect2(0, 272, 16, 16)
@@ -91,6 +193,101 @@ corner_radius_bottom_left = 6
 font_names = PackedStringArray("Georgia", "Times New Roman", "Palatino Linotype", "serif")
 font_weight = 400
 subpixel_positioning = 0
+
+[sub_resource type="AtlasTexture" id="Atlas_item_slot"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(65, 289, 30, 29)
+
+[sub_resource type="AtlasTexture" id="Atlas_item_selected"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(65, 385, 30, 30)
+
+[sub_resource type="AtlasTexture" id="Atlas_cat_btn_normal"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(113, 292, 14, 9)
+
+[sub_resource type="AtlasTexture" id="Atlas_cat_btn_selected"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(113, 305, 14, 9)
+
+[sub_resource type="AtlasTexture" id="Atlas_cat_icon_consumable"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(212, 532, 9, 8)
+
+[sub_resource type="AtlasTexture" id="Atlas_cat_icon_key"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(164, 534, 9, 5)
+
+[sub_resource type="AtlasTexture" id="Atlas_cat_icon_collectible"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(182, 518, 7, 7)
+
+[sub_resource type="AtlasTexture" id="Atlas_cat_icon_notes"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(196, 533, 8, 7)
+
+[sub_resource type="AtlasTexture" id="Atlas_bag_icon"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(181, 500, 8, 9)
+
+[sub_resource type="AtlasTexture" id="Atlas_btn_e"]
+atlas = ExtResource("5_action_buttons")
+region = Rect2(64, 208, 16, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_btn_space"]
+atlas = ExtResource("5_action_buttons")
+region = Rect2(0, 336, 29, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_keycap_blank"]
+atlas = ExtResource("5_action_buttons")
+region = Rect2(32, 464, 32, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_btn_enter"]
+atlas = ExtResource("5_action_buttons")
+region = Rect2(0, 416, 29, 16)
+
+[sub_resource type="AtlasTexture" id="Atlas_quest_btn_panel"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(65, 449, 62, 14)
+
+[sub_resource type="AtlasTexture" id="Atlas_location_pin"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(165, 547, 7, 8)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_objective_panel"]
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
+texture = SubResource("Atlas_quest_btn_panel")
+texture_margin_left = 5.0
+texture_margin_top = 4.0
+texture_margin_right = 5.0
+texture_margin_bottom = 4.0
+
+[sub_resource type="AtlasTexture" id="Atlas_slider_track_bg"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(66, 485, 62, 4)
+
+[sub_resource type="AtlasTexture" id="Atlas_slider_track_fill"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(66, 502, 30, 2)
+
+[sub_resource type="AtlasTexture" id="Atlas_val_box"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(113, 292, 14, 9)
+
+[sub_resource type="AtlasTexture" id="Atlas_submenu_btn_selected"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(65, 449, 62, 14)
+
+[sub_resource type="AtlasTexture" id="Atlas_submenu_btn_normal"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(145, 433, 62, 14)
+
+[sub_resource type="AtlasTexture" id="Atlas_save_card_selected"]
+atlas = ExtResource("15_ui_sheet")
+region = Rect2(145, 449, 62, 14)
 
 [node name="GameplayHud" type="CanvasLayer"]
 process_mode = 3
@@ -630,7 +827,7 @@ alignment = 1
 [node name="SkillBtn" type="TextureButton" parent="RootControl/SkillContainer/SkillSlot2"]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
-texture_normal = SubResource("Atlas_skill_2")
+texture_normal = SubResource("Atlas_skill_4")
 stretch_mode = 5
 
 [node name="Panel" type="Panel" parent="RootControl/SkillContainer/SkillSlot2/SkillBtn"]
@@ -740,7 +937,7 @@ alignment = 1
 [node name="SkillBtn" type="TextureButton" parent="RootControl/SkillContainer/SkillSlot4"]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
-texture_normal = SubResource("Atlas_skill_4")
+texture_normal = SubResource("Atlas_skill_2")
 stretch_mode = 5
 
 [node name="Panel" type="Panel" parent="RootControl/SkillContainer/SkillSlot4/SkillBtn"]
@@ -827,7 +1024,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="PauseOverlay" type="ColorRect" parent="RootControl"]
-process_mode = 2
+process_mode = 3
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -835,45 +1032,3482 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.6)
+color = Color(0.12, 0.11, 0.13, 0.85)
 
-[node name="PausePanel" type="PanelContainer" parent="RootControl/PauseOverlay"]
+[node name="DragGhost" type="Control" parent="RootControl/PauseOverlay"]
+visible = false
+z_index = 50
+texture_filter = 1
+layout_mode = 0
+offset_right = 63.0
+offset_bottom = 63.0
+mouse_filter = 2
+
+[node name="Frame" type="TextureRect" parent="RootControl/PauseOverlay/DragGhost"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_party_frame")
+expand_mode = 1
+
+[node name="Portrait" type="TextureRect" parent="RootControl/PauseOverlay/DragGhost/Frame"]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -140.0
-offset_top = -90.0
-offset_right = 140.0
-offset_bottom = 90.0
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_pause_panel")
+mouse_filter = 2
+texture = ExtResource("7_port_arthur")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="VBox" type="VBoxContainer" parent="RootControl/PauseOverlay/PausePanel"]
+[node name="PauseBookRoot" type="Control" parent="RootControl/PauseOverlay"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -336.0
+offset_top = -306.0
+offset_right = 336.0
+offset_bottom = 306.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+pivot_offset = Vector2(336, 306)
+
+[node name="HeaderContainer" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot"]
+layout_mode = 1
+anchors_preset = 0
+offset_right = 672.0
+offset_bottom = 96.0
+mouse_filter = 2
+
+[node name="HeaderBanner" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/HeaderContainer"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+texture = SubResource("Atlas_pause_header")
+
+[node name="HeaderTitle" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/HeaderContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 6.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 36
+text = "INFORMASI"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BookContainer" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot"]
+layout_mode = 1
+anchors_preset = 0
+offset_top = 118.0
+offset_right = 672.0
+offset_bottom = 612.0
+mouse_filter = 2
+
+[node name="BookBg" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer"]
+texture_filter = 1
+layout_mode = 0
+offset_top = 14.0
+offset_right = 672.0
+offset_bottom = 494.0
+mouse_filter = 0
+texture = SubResource("Atlas_pause_book_cover")
+
+[node name="TabsContainer" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 0.0
+offset_right = 265.0
+offset_bottom = 42.0
+mouse_filter = 1
+theme_override_constants/separation = 4
+
+[node name="Tab0" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer"]
+texture_filter = 1
+custom_minimum_size = Vector2(54, 42)
 layout_mode = 2
-theme_override_constants/separation = 14
+size_flags_vertical = 8
+mouse_filter = 0
+texture = SubResource("Atlas_tab_parchment")
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 1
+
+[node name="Icon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer/Tab0"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -11.0
+offset_top = -11.0
+offset_right = 11.0
+offset_bottom = 11.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_tab_icon_inventory")
+stretch_mode = 5
+
+[node name="ClickArea" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer/Tab0"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="Tab1" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer"]
+texture_filter = 1
+custom_minimum_size = Vector2(50, 36)
+layout_mode = 2
+size_flags_vertical = 8
+mouse_filter = 0
+texture = SubResource("Atlas_tab_parchment")
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 1
+
+[node name="Icon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer/Tab1"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_tab_icon_journal")
+stretch_mode = 5
+
+[node name="ClickArea" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer/Tab1"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="Tab2" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer"]
+texture_filter = 1
+custom_minimum_size = Vector2(50, 36)
+layout_mode = 2
+size_flags_vertical = 8
+mouse_filter = 0
+texture = SubResource("Atlas_tab_parchment")
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 1
+
+[node name="Icon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer/Tab2"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_tab_icon_info")
+stretch_mode = 5
+
+[node name="ClickArea" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer/Tab2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="Tab3" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer"]
+texture_filter = 1
+custom_minimum_size = Vector2(50, 36)
+layout_mode = 2
+size_flags_vertical = 8
+mouse_filter = 0
+texture = SubResource("Atlas_tab_parchment")
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 1
+
+[node name="Icon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer/Tab3"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_tab_icon_settings")
+stretch_mode = 5
+
+[node name="ClickArea" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer/Tab3"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="Tab4" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer"]
+visible = false
+texture_filter = 1
+layout_mode = 2
+texture = SubResource("Atlas_tab_parchment")
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 1
+
+[node name="Icon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer/Tab4"]
+visible = false
+layout_mode = 0
+
+[node name="ParchmentLeft" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 24.0
+offset_top = 32.0
+offset_right = 336.0
+offset_bottom = 473.0
+mouse_filter = 2
+texture = SubResource("Atlas_pause_page_left")
+
+[node name="ParchmentRight" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 336.0
+offset_top = 32.0
+offset_right = 648.0
+offset_bottom = 473.0
+mouse_filter = 2
+texture = SubResource("Atlas_pause_page_right")
+
+[node name="RedBookmark" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 78.0
+offset_top = 458.0
+offset_right = 129.0
+offset_bottom = 527.0
+mouse_filter = 0
+texture = SubResource("Atlas_pause_bookmark")
+
+[node name="PagesContainer" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer"]
+layout_mode = 0
+offset_top = 14.0
+offset_right = 672.0
+offset_bottom = 494.0
+mouse_filter = 2
+
+[node name="PageInformasi" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="LeftPage" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 18.0
+offset_right = 336.0
+offset_bottom = 459.0
+mouse_filter = 2
+
+[node name="BiodataHeader" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 24.0
+offset_right = 300.0
+offset_bottom = 54.0
+theme_override_constants/separation = 12
 alignment = 1
 
-[node name="Title" type="Label" parent="RootControl/PauseOverlay/PausePanel/VBox"]
+[node name="DotsL" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/BiodataHeader"]
+texture_filter = 1
+custom_minimum_size = Vector2(48, 9)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.85, 0.65, 1)
+size_flags_vertical = 4
+texture = SubResource("Atlas_dots_divider")
+expand_mode = 1
+
+[node name="Title" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/BiodataHeader"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 22
+text = "BIODATA"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DotsR" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/BiodataHeader"]
+texture_filter = 1
+custom_minimum_size = Vector2(48, 9)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_dots_divider")
+expand_mode = 1
+flip_h = true
+
+[node name="CharSprite" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 102.0
+offset_top = 66.0
+offset_right = 210.0
+offset_bottom = 174.0
+texture = SubResource("Atlas_char_knight")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 186.0
+offset_right = 288.0
+offset_bottom = 228.0
+theme_override_constants/separation = 9
+alignment = 1
+
+[node name="BtnPrev" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/NameRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+texture_normal = SubResource("Atlas_round_btn_left")
+stretch_mode = 5
+
+[node name="NameBox" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/NameRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(198, 42)
+layout_mode = 2
+texture = SubResource("Atlas_name_box")
+expand_mode = 1
+
+[node name="NameLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/NameRow/NameBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 20
-text = "Jeda Permainan"
+text = "Arthur"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BtnNext" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/NameRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_vertical = 4
+texture_normal = SubResource("Atlas_round_btn_right")
+stretch_mode = 5
+
+[node name="BioFields" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 240.0
+offset_right = 294.0
+offset_bottom = 426.0
+theme_override_constants/separation = 9
+
+[node name="RowNama" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/BioFields"]
+layout_mode = 2
+
+[node name="Key" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/BioFields/RowNama"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Nama:"
+
+[node name="Val" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/BioFields/RowNama"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Forzato Arthur"
+horizontal_alignment = 2
+
+[node name="RowGelar" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/BioFields"]
+layout_mode = 2
+
+[node name="Key" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/BioFields/RowGelar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Gelar:"
+
+[node name="Val" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/BioFields/RowGelar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Ksatria Kerajaan"
+horizontal_alignment = 2
+
+[node name="RowRas" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/BioFields"]
+layout_mode = 2
+
+[node name="Key" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/BioFields/RowRas"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Ras:"
+
+[node name="Val" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/BioFields/RowRas"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Manusia"
+horizontal_alignment = 2
+
+[node name="RowBday" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/BioFields"]
+layout_mode = 2
+
+[node name="Key" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/BioFields/RowBday"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Ulang Tahun:"
+
+[node name="Val" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/LeftPage/BioFields/RowBday"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "31 Agustus"
+horizontal_alignment = 2
+
+[node name="RightPage" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi"]
+layout_mode = 0
+offset_left = 336.0
+offset_top = 18.0
+offset_right = 648.0
+offset_bottom = 459.0
+mouse_filter = 2
+
+[node name="StatHeader" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 24.0
+offset_right = 300.0
+offset_bottom = 54.0
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="DotsL" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/StatHeader"]
+texture_filter = 1
+custom_minimum_size = Vector2(48, 9)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_dots_divider")
+expand_mode = 1
+
+[node name="Title" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/StatHeader"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 22
+text = "STAT"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DotsR" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/StatHeader"]
+texture_filter = 1
+custom_minimum_size = Vector2(48, 9)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_dots_divider")
+expand_mode = 1
+flip_h = true
+
+[node name="StatFields" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 66.0
+offset_right = 288.0
+offset_bottom = 123.0
+theme_override_constants/separation = 6
+
+[node name="RowHP" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/StatFields"]
+layout_mode = 2
+
+[node name="Key" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/StatFields/RowHP"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "MAX HP"
+
+[node name="Val" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/StatFields/RowHP"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "400"
+horizontal_alignment = 2
+
+[node name="RowATK" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/StatFields"]
+layout_mode = 2
+
+[node name="Key" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/StatFields/RowATK"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "ATK"
+
+[node name="Val" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/StatFields/RowATK"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "200"
+horizontal_alignment = 2
+
+[node name="SkillBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 18.0
+offset_top = 132.0
+offset_right = 294.0
+offset_bottom = 216.0
+texture = SubResource("Atlas_skill_panel")
+patch_margin_left = 18
+patch_margin_top = 18
+patch_margin_right = 18
+patch_margin_bottom = 18
+
+[node name="Icon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/SkillBox"]
+texture_filter = 1
+custom_minimum_size = Vector2(54, 54)
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 15.0
+offset_top = -27.0
+offset_right = 69.0
+offset_bottom = 27.0
+grow_vertical = 2
+texture = SubResource("Atlas_skill_1")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Desc" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/SkillBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 81.0
+offset_top = 9.0
+offset_right = -12.0
+offset_bottom = -9.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = "Shield seluruh tim
+selama 5 detik
+CD 5 detik"
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="PartyHeader" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 225.0
+offset_right = 300.0
+offset_bottom = 255.0
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="DotsL" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartyHeader"]
+texture_filter = 1
+custom_minimum_size = Vector2(48, 9)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_dots_divider")
+expand_mode = 1
+
+[node name="Title" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartyHeader"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 22
+text = "PARTY"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DotsR" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartyHeader"]
+texture_filter = 1
+custom_minimum_size = Vector2(48, 9)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_dots_divider")
+expand_mode = 1
+flip_h = true
+
+[node name="PartySlots" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 267.0
+offset_right = 300.0
+offset_bottom = 399.0
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Slot0" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Leader" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot0"]
+custom_minimum_size = Vector2(63, 15)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "Leader"
 horizontal_alignment = 1
 
-[node name="BtnResume" type="Button" parent="RootControl/PauseOverlay/PausePanel/VBox"]
+[node name="Frame" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot0"]
+texture_filter = 1
+custom_minimum_size = Vector2(63, 63)
 layout_mode = 2
-theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 15
-text = "Lanjutkan"
+mouse_filter = 0
+texture = SubResource("Atlas_party_frame")
+expand_mode = 1
 
-[node name="BtnMainMenu" type="Button" parent="RootControl/PauseOverlay/PausePanel/VBox"]
+[node name="Portrait" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot0/Frame"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("7_port_arthur")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HpBar" type="TextureProgressBar" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot0"]
+texture_filter = 1
+custom_minimum_size = Vector2(60, 12)
 layout_mode = 2
-theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 15
-text = "Menu Utama"
+size_flags_horizontal = 4
+max_value = 10.0
+value = 10.0
+nine_patch_stretch = true
+stretch_margin_left = 12
+stretch_margin_right = 12
+texture_under = ExtResource("11_hp_empty")
+texture_progress = ExtResource("12_hp_filled")
 
+[node name="Badge" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot0"]
+texture_filter = 1
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = SubResource("Atlas_btn_1")
+stretch_mode = 5
+
+[node name="Slot1" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Leader" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot1"]
+modulate = Color(1, 1, 1, 0)
+custom_minimum_size = Vector2(63, 15)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "Leader"
+horizontal_alignment = 1
+
+[node name="Frame" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot1"]
+texture_filter = 1
+custom_minimum_size = Vector2(63, 63)
+layout_mode = 2
+mouse_filter = 0
+texture = SubResource("Atlas_party_frame")
+expand_mode = 1
+
+[node name="Portrait" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot1/Frame"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_port_magnus_slot")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HpBar" type="TextureProgressBar" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot1"]
+texture_filter = 1
+custom_minimum_size = Vector2(60, 12)
+layout_mode = 2
+size_flags_horizontal = 4
+max_value = 10.0
+value = 10.0
+nine_patch_stretch = true
+stretch_margin_left = 12
+stretch_margin_right = 12
+texture_under = ExtResource("11_hp_empty")
+texture_progress = ExtResource("12_hp_filled")
+
+[node name="Badge" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot1"]
+texture_filter = 1
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = SubResource("Atlas_btn_2")
+stretch_mode = 5
+
+[node name="Slot2" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Leader" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot2"]
+modulate = Color(1, 1, 1, 0)
+custom_minimum_size = Vector2(63, 15)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "Leader"
+horizontal_alignment = 1
+
+[node name="Frame" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot2"]
+texture_filter = 1
+custom_minimum_size = Vector2(63, 63)
+layout_mode = 2
+mouse_filter = 0
+texture = SubResource("Atlas_party_frame")
+expand_mode = 1
+
+[node name="Portrait" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot2/Frame"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("9_port_anastasya")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HpBar" type="TextureProgressBar" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot2"]
+texture_filter = 1
+custom_minimum_size = Vector2(60, 12)
+layout_mode = 2
+size_flags_horizontal = 4
+max_value = 10.0
+value = 10.0
+nine_patch_stretch = true
+stretch_margin_left = 12
+stretch_margin_right = 12
+texture_under = ExtResource("11_hp_empty")
+texture_progress = ExtResource("12_hp_filled")
+
+[node name="Badge" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot2"]
+texture_filter = 1
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = SubResource("Atlas_btn_3")
+stretch_mode = 5
+
+[node name="Slot3" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Leader" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot3"]
+modulate = Color(1, 1, 1, 0)
+custom_minimum_size = Vector2(63, 15)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "Leader"
+horizontal_alignment = 1
+
+[node name="Frame" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot3"]
+texture_filter = 1
+custom_minimum_size = Vector2(63, 63)
+layout_mode = 2
+mouse_filter = 0
+texture = SubResource("Atlas_party_frame")
+expand_mode = 1
+
+[node name="Portrait" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot3/Frame"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("10_port_hellene")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HpBar" type="TextureProgressBar" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot3"]
+texture_filter = 1
+custom_minimum_size = Vector2(60, 12)
+layout_mode = 2
+size_flags_horizontal = 4
+max_value = 10.0
+value = 10.0
+nine_patch_stretch = true
+stretch_margin_left = 12
+stretch_margin_right = 12
+texture_under = ExtResource("11_hp_empty")
+texture_progress = ExtResource("12_hp_filled")
+
+[node name="Badge" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot3"]
+texture_filter = 1
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = SubResource("Atlas_btn_4")
+stretch_mode = 5
+
+[node name="PageInventory" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="LeftPage" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 18.0
+offset_right = 336.0
+offset_bottom = 459.0
+mouse_filter = 2
+
+[node name="CategoryRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = 264.0
+offset_bottom = 44.0
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="BtnPrevCategory" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/CategoryRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+texture_normal = SubResource("Atlas_round_btn_left")
+stretch_mode = 5
+
+[node name="CatBtn0" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/CategoryRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(45, 28)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_cat_btn_selected")
+patch_margin_left = 4
+patch_margin_top = 3
+patch_margin_right = 4
+patch_margin_bottom = 3
+
+[node name="Icon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/CategoryRow/CatBtn0"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -11.0
+offset_top = -9.0
+offset_right = 11.0
+offset_bottom = 9.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("Atlas_cat_icon_consumable")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ClickArea" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/CategoryRow/CatBtn0"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CatBtn1" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/CategoryRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(45, 28)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_cat_btn_normal")
+patch_margin_left = 4
+patch_margin_top = 3
+patch_margin_right = 4
+patch_margin_bottom = 3
+
+[node name="Icon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/CategoryRow/CatBtn1"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -11.0
+offset_top = -9.0
+offset_right = 11.0
+offset_bottom = 9.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("Atlas_cat_icon_key")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ClickArea" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/CategoryRow/CatBtn1"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CatBtn2" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/CategoryRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(45, 28)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_cat_btn_normal")
+patch_margin_left = 4
+patch_margin_top = 3
+patch_margin_right = 4
+patch_margin_bottom = 3
+
+[node name="Icon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/CategoryRow/CatBtn2"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -11.0
+offset_top = -9.0
+offset_right = 11.0
+offset_bottom = 9.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("Atlas_cat_icon_collectible")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ClickArea" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/CategoryRow/CatBtn2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CatBtn3" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/CategoryRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(45, 28)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_cat_btn_normal")
+patch_margin_left = 4
+patch_margin_top = 3
+patch_margin_right = 4
+patch_margin_bottom = 3
+
+[node name="Icon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/CategoryRow/CatBtn3"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -11.0
+offset_top = -9.0
+offset_right = 11.0
+offset_bottom = 9.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("Atlas_cat_icon_notes")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ClickArea" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/CategoryRow/CatBtn3"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BtnNextCategory" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/CategoryRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+texture_normal = SubResource("Atlas_round_btn_right")
+stretch_mode = 5
+
+[node name="InventoryScrollBar" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 55.0
+offset_right = 36.0
+offset_bottom = 338.0
+mouse_filter = 0
+
+[node name="Track" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/InventoryScrollBar"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -4.0
+offset_right = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+patch_margin_top = 6
+patch_margin_bottom = 6
+
+[node name="Grabber" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/InventoryScrollBar"]
+texture_filter = 1
+custom_minimum_size = Vector2(16, 14)
+layout_mode = 0
+offset_left = 2.0
+offset_top = 4.0
+offset_right = 18.0
+offset_bottom = 18.0
+mouse_filter = 2
+stretch_mode = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage"]
+layout_mode = 0
+offset_left = 44.0
+offset_top = 55.0
+offset_right = 264.0
+offset_bottom = 338.0
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="ItemGrid" type="GridContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 12
+columns = 3
+
+[node name="BottomRow" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage"]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 348.0
+offset_right = 294.0
+offset_bottom = 378.0
+
+[node name="BtnGunakan" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/BottomRow"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 110.0
+offset_bottom = 26.0
+mouse_filter = 0
+
+[node name="IconE" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/BottomRow/BtnGunakan"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 2.0
+offset_right = 18.0
+offset_bottom = 20.0
+texture = SubResource("Atlas_btn_e")
+stretch_mode = 5
+
+[node name="LabelGunakan" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/BottomRow/BtnGunakan"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 0.0
+offset_right = 110.0
+offset_bottom = 24.0
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Gunakan"
+vertical_alignment = 1
+
+[node name="CapacityContainer" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/BottomRow"]
+layout_mode = 0
+offset_left = 196.0
+offset_top = 0.0
+offset_right = 276.0
+offset_bottom = 24.0
+alignment = 2
+
+[node name="BagIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/BottomRow/CapacityContainer"]
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_bag_icon")
+stretch_mode = 5
+
+[node name="LabelCapacity" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/BottomRow/CapacityContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "1/50"
+vertical_alignment = 1
+
+[node name="RightPage" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory"]
+layout_mode = 0
+offset_left = 336.0
+offset_top = 18.0
+offset_right = 648.0
+offset_bottom = 459.0
+mouse_filter = 2
+
+[node name="DetailBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 55.0
+offset_right = 96.0
+offset_bottom = 127.0
+texture = SubResource("Atlas_item_slot")
+patch_margin_left = 8
+patch_margin_top = 8
+patch_margin_right = 8
+patch_margin_bottom = 8
+
+[node name="DetailIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/DetailBox"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch_mode = 5
+
+[node name="DetailName" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage"]
+layout_mode = 0
+offset_left = 108.0
+offset_top = 52.0
+offset_right = 296.0
+offset_bottom = 90.0
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 17
+text = "Nama Barang"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="DetailCountContainer" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage"]
+layout_mode = 0
+offset_left = 108.0
+offset_top = 92.0
+offset_right = 200.0
+offset_bottom = 116.0
+theme_override_constants/separation = 4
+
+[node name="BagIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/DetailCountContainer"]
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_bag_icon")
+stretch_mode = 5
+
+[node name="DetailCountLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/DetailCountContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "1"
+vertical_alignment = 1
+
+[node name="DetailDesc" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 145.0
+offset_right = 296.0
+offset_bottom = 350.0
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Deskripsi barang bisa satu sampai dua kalimat"
+autowrap_mode = 3
+
+[node name="PageJournal" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="LeftPage" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal"]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_top = 34.0
+offset_right = 320.0
+offset_bottom = -20.0
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="JournalScrollBar" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/LeftPage"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 20.0
+offset_right = 36.0
+offset_bottom = 370.0
+mouse_filter = 0
+
+[node name="Track" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/LeftPage/JournalScrollBar"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -4.0
+offset_right = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+patch_margin_top = 6
+patch_margin_bottom = 6
+
+[node name="Grabber" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/LeftPage/JournalScrollBar"]
+texture_filter = 1
+custom_minimum_size = Vector2(16, 14)
+layout_mode = 0
+offset_left = 2.0
+offset_top = 4.0
+offset_right = 18.0
+offset_bottom = 18.0
+mouse_filter = 2
+stretch_mode = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/LeftPage"]
+layout_mode = 0
+offset_left = 44.0
+offset_top = 20.0
+offset_right = 284.0
+offset_bottom = 370.0
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="QuestListVBox" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/LeftPage/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="MainQuestHeader" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/LeftPage/ScrollContainer/QuestListVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/LeftPage/ScrollContainer/QuestListVBox/MainQuestHeader"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "Misi Utama"
+
+[node name="Dots" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/LeftPage/ScrollContainer/QuestListVBox/MainQuestHeader"]
+custom_minimum_size = Vector2(60, 4)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+texture = SubResource("Atlas_dots_divider")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="MainQuestList" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/LeftPage/ScrollContainer/QuestListVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Spacer" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/LeftPage/ScrollContainer/QuestListVBox"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="WorldQuestHeader" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/LeftPage/ScrollContainer/QuestListVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/LeftPage/ScrollContainer/QuestListVBox/WorldQuestHeader"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "Misi Dunia"
+
+[node name="Dots" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/LeftPage/ScrollContainer/QuestListVBox/WorldQuestHeader"]
+custom_minimum_size = Vector2(60, 4)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+texture = SubResource("Atlas_dots_divider")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="WorldQuestList" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/LeftPage/ScrollContainer/QuestListVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RightPage" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -320.0
+offset_top = 34.0
+offset_right = -32.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="DetailsScroll" type="ScrollContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 20.0
+offset_right = 280.0
+offset_bottom = 338.0
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="DetailsVBox" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage/DetailsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage/DetailsScroll/DetailsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 22
+text = "Judul Misi"
+autowrap_mode = 3
+
+[node name="LocationRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage/DetailsScroll/DetailsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="LocationIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage/DetailsScroll/DetailsVBox/LocationRow"]
+custom_minimum_size = Vector2(14, 16)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_location_pin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LocationLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage/DetailsScroll/DetailsVBox/LocationRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.27, 0.16, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Istana Kerajaan"
+autowrap_mode = 3
+vertical_alignment = 1
+
+[node name="SpacerTop" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage/DetailsScroll/DetailsVBox"]
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+
+[node name="ObjectiveBox" type="PanelContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage/DetailsScroll/DetailsVBox"]
+texture_filter = 1
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_objective_panel")
+
+[node name="ObjectiveContent" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage/DetailsScroll/DetailsVBox/ObjectiveBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Arrow" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage/DetailsScroll/DetailsVBox/ObjectiveBox/ObjectiveContent"]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(0.44, 0.31, 0.27, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "▶"
+vertical_alignment = 1
+
+[node name="ObjectiveLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage/DetailsScroll/DetailsVBox/ObjectiveBox/ObjectiveContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = "Petunjuk Misi"
+autowrap_mode = 3
+
+[node name="SpacerMid" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage/DetailsScroll/DetailsVBox"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+
+[node name="DescLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage/DetailsScroll/DetailsVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Deskripsi petunjuk bisa satu sampai dua kalimat"
+autowrap_mode = 3
+
+[node name="BtnNavigasi" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage"]
+layout_mode = 0
+offset_left = 176.0
+offset_top = 345.0
+offset_right = 280.0
+offset_bottom = 371.0
+mouse_filter = 0
+
+[node name="IconE" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage/BtnNavigasi"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 2.0
+offset_right = 18.0
+offset_bottom = 20.0
+texture = SubResource("Atlas_btn_e")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LabelNavigasi" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageJournal/RightPage/BtnNavigasi"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 0.0
+offset_right = 104.0
+offset_bottom = 24.0
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Navigasi"
+vertical_alignment = 1
+
+[node name="PageSettings" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="LeftPage" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings"]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_top = 34.0
+offset_right = 320.0
+offset_bottom = -20.0
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="SubmenuList" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/LeftPage"]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 22.0
+offset_right = 268.0
+offset_bottom = 340.0
+theme_override_constants/separation = 14
+
+[node name="BtnSubmenuAudio" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/LeftPage/SubmenuList"]
+texture_filter = 1
+custom_minimum_size = Vector2(240, 36)
+layout_mode = 2
+texture = SubResource("Atlas_submenu_btn_selected")
+patch_margin_left = 5
+patch_margin_top = 4
+patch_margin_right = 5
+patch_margin_bottom = 4
+
+[node name="Title" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/LeftPage/SubmenuList/BtnSubmenuAudio"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_right = -14.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Musik & Suara"
+vertical_alignment = 1
+
+[node name="ClickArea" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/LeftPage/SubmenuList/BtnSubmenuAudio"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="BtnSubmenuControls" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/LeftPage/SubmenuList"]
+texture_filter = 1
+custom_minimum_size = Vector2(240, 36)
+layout_mode = 2
+texture = SubResource("Atlas_submenu_btn_normal")
+patch_margin_left = 5
+patch_margin_top = 4
+patch_margin_right = 5
+patch_margin_bottom = 4
+
+[node name="Title" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/LeftPage/SubmenuList/BtnSubmenuControls"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_right = -14.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.4, 0.3, 0.3, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Kontrol"
+vertical_alignment = 1
+
+[node name="ClickArea" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/LeftPage/SubmenuList/BtnSubmenuControls"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="BtnSubmenuSaveLoad" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/LeftPage/SubmenuList"]
+texture_filter = 1
+custom_minimum_size = Vector2(240, 36)
+layout_mode = 2
+texture = SubResource("Atlas_submenu_btn_normal")
+patch_margin_left = 5
+patch_margin_top = 4
+patch_margin_right = 5
+patch_margin_bottom = 4
+
+[node name="Title" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/LeftPage/SubmenuList/BtnSubmenuSaveLoad"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_right = -14.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.4, 0.3, 0.3, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Simpan & Muat"
+vertical_alignment = 1
+
+[node name="ClickArea" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/LeftPage/SubmenuList/BtnSubmenuSaveLoad"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="BtnSubmenuTitle" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/LeftPage/SubmenuList"]
+texture_filter = 1
+custom_minimum_size = Vector2(240, 36)
+layout_mode = 2
+texture = SubResource("Atlas_submenu_btn_normal")
+patch_margin_left = 5
+patch_margin_top = 4
+patch_margin_right = 5
+patch_margin_bottom = 4
+
+[node name="Title" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/LeftPage/SubmenuList/BtnSubmenuTitle"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_right = -14.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.4, 0.3, 0.3, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Kembali ke Judul"
+vertical_alignment = 1
+
+[node name="ClickArea" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/LeftPage/SubmenuList/BtnSubmenuTitle"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="RightPage" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -320.0
+offset_top = 34.0
+offset_right = -32.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="SubmenuAudio" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="AudioRows" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 18.0
+offset_right = 268.0
+offset_bottom = 330.0
+theme_override_constants/separation = 14
+
+[node name="RowMaster" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMaster"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Volume Utama"
+
+[node name="ControlsRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMaster"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ValBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMaster/ControlsRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(34, 16)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_val_box")
+patch_margin_left = 3
+patch_margin_top = 3
+patch_margin_right = 3
+patch_margin_bottom = 3
+
+[node name="ValLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMaster/ControlsRow/ValBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.85, 0.8, 0.75, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "65"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SliderMaster" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMaster/ControlsRow"]
+custom_minimum_size = Vector2(190, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 0
+
+[node name="TrackBg" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMaster/ControlsRow/SliderMaster"]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -4.0
+offset_bottom = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_slider_track_bg")
+patch_margin_left = 3
+patch_margin_right = 3
+
+[node name="TrackFill" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMaster/ControlsRow/SliderMaster"]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 0
+offset_left = 3.0
+offset_top = 8.0
+offset_right = 121.0
+offset_bottom = 12.0
+mouse_filter = 2
+texture = SubResource("Atlas_slider_track_fill")
+patch_margin_left = 2
+patch_margin_right = 2
+
+[node name="Grabber" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMaster/ControlsRow/SliderMaster"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 115.0
+offset_top = 2.0
+offset_right = 131.0
+offset_bottom = 18.0
+mouse_filter = 2
+stretch_mode = 3
+
+[node name="RowMusic" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMusic"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Musik"
+
+[node name="ControlsRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMusic"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ValBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMusic/ControlsRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(34, 16)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_val_box")
+patch_margin_left = 3
+patch_margin_top = 3
+patch_margin_right = 3
+patch_margin_bottom = 3
+
+[node name="ValLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMusic/ControlsRow/ValBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.85, 0.8, 0.75, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "50"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SliderMusic" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMusic/ControlsRow"]
+custom_minimum_size = Vector2(190, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 0
+
+[node name="TrackBg" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMusic/ControlsRow/SliderMusic"]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -4.0
+offset_bottom = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_slider_track_bg")
+patch_margin_left = 3
+patch_margin_right = 3
+
+[node name="TrackFill" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMusic/ControlsRow/SliderMusic"]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 0
+offset_left = 3.0
+offset_top = 8.0
+offset_right = 95.0
+offset_bottom = 12.0
+mouse_filter = 2
+texture = SubResource("Atlas_slider_track_fill")
+patch_margin_left = 2
+patch_margin_right = 2
+
+[node name="Grabber" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowMusic/ControlsRow/SliderMusic"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 87.0
+offset_top = 2.0
+offset_right = 103.0
+offset_bottom = 18.0
+mouse_filter = 2
+stretch_mode = 3
+
+[node name="RowSfx" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowSfx"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Efek Suara"
+
+[node name="ControlsRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowSfx"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ValBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowSfx/ControlsRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(34, 16)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_val_box")
+patch_margin_left = 3
+patch_margin_top = 3
+patch_margin_right = 3
+patch_margin_bottom = 3
+
+[node name="ValLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowSfx/ControlsRow/ValBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.85, 0.8, 0.75, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "50"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SliderSfx" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowSfx/ControlsRow"]
+custom_minimum_size = Vector2(190, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 0
+
+[node name="TrackBg" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowSfx/ControlsRow/SliderSfx"]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -4.0
+offset_bottom = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_slider_track_bg")
+patch_margin_left = 3
+patch_margin_right = 3
+
+[node name="TrackFill" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowSfx/ControlsRow/SliderSfx"]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 0
+offset_left = 3.0
+offset_top = 8.0
+offset_right = 95.0
+offset_bottom = 12.0
+mouse_filter = 2
+texture = SubResource("Atlas_slider_track_fill")
+patch_margin_left = 2
+patch_margin_right = 2
+
+[node name="Grabber" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowSfx/ControlsRow/SliderSfx"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 87.0
+offset_top = 2.0
+offset_right = 103.0
+offset_bottom = 18.0
+mouse_filter = 2
+stretch_mode = 3
+
+[node name="RowDialog" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowDialog"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Dialog"
+
+[node name="ControlsRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowDialog"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ValBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowDialog/ControlsRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(34, 16)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("Atlas_val_box")
+patch_margin_left = 3
+patch_margin_top = 3
+patch_margin_right = 3
+patch_margin_bottom = 3
+
+[node name="ValLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowDialog/ControlsRow/ValBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.85, 0.8, 0.75, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "50"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SliderDialog" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowDialog/ControlsRow"]
+custom_minimum_size = Vector2(190, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 0
+
+[node name="TrackBg" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowDialog/ControlsRow/SliderDialog"]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -4.0
+offset_bottom = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_slider_track_bg")
+patch_margin_left = 3
+patch_margin_right = 3
+
+[node name="TrackFill" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowDialog/ControlsRow/SliderDialog"]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 0
+offset_left = 3.0
+offset_top = 8.0
+offset_right = 95.0
+offset_bottom = 12.0
+mouse_filter = 2
+texture = SubResource("Atlas_slider_track_fill")
+patch_margin_left = 2
+patch_margin_right = 2
+
+[node name="Grabber" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowDialog/ControlsRow/SliderDialog"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 87.0
+offset_top = 2.0
+offset_right = 103.0
+offset_bottom = 18.0
+mouse_filter = 2
+stretch_mode = 3
+
+[node name="SubmenuControls" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ControlRows" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 18.0
+offset_right = 268.0
+offset_bottom = 372.0
+theme_override_constants/separation = 8
+
+[node name="RowSwitch" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSwitch"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Beralih Karakter"
+vertical_alignment = 1
+
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSwitch"]
+texture_filter = 1
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSwitch/KeyBox"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_btn_q")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSwitch/KeyBox"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "Q"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSwitch/KeyBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="RowAttack" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowAttack"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Serang"
+vertical_alignment = 1
+
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowAttack"]
+texture_filter = 1
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowAttack/KeyBox"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_btn_v")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowAttack/KeyBox"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "V"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowAttack/KeyBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="RowFollow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowFollow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Ikuti"
+vertical_alignment = 1
+
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowFollow"]
+texture_filter = 1
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowFollow/KeyBox"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_btn_c")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowFollow/KeyBox"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "C"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowFollow/KeyBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="RowSkill1" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill1"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Skill 1"
+vertical_alignment = 1
+
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill1"]
+texture_filter = 1
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill1/KeyBox"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_btn_1")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill1/KeyBox"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill1/KeyBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="RowSkill2" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill2"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Skill 2"
+vertical_alignment = 1
+
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill2"]
+texture_filter = 1
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill2/KeyBox"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_btn_2")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill2/KeyBox"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "2"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill2/KeyBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="RowSkill3" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill3"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Skill 3"
+vertical_alignment = 1
+
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill3"]
+texture_filter = 1
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill3/KeyBox"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_btn_3")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill3/KeyBox"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "3"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill3/KeyBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="RowSkill4" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill4"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Skill 4"
+vertical_alignment = 1
+
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill4"]
+texture_filter = 1
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill4/KeyBox"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_btn_4")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill4/KeyBox"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "4"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill4/KeyBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="RowInteract" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowInteract"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Interaksi"
+vertical_alignment = 1
+
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowInteract"]
+texture_filter = 1
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowInteract/KeyBox"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_btn_e")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowInteract/KeyBox"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "E"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowInteract/KeyBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="RowSkip" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkip"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Skip"
+vertical_alignment = 1
+
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkip"]
+texture_filter = 1
+custom_minimum_size = Vector2(58, 32)
+layout_mode = 2
+size_flags_vertical = 4
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkip/KeyBox"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_btn_space")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkip/KeyBox"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "SPACE"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkip/KeyBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="SubmenuSaveLoad" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="SlotsContainer" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad"]
+layout_mode = 0
+offset_left = 4.0
+offset_top = 18.0
+offset_right = 248.0
+offset_bottom = 302.0
+theme_override_constants/separation = 10
+
+[node name="SlotRow1" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer"]
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SlotNum" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1"]
+custom_minimum_size = Vector2(14, 24)
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 2
+
+[node name="SlotCard" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1"]
+texture_filter = 1
+custom_minimum_size = Vector2(224, 88)
+layout_mode = 2
+size_flags_horizontal = 3
+texture = SubResource("Atlas_save_card_selected")
+patch_margin_left = 5
+patch_margin_top = 4
+patch_margin_right = 5
+patch_margin_bottom = 4
+
+[node name="ContentMargin" type="MarginContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 5
+
+[node name="OccupiedView" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin"]
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="TopRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin/OccupiedView"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="InfoCol" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin/OccupiedView/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+
+[node name="Chapter" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 17
+text = "Chapter 1.1"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="Location" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "Lokasi: Istana Kerajaan"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="Playtime" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "Waktu Bermain: 00:08:11"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="Thumbnail" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin/OccupiedView/TopRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(44, 28)
+layout_mode = 2
+size_flags_vertical = 4
+stretch_mode = 5
+
+[node name="SaveTime" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin/OccupiedView"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "Waktu Simpan: 8 Nov 2026, 14.30"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="EmptyView" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="EmptyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin/EmptyView"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 17
+text = "Slot Kosong"
+horizontal_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="SlotRow2" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer"]
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SlotNum" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2"]
+custom_minimum_size = Vector2(14, 24)
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = "2"
+horizontal_alignment = 1
+vertical_alignment = 2
+
+[node name="SlotCard" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2"]
+texture_filter = 1
+custom_minimum_size = Vector2(224, 88)
+layout_mode = 2
+size_flags_horizontal = 3
+texture = SubResource("Atlas_submenu_btn_normal")
+patch_margin_left = 5
+patch_margin_top = 4
+patch_margin_right = 5
+patch_margin_bottom = 4
+
+[node name="ContentMargin" type="MarginContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 5
+
+[node name="OccupiedView" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="TopRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin/OccupiedView"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="InfoCol" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin/OccupiedView/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+
+[node name="Chapter" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 17
+text = "Chapter 1.1"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="Location" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "Lokasi: Istana Kerajaan"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="Playtime" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "Waktu Bermain: 00:08:11"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="Thumbnail" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin/OccupiedView/TopRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(44, 28)
+layout_mode = 2
+size_flags_vertical = 4
+stretch_mode = 5
+
+[node name="SaveTime" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin/OccupiedView"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "Waktu Simpan: 8 Nov 2026, 14.30"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="EmptyView" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="EmptyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin/EmptyView"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 17
+text = "Slot Kosong"
+horizontal_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="SlotRow3" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer"]
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SlotNum" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3"]
+custom_minimum_size = Vector2(14, 24)
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = "3"
+horizontal_alignment = 1
+vertical_alignment = 2
+
+[node name="SlotCard" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3"]
+texture_filter = 1
+custom_minimum_size = Vector2(224, 88)
+layout_mode = 2
+size_flags_horizontal = 3
+texture = SubResource("Atlas_submenu_btn_normal")
+patch_margin_left = 5
+patch_margin_top = 4
+patch_margin_right = 5
+patch_margin_bottom = 4
+
+[node name="ContentMargin" type="MarginContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 5
+
+[node name="OccupiedView" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard/ContentMargin"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="TopRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard/ContentMargin/OccupiedView"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="InfoCol" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard/ContentMargin/OccupiedView/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+
+[node name="Chapter" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 17
+text = "Chapter 1.1"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="Location" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "Lokasi: Istana Kerajaan"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="Playtime" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "Waktu Bermain: 00:08:11"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="Thumbnail" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard/ContentMargin/OccupiedView/TopRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(44, 28)
+layout_mode = 2
+size_flags_vertical = 4
+stretch_mode = 5
+
+[node name="SaveTime" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard/ContentMargin/OccupiedView"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "Waktu Simpan: 8 Nov 2026, 14.30"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="EmptyView" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard/ContentMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="EmptyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard/ContentMargin/EmptyView"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 17
+text = "Slot Kosong"
+horizontal_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="DecorativeScrollbar" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad"]
+layout_mode = 0
+offset_left = 252.0
+offset_top = 30.0
+offset_right = 272.0
+offset_bottom = 338.0
+mouse_filter = 2
+
+[node name="Track" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/DecorativeScrollbar"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -4.0
+offset_right = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+patch_margin_top = 6
+patch_margin_bottom = 6
+
+[node name="Grabber" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/DecorativeScrollbar"]
+texture_filter = 1
+custom_minimum_size = Vector2(16, 14)
+layout_mode = 0
+offset_left = 2.0
+offset_top = 4.0
+offset_right = 18.0
+offset_bottom = 18.0
+mouse_filter = 2
+stretch_mode = 3
+
+[node name="SaveFeedback" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad"]
+visible = false
+layout_mode = 0
+offset_left = 10.0
+offset_top = 318.0
+offset_right = 262.0
+offset_bottom = 342.0
+theme_override_colors/font_color = Color(0.2, 0.42, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 11
+text = "Data berhasil disimpan di Slot 1!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BottomRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 352.0
+offset_right = 262.0
+offset_bottom = 386.0
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="BtnSimpan" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/BottomRow"]
+visible = false
+texture_filter = 1
+custom_minimum_size = Vector2(60, 26)
+layout_mode = 2
+texture = SubResource("Atlas_submenu_btn_selected")
+patch_margin_left = 5
+patch_margin_top = 4
+patch_margin_right = 5
+patch_margin_bottom = 4
+
+[node name="Label" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/BottomRow/BtnSimpan"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 11
+text = "SIMPAN"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/BottomRow/BtnSimpan"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="BtnMuat" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/BottomRow"]
+visible = false
+texture_filter = 1
+custom_minimum_size = Vector2(52, 26)
+layout_mode = 2
+texture = SubResource("Atlas_submenu_btn_normal")
+patch_margin_left = 5
+patch_margin_top = 4
+patch_margin_right = 5
+patch_margin_bottom = 4
+
+[node name="Label" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/BottomRow/BtnMuat"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 11
+text = "MUAT"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/BottomRow/BtnMuat"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="EnterHint" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+theme_override_constants/separation = 8
+
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/BottomRow/EnterHint"]
+texture_filter = 1
+custom_minimum_size = Vector2(44, 24)
+layout_mode = 2
+size_flags_vertical = 4
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/BottomRow/EnterHint/KeyBox"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_btn_enter")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/BottomRow/EnterHint/KeyBox"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 10
+text = "Enter"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HintLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/BottomRow/EnterHint"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "Muat/Timpa data"
+vertical_alignment = 1
+
+[node name="PageCredits" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Msg" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -30.0
+offset_right = 240.0
+offset_bottom = 30.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.35, 0.25, 0.26, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 26
+text = "Credits"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SaveConfirmModal" type="Control" parent="RootControl/PauseOverlay"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dimmer" type="ColorRect" parent="RootControl/PauseOverlay/SaveConfirmModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.45)
+
+[node name="DialogBox" type="NinePatchRect" parent="RootControl/PauseOverlay/SaveConfirmModal"]
+texture_filter = 1
+custom_minimum_size = Vector2(260, 110)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -130.0
+offset_top = -55.0
+offset_right = 130.0
+offset_bottom = 55.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+texture = SubResource("Atlas_submenu_btn_selected")
+patch_margin_left = 6
+patch_margin_top = 6
+patch_margin_right = 6
+patch_margin_bottom = 6
+
+[node name="DialogTitle" type="Label" parent="RootControl/PauseOverlay/SaveConfirmModal/DialogBox"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 10.0
+offset_bottom = 26.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "Konfirmasi"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DialogMessage" type="Label" parent="RootControl/PauseOverlay/SaveConfirmModal/DialogBox"]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -18.0
+offset_bottom = 12.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.35, 0.25, 0.26, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "Timpa data simpan ini?"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="ButtonsRow" type="HBoxContainer" parent="RootControl/PauseOverlay/SaveConfirmModal/DialogBox"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -34.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="BtnYes" type="NinePatchRect" parent="RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(60, 24)
+layout_mode = 2
+texture = SubResource("Atlas_submenu_btn_normal")
+patch_margin_left = 5
+patch_margin_top = 4
+patch_margin_right = 5
+patch_margin_bottom = 4
+
+[node name="Label" type="Label" parent="RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow/BtnYes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 11
+text = "Ya"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow/BtnYes"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="BtnTimpa" type="NinePatchRect" parent="RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow"]
+visible = false
+texture_filter = 1
+custom_minimum_size = Vector2(60, 24)
+layout_mode = 2
+texture = SubResource("Atlas_submenu_btn_normal")
+patch_margin_left = 5
+patch_margin_top = 4
+patch_margin_right = 5
+patch_margin_bottom = 4
+
+[node name="Label" type="Label" parent="RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow/BtnTimpa"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 11
+text = "Timpa"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow/BtnTimpa"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="BtnNo" type="NinePatchRect" parent="RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(60, 24)
+layout_mode = 2
+texture = SubResource("Atlas_submenu_btn_normal")
+patch_margin_left = 5
+patch_margin_top = 4
+patch_margin_right = 5
+patch_margin_bottom = 4
+
+[node name="Label" type="Label" parent="RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow/BtnNo"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 11
+text = "Tidak"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow/BtnNo"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
