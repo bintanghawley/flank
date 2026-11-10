@@ -1,7 +1,8 @@
-[gd_scene format=3 uid="uid://c8k1ngd0mm4p1"]
+[gd_scene format=3 uid="uid://dlatxleiag3o8"]
 
 [ext_resource type="Texture2D" path="res://assets/environment/map/kingdom_ground.png" id="1_ground"]
 [ext_resource type="Texture2D" path="res://assets/environment/map/kingdom_structures.png" id="2_structures"]
+
 [sub_resource type="RectangleShape2D" id="Rect_0"]
 size = Vector2(560, 1040)
 
@@ -191,551 +192,551 @@ size = Vector2(560, 400)
 [sub_resource type="RectangleShape2D" id="Rect_62"]
 size = Vector2(720, 320)
 
-[node name="map_region1" type="Node2D"]
+[node name="map_region1" type="Node2D" unique_id=87851543]
 
-[node name="BaseGrass" type="ColorRect" parent="."]
+[node name="BaseGrass" type="ColorRect" parent="." unique_id=760148043]
 z_index = -2
 offset_right = 7215.0
 offset_bottom = 4090.0
 mouse_filter = 2
 color = Color(0.443137, 0.666667, 0.203922, 1)
 
-[node name="Ground" type="Sprite2D" parent="."]
+[node name="Ground" type="Sprite2D" parent="." unique_id=556731375]
 texture_filter = 1
 scale = Vector2(5, 5)
 texture = ExtResource("1_ground")
 centered = false
 
-[node name="Structures" type="Sprite2D" parent="."]
+[node name="Structures" type="Sprite2D" parent="." unique_id=690276953]
 z_index = 3
 texture_filter = 1
 scale = Vector2(5, 5)
 texture = ExtResource("2_structures")
 centered = false
 
-[node name="BuildingBoundary" type="StaticBody2D" parent="."]
-collision_layer = 1
+[node name="BuildingBoundary" type="StaticBody2D" parent="." unique_id=1017151662]
 collision_mask = 0
-[node name="Wall_0" type="CollisionShape2D" parent="BuildingBoundary"]
+
+[node name="Wall_0" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1227976241]
 position = Vector2(2440, 520)
 shape = SubResource("Rect_0")
 
-[node name="Wall_1" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_1" type="CollisionShape2D" parent="BuildingBoundary" unique_id=275067617]
 position = Vector2(3320, 600)
 shape = SubResource("Rect_1")
 
-[node name="Wall_2" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_2" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1438601269]
 position = Vector2(3240, 640)
 shape = SubResource("Rect_2")
 
-[node name="Wall_3" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_3" type="CollisionShape2D" parent="BuildingBoundary" unique_id=494948917]
 position = Vector2(3400, 640)
 shape = SubResource("Rect_2")
 
-[node name="Wall_4" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_4" type="CollisionShape2D" parent="BuildingBoundary" unique_id=94530193]
 position = Vector2(2000, 320)
 shape = SubResource("Rect_3")
 
-[node name="Wall_5" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_5" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1552632400]
 position = Vector2(3160, 640)
 shape = SubResource("Rect_4")
 
-[node name="Wall_6" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_6" type="CollisionShape2D" parent="BuildingBoundary" unique_id=114706095]
 position = Vector2(360, 2200)
 shape = SubResource("Rect_5")
 
-[node name="Wall_7" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_7" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1187308746]
 position = Vector2(2920, 680)
 shape = SubResource("Rect_6")
 
-[node name="Wall_8" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_8" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1512972490]
 position = Vector2(280, 2240)
 shape = SubResource("Rect_7")
 
-[node name="Wall_9" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_9" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1794190084]
 position = Vector2(440, 1280)
 shape = SubResource("Rect_8")
 
-[node name="Wall_10" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_10" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1464193173]
 position = Vector2(1960, 760)
 shape = SubResource("Rect_9")
 
-[node name="Wall_11" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_11" type="CollisionShape2D" parent="BuildingBoundary" unique_id=738719089]
 position = Vector2(5320, 640)
 shape = SubResource("Rect_10")
 
-[node name="Wall_12" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_12" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1692422835]
 position = Vector2(3480, 680)
 shape = SubResource("Rect_11")
 
-[node name="Wall_13" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_13" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1367240500]
 position = Vector2(1160, 720)
 shape = SubResource("Rect_12")
 
-[node name="Wall_14" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_14" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1398332326]
 position = Vector2(4320, 720)
 shape = SubResource("Rect_13")
 
-[node name="Wall_15" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_15" type="CollisionShape2D" parent="BuildingBoundary" unique_id=420520194]
 position = Vector2(6360, 720)
 shape = SubResource("Rect_14")
 
-[node name="Wall_16" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_16" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1408425299]
 position = Vector2(2120, 840)
 shape = SubResource("Rect_11")
 
-[node name="Wall_17" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_17" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1053028551]
 position = Vector2(120, 2400)
 shape = SubResource("Rect_15")
 
-[node name="Wall_18" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_18" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1916118873]
 position = Vector2(920, 1120)
 shape = SubResource("Rect_16")
 
-[node name="Wall_19" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_19" type="CollisionShape2D" parent="BuildingBoundary" unique_id=805780662]
 position = Vector2(5040, 1240)
 shape = SubResource("Rect_17")
 
-[node name="Wall_20" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_20" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1927023589]
 position = Vector2(5600, 960)
 shape = SubResource("Rect_18")
 
-[node name="Wall_21" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_21" type="CollisionShape2D" parent="BuildingBoundary" unique_id=48693684]
 position = Vector2(5920, 920)
 shape = SubResource("Rect_19")
 
-[node name="Wall_22" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_22" type="CollisionShape2D" parent="BuildingBoundary" unique_id=500030462]
 position = Vector2(6680, 920)
 shape = SubResource("Rect_20")
 
-[node name="Wall_23" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_23" type="CollisionShape2D" parent="BuildingBoundary" unique_id=935258934]
 position = Vector2(6720, 1000)
 shape = SubResource("Rect_21")
 
-[node name="Wall_24" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_24" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1666887692]
 position = Vector2(6840, 1080)
 shape = SubResource("Rect_22")
 
-[node name="Wall_25" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_25" type="CollisionShape2D" parent="BuildingBoundary" unique_id=2141578888]
 position = Vector2(5600, 1280)
 shape = SubResource("Rect_23")
 
-[node name="Wall_26" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_26" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1455653067]
 position = Vector2(6920, 1240)
 shape = SubResource("Rect_24")
 
-[node name="Wall_27" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_27" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1200741090]
 position = Vector2(5480, 1360)
 shape = SubResource("Rect_25")
 
-[node name="Wall_28" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_28" type="CollisionShape2D" parent="BuildingBoundary" unique_id=2111686631]
 position = Vector2(6040, 1480)
 shape = SubResource("Rect_26")
 
-[node name="Wall_29" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_29" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1746224469]
 position = Vector2(5800, 1320)
 shape = SubResource("Rect_27")
 
-[node name="Wall_30" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_30" type="CollisionShape2D" parent="BuildingBoundary" unique_id=962128756]
 position = Vector2(560, 1760)
 shape = SubResource("Rect_28")
 
-[node name="Wall_31" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_31" type="CollisionShape2D" parent="BuildingBoundary" unique_id=888958545]
 position = Vector2(1120, 1400)
 shape = SubResource("Rect_29")
 
-[node name="Wall_32" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_32" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1550267]
 position = Vector2(2920, 1720)
 shape = SubResource("Rect_30")
 
-[node name="Wall_33" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_33" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1353917908]
 position = Vector2(3160, 1720)
 shape = SubResource("Rect_30")
 
-[node name="Wall_34" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_34" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1015017565]
 position = Vector2(3720, 1720)
 shape = SubResource("Rect_9")
 
-[node name="Wall_35" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_35" type="CollisionShape2D" parent="BuildingBoundary" unique_id=395380056]
 position = Vector2(4280, 1720)
 shape = SubResource("Rect_30")
 
-[node name="Wall_36" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_36" type="CollisionShape2D" parent="BuildingBoundary" unique_id=190516698]
 position = Vector2(4520, 1720)
 shape = SubResource("Rect_30")
 
-[node name="Wall_37" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_37" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1975153111]
 position = Vector2(5720, 1400)
 shape = SubResource("Rect_31")
 
-[node name="Wall_38" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_38" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1742707421]
 position = Vector2(7000, 1400)
 shape = SubResource("Rect_32")
 
-[node name="Wall_39" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_39" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1119515164]
 position = Vector2(1200, 1760)
 shape = SubResource("Rect_33")
 
-[node name="Wall_40" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_40" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1652467140]
 position = Vector2(3040, 1760)
 shape = SubResource("Rect_34")
 
-[node name="Wall_41" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_41" type="CollisionShape2D" parent="BuildingBoundary" unique_id=2030733989]
 position = Vector2(3560, 1760)
 shape = SubResource("Rect_35")
 
-[node name="Wall_42" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_42" type="CollisionShape2D" parent="BuildingBoundary" unique_id=987618813]
 position = Vector2(3880, 1760)
 shape = SubResource("Rect_35")
 
-[node name="Wall_43" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_43" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1668893236]
 position = Vector2(4400, 1760)
 shape = SubResource("Rect_34")
 
-[node name="Wall_44" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_44" type="CollisionShape2D" parent="BuildingBoundary" unique_id=405491065]
 position = Vector2(5880, 1600)
 shape = SubResource("Rect_25")
 
-[node name="Wall_45" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_45" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1638588395]
 position = Vector2(7080, 1960)
 shape = SubResource("Rect_36")
 
-[node name="Wall_46" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_46" type="CollisionShape2D" parent="BuildingBoundary" unique_id=49127970]
 position = Vector2(1560, 1800)
 shape = SubResource("Rect_37")
 
-[node name="Wall_47" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_47" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1984488554]
 position = Vector2(5800, 1640)
 shape = SubResource("Rect_38")
 
-[node name="Wall_48" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_48" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1705575066]
 position = Vector2(6560, 1600)
 shape = SubResource("Rect_18")
 
-[node name="Wall_49" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_49" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1339389017]
 position = Vector2(2040, 1840)
 shape = SubResource("Rect_39")
 
-[node name="Wall_50" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_50" type="CollisionShape2D" parent="BuildingBoundary" unique_id=75390527]
 position = Vector2(5000, 1640)
 shape = SubResource("Rect_22")
 
-[node name="Wall_51" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_51" type="CollisionShape2D" parent="BuildingBoundary" unique_id=966855562]
 position = Vector2(6200, 1680)
 shape = SubResource("Rect_40")
 
-[node name="Wall_52" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_52" type="CollisionShape2D" parent="BuildingBoundary" unique_id=40145282]
 position = Vector2(3360, 1840)
 shape = SubResource("Rect_41")
 
-[node name="Wall_53" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_53" type="CollisionShape2D" parent="BuildingBoundary" unique_id=2106062460]
 position = Vector2(4080, 1840)
 shape = SubResource("Rect_41")
 
-[node name="Wall_54" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_54" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1696305018]
 position = Vector2(4920, 1760)
 shape = SubResource("Rect_42")
 
-[node name="Wall_55" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_55" type="CollisionShape2D" parent="BuildingBoundary" unique_id=724792734]
 position = Vector2(5360, 1720)
 shape = SubResource("Rect_43")
 
-[node name="Wall_56" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_56" type="CollisionShape2D" parent="BuildingBoundary" unique_id=306889461]
 position = Vector2(5640, 1720)
 shape = SubResource("Rect_27")
 
-[node name="Wall_57" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_57" type="CollisionShape2D" parent="BuildingBoundary" unique_id=2071995166]
 position = Vector2(1000, 1920)
 shape = SubResource("Rect_25")
 
-[node name="Wall_58" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_58" type="CollisionShape2D" parent="BuildingBoundary" unique_id=2146052416]
 position = Vector2(2360, 1800)
 shape = SubResource("Rect_31")
 
-[node name="Wall_59" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_59" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1180364239]
 position = Vector2(6760, 1960)
 shape = SubResource("Rect_27")
 
-[node name="Wall_60" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_60" type="CollisionShape2D" parent="BuildingBoundary" unique_id=433393310]
 position = Vector2(2360, 2040)
 shape = SubResource("Rect_31")
 
-[node name="Wall_61" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_61" type="CollisionShape2D" parent="BuildingBoundary" unique_id=2091114197]
 position = Vector2(5800, 2200)
 shape = SubResource("Rect_44")
 
-[node name="Wall_62" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_62" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1152237873]
 position = Vector2(5360, 2240)
 shape = SubResource("Rect_45")
 
-[node name="Wall_63" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_63" type="CollisionShape2D" parent="BuildingBoundary" unique_id=29471043]
 position = Vector2(6480, 2240)
 shape = SubResource("Rect_46")
 
-[node name="Wall_64" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_64" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1201869657]
 position = Vector2(1160, 2440)
 shape = SubResource("Rect_26")
 
-[node name="Wall_65" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_65" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1926326964]
 position = Vector2(440, 3160)
 shape = SubResource("Rect_47")
 
-[node name="Wall_66" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_66" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1379083723]
 position = Vector2(1720, 2440)
 shape = SubResource("Rect_48")
 
-[node name="Wall_67" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_67" type="CollisionShape2D" parent="BuildingBoundary" unique_id=98925300]
 position = Vector2(4920, 2520)
 shape = SubResource("Rect_26")
 
-[node name="Wall_68" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_68" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1375631187]
 position = Vector2(520, 3200)
 shape = SubResource("Rect_8")
 
-[node name="Wall_69" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_69" type="CollisionShape2D" parent="BuildingBoundary" unique_id=871924665]
 position = Vector2(1440, 2480)
 shape = SubResource("Rect_41")
 
-[node name="Wall_70" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_70" type="CollisionShape2D" parent="BuildingBoundary" unique_id=987079218]
 position = Vector2(2080, 2480)
 shape = SubResource("Rect_45")
 
-[node name="Wall_71" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_71" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1227553236]
 position = Vector2(3040, 2880)
 shape = SubResource("Rect_49")
 
-[node name="Wall_72" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_72" type="CollisionShape2D" parent="BuildingBoundary" unique_id=778918160]
 position = Vector2(3880, 2840)
 shape = SubResource("Rect_36")
 
-[node name="Wall_73" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_73" type="CollisionShape2D" parent="BuildingBoundary" unique_id=884299746]
 position = Vector2(4640, 2560)
 shape = SubResource("Rect_50")
 
-[node name="Wall_74" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_74" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1830959755]
 position = Vector2(5080, 2560)
 shape = SubResource("Rect_51")
 
-[node name="Wall_75" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_75" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1718303516]
 position = Vector2(4400, 2640)
 shape = SubResource("Rect_52")
 
-[node name="Wall_76" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_76" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1197860740]
 position = Vector2(5320, 2440)
 shape = SubResource("Rect_32")
 
-[node name="Wall_77" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_77" type="CollisionShape2D" parent="BuildingBoundary" unique_id=327322768]
 position = Vector2(6120, 2440)
 shape = SubResource("Rect_27")
 
-[node name="Wall_78" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_78" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1705156019]
 position = Vector2(6840, 2440)
 shape = SubResource("Rect_27")
 
-[node name="Wall_79" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_79" type="CollisionShape2D" parent="BuildingBoundary" unique_id=204471943]
 position = Vector2(3640, 2960)
 shape = SubResource("Rect_53")
 
-[node name="Wall_80" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_80" type="CollisionShape2D" parent="BuildingBoundary" unique_id=573041006]
 position = Vector2(4160, 2680)
 shape = SubResource("Rect_54")
 
-[node name="Wall_81" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_81" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1494713204]
 position = Vector2(5240, 3280)
 shape = SubResource("Rect_55")
 
-[node name="Wall_82" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_82" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1591064746]
 position = Vector2(1400, 2680)
 shape = SubResource("Rect_27")
 
-[node name="Wall_83" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_83" type="CollisionShape2D" parent="BuildingBoundary" unique_id=450641847]
 position = Vector2(1800, 2680)
 shape = SubResource("Rect_27")
 
-[node name="Wall_84" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_84" type="CollisionShape2D" parent="BuildingBoundary" unique_id=270324968]
 position = Vector2(2160, 2880)
 shape = SubResource("Rect_50")
 
-[node name="Wall_85" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_85" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1298136460]
 position = Vector2(3480, 2760)
 shape = SubResource("Rect_38")
 
-[node name="Wall_86" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_86" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1253115962]
 position = Vector2(600, 2840)
 shape = SubResource("Rect_38")
 
-[node name="Wall_87" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_87" type="CollisionShape2D" parent="BuildingBoundary" unique_id=486589085]
 position = Vector2(1240, 3000)
 shape = SubResource("Rect_56")
 
-[node name="Wall_88" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_88" type="CollisionShape2D" parent="BuildingBoundary" unique_id=565629781]
 position = Vector2(1320, 3040)
 shape = SubResource("Rect_51")
 
-[node name="Wall_89" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_89" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1042544065]
 position = Vector2(4840, 2880)
 shape = SubResource("Rect_40")
 
-[node name="Wall_90" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_90" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1994061894]
 position = Vector2(5000, 2840)
 shape = SubResource("Rect_31")
 
-[node name="Wall_91" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_91" type="CollisionShape2D" parent="BuildingBoundary" unique_id=728117993]
 position = Vector2(1160, 3080)
 shape = SubResource("Rect_11")
 
-[node name="Wall_92" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_92" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1107322600]
 position = Vector2(4120, 3120)
 shape = SubResource("Rect_57")
 
-[node name="Wall_93" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_93" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1955582011]
 position = Vector2(4440, 2920)
 shape = SubResource("Rect_31")
 
-[node name="Wall_94" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_94" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1300339492]
 position = Vector2(4600, 2920)
 shape = SubResource("Rect_31")
 
-[node name="Wall_95" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_95" type="CollisionShape2D" parent="BuildingBoundary" unique_id=240871960]
 position = Vector2(4760, 2920)
 shape = SubResource("Rect_31")
 
-[node name="Wall_96" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_96" type="CollisionShape2D" parent="BuildingBoundary" unique_id=422688660]
 position = Vector2(1080, 3120)
 shape = SubResource("Rect_25")
 
-[node name="Wall_97" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_97" type="CollisionShape2D" parent="BuildingBoundary" unique_id=749860514]
 position = Vector2(1440, 3120)
 shape = SubResource("Rect_23")
 
-[node name="Wall_98" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_98" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1113124964]
 position = Vector2(1680, 3080)
 shape = SubResource("Rect_58")
 
-[node name="Wall_99" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_99" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1637207020]
 position = Vector2(4920, 3040)
 shape = SubResource("Rect_40")
 
-[node name="Wall_100" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_100" type="CollisionShape2D" parent="BuildingBoundary" unique_id=2042385999]
 position = Vector2(5080, 3000)
 shape = SubResource("Rect_31")
 
-[node name="Wall_101" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_101" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1249447604]
 position = Vector2(1000, 3160)
 shape = SubResource("Rect_38")
 
-[node name="Wall_102" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_102" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1037594899]
 position = Vector2(4520, 3080)
 shape = SubResource("Rect_31")
 
-[node name="Wall_103" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_103" type="CollisionShape2D" parent="BuildingBoundary" unique_id=759834088]
 position = Vector2(4360, 3160)
 shape = SubResource("Rect_31")
 
-[node name="Wall_104" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_104" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1116425692]
 position = Vector2(4600, 3160)
 shape = SubResource("Rect_31")
 
-[node name="Wall_105" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_105" type="CollisionShape2D" parent="BuildingBoundary" unique_id=485068826]
 position = Vector2(4440, 3320)
 shape = SubResource("Rect_38")
 
-[node name="Wall_106" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_106" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1297369125]
 position = Vector2(4760, 3240)
 shape = SubResource("Rect_31")
 
-[node name="Wall_107" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_107" type="CollisionShape2D" parent="BuildingBoundary" unique_id=567462732]
 position = Vector2(5000, 3240)
 shape = SubResource("Rect_31")
 
-[node name="Wall_108" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_108" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1462601985]
 position = Vector2(4600, 3320)
 shape = SubResource("Rect_31")
 
-[node name="Wall_109" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_109" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1989934745]
 position = Vector2(3800, 3400)
 shape = SubResource("Rect_31")
 
-[node name="Wall_110" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_110" type="CollisionShape2D" parent="BuildingBoundary" unique_id=514826820]
 position = Vector2(4360, 3440)
 shape = SubResource("Rect_40")
 
-[node name="Wall_111" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_111" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1262728067]
 position = Vector2(4520, 3400)
 shape = SubResource("Rect_31")
 
-[node name="Wall_112" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_112" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1535689101]
 position = Vector2(4680, 3400)
 shape = SubResource("Rect_31")
 
-[node name="Wall_113" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_113" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1127935858]
 position = Vector2(4920, 3400)
 shape = SubResource("Rect_31")
 
-[node name="Wall_114" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_114" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1121524557]
 position = Vector2(1280, 3760)
 shape = SubResource("Rect_34")
 
-[node name="Wall_115" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_115" type="CollisionShape2D" parent="BuildingBoundary" unique_id=853109465]
 position = Vector2(2560, 3680)
 shape = SubResource("Rect_59")
 
-[node name="Wall_116" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_116" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1318048570]
 position = Vector2(5080, 3480)
 shape = SubResource("Rect_31")
 
-[node name="Wall_117" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_117" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1238946331]
 position = Vector2(1160, 3800)
 shape = SubResource("Rect_56")
 
-[node name="Wall_118" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_118" type="CollisionShape2D" parent="BuildingBoundary" unique_id=552031077]
 position = Vector2(1400, 3800)
 shape = SubResource("Rect_56")
 
-[node name="Wall_119" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_119" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1465863822]
 position = Vector2(2160, 3800)
 shape = SubResource("Rect_60")
 
-[node name="Wall_120" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_120" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1832409104]
 position = Vector2(2960, 3800)
 shape = SubResource("Rect_60")
 
-[node name="Wall_121" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_121" type="CollisionShape2D" parent="BuildingBoundary" unique_id=450260317]
 position = Vector2(4840, 3600)
 shape = SubResource("Rect_40")
 
-[node name="Wall_122" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_122" type="CollisionShape2D" parent="BuildingBoundary" unique_id=2076502089]
 position = Vector2(840, 3840)
 shape = SubResource("Rect_39")
 
-[node name="Wall_123" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_123" type="CollisionShape2D" parent="BuildingBoundary" unique_id=170623663]
 position = Vector2(3640, 3840)
 shape = SubResource("Rect_10")
 
-[node name="Wall_124" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_124" type="CollisionShape2D" parent="BuildingBoundary" unique_id=492429728]
 position = Vector2(4360, 3840)
 shape = SubResource("Rect_51")
 
-[node name="Wall_125" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_125" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1608363059]
 position = Vector2(4680, 3640)
 shape = SubResource("Rect_27")
 
-[node name="Wall_126" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_126" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1914284040]
 position = Vector2(4920, 3640)
 shape = SubResource("Rect_31")
 
-[node name="Wall_127" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_127" type="CollisionShape2D" parent="BuildingBoundary" unique_id=752515695]
 position = Vector2(1720, 3880)
 shape = SubResource("Rect_61")
 
-[node name="Wall_128" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_128" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1036861039]
 position = Vector2(3280, 3920)
 shape = SubResource("Rect_41")
 
-[node name="Wall_129" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_129" type="CollisionShape2D" parent="BuildingBoundary" unique_id=536727539]
 position = Vector2(4080, 3920)
 shape = SubResource("Rect_45")
 
-[node name="Wall_130" type="CollisionShape2D" parent="BuildingBoundary"]
+[node name="Wall_130" type="CollisionShape2D" parent="BuildingBoundary" unique_id=964980401]
 position = Vector2(4760, 3920)
 shape = SubResource("Rect_62")

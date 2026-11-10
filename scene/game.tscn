@@ -3,7 +3,6 @@
 [ext_resource type="Script" path="res://scene/game.gd" id="1_game_script"]
 [ext_resource type="PackedScene" uid="uid://bwrcpv48t8r6w" path="res://scene/player/player_archer.tscn" id="1_33cqm"]
 [ext_resource type="PackedScene" uid="uid://dol0jnt4w2mn7" path="res://scene/enemy/enemy.tscn" id="2_xwcet"]
-[ext_resource type="PackedScene" uid="uid://c8k1ngd0mm4p1" path="res://scene/world/kingdom_map.tscn" id="3_p1ry8"]
 [ext_resource type="PackedScene" path="res://scene/player/player_mage.tscn" id="4_mage"]
 [ext_resource type="PackedScene" path="res://scene/player/player_knight.tscn" id="5_knight"]
 [ext_resource type="PackedScene" uid="uid://df7k2m9b1nd1t" path="res://scene/player/player_bandit.tscn" id="6_bandit"]
@@ -38,10 +37,6 @@ script = ExtResource("1_game_script")
 [node name="Camera2D" type="Camera2D" parent="." unique_id=243320470]
 position = Vector2(3000, 1300)
 zoom = Vector2(0.65, 0.65)
-limit_left = 0
-limit_top = 0
-limit_right = 7215
-limit_bottom = 4090
 position_smoothing_enabled = true
 position_smoothing_speed = 7.0
 
@@ -68,8 +63,6 @@ position = Vector2(3700, 1000)
 [node name="Enemy2" parent="." unique_id=110304381 instance=ExtResource("2_xwcet")]
 z_index = 4
 position = Vector2(4100, 1000)
-
-[node name="map_region1" parent="." unique_id=1420594985 instance=ExtResource("3_p1ry8")]
 
 [node name="GameplayHud" parent="." instance=ExtResource("8_hud")]
 
