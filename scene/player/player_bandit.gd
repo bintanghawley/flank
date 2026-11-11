@@ -136,7 +136,6 @@ var shield_tween: Tween = null
 # CAMERA SHAKE SETTINGS
 # =========================
 @export var camera_shake_strength: float = 7.0
-var shake_decay: float = 35.0
 
 
 func _ready() -> void:

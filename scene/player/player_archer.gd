@@ -228,7 +228,6 @@ var invulnerability_timer: float = 0.0
 # CAMERA SHAKE SETTINGS
 # =========================
 @export var camera_shake_strength: float = 8.0 # Kekuatan getaran kamera saat mengenai lawan
-var shake_decay: float = 35.0
 
 
 func _ready() -> void:
