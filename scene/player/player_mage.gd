@@ -89,6 +89,35 @@ var is_skill_releasing: bool = false
 var skill_stuck_timer: float = 0.0
 var skill_facing_dir: String = "s"
 var active_indicator: Node2D = null
+var active_range_indicator: Node2D = null
+
+# Node bantuan visual lingkaran batas radius jangkauan skill Magnus
+class MeteorRangeIndicator extends Node2D:
+	var radius: float = 480.0
+	var time_passed: float = 0.0
+
+	func _ready() -> void:
+		z_index = 2
+
+	func _process(delta: float) -> void:
+		time_passed += delta
+		queue_redraw()
+
+	func _draw() -> void:
+		# Denyut halus agar batas jangkauan tampak hidup selaras dengan reticle
+		var pulse: float = 0.78 + 0.10 * sin(time_passed * 4.5)
+
+		# 1. Area jangkauan (fill transparan lembut bertema cyan sihir meteor)
+		var fill_color := Color(0.20, 0.85, 0.95, 0.08 + 0.03 * sin(time_passed * 4.5))
+		draw_circle(Vector2.ZERO, radius, fill_color)
+
+		# 2. Lingkaran batas utama (garis cyan murni tebal 4.0px, bersih tanpa garis hitam)
+		var ring_color := Color(0.25, 0.94, 0.98, pulse)
+		draw_arc(Vector2.ZERO, radius, 0.0, TAU, 160, ring_color, 4.0, true)
+
+		# 3. Garis aksen konsentris ganda di dalam batas (selaras dengan motif lingkaran reticle)
+		var inner_accent := Color(0.25, 0.94, 0.98, pulse * 0.45)
+		draw_arc(Vector2.ZERO, radius - 10.0, 0.0, TAU, 128, inner_accent, 2.0, true)
 
 # =========================
 # SPRINT DUST SETTINGS
@@ -140,6 +169,15 @@ func _setup_enemy_collision_exceptions() -> void:
 			e.add_collision_exception_with(self)
 
 
+func _exit_tree() -> void:
+	if active_indicator and is_instance_valid(active_indicator):
+		active_indicator.queue_free()
+		active_indicator = null
+	if active_range_indicator and is_instance_valid(active_range_indicator):
+		active_range_indicator.queue_free()
+		active_range_indicator = null
+
+
 func set_party_command(cmd: int) -> void:
 	party_command = cmd as PartyCommand
 	if party_command == PartyCommand.FOLLOW:
@@ -188,6 +226,9 @@ func cancel_skill() -> void:
 	if active_indicator and is_instance_valid(active_indicator):
 		active_indicator.queue_free()
 		active_indicator = null
+	if active_range_indicator and is_instance_valid(active_range_indicator):
+		active_range_indicator.queue_free()
+		active_range_indicator = null
 	is_aiming_skill = false
 	is_skill_releasing = false
 	if is_attacking:
@@ -1404,6 +1445,18 @@ func spawn_skill_indicator() -> void:
 	if active_indicator and is_instance_valid(active_indicator):
 		active_indicator.queue_free()
 		active_indicator = null
+	if active_range_indicator and is_instance_valid(active_range_indicator):
+		active_range_indicator.queue_free()
+		active_range_indicator = null
+
+	# Buat lingkaran batas radius casting di sekeliling Magnus
+	active_range_indicator = MeteorRangeIndicator.new()
+	active_range_indicator.radius = METEOR_MAX_CAST_RADIUS
+	active_range_indicator.global_position = global_position
+	if get_parent():
+		get_parent().add_child(active_range_indicator)
+	else:
+		get_tree().current_scene.add_child(active_range_indicator)
 
 	active_indicator = METEOR_INDICATOR_SCENE.instantiate()
 	var cam_rect := get_camera_world_rect()
@@ -1430,6 +1483,9 @@ func spawn_skill_indicator() -> void:
 func process_skill_aiming() -> void:
 	if not active_indicator or not is_instance_valid(active_indicator):
 		return
+
+	if active_range_indicator and is_instance_valid(active_range_indicator):
+		active_range_indicator.global_position = global_position
 
 	var cam_rect := get_camera_world_rect()
 	if cam_rect.size == Vector2.ZERO:
@@ -1481,6 +1537,9 @@ func execute_meteor_strike() -> void:
 		strike_pos = active_indicator.global_position
 		active_indicator.queue_free()
 		active_indicator = null
+	if active_range_indicator and is_instance_valid(active_range_indicator):
+		active_range_indicator.queue_free()
+		active_range_indicator = null
 
 	is_aiming_skill = false
 	is_skill_releasing = true
