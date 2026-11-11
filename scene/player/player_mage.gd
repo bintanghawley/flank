@@ -112,6 +112,12 @@ var knockback_decay: float = 1400.0
 @export var invulnerability_duration: float = 0.25 # Durasi proteksi kebal singkat setelah terkena hit (mencegah double hit)
 var invulnerability_timer: float = 0.0
 
+# =========================
+# CAMERA SHAKE SETTINGS
+# =========================
+@export var camera_shake_strength: float = 7.0
+var shake_decay: float = 35.0
+
 
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
@@ -1117,12 +1123,13 @@ func spawn_run_dust(move_dir: Vector2) -> void:
 			play_sfx(SFX_FOOTSTEP, -14.0)
 
 
-func apply_camera_shake(intensity: float = 7.0) -> void:
+func apply_camera_shake(intensity: float = -1.0) -> void:
+	var amount: float = intensity if intensity > 0.0 else camera_shake_strength
 	var game = get_tree().current_scene
 	if game and game.has_method("apply_camera_shake"):
-		game.apply_camera_shake(intensity)
+		game.apply_camera_shake(amount)
 	elif get_parent() and get_parent().has_method("apply_camera_shake"):
-		get_parent().apply_camera_shake(intensity)
+		get_parent().apply_camera_shake(amount)
 
 
 func apply_knockback(force: Vector2) -> void:
