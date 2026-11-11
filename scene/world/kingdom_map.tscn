@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dlatxleiag3o8"]
 
-[ext_resource type="Texture2D" uid="uid://cvyfu74rqha2y" path="res://assets/environment/map/ground.png" id="1_ground"]
-[ext_resource type="Texture2D" uid="uid://b4cnnkt0rda" path="res://assets/environment/map/Kingdom-Building.png" id="2_building"]
+[ext_resource type="Texture2D" uid="uid://cvyfu74rqha2y" path="res://assets/environment/map/kingdom_ground.png" id="1_ground"]
+[ext_resource type="Texture2D" uid="uid://b4cnnkt0rda" path="res://assets/environment/map/kingdom_structures.png" id="2_building"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ground"]
 texture = ExtResource("1_ground")

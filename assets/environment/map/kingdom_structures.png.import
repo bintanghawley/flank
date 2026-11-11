@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cvyfu74rqha2y"
-path="res://.godot/imported/ground.png-4cdeee26a12e5a7550c343331cb3ec99.ctex"
+uid="uid://b4cnnkt0rda"
+path="res://.godot/imported/Kingdom-Building.png-0374eb1fc94c713d23fc2f14405a5d60.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/environment/map/ground.png"
-dest_files=["res://.godot/imported/ground.png-4cdeee26a12e5a7550c343331cb3ec99.ctex"]
+source_file="res://assets/environment/map/kingdom_structures.png"
+dest_files=["res://.godot/imported/Kingdom-Building.png-0374eb1fc94c713d23fc2f14405a5d60.ctex"]
 
 [params]
 
