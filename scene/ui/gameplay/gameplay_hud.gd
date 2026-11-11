@@ -18,13 +18,19 @@ signal start_menu_settings_closed
 
 # Top-Left
 @onready var btn_pause_menu: TextureButton = $RootControl/BtnPauseMenu
+@onready var quest_header: Label = $RootControl/QuestHeader
 @onready var quest_container: HBoxContainer = $RootControl/QuestContainer
 @onready var quest_title: Label = $RootControl/QuestContainer/TextContainer/QuestTitle
 @onready var quest_objective: Label = $RootControl/QuestContainer/TextContainer/QuestObjective
 
 # Top-Center Location
 @onready var location_banner: TextureRect = $RootControl/LocationBanner
-@onready var location_label: Label = $RootControl/LocationBanner/LocationLabel
+@onready var location_label: Label = $RootControl/LocationBanner/LocationRow/LocationLabel
+
+# Top-Right Inventory, Info & Settings Shortcuts
+@onready var btn_hud_inventory: TextureButton = $RootControl/BtnHudInventory
+@onready var btn_hud_info: TextureButton = $RootControl/BtnHudInfo
+@onready var btn_hud_settings: TextureButton = $RootControl/BtnHudSettings
 
 # Bottom-Left Controls Prompt
 @onready var controls_prompt: VBoxContainer = $RootControl/ControlsPrompt
@@ -49,6 +55,7 @@ signal start_menu_settings_closed
 @onready var pause_book_bg: TextureRect = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/BookBg
 @onready var pause_red_bookmark: TextureRect = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/RedBookmark
 @onready var tabs_container: HBoxContainer = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer
+@onready var btn_close_book: TextureButton = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/BtnCloseBook
 
 # Tab Buttons
 @onready var tab_btn_inventory: Control = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer/Tab0
@@ -174,6 +181,15 @@ var skill_slot_nodes: Array = [] # Ordered SkillSlot1..SkillSlot4 nodes matching
 
 var _bubble_tween: Tween = null
 
+const LOCATION_BANNER_SLIDE_OFFSET: float = 52.0
+const LOCATION_BANNER_IN_DURATION: float = 0.45
+const LOCATION_BANNER_FADE_IN_DURATION: float = 0.38
+const LOCATION_BANNER_HOLD_DURATION: float = 2.2
+const LOCATION_BANNER_OUT_DURATION: float = 0.45
+const LOCATION_BANNER_FADE_OUT_DURATION: float = 0.38
+var _location_banner_rest_y: float = 32.0
+var _location_banner_tween: Tween = null
+
 # Pause Menu State
 var current_tab_index: int = 2 # 0: Inventory, 1: Journal, 2: Informasi, 3: Settings, 4: Credits
 var current_viewed_party_slot: int = 0 # Currently viewed character index in live party_members
@@ -249,7 +265,8 @@ const CONTROL_ACTION_ORDER: Array[String] = [
 	"skill_3",
 	"skill_4",
 	"interact",
-	"skip"
+	"skip",
+	"open_journal"
 ]
 
 const CONTROL_ACTION_INFO: Dictionary = {
@@ -261,7 +278,8 @@ const CONTROL_ACTION_INFO: Dictionary = {
 	"skill_3":          { "name": "Skill 3",           "default_key": KEY_3, "node_name": "RowSkill3" },
 	"skill_4":          { "name": "Skill 4",           "default_key": KEY_4, "node_name": "RowSkill4" },
 	"interact":         { "name": "Interaksi",         "default_key": KEY_E, "node_name": "RowInteract" },
-	"skip":             { "name": "Skip",              "default_key": KEY_SPACE, "node_name": "RowSkip" }
+	"skip":             { "name": "Skip",              "default_key": KEY_SPACE, "node_name": "RowSkip" },
+	"open_journal":     { "name": "Jurnal",            "default_key": KEY_J, "node_name": "RowJournal" }
 }
 
 const ACTION_BUTTONS_SHEET: Texture2D = preload("res://assets/ui/icons/actions/action_buttons.png")
@@ -408,10 +426,32 @@ func _ready() -> void:
 	speech_bubble.visible = false
 	speech_bubble.modulate.a = 0.0
 	pause_overlay.visible = false
+	if is_instance_valid(location_banner):
+		_location_banner_rest_y = location_banner.offset_top
+		location_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		location_banner.visible = false
+		location_banner.modulate.a = 0.0
 
 	# Connect Pause Menu Buttons
 	if btn_pause_menu:
 		btn_pause_menu.pressed.connect(_on_btn_pause_menu_pressed)
+	for hud_shortcut in [
+		{ "btn": btn_hud_inventory, "tab": 0 },
+		{ "btn": btn_hud_info, "tab": 2 },
+		{ "btn": btn_hud_settings, "tab": 3 },
+	]:
+		var sc_btn := hud_shortcut["btn"] as TextureButton
+		if is_instance_valid(sc_btn):
+			sc_btn.pressed.connect(_open_book_tab_from_hud.bind(int(hud_shortcut["tab"])))
+	for quest_widget in [quest_header, quest_container]:
+		if is_instance_valid(quest_widget):
+			quest_widget.mouse_filter = Control.MOUSE_FILTER_STOP
+			quest_widget.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+			quest_widget.gui_input.connect(_on_hud_shortcut_gui_input.bind(quest_widget, 1))
+			if not quest_widget.mouse_entered.is_connected(_on_quest_container_mouse_entered):
+				quest_widget.mouse_entered.connect(_on_quest_container_mouse_entered)
+			if not quest_widget.mouse_exited.is_connected(_on_quest_container_mouse_exited):
+				quest_widget.mouse_exited.connect(_on_quest_container_mouse_exited)
 
 	_init_pause_menu_textures()
 	_init_pause_menu_ui()
@@ -438,15 +478,21 @@ func _unhandled_input(event: InputEvent) -> void:
 				else:
 					toggle_pause_menu()
 					get_viewport().set_input_as_handled()
-		elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
-			if pause_overlay.visible:
-				if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
-					_on_confirm_yes_pressed()
-					get_viewport().set_input_as_handled()
-				elif current_tab_index == 3 and active_settings_submenu == 2:
-					_on_save_load_enter_pressed()
-					get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("interact"):
+				return
+		if (event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER) and pause_overlay.visible:
+			if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
+				_on_confirm_yes_pressed()
+				get_viewport().set_input_as_handled()
+				return
+			elif current_tab_index == 3 and active_settings_submenu == 2:
+				_on_save_load_enter_pressed()
+				get_viewport().set_input_as_handled()
+				return
+		if event.is_action_pressed("open_journal") and not is_start_menu_mode:
+			if _toggle_or_switch_journal_menu():
+				get_viewport().set_input_as_handled()
+				return
+		if event.is_action_pressed("interact"):
 			if pause_overlay.visible:
 				if current_tab_index == 0:
 					_on_btn_gunakan_pressed()
@@ -664,12 +710,192 @@ func _init_pause_menu_textures() -> void:
 	submenu_btn_normal_tex = _create_atlas(sheet, Rect2(145, 433, 62, 14))
 	slot_card_selected_tex = _create_atlas(sheet, Rect2(145, 449, 62, 14))
 
+	if is_instance_valid(btn_close_book):
+		var outline_col := Color8(61, 35, 38, 255)
+		btn_close_book.ignore_texture_size = true
+		btn_close_book.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		btn_close_book.texture_normal = _build_close_button_texture(
+			outline_col,
+			Color8(248, 166, 162, 255),
+			Color8(219, 77, 81, 255),
+			Color8(161, 39, 46, 255),
+			Color8(255, 246, 232, 255)
+		)
+		btn_close_book.texture_hover = _build_close_button_texture(
+			outline_col,
+			Color8(255, 186, 186, 255),
+			Color8(237, 98, 102, 255),
+			Color8(184, 54, 59, 255),
+			Color(1.0, 1.0, 1.0, 1.0)
+		)
+		btn_close_book.texture_pressed = _build_close_button_texture(
+			outline_col,
+			Color8(161, 39, 46, 255),
+			Color8(184, 54, 59, 255),
+			Color8(140, 30, 36, 255),
+			Color8(255, 246, 232, 255)
+		)
+
+	var frame_outline := Color8(66, 46, 47, 255)
+	var hud_btn_normal := _build_hud_settings_button_texture(
+		frame_outline,
+		Color8(255, 244, 220, 255),
+		Color8(252, 226, 184, 255),
+		Color8(229, 182, 127, 255),
+		Color8(199, 137, 93, 255)
+	)
+	var hud_btn_hover := _build_hud_settings_button_texture(
+		frame_outline,
+		Color8(255, 250, 238, 255),
+		Color8(255, 238, 204, 255),
+		Color8(244, 204, 156, 255),
+		Color8(215, 155, 108, 255)
+	)
+	var hud_btn_pressed := _build_hud_settings_button_texture(
+		frame_outline,
+		Color8(199, 137, 93, 255),
+		Color8(236, 202, 156, 255),
+		Color8(216, 172, 122, 255),
+		Color8(172, 114, 74, 255)
+	)
+	for hud_btn in [btn_hud_inventory, btn_hud_info, btn_hud_settings]:
+		if is_instance_valid(hud_btn):
+			hud_btn.ignore_texture_size = true
+			hud_btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+			hud_btn.texture_normal = hud_btn_normal
+			hud_btn.texture_hover = hud_btn_hover
+			hud_btn.texture_pressed = hud_btn_pressed
+	for icon_cfg in [
+		[btn_hud_inventory, _build_backpack_icon_texture(frame_outline)],
+		[btn_hud_settings, _build_gear_icon_texture(frame_outline)],
+	]:
+		var target_btn := icon_cfg[0] as TextureButton
+		if is_instance_valid(target_btn):
+			var btn_icon := target_btn.get_node_or_null("Icon") as TextureRect
+			if btn_icon:
+				btn_icon.texture = icon_cfg[1]
+
 
 func _create_atlas(tex: Texture2D, rect: Rect2) -> AtlasTexture:
 	var a := AtlasTexture.new()
 	a.atlas = tex
 	a.region = rect
 	return a
+
+
+## Builds an ImageTexture from a character grid pattern and color palette.
+func _build_pixel_texture(width: int, height: int, pattern: Array[String], palette: Dictionary) -> ImageTexture:
+	var img := Image.create_empty(width, height, false, Image.FORMAT_RGBA8)
+	for y in range(height):
+		var row: String = pattern[y]
+		for x in range(width):
+			var ch := row.substr(x, 1)
+			if palette.has(ch):
+				img.set_pixel(x, y, palette[ch])
+	return ImageTexture.create_from_image(img)
+
+
+## Builds a 12x12 pixel-art close-button ImageTexture using the provided palette.
+func _build_close_button_texture(
+	border_col: Color,
+	top_col: Color,
+	fill_col: Color,
+	bottom_col: Color,
+	x_col: Color
+) -> ImageTexture:
+	var pattern: Array[String] = [
+		".##########.",
+		"#HHHHHHHHHH#",
+		"#FFFFFFFFFF#",
+		"#FFWWFFWWFF#",
+		"#FFFWWWWFFF#",
+		"#FFFFWWFFFF#",
+		"#FFFFWWFFFF#",
+		"#FFFWWWWFFF#",
+		"#FFWWFFWWFF#",
+		"#FFFFFFFFFF#",
+		"#DDDDDDDDDD#",
+		".##########.",
+	]
+	var palette := {
+		"#": border_col,
+		"H": top_col,
+		"F": fill_col,
+		"D": bottom_col,
+		"W": x_col,
+	}
+	return _build_pixel_texture(12, 12, pattern, palette)
+
+
+## Builds a 19x19 rounded parchment button frame ImageTexture for the HUD settings button.
+func _build_hud_settings_button_texture(
+	border_col: Color,
+	highlight_col: Color,
+	fill_col: Color,
+	shade_col: Color,
+	shadow_col: Color
+) -> ImageTexture:
+	const SIZE := 19
+	var pattern: Array[String] = []
+	for y in range(SIZE):
+		var row := ""
+		for x in range(SIZE):
+			if (x == 0 or x == SIZE - 1) and (y == 0 or y == SIZE - 1):
+				row += "."
+			elif x == 0 or x == SIZE - 1 or y == 0 or y == SIZE - 1:
+				row += "#"
+			elif y == 1:
+				row += "H"
+			elif y == SIZE - 2:
+				row += "D"
+			elif x == 1 or x == SIZE - 2:
+				row += "S"
+			else:
+				row += "F"
+		pattern.append(row)
+	var palette := {
+		"#": border_col,
+		"H": highlight_col,
+		"F": fill_col,
+		"S": shade_col,
+		"D": shadow_col,
+	}
+	return _build_pixel_texture(SIZE, SIZE, pattern, palette)
+
+
+## Builds an 11x11 symmetrical pixel-art cogwheel ImageTexture for the HUD settings button.
+func _build_gear_icon_texture(ink_col: Color) -> ImageTexture:
+	var pattern: Array[String] = [
+		"....###....",
+		".##.###.##.",
+		".#########.",
+		"..#######..",
+		"#####.#####",
+		"####...####",
+		"#####.#####",
+		"..#######..",
+		".#########.",
+		".##.###.##.",
+		"....###....",
+	]
+	return _build_pixel_texture(11, 11, pattern, {"#": ink_col})
+
+
+## Builds an 11x11 symmetrical pixel-art backpack (tas ransel) ImageTexture for the HUD inventory button.
+func _build_backpack_icon_texture(ink_col: Color) -> ImageTexture:
+	var pattern: Array[String] = [
+		"....###....",
+		"...#...#...",
+		"..#######..",
+		".#########.",
+		".#########.",
+		".#...#...#.",
+		"#.##...##.#",
+		"#.#######.#",
+		"#.#######.#",
+		".#########.",
+		"..#######.."]
+	return _build_pixel_texture(11, 11, pattern, {"#": ink_col})
 
 
 func _init_pause_menu_ui() -> void:
@@ -682,6 +908,9 @@ func _init_pause_menu_ui() -> void:
 		save_confirm_dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
 		if not save_confirm_dimmer.gui_input.is_connected(_on_save_confirm_dimmer_gui_input):
 			save_confirm_dimmer.gui_input.connect(_on_save_confirm_dimmer_gui_input)
+	if is_instance_valid(btn_close_book):
+		if not btn_close_book.pressed.is_connected(_on_btn_close_book_pressed):
+			btn_close_book.pressed.connect(_on_btn_close_book_pressed)
 
 	# Tab button signals
 	_connect_tab_click(tab_btn_inventory, 0)
@@ -787,7 +1016,8 @@ func enable_start_menu_mode() -> void:
 	is_start_menu_mode = true
 	_outside_pause_pressed = false
 	_outside_modal_pressed = false
-	for hud_node in [btn_pause_menu, quest_container, location_banner, controls_prompt, party_container, skill_container, speech_bubble]:
+	hide_location_banner()
+	for hud_node in [btn_pause_menu, btn_hud_inventory, btn_hud_info, btn_hud_settings, quest_header, quest_container, location_banner, controls_prompt, party_container, skill_container, speech_bubble]:
 		if is_instance_valid(hud_node):
 			hud_node.visible = false
 	current_tab_index = 3
@@ -824,7 +1054,7 @@ func close_start_menu_settings() -> void:
 	start_menu_settings_closed.emit()
 
 
-func toggle_pause_menu() -> void:
+func toggle_pause_menu(initial_tab: int = 2) -> void:
 	if is_start_menu_mode:
 		if pause_overlay.visible:
 			close_start_menu_settings()
@@ -840,7 +1070,8 @@ func toggle_pause_menu() -> void:
 	get_tree().paused = is_paused
 
 	if is_paused:
-		current_tab_index = 2 # Default halaman: INFORMASI
+		_set_quest_hud_modulate(Color.WHITE)
+		current_tab_index = initial_tab
 		if active_leader_index >= 0 and active_leader_index < party_members.size():
 			current_viewed_party_slot = active_leader_index
 		else:
@@ -849,6 +1080,13 @@ func toggle_pause_menu() -> void:
 		_update_character_info_ui()
 		_update_pause_party_display()
 		_refresh_inventory_ui()
+		if initial_tab == 1 and tracked_quest_id != "":
+			_select_quest(tracked_quest_id)
+		elif initial_tab == 3:
+			active_settings_submenu = 0
+			_scan_all_save_slots()
+			_switch_settings_submenu(0)
+			_sync_all_audio_sliders()
 
 
 	else:
@@ -865,6 +1103,64 @@ func toggle_pause_menu() -> void:
 
 func _on_btn_pause_menu_pressed() -> void:
 	toggle_pause_menu()
+
+
+## Opens the book pause menu directly on the requested tab from a gameplay HUD shortcut.
+func _open_book_tab_from_hud(tab_idx: int) -> void:
+	if is_start_menu_mode:
+		return
+	if is_instance_valid(pause_overlay) and pause_overlay.visible:
+		return
+	toggle_pause_menu(tab_idx)
+
+
+## Handles the open_journal hotkey: opens to Journal, switches to Journal, or closes it.
+func _toggle_or_switch_journal_menu() -> bool:
+	if is_start_menu_mode:
+		return false
+	if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
+		return false
+	if _is_dragging or _drag_candidate_slot_idx != -1:
+		return false
+	if not is_instance_valid(pause_overlay) or not pause_overlay.visible:
+		toggle_pause_menu(1)
+		return true
+	if current_tab_index == 1:
+		toggle_pause_menu()
+		return true
+	_on_tab_pressed(1)
+	return true
+
+
+## Updates hover tint across both the HUD quest header label and quest row.
+func _set_quest_hud_modulate(col: Color) -> void:
+	for quest_widget in [quest_header, quest_container]:
+		if is_instance_valid(quest_widget):
+			quest_widget.modulate = col
+
+
+## Opens the target book tab directly when clicking an interactive gameplay HUD widget.
+func _on_hud_shortcut_gui_input(event: InputEvent, source_widget: Control = null, tab_idx: int = 1) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	var mb := event as InputEventMouseButton
+	if mb.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if is_start_menu_mode or (is_instance_valid(pause_overlay) and pause_overlay.visible):
+		return
+	if is_instance_valid(source_widget):
+		source_widget.accept_event()
+	if mb.pressed:
+		_open_book_tab_from_hud(tab_idx)
+
+
+func _on_quest_container_mouse_entered() -> void:
+	if not is_start_menu_mode and (not is_instance_valid(pause_overlay) or not pause_overlay.visible):
+		_set_quest_hud_modulate(Color(1.08, 1.05, 0.92, 1.0))
+
+
+func _on_quest_container_mouse_exited() -> void:
+	_set_quest_hud_modulate(Color.WHITE)
 
 
 func _on_tab_pressed(tab_idx: int) -> void:
@@ -1434,10 +1730,10 @@ func _update_hp_bars() -> void:
 				var def_name: String = HERO_NAMES.get(h_type, hero.name)
 				if is_dead:
 					name_label.text = "KO"
-					name_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1.0))
+					name_label.add_theme_color_override("font_color", Color(0.78, 0.16, 0.16, 1.0))
 				else:
 					name_label.text = def_name
-					name_label.remove_theme_color_override("font_color")
+					name_label.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
 
 
 func _update_skill_cooldowns() -> void:
@@ -1525,6 +1821,64 @@ func _update_speech_bubble_position() -> void:
 	var screen_pos := canvas_transform * active_leader_node.global_position
 	# Posisikan bubble tepat di atas kepala karakter leader (offset Y sekitar -96px, X sesuai pivot tail)
 	speech_bubble.position = screen_pos + Vector2(-28, -96)
+
+
+# =========================================================
+# LOCATION BANNER NOTIFICATION
+# =========================================================
+
+func hide_location_banner() -> void:
+	"""Menghentikan animasi banner lokasi yang berjalan dan menyembunyikannya dengan rapi."""
+	if _location_banner_tween and _location_banner_tween.is_valid():
+		_location_banner_tween.kill()
+	_location_banner_tween = null
+	if is_instance_valid(location_banner):
+		location_banner.visible = false
+		location_banner.modulate.a = 0.0
+		location_banner.position.y = _location_banner_rest_y
+
+
+func show_location_banner(location_name: String) -> void:
+	"""Menampilkan banner lokasi dengan slide turun + fade in, tahan sejenak, lalu fade out + slide ke atas."""
+	if is_start_menu_mode or not is_instance_valid(location_banner) or not is_instance_valid(location_label):
+		return
+
+	var clean_name := location_name.strip_edges()
+	if clean_name.is_empty():
+		return
+
+	hide_location_banner()
+	location_label.text = clean_name
+
+	var hidden_y := _location_banner_rest_y - LOCATION_BANNER_SLIDE_OFFSET
+	location_banner.position.y = hidden_y
+	location_banner.modulate.a = 0.0
+	location_banner.visible = true
+
+	_location_banner_tween = create_tween()
+	_location_banner_tween.set_pause_mode(Tween.TWEEN_PAUSE_STOP)
+
+	# Masuk: slide dari atas ke bawah bersamaan dengan fade in
+	_location_banner_tween.tween_property(location_banner, "position:y", _location_banner_rest_y, LOCATION_BANNER_IN_DURATION)\
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_location_banner_tween.parallel().tween_property(location_banner, "modulate:a", 1.0, LOCATION_BANNER_FADE_IN_DURATION)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	# Tahan agar terbaca jelas oleh pemain
+	_location_banner_tween.tween_interval(LOCATION_BANNER_HOLD_DURATION)
+
+	# Keluar: fade out bersamaan dengan slide kembali ke atas
+	_location_banner_tween.tween_property(location_banner, "position:y", hidden_y, LOCATION_BANNER_OUT_DURATION)\
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_location_banner_tween.parallel().tween_property(location_banner, "modulate:a", 0.0, LOCATION_BANNER_FADE_OUT_DURATION)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+	_location_banner_tween.tween_callback(func():
+		if is_instance_valid(location_banner):
+			location_banner.visible = false
+			location_banner.position.y = _location_banner_rest_y
+		_location_banner_tween = null
+	)
 
 
 # =========================================================
@@ -2514,20 +2868,21 @@ func _refresh_controls_ui() -> void:
 
 func _sync_gameplay_hud_controls_prompts() -> void:
 	var hud_bindings := {
-		"party_attack": { "node": controls_prompt.get_node_or_null("ActionV/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false },
-		"party_follow": { "node": controls_prompt.get_node_or_null("ActionC/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false },
-		"switch_character": { "node": controls_prompt.get_node_or_null("ActionQ/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false },
-		"skill_1": { "node": skill_container.get_node_or_null("SkillSlot1/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false },
-		"skill_2": { "node": skill_container.get_node_or_null("SkillSlot2/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false },
-		"skill_3": { "node": skill_container.get_node_or_null("SkillSlot3/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false },
-		"skill_4": { "node": skill_container.get_node_or_null("SkillSlot4/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false },
+		"party_attack": { "node": controls_prompt.get_node_or_null("ActionV/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 18.0 },
+		"party_follow": { "node": controls_prompt.get_node_or_null("ActionC/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 18.0 },
+		"switch_character": { "node": controls_prompt.get_node_or_null("ActionQ/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 18.0 },
+		"skill_1": { "node": skill_container.get_node_or_null("SkillSlot1/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 18.0 },
+		"skill_2": { "node": skill_container.get_node_or_null("SkillSlot2/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 18.0 },
+		"skill_3": { "node": skill_container.get_node_or_null("SkillSlot3/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 18.0 },
+		"skill_4": { "node": skill_container.get_node_or_null("SkillSlot4/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 18.0 },
+		"open_journal": { "node": quest_container.get_node_or_null("QuestIcon") if is_instance_valid(quest_container) else null, "fixed_square": false, "target_h": 26.0 },
 	}
 	for action_name in hud_bindings.keys():
 		var cfg: Dictionary = hud_bindings[action_name]
 		var target_rect := cfg.get("node") as TextureRect
 		if is_instance_valid(target_rect):
 			var keycode: int = control_bindings.get(action_name, CONTROL_ACTION_INFO[action_name]["default_key"])
-			_apply_hud_keycap_widget(target_rect, keycode, 18.0, bool(cfg.get("fixed_square", false)))
+			_apply_hud_keycap_widget(target_rect, keycode, float(cfg.get("target_h", 18.0)), bool(cfg.get("fixed_square", false)))
 
 	var interact_key: int = control_bindings.get("interact", CONTROL_ACTION_INFO["interact"]["default_key"])
 	for btn_node in [inv_btn_gunakan, journal_btn_navigasi]:
@@ -2798,13 +3153,29 @@ func _close_confirm_modal() -> void:
 
 
 func _is_point_inside_pause_book(global_pos: Vector2) -> bool:
-	for rect_node in [pause_header_banner, pause_book_bg, pause_red_bookmark]:
+	for rect_node in [pause_header_banner, pause_book_bg, pause_red_bookmark, btn_close_book]:
 		if is_instance_valid(rect_node) and rect_node.visible and rect_node.get_global_rect().has_point(global_pos):
 			return true
 	for tab_node in [tab_btn_inventory, tab_btn_journal, tab_btn_info, tab_btn_settings]:
 		if is_instance_valid(tab_node) and tab_node.visible and tab_node.get_global_rect().has_point(global_pos):
 			return true
 	return false
+
+
+## Closes the active book menu, returning either to the start menu or to live gameplay.
+func _close_pause_book() -> void:
+	_outside_pause_pressed = false
+	if is_start_menu_mode:
+		close_start_menu_settings()
+	else:
+		toggle_pause_menu()
+
+
+## Handles pressing the top-right [X] close button on the book cover.
+func _on_btn_close_book_pressed() -> void:
+	if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
+		return
+	_close_pause_book()
 
 
 func _on_pause_overlay_gui_input(event: InputEvent) -> void:
@@ -2829,11 +3200,7 @@ func _on_pause_overlay_gui_input(event: InputEvent) -> void:
 		_outside_pause_pressed = not inside_panel
 	else:
 		if _outside_pause_pressed and not inside_panel:
-			_outside_pause_pressed = false
-			if is_start_menu_mode:
-				close_start_menu_settings()
-			else:
-				toggle_pause_menu()
+			_close_pause_book()
 		else:
 			_outside_pause_pressed = false
 
