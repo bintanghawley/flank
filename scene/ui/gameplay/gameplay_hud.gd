@@ -176,8 +176,11 @@ var active_leader_node: CharacterBody2D = null
 
 # Card node references for the 4 heroes in gameplay HUD
 var hero_card_map: Dictionary = {} # hero_type -> Card node
+var hero_card_cached_nodes: Dictionary = {} # hero_type -> { "hp_bar": TextureProgressBar, "portrait": TextureRect, "name_label": Label }
 var hero_skill_map: Dictionary = {} # hero_type -> Skill slot node
 var skill_slot_nodes: Array = [] # Ordered SkillSlot1..SkillSlot4 nodes matching party_members[0..3]
+var skill_slot_cd_overlays: Array[ColorRect] = []
+var skill_slot_cd_labels: Array[Label] = []
 
 var _bubble_tween: Tween = null
 
@@ -1608,6 +1611,8 @@ func _setup_skill_buttons() -> void:
 		$RootControl/SkillContainer/SkillSlot3,
 		$RootControl/SkillContainer/SkillSlot4
 	]
+	skill_slot_cd_overlays.clear()
+	skill_slot_cd_labels.clear()
 
 	for i in range(skill_slot_nodes.size()):
 		var slot := skill_slot_nodes[i] as Control
@@ -1615,6 +1620,11 @@ func _setup_skill_buttons() -> void:
 		var btn: TextureButton = slot.get_node_or_null("SkillBtn") as TextureButton if is_instance_valid(slot) else null
 		if btn:
 			btn.pressed.connect(func(): trigger_skill_slot(slot_idx))
+			skill_slot_cd_overlays.append(btn.get_node_or_null("CooldownOverlay") as ColorRect)
+			skill_slot_cd_labels.append(btn.get_node_or_null("CooldownLabel") as Label)
+		else:
+			skill_slot_cd_overlays.append(null)
+			skill_slot_cd_labels.append(null)
 
 	update_skill_slots_hud()
 
@@ -1634,6 +1644,16 @@ func _setup_party_card_clicks() -> void:
 	_connect_card_click(card_magnus, 3)
 	_connect_card_click(card_anastasya, 2)
 	_connect_card_click(card_hellene, 1)
+
+	hero_card_cached_nodes.clear()
+	for h_type in hero_card_map.keys():
+		var card: Control = hero_card_map[h_type]
+		if is_instance_valid(card):
+			hero_card_cached_nodes[h_type] = {
+				"hp_bar": card.get_node_or_null("LifeBar") as TextureProgressBar,
+				"portrait": card.get_node_or_null("Portrait") as TextureRect,
+				"name_label": card.get_node_or_null("NameLabel") as Label
+			}
 
 
 func _connect_card_click(card: Control, hero_type: int) -> void:
@@ -1716,24 +1736,28 @@ func _update_hp_bars() -> void:
 			var cur_hp: int = hero.get("current_health") if "current_health" in hero else max_hp
 			var is_dead: bool = hero.get("is_dead") if "is_dead" in hero else (cur_hp <= 0)
 
-			var hp_bar = card.get_node_or_null("LifeBar") as TextureProgressBar
+			var cached: Dictionary = hero_card_cached_nodes.get(h_type, {})
+			var hp_bar: TextureProgressBar = cached.get("hp_bar")
 			if hp_bar:
-				hp_bar.max_value = max_hp
-				hp_bar.value = cur_hp
+				if hp_bar.max_value != max_hp:
+					hp_bar.max_value = max_hp
+				if hp_bar.value != cur_hp:
+					hp_bar.value = cur_hp
 
-			var portrait = card.get_node_or_null("Portrait") as TextureRect
+			var portrait: TextureRect = cached.get("portrait")
 			if portrait:
-				portrait.modulate = Color(0.35, 0.35, 0.35, 0.55) if is_dead else Color.WHITE
+				var target_modulate: Color = Color(0.35, 0.35, 0.35, 0.55) if is_dead else Color.WHITE
+				if portrait.modulate != target_modulate:
+					portrait.modulate = target_modulate
 
-			var name_label = card.get_node_or_null("NameLabel") as Label
+			var name_label: Label = cached.get("name_label")
 			if name_label:
 				var def_name: String = HERO_NAMES.get(h_type, hero.name)
-				if is_dead:
-					name_label.text = "KO"
-					name_label.add_theme_color_override("font_color", Color(0.78, 0.16, 0.16, 1.0))
-				else:
-					name_label.text = def_name
-					name_label.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+				var target_text: String = "KO" if is_dead else def_name
+				if name_label.text != target_text:
+					name_label.text = target_text
+					var target_color: Color = Color(0.78, 0.16, 0.16, 1.0) if is_dead else Color(0.24, 0.15, 0.16, 1.0)
+					name_label.add_theme_color_override("font_color", target_color)
 
 
 func _update_skill_cooldowns() -> void:
@@ -1741,8 +1765,8 @@ func _update_skill_cooldowns() -> void:
 		var slot := skill_slot_nodes[i] as Control
 		if not is_instance_valid(slot):
 			continue
-		var cd_overlay = slot.find_child("CooldownOverlay", true, false) as ColorRect
-		var cd_label = slot.find_child("CooldownLabel", true, false) as Label
+		var cd_overlay: ColorRect = skill_slot_cd_overlays[i] if i < skill_slot_cd_overlays.size() else null
+		var cd_label: Label = skill_slot_cd_labels[i] if i < skill_slot_cd_labels.size() else null
 		if not cd_overlay:
 			continue
 
@@ -1751,21 +1775,28 @@ func _update_skill_cooldowns() -> void:
 			var is_dead: bool = hero.get("is_dead") if "is_dead" in hero else false
 			var cd: float = hero.get("skill_cooldown_timer") if "skill_cooldown_timer" in hero else 0.0
 			if is_dead:
-				cd_overlay.visible = true
-				if cd_label:
+				if not cd_overlay.visible:
+					cd_overlay.visible = true
+				if cd_label and cd_label.visible:
 					cd_label.visible = false
 			elif cd > 0.05:
-				cd_overlay.visible = true
+				if not cd_overlay.visible:
+					cd_overlay.visible = true
 				if cd_label:
-					cd_label.visible = true
-					cd_label.text = "%.1f" % cd
+					if not cd_label.visible:
+						cd_label.visible = true
+					var cd_text: String = "%.1f" % cd
+					if cd_label.text != cd_text:
+						cd_label.text = cd_text
 			else:
-				cd_overlay.visible = false
-				if cd_label:
+				if cd_overlay.visible:
+					cd_overlay.visible = false
+				if cd_label and cd_label.visible:
 					cd_label.visible = false
 		else:
-			cd_overlay.visible = false
-			if cd_label:
+			if cd_overlay.visible:
+				cd_overlay.visible = false
+			if cd_label and cd_label.visible:
 				cd_label.visible = false
 
 
