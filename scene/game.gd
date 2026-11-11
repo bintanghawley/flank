@@ -965,7 +965,7 @@ func get_follower_nav_target(slot_index: int, follower_pos: Vector2, space_state
 
 	var target_dist: float = slot_index * QUEUE_DIST
 	var accumulated: float = 0.0
-	var prev := party_members[active_leader_index].global_position if (active_leader_index < party_members.size() and is_instance_valid(party_members[active_leader_index])) else Vector2.ZERO
+	var prev: Vector2 = party_members[active_leader_index].global_position if (active_leader_index < party_members.size() and is_instance_valid(party_members[active_leader_index])) else Vector2.ZERO
 	var slot_bc_index: int = 0
 
 	for i in range(breadcrumbs.size()):
@@ -998,7 +998,7 @@ func get_follower_nav_target(slot_index: int, follower_pos: Vector2, space_state
 
 func play_iris_opening_transition() -> void:
 	var transition_layer := get_node_or_null("TransitionLayer")
-	var iris := transition_layer.get_node_or_null("IrisMask") as ColorRect if transition_layer else null
+	var iris: ColorRect = transition_layer.get_node_or_null("IrisMask") as ColorRect if transition_layer else null
 	if iris and (iris.material is ShaderMaterial):
 		var mat := iris.material as ShaderMaterial
 		mat.set_shader_parameter("center", Vector2(0.5, 0.5))
@@ -1065,7 +1065,7 @@ func _on_hud_return_to_title_requested() -> void:
 
 func save_game_to_slot(slot_id: int) -> bool:
 	var path_tmp := "user://save_slot_%d.json.tmp" % slot_id
-	var path_final := "user://save_slot_%d.json" % slot_id
+	var _path_final := "user://save_slot_%d.json" % slot_id
 
 	var data := _collect_save_data(slot_id)
 	var json_str := JSON.stringify(data, "\t")
@@ -1213,7 +1213,7 @@ func load_game_from_slot(slot_id: int) -> bool:
 	if not visited_locations.has(current_location_name):
 		enter_location(current_location_name)
 
-	print("GAME LOADED: Slot %d | Leader: %s | HP: %d | Playtime: %f" % [slot_id, leader.name if leader else "None", leader.current_health if leader and "current_health" in leader else 0, total_playtime])
+	print("GAME LOADED: Slot %d | Leader: %s | HP: %d | Playtime: %f" % [slot_id, String(leader.name) if leader else "None", int(leader.current_health) if (leader and "current_health" in leader) else 0, total_playtime])
 	return true
 
 

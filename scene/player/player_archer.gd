@@ -1846,7 +1846,7 @@ func _setup_shield_sprite() -> void:
 			shield_sprite = Sprite2D.new()
 			shield_sprite.name = "ShieldSprite"
 			shield_sprite.texture = preload("res://assets/skills/knight/shield/shield.png")
-			shield_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			shield_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST as CanvasItem.TextureFilter
 			shield_sprite.z_index = 6
 			shield_sprite.position = SHIELD_CENTER_OFFSET
 			shield_sprite.scale = Vector2(0.85, 0.85)

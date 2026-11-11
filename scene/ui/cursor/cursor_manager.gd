@@ -39,12 +39,12 @@ class ClickRipple extends Control:
 
 func _ready() -> void:
 	# Tetap memproses input kursor meskipun scene tree dalam keadaan paused (Pause Menu)
-	process_mode = Node.PROCESS_MODE_ALWAYS
+	process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
 	
 	# Layer paling atas untuk menampilkan efek riak lingkaran klik tanpa tertutup UI/HUD
 	_ripple_layer = CanvasLayer.new()
 	_ripple_layer.layer = 125
-	_ripple_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	_ripple_layer.process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
 	add_child(_ripple_layer)
 	
 	_apply_cursor(false)
@@ -83,11 +83,12 @@ func _schedule_release() -> void:
 			_set_pressed_state(false)
 	)
 
+@warning_ignore("int_as_enum_without_cast")
 func _apply_cursor(is_pressed: bool) -> void:
 	var tex: Texture2D = CURSOR_PRESSED if is_pressed else CURSOR_NORMAL
 	# Tetapkan kursor kustom untuk panah default (ARROW) dan kursor tombol (POINTING_HAND)
-	Input.set_custom_mouse_cursor(tex, Input.CURSOR_ARROW, CURSOR_HOTSPOT)
-	Input.set_custom_mouse_cursor(tex, Input.CURSOR_POINTING_HAND, CURSOR_HOTSPOT)
+	Input.set_custom_mouse_cursor(tex, Input.CURSOR_ARROW as Input.CursorShape, CURSOR_HOTSPOT)
+	Input.set_custom_mouse_cursor(tex, Input.CURSOR_POINTING_HAND as Input.CursorShape, CURSOR_HOTSPOT)
 
 func _spawn_click_ripple(click_pos: Vector2, button_index: int) -> void:
 	if not _ripple_layer or not is_instance_valid(_ripple_layer):
@@ -96,8 +97,8 @@ func _spawn_click_ripple(click_pos: Vector2, button_index: int) -> void:
 	var ripple := ClickRipple.new()
 	# Pusatkan lingkaran bayangan tepat pada ujung panah kursor yang telah bergerak maju ke depan
 	ripple.position = click_pos - CURSOR_HOTSPOT
-	ripple.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ripple.process_mode = Node.PROCESS_MODE_ALWAYS
+	ripple.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
+	ripple.process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
 	
 	_ripple_layer.add_child(ripple)
 	

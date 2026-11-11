@@ -421,14 +421,14 @@ const HERO_LORE: Dictionary = {
 
 func _ready() -> void:
 	layer = 15 # Di atas elemen world game, di bawah TransitionLayer (layer 100)
-	process_mode = Node.PROCESS_MODE_ALWAYS
+	process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
 
 	speech_bubble.visible = false
 	speech_bubble.modulate.a = 0.0
 	pause_overlay.visible = false
 	if is_instance_valid(location_banner):
 		_location_banner_rest_y = location_banner.offset_top
-		location_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		location_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
 		location_banner.visible = false
 		location_banner.modulate.a = 0.0
 
@@ -445,8 +445,8 @@ func _ready() -> void:
 			sc_btn.pressed.connect(_open_book_tab_from_hud.bind(int(hud_shortcut["tab"])))
 	for quest_widget in [quest_header, quest_container]:
 		if is_instance_valid(quest_widget):
-			quest_widget.mouse_filter = Control.MOUSE_FILTER_STOP
-			quest_widget.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+			quest_widget.mouse_filter = Control.MOUSE_FILTER_STOP as Control.MouseFilter
+			quest_widget.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND as Control.CursorShape
 			quest_widget.gui_input.connect(_on_hud_shortcut_gui_input.bind(quest_widget, 1))
 			if not quest_widget.mouse_entered.is_connected(_on_quest_container_mouse_entered):
 				quest_widget.mouse_entered.connect(_on_quest_container_mouse_entered)
@@ -713,7 +713,7 @@ func _init_pause_menu_textures() -> void:
 	if is_instance_valid(btn_close_book):
 		var outline_col := Color8(61, 35, 38, 255)
 		btn_close_book.ignore_texture_size = true
-		btn_close_book.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		btn_close_book.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED as TextureButton.StretchMode
 		btn_close_book.texture_normal = _build_close_button_texture(
 			outline_col,
 			Color8(248, 166, 162, 255),
@@ -761,7 +761,7 @@ func _init_pause_menu_textures() -> void:
 	for hud_btn in [btn_hud_inventory, btn_hud_info, btn_hud_settings]:
 		if is_instance_valid(hud_btn):
 			hud_btn.ignore_texture_size = true
-			hud_btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+			hud_btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED as TextureButton.StretchMode
 			hud_btn.texture_normal = hud_btn_normal
 			hud_btn.texture_hover = hud_btn_hover
 			hud_btn.texture_pressed = hud_btn_pressed
@@ -901,11 +901,11 @@ func _build_backpack_icon_texture(ink_col: Color) -> ImageTexture:
 func _init_pause_menu_ui() -> void:
 	# Click outside to close (backdrop overlays)
 	if is_instance_valid(pause_overlay):
-		pause_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+		pause_overlay.mouse_filter = Control.MOUSE_FILTER_STOP as Control.MouseFilter
 		if not pause_overlay.gui_input.is_connected(_on_pause_overlay_gui_input):
 			pause_overlay.gui_input.connect(_on_pause_overlay_gui_input)
 	if is_instance_valid(save_confirm_dimmer):
-		save_confirm_dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
+		save_confirm_dimmer.mouse_filter = Control.MOUSE_FILTER_STOP as Control.MouseFilter
 		if not save_confirm_dimmer.gui_input.is_connected(_on_save_confirm_dimmer_gui_input):
 			save_confirm_dimmer.gui_input.connect(_on_save_confirm_dimmer_gui_input)
 	if is_instance_valid(btn_close_book):
@@ -953,10 +953,10 @@ func _init_pause_menu_ui() -> void:
 
 	# Ensure ONLY ONE slider in inventory: hide built-in scrollbar of ScrollContainer
 	if inv_scroll_container:
-		inv_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+		inv_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER as ScrollContainer.ScrollMode
 		var v_bar = inv_scroll_container.get_v_scroll_bar()
 		if v_bar:
-			v_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			v_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
 			v_bar.custom_minimum_size = Vector2.ZERO
 			v_bar.scale = Vector2.ZERO
 			v_bar.visible = false
@@ -973,10 +973,10 @@ func _init_pause_menu_ui() -> void:
 		journal_btn_navigasi.pressed.connect(_on_btn_navigasi_pressed)
 
 	if journal_scroll_container:
-		journal_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+		journal_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER as ScrollContainer.ScrollMode
 		var j_v_bar = journal_scroll_container.get_v_scroll_bar()
 		if j_v_bar:
-			j_v_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			j_v_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
 			j_v_bar.custom_minimum_size = Vector2.ZERO
 			j_v_bar.scale = Vector2.ZERO
 			j_v_bar.visible = false
@@ -1194,10 +1194,10 @@ func _on_tab_pressed(tab_idx: int) -> void:
 func _connect_tab_click(tab_node: Control, tab_idx: int) -> void:
 	if not is_instance_valid(tab_node):
 		return
-	tab_node.mouse_filter = Control.MOUSE_FILTER_STOP
+	tab_node.mouse_filter = Control.MOUSE_FILTER_STOP as Control.MouseFilter
 	var click_area = tab_node.get_node_or_null("ClickArea") as BaseButton
 	if click_area:
-		click_area.mouse_filter = Control.MOUSE_FILTER_PASS
+		click_area.mouse_filter = Control.MOUSE_FILTER_PASS as Control.MouseFilter
 		click_area.pressed.connect(func(): _on_tab_pressed(tab_idx))
 	tab_node.gui_input.connect(func(event: InputEvent):
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -1226,11 +1226,11 @@ func _update_tab_navigation() -> void:
 				tab_node.patch_margin_top = 4
 				tab_node.patch_margin_right = 4
 				tab_node.patch_margin_bottom = 1
-			tab_node.size_flags_vertical = Control.SIZE_SHRINK_END
+			tab_node.size_flags_vertical = Control.SIZE_SHRINK_END as Control.SizeFlags
 			tab_node.custom_minimum_size = Vector2(54, 42) if is_active else Vector2(50, 36)
 			tab_node.self_modulate = Color(1.0, 1.0, 1.0, 1.0) if is_active else Color(0.88, 0.84, 0.80, 1.0)
 			tab_node.z_index = 1 if is_active else 0
-			tab_node.mouse_filter = Control.MOUSE_FILTER_STOP
+			tab_node.mouse_filter = Control.MOUSE_FILTER_STOP as Control.MouseFilter
 
 			var icon = tab_node.get_node_or_null("Icon") as TextureRect
 			if icon:
@@ -1612,7 +1612,7 @@ func _setup_skill_buttons() -> void:
 	for i in range(skill_slot_nodes.size()):
 		var slot := skill_slot_nodes[i] as Control
 		var slot_idx: int = i
-		var btn := slot.get_node_or_null("SkillBtn") as TextureButton if is_instance_valid(slot) else null
+		var btn: TextureButton = slot.get_node_or_null("SkillBtn") as TextureButton if is_instance_valid(slot) else null
 		if btn:
 			btn.pressed.connect(func(): trigger_skill_slot(slot_idx))
 
@@ -1961,7 +1961,7 @@ func _refresh_inventory_ui() -> void:
 func _create_inventory_slot_node(slot_idx: int) -> Control:
 	var slot := Control.new()
 	slot.custom_minimum_size = Vector2(60, 58)
-	slot.mouse_filter = Control.MOUSE_FILTER_PASS
+	slot.mouse_filter = Control.MOUSE_FILTER_PASS as Control.MouseFilter
 
 	# Base slot background
 	var bg := NinePatchRect.new()
@@ -1970,8 +1970,8 @@ func _create_inventory_slot_node(slot_idx: int) -> Control:
 	bg.patch_margin_top = 6
 	bg.patch_margin_right = 6
 	bg.patch_margin_bottom = 6
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT as Control.LayoutPreset)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
 	slot.add_child(bg)
 
 	var has_item: bool = (slot_idx < _filtered_inventory_items.size())
@@ -1980,16 +1980,16 @@ func _create_inventory_slot_node(slot_idx: int) -> Control:
 
 		# Item Icon
 		var icon := TextureRect.new()
-		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST as CanvasItem.TextureFilter
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED as TextureRect.StretchMode
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE as TextureRect.ExpandMode
 		icon.custom_minimum_size = Vector2(36, 36)
-		icon.set_anchors_preset(Control.PRESET_CENTER)
+		icon.set_anchors_preset(Control.PRESET_CENTER as Control.LayoutPreset)
 		icon.offset_left = -18
 		icon.offset_top = -18
 		icon.offset_right = 18
 		icon.offset_bottom = 18
-		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
 
 		if item.has("icon_texture") and item["icon_texture"] != null:
 			icon.texture = item["icon_texture"]
@@ -2002,20 +2002,20 @@ func _create_inventory_slot_node(slot_idx: int) -> Control:
 		if qty > 1:
 			var count_lbl := Label.new()
 			count_lbl.text = str(qty)
-			count_lbl.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+			count_lbl.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT as Control.LayoutPreset)
 			count_lbl.offset_left = -30
 			count_lbl.offset_top = -18
 			count_lbl.offset_right = -4
 			count_lbl.offset_bottom = -2
-			count_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-			count_lbl.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+			count_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT as HorizontalAlignment
+			count_lbl.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM as VerticalAlignment
 			count_lbl.add_theme_font_override("font", preload("res://assets/ui/fonts/Beholden-Bold.ttf"))
 			count_lbl.add_theme_font_size_override("font_size", 13)
 			count_lbl.add_theme_color_override("font_color", Color(0.95, 0.90, 0.85, 1))
 			count_lbl.add_theme_color_override("font_shadow_color", Color(0.15, 0.10, 0.10, 0.9))
 			count_lbl.add_theme_constant_override("shadow_offset_x", 1)
 			count_lbl.add_theme_constant_override("shadow_offset_y", 1)
-			count_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			count_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
 			slot.add_child(count_lbl)
 
 	# Selected bracket frame
@@ -2027,15 +2027,15 @@ func _create_inventory_slot_node(slot_idx: int) -> Control:
 	sel_frame.patch_margin_top = 6
 	sel_frame.patch_margin_right = 6
 	sel_frame.patch_margin_bottom = 6
-	sel_frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	sel_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sel_frame.set_anchors_preset(Control.PRESET_FULL_RECT as Control.LayoutPreset)
+	sel_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
 	sel_frame.visible = is_selected
 	slot.add_child(sel_frame)
 
 	# Click area button
 	var btn := TextureButton.new()
-	btn.set_anchors_preset(Control.PRESET_FULL_RECT)
-	btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	btn.set_anchors_preset(Control.PRESET_FULL_RECT as Control.LayoutPreset)
+	btn.mouse_filter = Control.MOUSE_FILTER_STOP as Control.MouseFilter
 	if has_item:
 		var click_idx: int = slot_idx
 		btn.pressed.connect(func(): _on_inventory_slot_clicked(click_idx))
@@ -2289,7 +2289,7 @@ func _refresh_journal_ui() -> void:
 func _create_quest_item_node(quest: Dictionary, is_selected: bool) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
-	row.mouse_filter = Control.MOUSE_FILTER_PASS
+	row.mouse_filter = Control.MOUSE_FILTER_PASS as Control.MouseFilter
 
 	var serif_font: Font = preload("res://assets/ui/fonts/Beholden-Bold.ttf")
 
@@ -2302,32 +2302,31 @@ func _create_quest_item_node(quest: Dictionary, is_selected: bool) -> Control:
 	arrow.add_theme_font_size_override("font_size", 14)
 	arrow.add_theme_color_override("font_color", Color(0.44, 0.31, 0.27, 1.0))
 	arrow.text = "▶"
-	arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER as VerticalAlignment
 	arrow.modulate.a = 1.0 if is_selected else 0.0
 	row.add_child(arrow)
 
 	# Button panel box
 	var box := NinePatchRect.new()
 	box.name = "Box"
-	box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST as CanvasItem.TextureFilter
 	box.custom_minimum_size = Vector2(180, 32)
-	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL as Control.SizeFlags
 	box.texture = quest_btn_panel_tex
 	box.patch_margin_left = 5
 	box.patch_margin_top = 4
 	box.patch_margin_right = 5
 	box.patch_margin_bottom = 4
-	box.mouse_filter = Control.MOUSE_FILTER_PASS
+	box.mouse_filter = Control.MOUSE_FILTER_PASS as Control.MouseFilter
 
 	var title_lbl := Label.new()
 	title_lbl.name = "Title"
-	title_lbl.layout_mode = 1
-	title_lbl.anchors_preset = Control.PRESET_FULL_RECT
+	title_lbl.set_anchors_preset(Control.PRESET_FULL_RECT as Control.LayoutPreset)
 	title_lbl.offset_left = 10.0
 	title_lbl.offset_right = -10.0
-	title_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER as VerticalAlignment
 	title_lbl.clip_text = true
-	title_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	title_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS as TextServer.OverrunBehavior
 	title_lbl.text = quest.get("title", "Judul Misi")
 	title_lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
 	if serif_font:
@@ -2338,9 +2337,8 @@ func _create_quest_item_node(quest: Dictionary, is_selected: bool) -> Control:
 	# Click Area Button
 	var btn := TextureButton.new()
 	btn.name = "ClickArea"
-	btn.layout_mode = 1
-	btn.anchors_preset = Control.PRESET_FULL_RECT
-	btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	btn.set_anchors_preset(Control.PRESET_FULL_RECT as Control.LayoutPreset)
+	btn.mouse_filter = Control.MOUSE_FILTER_STOP as Control.MouseFilter
 	var q_id: String = quest.get("id", "")
 	btn.pressed.connect(func(): _select_quest(q_id))
 	box.add_child(btn)
@@ -2485,7 +2483,7 @@ func _ensure_audio_buses() -> void:
 
 func save_audio_settings() -> void:
 	var config := ConfigFile.new()
-	var err := config.load(SETTINGS_FILE_PATH)
+	var _err := config.load(SETTINGS_FILE_PATH)
 	config.set_value("audio", "master_volume", audio_settings.get("master", 65))
 	config.set_value("audio", "music_volume", audio_settings.get("music", 50))
 	config.set_value("audio", "sfx_volume", audio_settings.get("sfx", 50))
@@ -2895,8 +2893,8 @@ func _sync_gameplay_hud_controls_prompts() -> void:
 func _apply_hud_keycap_widget(tex_rect: TextureRect, keycode: int, target_h: float = 18.0, fixed_square: bool = false) -> void:
 	if not is_instance_valid(tex_rect):
 		return
-	tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE as TextureRect.ExpandMode
+	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED as TextureRect.StretchMode
 	var icon_tex: AtlasTexture = _get_control_keycap_tex(keycode)
 	var fallback_lbl := tex_rect.get_node_or_null("KeyText") as Label
 
@@ -2916,10 +2914,10 @@ func _apply_hud_keycap_widget(tex_rect: TextureRect, keycode: int, target_h: flo
 		if not is_instance_valid(fallback_lbl):
 			fallback_lbl = Label.new()
 			fallback_lbl.name = "KeyText"
-			fallback_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-			fallback_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			fallback_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			fallback_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			fallback_lbl.set_anchors_preset(Control.PRESET_FULL_RECT as Control.LayoutPreset)
+			fallback_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER as HorizontalAlignment
+			fallback_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER as VerticalAlignment
+			fallback_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
 			fallback_lbl.add_theme_font_override("font", preload("res://assets/ui/fonts/Beholden-Bold.ttf"))
 			fallback_lbl.add_theme_color_override("font_color", Color(0.98, 0.92, 0.8, 1.0))
 			tex_rect.add_child(fallback_lbl)
@@ -3121,8 +3119,8 @@ func _refresh_save_load_ui() -> void:
 
 func _format_playtime_str(seconds: float) -> String:
 	var total_secs := int(seconds)
-	var hrs := total_secs / 3600
-	var mins := (total_secs % 3600) / 60
+	var hrs := int(float(total_secs) / 3600.0)
+	var mins := int(float(total_secs % 3600) / 60.0)
 	var secs := total_secs % 60
 	return "%02d:%02d:%02d" % [hrs, mins, secs]
 
