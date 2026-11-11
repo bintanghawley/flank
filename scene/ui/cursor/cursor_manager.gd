@@ -75,7 +75,7 @@ func _schedule_release() -> void:
 	if _release_tween and _release_tween.is_valid():
 		_release_tween.kill()
 	_release_tween = create_tween()
-	_release_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_release_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS as Tween.TweenPauseMode)
 	_release_tween.tween_interval(MIN_CLICK_HOLD_TIME)
 	_release_tween.tween_callback(func():
 		var still_down: bool = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
@@ -86,10 +86,8 @@ func _schedule_release() -> void:
 func _apply_cursor(is_pressed: bool) -> void:
 	var tex: Texture2D = CURSOR_PRESSED if is_pressed else CURSOR_NORMAL
 	# Tetapkan kursor kustom untuk panah default (ARROW) dan kursor tombol (POINTING_HAND)
-	@warning_ignore("int_as_enum_without_cast")
-	Input.set_custom_mouse_cursor(tex, Input.CURSOR_ARROW, CURSOR_HOTSPOT)
-	@warning_ignore("int_as_enum_without_cast")
-	Input.set_custom_mouse_cursor(tex, Input.CURSOR_POINTING_HAND, CURSOR_HOTSPOT)
+	Input.set_custom_mouse_cursor(tex, Input.CURSOR_ARROW as Input.CursorShape, CURSOR_HOTSPOT)
+	Input.set_custom_mouse_cursor(tex, Input.CURSOR_POINTING_HAND as Input.CursorShape, CURSOR_HOTSPOT)
 
 func _spawn_click_ripple(click_pos: Vector2, button_index: int) -> void:
 	if not _ripple_layer or not is_instance_valid(_ripple_layer):
@@ -104,7 +102,7 @@ func _spawn_click_ripple(click_pos: Vector2, button_index: int) -> void:
 	_ripple_layer.add_child(ripple)
 	
 	var tween: Tween = create_tween().set_parallel(true)
-	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS as Tween.TweenPauseMode)
 	
 	# Dinamika ekspansi lingkaran dan penipisan garis
 	tween.tween_property(ripple, "radius", 26.0, 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
