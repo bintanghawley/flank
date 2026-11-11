@@ -56,9 +56,9 @@ var shake_decay: float = 35.0
 # Indikator segitiga kecil di atas kepala leader yang sedang aktif
 const HERO_INDICATOR_TIP_OFFSET_Y: Dictionary = {
 	"Knight_1": -58.0,
-	"Mage_1": -43.0,
+	"Bandit_1": -30.0,
 	"Archer_1": -38.0,
-	"Bandit_1": -30.0
+	"Mage_1": -43.0
 }
 const DEFAULT_INDICATOR_TIP_OFFSET_Y: float = -42.0
 var _active_leader_indicator: Node2D = null
@@ -67,8 +67,8 @@ var _active_indicator_bob_time: float = 0.0
 
 func _ready() -> void:
 	# 1. Daftarkan 4 anggota party dari scene
-	# Urutan default: Knight_1 (Arthur), Mage_1 (Magnus), Archer_1 (Anastasya), Bandit_1 (Hellene)
-	var names: Array[String] = ["Knight_1", "Mage_1", "Archer_1", "Bandit_1"]
+	# Urutan default: Knight_1 (Arthur), Bandit_1 (Hellene), Archer_1 (Anastasya), Mage_1 (Magnus)
+	var names: Array[String] = ["Knight_1", "Bandit_1", "Archer_1", "Mage_1"]
 	for n in names:
 		var node := get_node_or_null(n) as CharacterBody2D
 		if node:
