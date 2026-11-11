@@ -8,7 +8,7 @@ var current_length: float = 0.0
 var time_passed: float = 0.0
 
 
-func _process(delta: float):
+func _process(delta: float) -> void:
 	time_passed += delta
 	if sprite:
 		# Denyut halus pada transparansi indikator agar tampak dinamis
@@ -16,7 +16,7 @@ func _process(delta: float):
 		sprite.modulate.a = alpha
 
 
-func update_indicator(origin: Vector2, dir: Vector2, p_current_length: float, progress: float = 0.0):
+func update_indicator(origin: Vector2, dir: Vector2, p_current_length: float, progress: float = 0.0) -> void:
 	# Simpan panjang aktual panah saat ini
 	current_length = p_current_length
 
@@ -45,11 +45,11 @@ func update_indicator(origin: Vector2, dir: Vector2, p_current_length: float, pr
 		sprite.modulate.b = 1.0
 
 
-func set_aim(origin: Vector2, dir: Vector2, dist: float):
+func set_aim(origin: Vector2, dir: Vector2, dist: float) -> void:
 	update_indicator(origin, dir, dist, 0.0)
 
 
-func set_charge_progress(prog: float):
+func set_charge_progress(prog: float) -> void:
 	if sprite:
 		var clamped: float = clampf(prog, 0.0, 1.0)
 		sprite.modulate.r = 1.0 + clamped * 0.4

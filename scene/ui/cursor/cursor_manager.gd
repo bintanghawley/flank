@@ -83,12 +83,13 @@ func _schedule_release() -> void:
 			_set_pressed_state(false)
 	)
 
-@warning_ignore("int_as_enum_without_cast")
 func _apply_cursor(is_pressed: bool) -> void:
 	var tex: Texture2D = CURSOR_PRESSED if is_pressed else CURSOR_NORMAL
 	# Tetapkan kursor kustom untuk panah default (ARROW) dan kursor tombol (POINTING_HAND)
-	Input.set_custom_mouse_cursor(tex, Input.CURSOR_ARROW as Input.CursorShape, CURSOR_HOTSPOT)
-	Input.set_custom_mouse_cursor(tex, Input.CURSOR_POINTING_HAND as Input.CursorShape, CURSOR_HOTSPOT)
+	@warning_ignore("int_as_enum_without_cast")
+	Input.set_custom_mouse_cursor(tex, Input.CURSOR_ARROW, CURSOR_HOTSPOT)
+	@warning_ignore("int_as_enum_without_cast")
+	Input.set_custom_mouse_cursor(tex, Input.CURSOR_POINTING_HAND, CURSOR_HOTSPOT)
 
 func _spawn_click_ripple(click_pos: Vector2, button_index: int) -> void:
 	if not _ripple_layer or not is_instance_valid(_ripple_layer):

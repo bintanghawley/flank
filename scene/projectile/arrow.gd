@@ -17,7 +17,7 @@ var has_been_on_screen: bool = false
 @onready var trail_line: Line2D = $TrailLine
 
 
-func _ready():
+func _ready() -> void:
 	# Sambungkan deteksi tabrakan fisik & hurtbox
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
@@ -48,7 +48,7 @@ func _ready():
 		destroy(false)
 
 
-func _physics_process(delta: float):
+func _physics_process(delta: float) -> void:
 	if is_destroyed:
 		return
 
@@ -94,7 +94,7 @@ func is_outside_camera_or_limits() -> bool:
 	return false
 
 
-func destroy(with_impact: bool = false):
+func destroy(with_impact: bool = false) -> void:
 	if is_destroyed:
 		return
 	is_destroyed = true
@@ -117,7 +117,7 @@ func destroy(with_impact: bool = false):
 		queue_free()
 
 
-func spawn_impact():
+func spawn_impact() -> void:
 	var parent_node = get_parent()
 	if not parent_node:
 		return

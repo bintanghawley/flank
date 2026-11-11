@@ -1,6 +1,6 @@
 extends AnimatedSprite2D
 
-func _ready():
+func _ready() -> void:
 	offset = Vector2(0, -0.5)
 	frame = 0
 	play("default")
