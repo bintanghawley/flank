@@ -119,7 +119,7 @@ region = Rect2(40, 21, 17, 20)
 
 [sub_resource type="AtlasTexture" id="Atlas_quest_icon"]
 atlas = ExtResource("5_action_buttons")
-region = Rect2(0, 272, 16, 16)
+region = Rect2(32, 224, 16, 16)
 
 [sub_resource type="AtlasTexture" id="Atlas_btn_v"]
 atlas = ExtResource("5_action_buttons")
@@ -315,28 +315,52 @@ scale = Vector2(2.2, 2.2)
 texture_normal = ExtResource("3_book")
 stretch_mode = 3
 
+[node name="QuestHeader" type="Label" parent="RootControl"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 224.0
+offset_right = 82.0
+offset_bottom = 246.0
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.45, 1)
+theme_override_colors/font_outline_color = Color(0.12, 0.08, 0.06, 0.9)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 2
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = SubResource("SystemFont_serif")
+theme_override_font_sizes/font_size = 15
+text = "Misi"
+
 [node name="QuestContainer" type="HBoxContainer" parent="RootControl"]
 layout_mode = 0
 offset_left = 30.0
 offset_top = 250.0
 offset_right = 320.0
 offset_bottom = 310.0
+mouse_filter = 0
+mouse_default_cursor_shape = 2
 theme_override_constants/separation = 10
 
 [node name="QuestIcon" type="TextureRect" parent="RootControl/QuestContainer"]
+texture_filter = 1
 custom_minimum_size = Vector2(26, 26)
 layout_mode = 2
 size_flags_vertical = 0
+mouse_filter = 2
 texture = SubResource("Atlas_quest_icon")
 expand_mode = 1
 stretch_mode = 5
 
 [node name="TextContainer" type="VBoxContainer" parent="RootControl/QuestContainer"]
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 2
 
 [node name="QuestTitle" type="Label" parent="RootControl/QuestContainer/TextContainer"]
 layout_mode = 2
+mouse_filter = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
 theme_override_constants/shadow_offset_x = 1
@@ -347,6 +371,7 @@ text = "Judul utama misi"
 
 [node name="QuestObjective" type="Label" parent="RootControl/QuestContainer/TextContainer"]
 layout_mode = 2
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
 theme_override_constants/shadow_offset_x = 1
@@ -356,6 +381,8 @@ theme_override_font_sizes/font_size = 15
 text = "objektif misi"
 
 [node name="LocationBanner" type="TextureRect" parent="RootControl"]
+visible = false
+modulate = Color(1, 1, 1, 0)
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 5
@@ -366,47 +393,151 @@ offset_top = 32.0
 offset_right = 180.0
 offset_bottom = 102.0
 grow_horizontal = 2
+mouse_filter = 2
 texture = ExtResource("4_banner")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="LocationLabel" type="Label" parent="RootControl/LocationBanner"]
+[node name="LocationRow" type="HBoxContainer" parent="RootControl/LocationBanner"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -2.0
+offset_left = 40.0
+offset_top = 10.0
+offset_right = -40.0
+offset_bottom = -16.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 7
+alignment = 1
+
+[node name="LocationIcon" type="TextureRect" parent="RootControl/LocationBanner/LocationRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(14, 16)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = SubResource("Atlas_location_pin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LocationLabel" type="Label" parent="RootControl/LocationBanner/LocationRow"]
+layout_mode = 2
+size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.18, 0.12, 0.1, 1)
 theme_override_fonts/font = SubResource("SystemFont_serif")
 theme_override_font_sizes/font_size = 18
-text = "📍 Istana Kerajaan"
-horizontal_alignment = 1
+text = "Istana Kerajaan"
 vertical_alignment = 1
+
+[node name="BtnHudInventory" type="TextureButton" parent="RootControl"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -164.0
+offset_top = 36.0
+offset_right = -126.0
+offset_bottom = 74.0
+grow_horizontal = 0
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+texture_normal = SubResource("Atlas_save_card_selected")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Icon" type="TextureRect" parent="RootControl/BtnHudInventory"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 30.0
+offset_bottom = 30.0
+mouse_filter = 2
+texture = SubResource("Atlas_tab_icon_inventory")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BtnHudInfo" type="TextureButton" parent="RootControl"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -116.0
+offset_top = 36.0
+offset_right = -78.0
+offset_bottom = 74.0
+grow_horizontal = 0
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+texture_normal = SubResource("Atlas_save_card_selected")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Icon" type="TextureRect" parent="RootControl/BtnHudInfo"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 28.0
+offset_bottom = 28.0
+mouse_filter = 2
+texture = SubResource("Atlas_tab_icon_info")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BtnHudSettings" type="TextureButton" parent="RootControl"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -68.0
+offset_top = 36.0
+offset_right = -30.0
+offset_bottom = 74.0
+grow_horizontal = 0
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+texture_normal = SubResource("Atlas_save_card_selected")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Icon" type="TextureRect" parent="RootControl/BtnHudSettings"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 30.0
+offset_bottom = 30.0
+mouse_filter = 2
+texture = SubResource("Atlas_tab_icon_settings")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="ControlsPrompt" type="VBoxContainer" parent="RootControl"]
 layout_mode = 1
-anchors_preset = 2
+anchors_preset = 3
+anchor_left = 1.0
 anchor_top = 1.0
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = -260.0
-offset_right = 180.0
-offset_bottom = -180.0
+offset_left = -220.0
+offset_top = -196.0
+offset_right = -24.0
+offset_bottom = -116.0
+grow_horizontal = 0
 grow_vertical = 0
 theme_override_constants/separation = 5
 
 [node name="ActionV" type="HBoxContainer" parent="RootControl/ControlsPrompt"]
 layout_mode = 2
 theme_override_constants/separation = 8
-
-[node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionV"]
-custom_minimum_size = Vector2(18, 18)
-layout_mode = 2
-texture = SubResource("Atlas_btn_v")
-expand_mode = 1
-stretch_mode = 5
+alignment = 2
 
 [node name="Label" type="Label" parent="RootControl/ControlsPrompt/ActionV"]
 layout_mode = 2
@@ -417,17 +548,20 @@ theme_override_constants/shadow_offset_y = 1
 theme_override_fonts/font = SubResource("SystemFont_serif")
 theme_override_font_sizes/font_size = 14
 text = "Serang"
+horizontal_alignment = 2
+
+[node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionV"]
+texture_filter = 1
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+texture = SubResource("Atlas_btn_v")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="ActionC" type="HBoxContainer" parent="RootControl/ControlsPrompt"]
 layout_mode = 2
 theme_override_constants/separation = 8
-
-[node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionC"]
-custom_minimum_size = Vector2(18, 18)
-layout_mode = 2
-texture = SubResource("Atlas_btn_c")
-expand_mode = 1
-stretch_mode = 5
+alignment = 2
 
 [node name="Label" type="Label" parent="RootControl/ControlsPrompt/ActionC"]
 layout_mode = 2
@@ -438,17 +572,20 @@ theme_override_constants/shadow_offset_y = 1
 theme_override_fonts/font = SubResource("SystemFont_serif")
 theme_override_font_sizes/font_size = 14
 text = "Ikuti"
+horizontal_alignment = 2
+
+[node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionC"]
+texture_filter = 1
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+texture = SubResource("Atlas_btn_c")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="ActionQ" type="HBoxContainer" parent="RootControl/ControlsPrompt"]
 layout_mode = 2
 theme_override_constants/separation = 8
-
-[node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionQ"]
-custom_minimum_size = Vector2(18, 18)
-layout_mode = 2
-texture = SubResource("Atlas_btn_q")
-expand_mode = 1
-stretch_mode = 5
+alignment = 2
 
 [node name="Label" type="Label" parent="RootControl/ControlsPrompt/ActionQ"]
 layout_mode = 2
@@ -459,6 +596,15 @@ theme_override_constants/shadow_offset_y = 1
 theme_override_fonts/font = SubResource("SystemFont_serif")
 theme_override_font_sizes/font_size = 14
 text = "Beralih Karakter"
+horizontal_alignment = 2
+
+[node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionQ"]
+texture_filter = 1
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+texture = SubResource("Atlas_btn_q")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="PartyContainer" type="HBoxContainer" parent="RootControl"]
 texture_filter = 1
@@ -502,12 +648,10 @@ stretch_mode = 5
 [node name="NameLabel" type="Label" parent="RootControl/PartyContainer/CardArthur"]
 layout_mode = 0
 offset_left = 48.0
-offset_top = 12.0
+offset_top = 15.0
 offset_right = 130.0
-offset_bottom = 30.0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 2
+offset_bottom = 33.0
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = SubResource("SystemFont_serif")
 theme_override_font_sizes/font_size = 13
 text = "Arthur"
@@ -570,12 +714,10 @@ stretch_mode = 5
 [node name="NameLabel" type="Label" parent="RootControl/PartyContainer/CardMagnus"]
 layout_mode = 0
 offset_left = 48.0
-offset_top = 12.0
+offset_top = 15.0
 offset_right = 130.0
-offset_bottom = 30.0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 2
+offset_bottom = 33.0
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = SubResource("SystemFont_serif")
 theme_override_font_sizes/font_size = 13
 text = "Magnus"
@@ -639,12 +781,10 @@ stretch_mode = 5
 [node name="NameLabel" type="Label" parent="RootControl/PartyContainer/CardAnastasya"]
 layout_mode = 0
 offset_left = 48.0
-offset_top = 12.0
+offset_top = 15.0
 offset_right = 130.0
-offset_bottom = 30.0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 2
+offset_bottom = 33.0
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = SubResource("SystemFont_serif")
 theme_override_font_sizes/font_size = 13
 text = "Anastasya"
@@ -708,12 +848,10 @@ stretch_mode = 5
 [node name="NameLabel" type="Label" parent="RootControl/PartyContainer/CardHellene"]
 layout_mode = 0
 offset_left = 48.0
-offset_top = 12.0
+offset_top = 15.0
 offset_right = 130.0
-offset_bottom = 30.0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 2
+offset_bottom = 33.0
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = SubResource("SystemFont_serif")
 theme_override_font_sizes/font_size = 13
 text = "Hellene"
@@ -3175,10 +3313,10 @@ mouse_filter = 2
 [node name="ControlRows" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls"]
 layout_mode = 0
 offset_left = 20.0
-offset_top = 18.0
+offset_top = 12.0
 offset_right = 268.0
-offset_bottom = 372.0
-theme_override_constants/separation = 8
+offset_bottom = 384.0
+theme_override_constants/separation = 5
 
 [node name="RowSwitch" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
 custom_minimum_size = Vector2(0, 32)
@@ -3739,6 +3877,69 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkip/KeyBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="RowJournal" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowJournal"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Jurnal"
+vertical_alignment = 1
+
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowJournal"]
+texture_filter = 1
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowJournal/KeyBox"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_quest_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowJournal/KeyBox"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "J"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowJournal/KeyBox"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -4326,6 +4527,18 @@ theme_override_font_sizes/font_size = 26
 text = "Credits"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="BtnCloseBook" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 636.0
+offset_top = 14.0
+offset_right = 672.0
+offset_bottom = 50.0
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+ignore_texture_size = true
+stretch_mode = 5
 
 [node name="SaveConfirmModal" type="Control" parent="RootControl/PauseOverlay"]
 visible = false

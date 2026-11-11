@@ -12,6 +12,9 @@ var active_leader_index: int = 0
 var inventory_items: Array[Dictionary] = []
 var quest_list: Array[Dictionary] = []
 var tracked_quest_id: String = "main_01"
+const DEFAULT_START_LOCATION: String = "Istana Kerajaan"
+var current_location_name: String = DEFAULT_START_LOCATION
+var visited_locations: Array[String] = []
 var total_playtime: float = 0.0
 
 # State Tempur Party ala Guardian Tales
@@ -50,6 +53,17 @@ func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 var shake_intensity: float = 0.0
 var shake_decay: float = 35.0
 
+# Indikator segitiga kecil di atas kepala leader yang sedang aktif
+const HERO_INDICATOR_TIP_OFFSET_Y: Dictionary = {
+	"Knight_1": -58.0,
+	"Mage_1": -43.0,
+	"Archer_1": -38.0,
+	"Bandit_1": -30.0
+}
+const DEFAULT_INDICATOR_TIP_OFFSET_Y: float = -42.0
+var _active_leader_indicator: Node2D = null
+var _active_indicator_bob_time: float = 0.0
+
 
 func _ready() -> void:
 	# 1. Daftarkan 4 anggota party dari scene
@@ -74,6 +88,7 @@ func _ready() -> void:
 
 	# 3. Nonaktifkan tabrakan fisik antara anggota party dan musuh agar tidak saling menyeret / mengunci
 	setup_party_enemy_collision_exceptions.call_deferred()
+	_init_active_leader_indicator()
 
 	# 4. Tentukan karakter awal sebagai Leader (Knight_1 = index 0)
 	set_active_leader(0)
@@ -251,6 +266,7 @@ func set_active_leader(idx: int) -> void:
 	if gameplay_hud:
 		gameplay_hud.set_active_leader(idx)
 
+	_update_active_leader_indicator(0.0)
 	print("Party Switch -> Leader aktif: [", active_leader_index + 1, "] ", leader.name)
 
 
@@ -615,6 +631,21 @@ func _on_hud_quest_navigation_requested(quest: Dictionary) -> void:
 			gameplay_hud.show_speech_bubble("Navigasi: " + loc)
 
 
+func enter_location(location_name: String) -> void:
+	"""Menandai kunjungan lokasi dan memicu banner sekali saat pertama kali masuk."""
+	var clean_loc := location_name.strip_edges()
+	if clean_loc.is_empty():
+		return
+
+	current_location_name = clean_loc
+	if visited_locations.has(clean_loc):
+		return
+
+	visited_locations.append(clean_loc)
+	if gameplay_hud and gameplay_hud.has_method("show_location_banner"):
+		gameplay_hud.show_location_banner(clean_loc)
+
+
 func get_active_leader() -> CharacterBody2D:
 	if not party_members.is_empty() and active_leader_index >= 0 and active_leader_index < party_members.size():
 		return party_members[active_leader_index]
@@ -628,6 +659,7 @@ func _process(delta: float) -> void:
 	handle_viewport_aggro_detection(delta)
 	update_breadcrumbs()
 	check_active_leader_status()
+	_update_active_leader_indicator(delta)
 
 
 func check_active_leader_status() -> void:
@@ -966,45 +998,50 @@ func get_follower_nav_target(slot_index: int, follower_pos: Vector2, space_state
 
 func play_iris_opening_transition() -> void:
 	var transition_layer := get_node_or_null("TransitionLayer")
-	if not transition_layer:
-		return
-	var iris := transition_layer.get_node_or_null("IrisMask") as ColorRect
-	if not iris or not (iris.material is ShaderMaterial):
-		return
+	var iris := transition_layer.get_node_or_null("IrisMask") as ColorRect if transition_layer else null
+	if iris and (iris.material is ShaderMaterial):
+		var mat := iris.material as ShaderMaterial
+		mat.set_shader_parameter("center", Vector2(0.5, 0.5))
+		mat.set_shader_parameter("radius", 0.0)
+		mat.set_shader_parameter("softness", 0.015)
 
-	var mat := iris.material as ShaderMaterial
-	mat.set_shader_parameter("center", Vector2(0.5, 0.5))
-	mat.set_shader_parameter("radius", 0.0)
-	mat.set_shader_parameter("softness", 0.015)
+		# Tunggu inisialisasi engine dan scene stabil agar bebas dari frame-drop awal
+		await get_tree().process_frame
+		await get_tree().process_frame
 
-	# Tunggu inisialisasi engine dan scene stabil agar bebas dari frame-drop awal
-	await get_tree().process_frame
-	await get_tree().process_frame
+		# Kunci posisi kamera langsung ke leader tanpa lag smoothing awal
+		if is_instance_valid(camera):
+			camera.reset_smoothing()
 
-	# Kunci posisi kamera langsung ke leader tanpa lag smoothing awal
-	if is_instance_valid(camera):
-		camera.reset_smoothing()
+		# Jeda bernapas halus sebelum lingkaran mulai mekar
+		await get_tree().create_timer(0.08).timeout
 
-	# Jeda bernapas halus sebelum lingkaran mulai mekar
-	await get_tree().create_timer(0.08).timeout
+		# Buka circular mask dengan kurva sinusoidal alami (EASE_IN_OUT) yang sangat lembut
+		var sfx_iris_open: AudioStream = load("res://assets/audio/sfx/ui/transition_iris_open.wav")
+		if sfx_iris_open:
+			var sfx_player := AudioStreamPlayer.new()
+			sfx_player.stream = sfx_iris_open
+			sfx_player.volume_db = -3.0
+			add_child(sfx_player)
+			sfx_player.finished.connect(sfx_player.queue_free)
+			sfx_player.play()
 
-	# Buka circular mask dengan kurva sinusoidal alami (EASE_IN_OUT) yang sangat lembut
-	var sfx_iris_open: AudioStream = load("res://assets/audio/sfx/ui/transition_iris_open.wav")
-	if sfx_iris_open:
-		var sfx_player := AudioStreamPlayer.new()
-		sfx_player.stream = sfx_iris_open
-		sfx_player.volume_db = -3.0
-		add_child(sfx_player)
-		sfx_player.finished.connect(sfx_player.queue_free)
-		sfx_player.play()
-
-	var tween := create_tween()
-	tween.tween_property(mat, "shader_parameter/radius", 1.5, 1.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await tween.finished
+		var tween := create_tween()
+		tween.tween_property(mat, "shader_parameter/radius", 1.5, 1.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		await tween.finished
+	else:
+		await get_tree().process_frame
 
 	# Hapus node transisi setelah selesai agar memori dan render pass bersih
 	if is_instance_valid(transition_layer):
 		transition_layer.queue_free()
+
+	if not is_inside_tree():
+		return
+
+	# Munculkan banner lokasi sekali setelah arena terbuka pada kunjungan pertama
+	if not visited_locations.has(current_location_name):
+		enter_location(current_location_name)
 
 
 # ==========================================
@@ -1147,9 +1184,24 @@ func load_game_from_slot(slot_id: int) -> bool:
 	if data.has("tracked_quest_id"):
 		tracked_quest_id = str(data["tracked_quest_id"])
 
+	# Restore Location & Visited History
+	current_location_name = str(data.get("current_location_name", DEFAULT_START_LOCATION)).strip_edges()
+	if current_location_name.is_empty():
+		current_location_name = DEFAULT_START_LOCATION
+	visited_locations.clear()
+	if data.has("visited_locations") and data["visited_locations"] is Array:
+		for v_loc in data["visited_locations"]:
+			var loc_str := str(v_loc).strip_edges()
+			if not loc_str.is_empty() and not visited_locations.has(loc_str):
+				visited_locations.append(loc_str)
+	else:
+		visited_locations.append(current_location_name)
+
 	# Sync HUD & Unpause
 	get_tree().paused = false
 	if gameplay_hud:
+		if gameplay_hud.has_method("hide_location_banner"):
+			gameplay_hud.hide_location_banner()
 		gameplay_hud.setup(party_members, active_leader_index, inventory_items, quest_list)
 		gameplay_hud.set_quests(quest_list, tracked_quest_id)
 		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
@@ -1157,6 +1209,9 @@ func load_game_from_slot(slot_id: int) -> bool:
 			gameplay_hud.update_hud_quest_display(tracked_q)
 		gameplay_hud.pause_overlay.visible = false
 		gameplay_hud.on_load_completed(slot_id, data)
+
+	if not visited_locations.has(current_location_name):
+		enter_location(current_location_name)
 
 	print("GAME LOADED: Slot %d | Leader: %s | HP: %d | Playtime: %f" % [slot_id, leader.name if leader else "None", leader.current_health if leader and "current_health" in leader else 0, total_playtime])
 	return true
@@ -1196,15 +1251,19 @@ func _collect_save_data(slot_id: int) -> Dictionary:
 		now_dict.get("minute", 0)
 	]
 
-	var current_location: String = "Istana Kerajaan"
+	var current_location: String = DEFAULT_START_LOCATION
 	var cur_q := _get_quest_by_id(tracked_quest_id)
 	if not cur_q.is_empty() and cur_q.get("location", "") != "":
 		current_location = cur_q.get("location")
+	elif not current_location_name.is_empty():
+		current_location = current_location_name
 
 	return {
 		"slot_id": slot_id,
 		"chapter": "Chapter 1.1",
 		"location": current_location,
+		"current_location_name": current_location_name,
+		"visited_locations": visited_locations.duplicate(),
 		"playtime": total_playtime,
 		"save_time_str": time_str,
 		"timestamp": int(Time.get_unix_time_from_system()),
@@ -1264,3 +1323,61 @@ func _deserialize_quests(quests: Array) -> Array[Dictionary]:
 				d["target_position"] = Vector2(a[0], a[1])
 		out.append(d)
 	return out
+
+
+func _init_active_leader_indicator() -> void:
+	"""Membuat node segitiga kecil di world space untuk menandai karakter aktif."""
+	if _active_leader_indicator != null and is_instance_valid(_active_leader_indicator):
+		return
+
+	var indicator := Node2D.new()
+	indicator.name = "ActiveLeaderIndicator"
+	indicator.z_index = 10
+	indicator.visible = false
+
+	var outline := Polygon2D.new()
+	outline.name = "TriangleOutline"
+	outline.polygon = PackedVector2Array([
+		Vector2(-13.0, -15.5),
+		Vector2(13.0, -15.5),
+		Vector2(0.0, 3.0)
+	])
+	outline.color = Color(0.11, 0.07, 0.08, 1.0)
+	indicator.add_child(outline)
+
+	var fill := Polygon2D.new()
+	fill.name = "TriangleFill"
+	fill.polygon = PackedVector2Array([
+		Vector2(-10.0, -13.0),
+		Vector2(10.0, -13.0),
+		Vector2(0.0, 0.0)
+	])
+	fill.color = Color(1.0, 0.88, 0.36, 1.0)
+	indicator.add_child(fill)
+
+	add_child(indicator)
+	_active_leader_indicator = indicator
+
+
+func _get_leader_indicator_offset_y(leader: CharacterBody2D) -> float:
+	"""Mengambil jarak vertikal ujung segitiga agar pas di atas kepala masing-masing karakter."""
+	return float(HERO_INDICATOR_TIP_OFFSET_Y.get(leader.name, DEFAULT_INDICATOR_TIP_OFFSET_Y))
+
+
+func _update_active_leader_indicator(delta: float) -> void:
+	"""Menyinkronkan posisi, bobbing halus, dan visibilitas segitiga ke leader yang aktif."""
+	if _active_leader_indicator == null or not is_instance_valid(_active_leader_indicator):
+		return
+
+	var leader := get_active_leader()
+	if leader == null or not is_instance_valid(leader) or not is_character_alive(leader) or not leader.visible:
+		_active_leader_indicator.visible = false
+		return
+
+	if delta > 0.0:
+		_active_indicator_bob_time = fmod(_active_indicator_bob_time + delta * 4.5, TAU)
+
+	var bob_offset: float = sin(_active_indicator_bob_time) * 3.5
+	var base_tip_y: float = _get_leader_indicator_offset_y(leader)
+	_active_leader_indicator.global_position = leader.global_position + Vector2(0.0, base_tip_y + bob_offset)
+	_active_leader_indicator.visible = true
