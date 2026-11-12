@@ -89,6 +89,35 @@ var is_skill_releasing: bool = false
 var skill_stuck_timer: float = 0.0
 var skill_facing_dir: String = "s"
 var active_indicator: Node2D = null
+var active_range_indicator: Node2D = null
+
+# Node bantuan visual lingkaran batas radius jangkauan skill Magnus
+class MeteorRangeIndicator extends Node2D:
+	var radius: float = 480.0
+	var time_passed: float = 0.0
+
+	func _ready() -> void:
+		z_index = 2
+
+	func _process(delta: float) -> void:
+		time_passed += delta
+		queue_redraw()
+
+	func _draw() -> void:
+		# Denyut halus agar batas jangkauan tampak hidup selaras dengan reticle
+		var pulse: float = 0.78 + 0.10 * sin(time_passed * 4.5)
+
+		# 1. Area jangkauan (fill transparan lembut bertema cyan sihir meteor)
+		var fill_color := Color(0.20, 0.85, 0.95, 0.08 + 0.03 * sin(time_passed * 4.5))
+		draw_circle(Vector2.ZERO, radius, fill_color)
+
+		# 2. Lingkaran batas utama (garis cyan murni tebal 4.0px, bersih tanpa garis hitam)
+		var ring_color := Color(0.25, 0.94, 0.98, pulse)
+		draw_arc(Vector2.ZERO, radius, 0.0, TAU, 160, ring_color, 4.0, true)
+
+		# 3. Garis aksen konsentris ganda di dalam batas (selaras dengan motif lingkaran reticle)
+		var inner_accent := Color(0.25, 0.94, 0.98, pulse * 0.45)
+		draw_arc(Vector2.ZERO, radius - 10.0, 0.0, TAU, 128, inner_accent, 2.0, true)
 
 # =========================
 # SPRINT DUST SETTINGS
@@ -112,8 +141,13 @@ var knockback_decay: float = 1400.0
 @export var invulnerability_duration: float = 0.25 # Durasi proteksi kebal singkat setelah terkena hit (mencegah double hit)
 var invulnerability_timer: float = 0.0
 
+# =========================
+# CAMERA SHAKE SETTINGS
+# =========================
+@export var camera_shake_strength: float = 7.0
 
-func _ready():
+
+func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("player")
 	current_health = max_health
@@ -133,6 +167,15 @@ func _setup_enemy_collision_exceptions() -> void:
 		if is_instance_valid(e) and e is CollisionObject2D:
 			add_collision_exception_with(e)
 			e.add_collision_exception_with(self)
+
+
+func _exit_tree() -> void:
+	if active_indicator and is_instance_valid(active_indicator):
+		active_indicator.queue_free()
+		active_indicator = null
+	if active_range_indicator and is_instance_valid(active_range_indicator):
+		active_range_indicator.queue_free()
+		active_range_indicator = null
 
 
 func set_party_command(cmd: int) -> void:
@@ -183,6 +226,9 @@ func cancel_skill() -> void:
 	if active_indicator and is_instance_valid(active_indicator):
 		active_indicator.queue_free()
 		active_indicator = null
+	if active_range_indicator and is_instance_valid(active_range_indicator):
+		active_range_indicator.queue_free()
+		active_range_indicator = null
 	is_aiming_skill = false
 	is_skill_releasing = false
 	if is_attacking:
@@ -280,7 +326,7 @@ func _physics_process(delta: float) -> void:
 	handle_run_dust_cycle(delta)
 
 
-func _unhandled_input(event: InputEvent):
+func _unhandled_input(event: InputEvent) -> void:
 	if not is_leader or is_dead:
 		return
 
@@ -336,7 +382,7 @@ func _unhandled_input(event: InputEvent):
 # LEADER MOVEMENT & ATTACK
 # =========================================================
 
-func process_leader_movement(delta: float):
+func process_leader_movement(delta: float) -> void:
 	if is_aiming_skill or is_skill_releasing:
 		velocity = knockback_velocity
 		move_and_slide_with_separation()
@@ -825,7 +871,7 @@ func get_camera_world_rect() -> Rect2:
 	var center: Vector2 = cam.get_screen_center_position()
 	return Rect2(center - vp_size * 0.5, vp_size).grow(40.0)
 
-func shoot_towards(target_pos: Vector2):
+func shoot_towards(target_pos: Vector2) -> void:
 	if attack_timer > 0.0 or is_attacking or is_dead or is_aiming_skill or is_skill_releasing:
 		return
 
@@ -902,7 +948,7 @@ func get_magic_bolt_spawn_position() -> Vector2:
 	return staff_pos + offset
 
 
-func reset_attack_state(token: int):
+func reset_attack_state(token: int) -> void:
 	# Saat senjata tongkat sihir mengarah ke depan dan efek sihir meletup (~0.34 detik, Frame 4)
 	await get_tree().create_timer(0.34).timeout
 
@@ -941,7 +987,7 @@ func reset_attack_state(token: int):
 # ANIMASI KARAKTER (4 ARAH & DIAGONAL)
 # =========================================================
 
-func update_direction_animation(direction: Vector2):
+func update_direction_animation(direction: Vector2) -> void:
 	if direction == Vector2.ZERO or is_aiming_skill or is_skill_releasing:
 		return
 
@@ -985,7 +1031,7 @@ func get_8_direction(direction: Vector2) -> Vector2:
 			return Vector2.DOWN
 
 
-func play_walk_animation():
+func play_walk_animation() -> void:
 	if is_aiming_skill or is_skill_releasing:
 		return
 
@@ -1011,7 +1057,7 @@ func play_walk_animation():
 		animated_sprite.play("walk_e")
 
 
-func play_idle_animation():
+func play_idle_animation() -> void:
 	if is_aiming_skill or is_skill_releasing:
 		return
 
@@ -1037,7 +1083,7 @@ func play_idle_animation():
 		animated_sprite.play("idle_e")
 
 
-func play_attack_animation():
+func play_attack_animation() -> void:
 	animated_sprite.flip_h = false
 
 	if last_direction == Vector2.UP:
@@ -1117,25 +1163,23 @@ func spawn_run_dust(move_dir: Vector2) -> void:
 			play_sfx(SFX_FOOTSTEP, -14.0)
 
 
-func apply_camera_shake(intensity: float = 7.0):
-	var leader = get_tree().get_first_node_in_group("player")
-	var vp := get_viewport()
-	if vp:
-		var cam := vp.get_camera_2d()
-		if cam and cam.has_method("apply_shake"):
-			cam.apply_shake(intensity)
-		elif leader and leader != self and leader.has_method("apply_camera_shake"):
-			leader.apply_camera_shake(intensity)
+func apply_camera_shake(intensity: float = -1.0) -> void:
+	var amount: float = intensity if intensity > 0.0 else camera_shake_strength
+	var game = get_tree().current_scene
+	if game and game.has_method("apply_camera_shake"):
+		game.apply_camera_shake(amount)
+	elif get_parent() and get_parent().has_method("apply_camera_shake"):
+		get_parent().apply_camera_shake(amount)
 
 
-func apply_knockback(force: Vector2):
+func apply_knockback(force: Vector2) -> void:
 	if force == Vector2.ZERO:
 		return
 	knockback_velocity = force
 	is_moving = false
 
 
-func take_damage(amount: int, _source_position = null):
+func take_damage(amount: int, _source_position = null) -> void:
 	if is_dead or invulnerability_timer > 0.0:
 		return
 	invulnerability_timer = invulnerability_duration
@@ -1166,7 +1210,7 @@ func take_damage(amount: int, _source_position = null):
 		die()
 
 
-func die():
+func die() -> void:
 	attack_token += 1
 	cancel_skill()
 	deactivate_shield()
@@ -1214,7 +1258,7 @@ func die():
 	respawn()
 
 
-func respawn():
+func respawn() -> void:
 	deactivate_shield()
 	is_flanking = false
 	flank_wp1 = Vector2.ZERO
@@ -1306,7 +1350,7 @@ func _setup_shield_sprite() -> void:
 			shield_sprite = Sprite2D.new()
 			shield_sprite.name = "ShieldSprite"
 			shield_sprite.texture = preload("res://assets/skills/knight/shield/shield.png")
-			shield_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			shield_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST as CanvasItem.TextureFilter
 			shield_sprite.z_index = 6
 			shield_sprite.position = SHIELD_CENTER_OFFSET
 			shield_sprite.scale = Vector2(0.85, 0.85)
@@ -1401,6 +1445,18 @@ func spawn_skill_indicator() -> void:
 	if active_indicator and is_instance_valid(active_indicator):
 		active_indicator.queue_free()
 		active_indicator = null
+	if active_range_indicator and is_instance_valid(active_range_indicator):
+		active_range_indicator.queue_free()
+		active_range_indicator = null
+
+	# Buat lingkaran batas radius casting di sekeliling Magnus
+	active_range_indicator = MeteorRangeIndicator.new()
+	active_range_indicator.radius = METEOR_MAX_CAST_RADIUS
+	active_range_indicator.global_position = global_position
+	if get_parent():
+		get_parent().add_child(active_range_indicator)
+	else:
+		get_tree().current_scene.add_child(active_range_indicator)
 
 	active_indicator = METEOR_INDICATOR_SCENE.instantiate()
 	var cam_rect := get_camera_world_rect()
@@ -1427,6 +1483,9 @@ func spawn_skill_indicator() -> void:
 func process_skill_aiming() -> void:
 	if not active_indicator or not is_instance_valid(active_indicator):
 		return
+
+	if active_range_indicator and is_instance_valid(active_range_indicator):
+		active_range_indicator.global_position = global_position
 
 	var cam_rect := get_camera_world_rect()
 	if cam_rect.size == Vector2.ZERO:
@@ -1478,6 +1537,9 @@ func execute_meteor_strike() -> void:
 		strike_pos = active_indicator.global_position
 		active_indicator.queue_free()
 		active_indicator = null
+	if active_range_indicator and is_instance_valid(active_range_indicator):
+		active_range_indicator.queue_free()
+		active_range_indicator = null
 
 	is_aiming_skill = false
 	is_skill_releasing = true

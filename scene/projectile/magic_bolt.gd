@@ -154,9 +154,13 @@ func _process_hit(target_node: Node2D) -> void:
 				target.take_damage(damage, shooter_node)
 
 			# Trigger getaran kamera saat magic bolt mengenai musuh
-			var leader = get_tree().get_first_node_in_group("player")
-			if leader and is_instance_valid(leader) and leader.has_method("apply_camera_shake"):
-				leader.apply_camera_shake(6.0)
+			var game = get_tree().current_scene
+			if game and game.has_method("apply_camera_shake"):
+				game.apply_camera_shake(6.0)
+			else:
+				var leader = get_tree().get_first_node_in_group("player")
+				if leader and is_instance_valid(leader) and leader.has_method("apply_camera_shake"):
+					leader.apply_camera_shake(6.0)
 
 			play_sfx(SFX_BOLT_HIT, -2.0)
 			destroy(true)

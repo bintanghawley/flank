@@ -39,12 +39,12 @@ class ClickRipple extends Control:
 
 func _ready() -> void:
 	# Tetap memproses input kursor meskipun scene tree dalam keadaan paused (Pause Menu)
-	process_mode = Node.PROCESS_MODE_ALWAYS
+	process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
 	
 	# Layer paling atas untuk menampilkan efek riak lingkaran klik tanpa tertutup UI/HUD
 	_ripple_layer = CanvasLayer.new()
 	_ripple_layer.layer = 125
-	_ripple_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	_ripple_layer.process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
 	add_child(_ripple_layer)
 	
 	_apply_cursor(false)
@@ -75,7 +75,7 @@ func _schedule_release() -> void:
 	if _release_tween and _release_tween.is_valid():
 		_release_tween.kill()
 	_release_tween = create_tween()
-	_release_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_release_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS as Tween.TweenPauseMode)
 	_release_tween.tween_interval(MIN_CLICK_HOLD_TIME)
 	_release_tween.tween_callback(func():
 		var still_down: bool = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
@@ -86,8 +86,8 @@ func _schedule_release() -> void:
 func _apply_cursor(is_pressed: bool) -> void:
 	var tex: Texture2D = CURSOR_PRESSED if is_pressed else CURSOR_NORMAL
 	# Tetapkan kursor kustom untuk panah default (ARROW) dan kursor tombol (POINTING_HAND)
-	Input.set_custom_mouse_cursor(tex, Input.CURSOR_ARROW, CURSOR_HOTSPOT)
-	Input.set_custom_mouse_cursor(tex, Input.CURSOR_POINTING_HAND, CURSOR_HOTSPOT)
+	Input.set_custom_mouse_cursor(tex, Input.CURSOR_ARROW as Input.CursorShape, CURSOR_HOTSPOT)
+	Input.set_custom_mouse_cursor(tex, Input.CURSOR_POINTING_HAND as Input.CursorShape, CURSOR_HOTSPOT)
 
 func _spawn_click_ripple(click_pos: Vector2, button_index: int) -> void:
 	if not _ripple_layer or not is_instance_valid(_ripple_layer):
@@ -96,13 +96,13 @@ func _spawn_click_ripple(click_pos: Vector2, button_index: int) -> void:
 	var ripple := ClickRipple.new()
 	# Pusatkan lingkaran bayangan tepat pada ujung panah kursor yang telah bergerak maju ke depan
 	ripple.position = click_pos - CURSOR_HOTSPOT
-	ripple.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	ripple.process_mode = Node.PROCESS_MODE_ALWAYS
+	ripple.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
+	ripple.process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
 	
 	_ripple_layer.add_child(ripple)
 	
 	var tween: Tween = create_tween().set_parallel(true)
-	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS as Tween.TweenPauseMode)
 	
 	# Dinamika ekspansi lingkaran dan penipisan garis
 	tween.tween_property(ripple, "radius", 26.0, 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)

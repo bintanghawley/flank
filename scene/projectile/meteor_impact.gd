@@ -56,6 +56,12 @@ func apply_aoe_damage() -> void:
 
 
 func trigger_camera_shake() -> void:
-	var player = get_tree().get_first_node_in_group("player")
-	if player and is_instance_valid(player) and player.has_method("apply_camera_shake"):
-		player.apply_camera_shake(12.0)
+	var game = get_tree().current_scene
+	if game and game.has_method("apply_camera_shake"):
+		game.apply_camera_shake(12.0)
+	elif get_parent() and get_parent().has_method("apply_camera_shake"):
+		get_parent().apply_camera_shake(12.0)
+	else:
+		var player = get_tree().get_first_node_in_group("player")
+		if player and is_instance_valid(player) and player.has_method("apply_camera_shake"):
+			player.apply_camera_shake(12.0)

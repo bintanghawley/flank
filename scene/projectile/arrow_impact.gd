@@ -1,5 +1,5 @@
 extends AnimatedSprite2D
 
-func _ready():
+func _ready() -> void:
 	play("default")
 	animation_finished.connect(queue_free)

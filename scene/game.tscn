@@ -1,11 +1,12 @@
- [gd_scene format=3 uid="uid://80uy3wgwk1dw"]
+[gd_scene format=3 uid="uid://80uy3wgwk1dw"]
 
-[ext_resource type="Script" path="res://scene/game.gd" id="1_game_script"]
 [ext_resource type="PackedScene" uid="uid://bwrcpv48t8r6w" path="res://scene/player/player_archer.tscn" id="1_33cqm"]
+[ext_resource type="Script" uid="uid://vjhhky8r2m43" path="res://scene/game.gd" id="1_game_script"]
 [ext_resource type="PackedScene" uid="uid://dol0jnt4w2mn7" path="res://scene/enemy/enemy.tscn" id="2_xwcet"]
-[ext_resource type="PackedScene" path="res://scene/player/player_mage.tscn" id="4_mage"]
-[ext_resource type="PackedScene" path="res://scene/player/player_knight.tscn" id="5_knight"]
-[ext_resource type="PackedScene" uid="uid://df7k2m9b1nd1t" path="res://scene/player/player_bandit.tscn" id="6_bandit"]
+[ext_resource type="PackedScene" uid="uid://dlatxleiag3o8" path="res://scene/world/kingdom_map.tscn" id="3_map"]
+[ext_resource type="PackedScene" uid="uid://cmkcndgxhr4gq" path="res://scene/player/player_mage.tscn" id="4_mage"]
+[ext_resource type="PackedScene" uid="uid://c7yak2m4n8p1q" path="res://scene/player/player_knight.tscn" id="5_knight"]
+[ext_resource type="PackedScene" uid="uid://df7k2nab1nd1t" path="res://scene/player/player_bandit.tscn" id="6_bandit"]
 [ext_resource type="PackedScene" uid="uid://b5k8vyg6w3xqm" path="res://scene/ui/gameplay/gameplay_hud.tscn" id="8_hud"]
 
 [sub_resource type="Shader" id="Shader_iris"]
@@ -31,7 +32,7 @@ shader_parameter/radius = 0.0
 shader_parameter/softness = 0.015
 
 [node name="Game" type="Node2D" unique_id=1512194323]
-position = Vector2(0, 0)
+y_sort_enabled = true
 script = ExtResource("1_game_script")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=243320470]
@@ -39,6 +40,8 @@ position = Vector2(3000, 1300)
 zoom = Vector2(0.65, 0.65)
 position_smoothing_enabled = true
 position_smoothing_speed = 7.0
+
+[node name="map_region1" parent="." unique_id=1420594985 instance=ExtResource("3_map")]
 
 [node name="Knight_1" parent="." unique_id=1280897880 instance=ExtResource("5_knight")]
 y_sort_enabled = true
@@ -57,19 +60,17 @@ y_sort_enabled = true
 position = Vector2(2745, 1300)
 
 [node name="Enemy1" parent="." unique_id=110304380 instance=ExtResource("2_xwcet")]
-z_index = 4
 position = Vector2(3700, 1000)
 
 [node name="Enemy2" parent="." unique_id=110304381 instance=ExtResource("2_xwcet")]
-z_index = 4
 position = Vector2(4100, 1000)
 
-[node name="GameplayHud" parent="." instance=ExtResource("8_hud")]
+[node name="GameplayHud" parent="." unique_id=161884810 instance=ExtResource("8_hud")]
 
 [node name="TransitionLayer" type="CanvasLayer" parent="." unique_id=98127341]
 layer = 100
 
-[node name="IrisMask" type="ColorRect" parent="TransitionLayer"]
+[node name="IrisMask" type="ColorRect" parent="TransitionLayer" unique_id=568817687]
 material = SubResource("ShaderMaterial_iris")
 anchors_preset = 15
 anchor_right = 1.0

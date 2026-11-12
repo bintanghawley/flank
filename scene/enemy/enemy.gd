@@ -96,7 +96,7 @@ var stun_timer: float = 0.0
 var damage_tween: Tween = null
 
 
-func _ready():
+func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("enemy")
 	current_health = max_health
@@ -207,7 +207,7 @@ static func _init_health_bar_styles() -> void:
 	_style_fill.set_corner_radius_all(1)
 
 
-func setup_health_bar():
+func setup_health_bar() -> void:
 	_init_health_bar_styles()
 
 	# Konfigurasi Bar Belakang (Damage Bar / Buffer yang menunjukkan darah yang hilang)
@@ -229,7 +229,7 @@ func setup_health_bar():
 		health_bar.add_theme_stylebox_override("fill", _style_fill)
 
 
-func _physics_process(delta):
+func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 
@@ -388,7 +388,7 @@ func _physics_process(delta):
 			damage_timer = attack_cooldown
 
 
-func handle_idle_patrol(delta):
+func handle_idle_patrol(delta: float) -> void:
 	wander_timer -= delta
 
 	# Pilih titik acak baru setiap beberapa detik
@@ -611,7 +611,7 @@ func get_dynamic_shoot_cooldown() -> float:
 	return shoot_cooldown
 
 
-func shoot_at_player():
+func shoot_at_player() -> void:
 	if player == null or not is_instance_valid(player) or is_dead or is_shooting:
 		return
 
@@ -674,7 +674,7 @@ func shoot_at_player():
 # UPDATE ARAH ANIMASI
 # =========================================================
 
-func update_direction_animation(direction: Vector2):
+func update_direction_animation(direction: Vector2) -> void:
 	if direction == Vector2.ZERO:
 		return
 	last_direction = get_8_direction(direction)
@@ -718,7 +718,7 @@ func get_8_direction(direction: Vector2) -> Vector2:
 # WALK ANIMATION (8 ARAH)
 # =========================================================
 
-func play_walk_animation():
+func play_walk_animation() -> void:
 	if not animated_sprite:
 		return
 	animated_sprite.flip_h = false
@@ -751,7 +751,7 @@ func play_walk_animation():
 # IDLE ANIMATION (8 ARAH)
 # =========================================================
 
-func play_idle_animation():
+func play_idle_animation() -> void:
 	if not animated_sprite:
 		return
 	animated_sprite.flip_h = false
@@ -784,7 +784,7 @@ func play_idle_animation():
 # ATTACK ANIMATION (8 ARAH)
 # =========================================================
 
-func play_attack_animation():
+func play_attack_animation() -> void:
 	if not animated_sprite:
 		return
 	animated_sprite.flip_h = false
@@ -838,7 +838,7 @@ func apply_knockup(duration: float = 0.65, height: float = 38.0) -> void:
 # MENERIMA DAMAGE DARI PANAH ARCHER
 # =========================================================
 
-func take_damage(amount: int, attacker: CharacterBody2D = null):
+func take_damage(amount: int, attacker: CharacterBody2D = null) -> void:
 	if is_dead:
 		return
 
@@ -899,7 +899,7 @@ func take_damage(amount: int, attacker: CharacterBody2D = null):
 # KEMATIAN & RESPAWN OTOMATIS
 # =========================================================
 
-func die():
+func die() -> void:
 	is_dead = true
 	play_sfx(SFX_DEATH, 0.0)
 	is_shooting = false
@@ -938,7 +938,7 @@ func die():
 	respawn()
 
 
-func respawn():
+func respawn() -> void:
 	# Kembalikan ke posisi awal
 	global_position = spawn_position
 	current_health = max_health
@@ -1004,7 +1004,7 @@ func respawn():
 # AREA DETEKSI PLAYER
 # =========================================================
 
-func _on_detection_area_body_entered(body):
+func _on_detection_area_body_entered(body: Node2D) -> void:
 	if is_dead:
 		return
 	if body.is_in_group("player") and not ("is_dead" in body and body.is_dead):
@@ -1016,7 +1016,7 @@ func _on_detection_area_body_entered(body):
 			play_sfx(SFX_ALERT, -2.0)
 
 
-func _on_detection_area_body_exited(body):
+func _on_detection_area_body_exited(body: Node2D) -> void:
 	if is_dead:
 		return
 	if body == player:

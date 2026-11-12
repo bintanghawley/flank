@@ -16,7 +16,7 @@ var attack_dir: Vector2 = Vector2.RIGHT
 var attack_length: float = 0.0
 
 
-func setup(origin: Vector2, dir: Vector2, length: float):
+func setup(origin: Vector2, dir: Vector2, length: float) -> void:
 	attack_origin = origin
 	attack_dir = dir
 	attack_length = length
@@ -31,7 +31,7 @@ func setup(origin: Vector2, dir: Vector2, length: float):
 	global_position = origin + dir * (length / 2.0)
 
 
-func _ready():
+func _ready() -> void:
 	if attack_length <= 0.0:
 		attack_length = 154.0 * scale.x
 		attack_dir = Vector2.RIGHT.rotated(rotation)
@@ -50,7 +50,7 @@ func _ready():
 	call_deferred("_check_initial_overlaps")
 
 
-func _check_initial_overlaps():
+func _check_initial_overlaps() -> void:
 	for body in get_overlapping_bodies():
 		_process_target(body)
 	for area in get_overlapping_areas():
@@ -59,18 +59,18 @@ func _check_initial_overlaps():
 		_process_target(area)
 
 
-func _on_body_entered(body: Node2D):
+func _on_body_entered(body: Node2D) -> void:
 	_process_target(body)
 
 
-func _on_area_entered(area: Area2D):
+func _on_area_entered(area: Area2D) -> void:
 	# DetectionArea milik musuh adalah area aggro/penglihatan, BUKAN hitbox penerima damage!
 	if area.name == "DetectionArea":
 		return
 	_process_target(area)
 
 
-func _process_target(node: Node):
+func _process_target(node: Node) -> void:
 	if not is_instance_valid(node):
 		return
 
@@ -135,5 +135,5 @@ func _is_target_in_hitbox(target: Node2D) -> bool:
 	return true
 
 
-func _on_animation_finished():
+func _on_animation_finished() -> void:
 	queue_free()

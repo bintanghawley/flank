@@ -104,8 +104,6 @@ var invulnerability_timer: float = 0.0
 # CAMERA SHAKE SETTINGS
 # =========================
 @export var camera_shake_strength: float = 7.0
-var shake_intensity: float = 0.0
-var shake_decay: float = 35.0
 
 
 func _ready() -> void:
@@ -1043,7 +1041,6 @@ func get_camera_world_rect() -> Rect2:
 
 func apply_camera_shake(intensity: float = -1.0) -> void:
 	var amount: float = intensity if intensity > 0.0 else camera_shake_strength
-	shake_intensity = max(shake_intensity, amount)
 	var game = get_tree().current_scene
 	if game and game.has_method("apply_camera_shake"):
 		game.apply_camera_shake(amount)

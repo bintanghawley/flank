@@ -228,11 +228,9 @@ var invulnerability_timer: float = 0.0
 # CAMERA SHAKE SETTINGS
 # =========================
 @export var camera_shake_strength: float = 8.0 # Kekuatan getaran kamera saat mengenai lawan
-var shake_intensity: float = 0.0
-var shake_decay: float = 35.0
 
 
-func _ready():
+func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("player")
 	current_health = max_health
@@ -255,44 +253,23 @@ func _setup_enemy_collision_exceptions() -> void:
 			e.add_collision_exception_with(self)
 
 
-func _process(delta: float):
-	handle_camera_shake(delta)
-
-
 func get_camera() -> Camera2D:
 	if has_node("Camera2D"):
 		return $Camera2D
 	return get_viewport().get_camera_2d()
 
 
-func apply_camera_shake(intensity: float = -1.0):
-	var amount = intensity if intensity > 0.0 else camera_shake_strength
-	shake_intensity = max(shake_intensity, amount)
+func apply_camera_shake(intensity: float = -1.0) -> void:
+	var amount: float = intensity if intensity > 0.0 else camera_shake_strength
 	if get_parent() and get_parent().has_method("apply_camera_shake"):
 		get_parent().apply_camera_shake(amount)
-
-
-func handle_camera_shake(delta: float):
-	if get_parent() and get_parent().has_method("apply_camera_shake"):
-		return
-	var cam: Camera2D = get_camera()
-	if not cam:
-		return
-	if shake_intensity > 0.0:
-		cam.offset = Vector2(
-			randf_range(-shake_intensity, shake_intensity),
-			randf_range(-shake_intensity, shake_intensity)
-		)
-		shake_intensity = move_toward(shake_intensity, 0.0, shake_decay * delta)
-	elif cam.offset != Vector2.ZERO:
-		cam.offset = Vector2.ZERO
 
 
 # =========================================================
 # MOVEMENT & AUTO-ATTACK
 # =========================================================
 
-func _physics_process(delta: float):
+func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 
@@ -574,7 +551,7 @@ func spawn_run_dust(move_dir: Vector2) -> void:
 # INPUT MOUSE
 # =========================================================
 
-func _unhandled_input(event: InputEvent):
+func _unhandled_input(event: InputEvent) -> void:
 	if not is_leader or is_dead:
 		return
 
@@ -836,7 +813,7 @@ func process_follower_combat(delta: float) -> void:
 	move_and_slide_with_separation()
 	last_movement_direction = move_dir
 	apply_smoothed_facing(move_dir, delta)
-func update_direction_animation(direction: Vector2):
+func update_direction_animation(direction: Vector2) -> void:
 
 	if direction == Vector2.ZERO:
 		return
@@ -920,7 +897,7 @@ func get_8_direction(direction: Vector2) -> Vector2:
 # WALK ANIMATION
 # =========================================================
 
-func play_walk_animation():
+func play_walk_animation() -> void:
 
 	# Reset flip
 	animated_sprite.flip_h = false
@@ -984,7 +961,7 @@ func play_walk_animation():
 # IDLE ANIMATION
 # =========================================================
 
-func play_idle_animation():
+func play_idle_animation() -> void:
 
 	# Reset flip
 	animated_sprite.flip_h = false
@@ -1048,7 +1025,7 @@ func play_idle_animation():
 # ATTACK ANIMATION
 # =========================================================
 
-func play_attack_animation():
+func play_attack_animation() -> void:
 
 	# Reset flip
 	animated_sprite.flip_h = false
@@ -1295,7 +1272,7 @@ func get_camera_world_rect() -> Rect2:
 	var center: Vector2 = cam.get_screen_center_position()
 	return Rect2(center - vp_size * 0.5, vp_size).grow(40.0)
 
-func shoot_towards(target_pos: Vector2):
+func shoot_towards(target_pos: Vector2) -> void:
 	if attack_timer > 0.0 or is_attacking or is_dead:
 		return
 
@@ -1331,7 +1308,7 @@ func shoot_towards(target_pos: Vector2):
 
 	reset_attack_state(token)
 
-func shoot_at(target: Node2D):
+func shoot_at(target: Node2D) -> void:
 	if is_instance_valid(target):
 		shoot_towards(target.global_position)
 
@@ -1344,7 +1321,7 @@ func get_dynamic_projectile_speed() -> float:
 	return controlled_projectile_speed * follower_projectile_ratio
 
 
-func reset_attack_state(token: int):
+func reset_attack_state(token: int) -> void:
 	# Tunggu sampai sekitar frame 3-4 dari animasi attack
 	await get_tree().create_timer(0.22).timeout
 
@@ -1397,7 +1374,7 @@ func reset_attack_state(token: int):
 # MENERIMA DAMAGE DARI MUSUH & KNOCKBACK
 # =========================================================
 
-func take_damage(amount: int, _source_position = null):
+func take_damage(amount: int, _source_position = null) -> void:
 	if is_dead or invulnerability_timer > 0.0:
 		return
 	invulnerability_timer = invulnerability_duration
@@ -1434,7 +1411,7 @@ func take_damage(amount: int, _source_position = null):
 # KEMATIAN & RESPAWN ARCHER
 # =========================================================
 
-func die():
+func die() -> void:
 	attack_token += 1
 	deactivate_shield()
 	if is_dead:
@@ -1460,7 +1437,6 @@ func die():
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO
 	invulnerability_timer = 0.0
-	shake_intensity = 0.0
 	var cam: Camera2D = get_camera()
 	if cam:
 		cam.offset = Vector2.ZERO
@@ -1496,7 +1472,7 @@ func die():
 	respawn()
 
 
-func respawn():
+func respawn() -> void:
 	deactivate_shield()
 	is_flanking = false
 	flank_wp1 = Vector2.ZERO
@@ -1581,7 +1557,7 @@ func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 	player.play()
 
 
-func apply_knockback(force: Vector2):
+func apply_knockback(force: Vector2) -> void:
 	if force == Vector2.ZERO:
 		return
 	knockback_velocity = force
@@ -1614,7 +1590,7 @@ func is_skill_locked() -> bool:
 			current_skill_state == SkillState.RELEASING)
 
 
-func activate_skill_mode():
+func activate_skill_mode() -> void:
 	current_skill_state = SkillState.READY
 	skill_charges = skill_max_charges
 	skill_mode_timer = skill_mode_duration
@@ -1636,7 +1612,7 @@ func activate_skill_mode():
 	play_sfx(SFX_ARCHER_SKILL_MODE_ACTIVATE, -1.0)
 
 
-func deactivate_skill_mode():
+func deactivate_skill_mode() -> void:
 	current_skill_state = SkillState.INACTIVE
 	skill_charges = 0
 	skill_mode_timer = 0.0
@@ -1659,7 +1635,7 @@ func deactivate_skill_mode():
 			play_idle_animation()
 
 
-func start_skill_charge():
+func start_skill_charge() -> void:
 	current_skill_state = SkillState.STARTING
 	skill_release_queued = false
 
@@ -1699,7 +1675,7 @@ func start_skill_charge():
 	play_sfx(SFX_ARCHER_SKILL_CHARGE, -2.0)
 
 
-func execute_skill_release():
+func execute_skill_release() -> void:
 	if current_skill_state == SkillState.RELEASING or is_dead:
 		return
 
@@ -1749,7 +1725,7 @@ func execute_skill_release():
 	play_sfx(SFX_ARCHER_SKILL_RELEASE, 0.0)
 
 
-func on_skill_release_finished():
+func on_skill_release_finished() -> void:
 	if is_dead:
 		return
 
@@ -1775,7 +1751,7 @@ func on_skill_release_finished():
 			play_idle_animation()
 
 
-func _on_animated_sprite_animation_finished():
+func _on_animated_sprite_animation_finished() -> void:
 	if is_dead:
 		return
 
@@ -1846,7 +1822,7 @@ func _setup_shield_sprite() -> void:
 			shield_sprite = Sprite2D.new()
 			shield_sprite.name = "ShieldSprite"
 			shield_sprite.texture = preload("res://assets/skills/knight/shield/shield.png")
-			shield_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			shield_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST as CanvasItem.TextureFilter
 			shield_sprite.z_index = 6
 			shield_sprite.position = SHIELD_CENTER_OFFSET
 			shield_sprite.scale = Vector2(0.85, 0.85)

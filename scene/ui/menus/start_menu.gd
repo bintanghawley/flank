@@ -84,7 +84,7 @@ func _ready() -> void:
 	for btn_name in BUTTON_TEXTS:
 		var btn: Button = get_node_or_null("MenuContainer/" + btn_name)
 		if btn:
-			btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+			btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND as Control.CursorShape
 			btn.pivot_offset = Vector2(btn.size.x / 2.0, btn.size.y / 2.0)
 			btn.mouse_entered.connect(_on_button_hovered.bind(btn))
 			btn.focus_entered.connect(_on_button_hovered.bind(btn))
@@ -200,7 +200,7 @@ func _on_start_pressed() -> void:
 		var btn: Button = get_node_or_null("MenuContainer/" + btn_name)
 		if btn:
 			btn.disabled = true
-			btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			btn.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
 	
 	# Fade out menu buttons dan logo
 	var fade_tween: Tween = create_tween().set_parallel(true)
@@ -270,8 +270,8 @@ func _on_settings_pressed() -> void:
 	for btn_name in BUTTON_TEXTS:
 		var btn: Button = get_node_or_null("MenuContainer/" + btn_name)
 		if btn:
-			btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			btn.focus_mode = Control.FOCUS_NONE
+			btn.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
+			btn.focus_mode = Control.FOCUS_NONE as Control.FocusMode
 	get_viewport().gui_release_focus()
 
 	if is_instance_valid(_settings_overlay_hud) and _settings_overlay_hud.has_method("open_as_start_menu_settings"):
@@ -282,8 +282,8 @@ func _on_settings_closed() -> void:
 	for btn_name in BUTTON_TEXTS:
 		var btn: Button = get_node_or_null("MenuContainer/" + btn_name)
 		if btn:
-			btn.mouse_filter = Control.MOUSE_FILTER_STOP
-			btn.focus_mode = Control.FOCUS_ALL
+			btn.mouse_filter = Control.MOUSE_FILTER_STOP as Control.MouseFilter
+			btn.focus_mode = Control.FOCUS_ALL as Control.FocusMode
 	_select_button(btn_settings, true)
 
 func _on_exit_pressed() -> void:

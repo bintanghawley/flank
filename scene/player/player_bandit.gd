@@ -5,7 +5,6 @@ extends CharacterBody2D
 # =========================================================
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
-@onready var triple_slash_sprite: AnimatedSprite2D = get_node_or_null("TripleSlashSprite")
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var shield_sprite: Sprite2D = $ShieldSprite
 
@@ -137,8 +136,6 @@ var shield_tween: Tween = null
 # CAMERA SHAKE SETTINGS
 # =========================
 @export var camera_shake_strength: float = 7.0
-var shake_intensity: float = 0.0
-var shake_decay: float = 35.0
 
 
 func _ready() -> void:
@@ -206,8 +203,6 @@ func cancel_skill() -> void:
 	skill_stuck_timer = 0.0
 	skill_target_enemy = null
 	skill_hit_enemies_step.clear()
-	if triple_slash_sprite:
-		triple_slash_sprite.visible = false
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		require_mouse_release = true
 	if not is_dead and not is_moving and not is_attacking and not is_ambush_lunging:
@@ -523,9 +518,6 @@ func process_triple_slash_skill(delta: float) -> void:
 				animated_sprite.flip_h = (last_direction == Vector2.LEFT)
 				animated_sprite.play("triple_slash")
 
-			if triple_slash_sprite:
-				triple_slash_sprite.visible = false
-
 			apply_camera_shake(5.0)
 			play_sfx(SFX_BANDIT_KNOCKUP, 0.0)
 			print(name, " menabrak ", hit_enemy.name, " -> KNOCKUP & Memulai TRIPLE SLASH!")
@@ -582,8 +574,6 @@ func process_triple_slash_skill(delta: float) -> void:
 			skill_slash_step = 0
 			skill_stuck_timer = 0.0
 			skill_cooldown_timer = skill_cooldown_max # Cooldown 5.0s dimulai setelah eksekusi selesai
-			if triple_slash_sprite:
-				triple_slash_sprite.visible = false
 			if not is_dead and not is_moving:
 				play_idle_animation()
 			print(name, " menyelesaikan Triple Slash. Cooldown: ", skill_cooldown_max, " detik.")
@@ -1161,8 +1151,6 @@ func die() -> void:
 	deactivate_shield()
 	ai_attack_timer = 0.0
 	knockback_velocity = Vector2.ZERO
-	if triple_slash_sprite:
-		triple_slash_sprite.visible = false
 	print("Bandit Gugur! Menunggu respawn...")
 
 	if is_leader:
@@ -1352,8 +1340,7 @@ func spawn_run_dust(move_dir: Vector2) -> void:
 
 
 func apply_camera_shake(intensity: float = -1.0) -> void:
-	var amount = intensity if intensity > 0.0 else camera_shake_strength
-	shake_intensity = max(shake_intensity, amount)
+	var amount: float = intensity if intensity > 0.0 else camera_shake_strength
 	if get_parent() and get_parent().has_method("apply_camera_shake"):
 		get_parent().apply_camera_shake(amount)
 
