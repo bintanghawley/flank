@@ -190,6 +190,15 @@ const LOCATION_BANNER_FADE_OUT_DURATION: float = 0.38
 var _location_banner_rest_y: float = 32.0
 var _location_banner_tween: Tween = null
 
+# Book Menu UI SFX
+const SFX_UI_HOVER: AudioStream = preload("res://assets/audio/sfx/ui/ui_hover.wav")
+const SFX_BOOK_OPEN: AudioStream = preload("res://assets/audio/sfx/ui/book_open.wav")
+const SFX_BOOK_CLOSE: AudioStream = preload("res://assets/audio/sfx/ui/book_close.wav")
+const SFX_BOOK_PAGE_FLIP: AudioStream = preload("res://assets/audio/sfx/ui/book_page_flip.wav")
+const SFX_BOOK_TAB_SELECT: AudioStream = preload("res://assets/audio/sfx/ui/book_tab_select.wav")
+const SFX_BOOK_CONFIRM: AudioStream = preload("res://assets/audio/sfx/ui/book_confirm.wav")
+var _last_hover_sfx_msec: int = 0
+
 # Pause Menu State
 var current_tab_index: int = 2 # 0: Inventory, 1: Journal, 2: Informasi, 3: Settings, 4: Credits
 var current_viewed_party_slot: int = 0 # Currently viewed character index in live party_members
@@ -215,6 +224,10 @@ var cat_btn_selected_tex: Texture2D
 var item_slot_tex: Texture2D
 var item_selected_tex: Texture2D
 var quest_btn_panel_tex: Texture2D
+var _inventory_item_textures: Dictionary = {}
+
+const CARD_FRAME_NORMAL_TEX: Texture2D = preload("res://assets/ui/gameplay/party_hud/hud_frame_character.png")
+const CARD_FRAME_SELECTED_TEX: Texture2D = preload("res://assets/ui/gameplay/party_hud/hud_frame_character-selected.png")
 
 # Journal State
 var quest_list: Array[Dictionary] = []
@@ -435,6 +448,7 @@ func _ready() -> void:
 	# Connect Pause Menu Buttons
 	if btn_pause_menu:
 		btn_pause_menu.pressed.connect(_on_btn_pause_menu_pressed)
+		_connect_book_hover_sfx(btn_pause_menu, true)
 	for hud_shortcut in [
 		{ "btn": btn_hud_inventory, "tab": 0 },
 		{ "btn": btn_hud_info, "tab": 2 },
@@ -443,6 +457,7 @@ func _ready() -> void:
 		var sc_btn := hud_shortcut["btn"] as TextureButton
 		if is_instance_valid(sc_btn):
 			sc_btn.pressed.connect(_open_book_tab_from_hud.bind(int(hud_shortcut["tab"])))
+			_connect_book_hover_sfx(sc_btn, true)
 	for quest_widget in [quest_header, quest_container]:
 		if is_instance_valid(quest_widget):
 			quest_widget.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -465,6 +480,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE:
 			if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
+				_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5)
 				_close_confirm_modal()
 				get_viewport().set_input_as_handled()
 				return
@@ -517,6 +533,7 @@ func _input(event: InputEvent) -> void:
 		if event is InputEventKey:
 			if event.pressed and not event.echo:
 				if event.keycode == KEY_ESCAPE:
+					_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5)
 					_cancel_rebind()
 					get_viewport().set_input_as_handled()
 					return
@@ -530,6 +547,7 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+			_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5)
 			_cancel_rebind()
 			get_viewport().set_input_as_handled()
 			return
@@ -543,6 +561,7 @@ func _input(event: InputEvent) -> void:
 	if _active_dragging_slider != "" and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 		_active_dragging_slider = ""
 		save_audio_settings()
+		_play_ui_sfx(SFX_BOOK_TAB_SELECT, -5.0)
 
 	if _active_dragging_slider != "" and event is InputEventMouseMotion:
 		var s_ctrl = _get_slider_ctrl(_active_dragging_slider)
@@ -775,6 +794,10 @@ func _init_pause_menu_textures() -> void:
 			if btn_icon:
 				btn_icon.texture = icon_cfg[1]
 
+	_init_inventory_item_textures()
+	if is_instance_valid(inv_detail_icon):
+		inv_detail_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
 
 func _create_atlas(tex: Texture2D, rect: Rect2) -> AtlasTexture:
 	var a := AtlasTexture.new()
@@ -784,7 +807,7 @@ func _create_atlas(tex: Texture2D, rect: Rect2) -> AtlasTexture:
 
 
 ## Builds an ImageTexture from a character grid pattern and color palette.
-func _build_pixel_texture(width: int, height: int, pattern: Array[String], palette: Dictionary) -> ImageTexture:
+func _build_pixel_texture(width: int, height: int, pattern: Array, palette: Dictionary) -> ImageTexture:
 	var img := Image.create_empty(width, height, false, Image.FORMAT_RGBA8)
 	for y in range(height):
 		var row: String = pattern[y]
@@ -898,6 +921,446 @@ func _build_backpack_icon_texture(ink_col: Color) -> ImageTexture:
 	return _build_pixel_texture(11, 11, pattern, {"#": ink_col})
 
 
+const INVENTORY_ITEM_PALETTE: Dictionary = {
+	"k": Color8(32, 18, 22, 255),
+	"w": Color8(255, 250, 238, 255),
+	"c": Color8(244, 219, 176, 255),
+	"C": Color8(212, 174, 126, 255),
+	"b": Color8(176, 108, 62, 255),
+	"B": Color8(122, 68, 42, 255),
+	"r": Color8(235, 58, 68, 255),
+	"R": Color8(166, 28, 44, 255),
+	"p": Color8(255, 148, 166, 255),
+	"o": Color8(242, 142, 48, 255),
+	"O": Color8(196, 86, 28, 255),
+	"y": Color8(252, 218, 68, 255),
+	"Y": Color8(214, 152, 34, 255),
+	"g": Color8(96, 210, 82, 255),
+	"G": Color8(46, 142, 62, 255),
+	"a": Color8(102, 220, 245, 255),
+	"A": Color8(46, 146, 206, 255),
+	"v": Color8(184, 92, 242, 255),
+	"V": Color8(118, 46, 172, 255),
+	"s": Color8(210, 222, 232, 255),
+	"S": Color8(132, 146, 164, 255),
+	"D": Color8(82, 92, 108, 255),
+	"t": Color8(186, 198, 210, 255)
+}
+
+const INVENTORY_ITEM_PATTERNS: Dictionary = {
+	"potion_hp": [
+		"......kkkk......",
+		"......kbbk......",
+		"......kBBk......",
+		".....kssssk.....",
+		"......kssk......",
+		".....ksttsk.....",
+		"....kskrrksk....",
+		"...ksprrrrksk...",
+		"...kprrrrrrrk...",
+		"..kskrrrrrrrrk..",
+		"..ksrRRRRRRRRk..",
+		"..krrrrrrrrRRk..",
+		"...krRRRRRRRk...",
+		"....kRRRRRRk....",
+		".....kkkkkk.....",
+		"................"
+	],
+	"apple": [
+		"........kkk.....",
+		".......kggk.....",
+		"......kbkGk.....",
+		".....k.k.k......",
+		"...kkkbbkkk.....",
+		"..krrrkrrrrk....",
+		".krwwrrrrrrrrk..",
+		".krwrrrrrrrrrk..",
+		".krrrrrrrrrrRk..",
+		".krrrrrrrrrRRk..",
+		".krRRRRRRRRRRk..",
+		"..kRRRRRRRRRk...",
+		"..kRRRRRRRRRk...",
+		"...kRRRkkRRk....",
+		"....kkk..kkk....",
+		"................"
+	],
+	"bread": [
+		"................",
+		".....kkkkkk.....",
+		"...kkyyyyyykk...",
+		"..kyyOyyyyOyyk..",
+		".kyyOyOyyOyOyyk.",
+		".kyyOyyyyyyyyyk.",
+		"kyyCyyyyOyyyyyOk",
+		"kyyCCCCyyOyyyOOk",
+		"kOCCCCCCCCCCCCOk",
+		"kOOOOOOOOOOOOOOk",
+		".kBBBBBBBBBBBBk.",
+		"..kkkkkkkkkkkk..",
+		"................",
+		"................",
+		"................",
+		"................"
+	],
+	"meat": [
+		"...........kkk..",
+		"..........kcwck.",
+		"....kkkk..kccck.",
+		"..kkbOOOk.kcck..",
+		".kbbwOOOOkkkck..",
+		"kbbOOrOOOOOOk...",
+		"kbOOrccrrOOOk...",
+		"kBOOrcrrROOOOk..",
+		"kBBOOrRRRROOBk..",
+		"kBBBOOOOOOBBBk..",
+		".kBBBBBBBBBBk...",
+		"..kkkkkkkkkk....",
+		"................",
+		"................",
+		"................",
+		"................"
+	],
+	"holy_water": [
+		"......kkkk......",
+		"......kyyk......",
+		".....kyYYyk.....",
+		"......kssk......",
+		".....ksttsk.....",
+		"....kswaaask....",
+		"...kssaaaaask...",
+		"..kssaawwaaaak..",
+		"..ksaaayyaaaAk..",
+		"..ksaaywwyaAAk..",
+		"..ksaaayyaAAAk..",
+		"..ksaAAAAAAaAk..",
+		"...kAAAAAAAAk...",
+		"....kAAAAAAk....",
+		".....kkkkkk.....",
+		"................"
+	],
+	"herb": [
+		"......kkk.......",
+		".....kgggk......",
+		"....kgwgwgk.....",
+		"....kggGggk.kkk.",
+		".kkk.kggGk.kgggk",
+		"kgggk.kGk.kgwggk",
+		"kgwgGk.kk.kgGggk",
+		".kgGGgkGkkgGGgk.",
+		"..kGGkgggkGGGk..",
+		"...kkkGGgkkkk...",
+		".....kGGk.......",
+		".....kGgk.......",
+		"......kGk.......",
+		"......kbk.......",
+		".......kk.......",
+		"................"
+	],
+	"honey": [
+		".....kkkkkk.....",
+		"....kbbbbbBk....",
+		"....kkkkkkkk....",
+		"...kyyyyyyyyk...",
+		"..kywyyyyyyyyk..",
+		"..kyyykyyykyyk..",
+		"..kyykkbbbkyyk..",
+		"..kbbboooobbbk..",
+		"..kbbowwwoBBbk..",
+		"..kbbbooooBBbk..",
+		"..kBBbBBBBBBbk..",
+		"...kBBBBBBBBk...",
+		"....kBBBBBBk....",
+		".....kkkkkk.....",
+		"................",
+		"................"
+	],
+	"cheese": [
+		"........kkk.....",
+		"......kkyyykk...",
+		"....kkywyyyyyk..",
+		"..kkyyyYYyyyyyk.",
+		".kyyyyyYYyyyyYYk",
+		"kyyyYYyyyyyyyyYk",
+		"kYYYYYYYYYYYYYYk",
+		"kyyyyYYyyyyYYyyk",
+		"kyyYYyyyyyyyyyyk",
+		"kyyyyyYYyyyYYyyk",
+		"kyyyYYYYyyyyyyyk",
+		"kYYYYYYYYYYYYYYk",
+		".kkkkkkkkkkkkkk.",
+		"................",
+		"................",
+		"................"
+	],
+	"soup": [
+		"....t......w....",
+		".....w....t.....",
+		"....w......w....",
+		"..kkkkkkkkkkkk..",
+		".ksooooorrroosk.",
+		"ksoowyyrrrrroyok",
+		"ksoyoyyrrwryoYYk",
+		".ksoooooooooook.",
+		"kbbbbbbbbbbbbbbk",
+		"kbCCCCCCCCCCCCBk",
+		".kbBBBBBBBBBBBk.",
+		"..kBBBBBBBBBBk..",
+		"...kkkkkkkkkk...",
+		"................",
+		"................",
+		"................"
+	],
+	"big_potion": [
+		".....kkkkkk.....",
+		".....kbbbbk.....",
+		".....kyYYyk.....",
+		"....kssssssk....",
+		".....kssssk.....",
+		"....ksttttsk....",
+		"...kssppppppk...",
+		"..kskprrrrrrrk..",
+		".ksprrrrrrprrrk.",
+		".kswrrrrrrrrRRk.",
+		".ksprrrrrrrrrRk.",
+		".krrRRRRRRRRRRk.",
+		"..krRRRRRRRRRk..",
+		"...kRRRRRRRRk...",
+		"....kkkkkkkk....",
+		"................"
+	],
+	"berry": [
+		".......kkk......",
+		".....kkgggkk....",
+		"....kgwgkggGk...",
+		"...kkkGkkkGGk...",
+		"..kvvvk.kvvvkk..",
+		".kvwvvk.kvwvvvk.",
+		".kvvvvkvvwvvvvvk",
+		".kvVVVvvvvVVVvk.",
+		"..kVkkvvvvvVVk..",
+		"...kvvwvvvvVVk..",
+		"...kvvvvvvvVk...",
+		"....kVVVVVVVk...",
+		".....kVVVVVk....",
+		"......kkkkk.....",
+		"................",
+		"................"
+	],
+	"soul_elixir": [
+		"......kkkk......",
+		".....kssssk.....",
+		"......kSSk......",
+		".....ksttsk.....",
+		"....ksvvvvsk....",
+		"...ksvwvvvVsk...",
+		"..ksvvaaavvvVk..",
+		"..ksvawwwavvVk..",
+		"..ksvaawaaVvVk..",
+		"...ksvaaavVVk...",
+		"....ksvvvVVk....",
+		".....ksvVVk.....",
+		"......kvVk......",
+		".......kk.......",
+		"................",
+		"................"
+	],
+	"pumpkin_pie": [
+		"................",
+		"......kkkk......",
+		".....kwwwwk.....",
+		"....kccwwcck....",
+		"..kkYYccccYYkk..",
+		".kyyOOOOOOOOyyk.",
+		"kyyOooooooooOyyk",
+		"kyOoowoooooooOyk",
+		"kYOOooooooooOOYk",
+		"kYYYYOOOOOOYYYYk",
+		".kBBBBBBBBBBBBk.",
+		"..kkkkkkkkkkkk..",
+		"................",
+		"................",
+		"................",
+		"................"
+	],
+	"palace_key": [
+		"....kkkkkk......",
+		"..kkyyyyyykk....",
+		".kyywkrrkyyyk...",
+		".kyykrrrrkyyk...",
+		".kyyykrrkyyyk...",
+		"..kkyyyyyykk....",
+		"....kkyykk......",
+		"......kyyk......",
+		"......kyykkk....",
+		"......kyyyyyk...",
+		"......kyykkk....",
+		"......kyyk......",
+		"......kyykkk....",
+		"......kyyyyyk...",
+		"......kkkkkkk...",
+		"................"
+	],
+	"dungeon_key": [
+		"....kkkkkk......",
+		"..kksssssskk....",
+		".ksswSSSSSSsk...",
+		".ksskkDDkkSSk...",
+		".ksSDDDDDDSSk...",
+		"..kkSSSSSSkk....",
+		"....kkSSkk......",
+		"......kSSk......",
+		"......kSSkkk....",
+		"......kSSDSSk...",
+		"......kSSDDDk...",
+		"......kSSk......",
+		"......kSSDkkk...",
+		"......kSSDDDk...",
+		"......kkkkkkk...",
+		"................"
+	],
+	"ancient_coin": [
+		"....kkkkkk......",
+		"..kkyyyyyykk....",
+		".kywwyyyyyyYk...",
+		".kywyyYYYYyYk...",
+		"kyyyYYyyyyYYyk..",
+		"kyyYYywyyyyYYk..",
+		"kyyYYyyyyyyYYk..",
+		"kyyYYyyyyyyYYk..",
+		"kyyyYYyyyyYYyk..",
+		".kyyyYYYYYYyk...",
+		".kyyyyyyYYYyk...",
+		"..kkyyyyyYkk....",
+		"....kkkkkkk.....",
+		"................",
+		"................",
+		"................"
+	],
+	"honor_chalice": [
+		"..kkkkkkkkkkkk..",
+		".kswsssssssswsk.",
+		".kssyyyyyyyySSk.",
+		"..kssyywwyySSk..",
+		"..ksyyrrrrrySk..",
+		"...ksyrrrrrSk...",
+		"....kssrrSSk....",
+		".....kkSSkk.....",
+		"......kyyk......",
+		"......kyYk......",
+		".....kyYYyk.....",
+		"....kssYYssk....",
+		"...kssssssssk...",
+		"..kkkkkkkkkkkk..",
+		"................",
+		"................"
+	],
+	"intel_report": [
+		"...kkkkkkkkkk...",
+		"..kccCccccCCck..",
+		"..kckkkkkkkkck..",
+		"...kccBBBcccCk..",
+		"...kccccccccCk..",
+		"...kccBBBBccCk..",
+		"...kccccrrrCCk..",
+		"...kcccrwrrCCk..",
+		"...kccccrrrCCk..",
+		"...kccBBBrCCCk..",
+		"..kccccccrCCck..",
+		"..kcCCCCCCccck..",
+		"..kckkkkkkkkck..",
+		"...kkkkkkkkkk...",
+		"................",
+		"................"
+	],
+	"soldier_diary": [
+		"...kkkkkkkkkk...",
+		"..kbbbbbbbbbBk..",
+		".kbwbbbbbbbbBk..",
+		".kbbkkkkkkkkBk..",
+		".kbbkcccccckBk..",
+		".kbbkcccccckBk..",
+		".kbbkkkkkkkkBk..",
+		".kbbbbbbbbyyk...",
+		".kbbbbbbbbyYk...",
+		".kbbbbbbbbBBk...",
+		".kbBBBBBBBBBkk..",
+		".kbBccccccccck..",
+		".kBBrBBBBBBBBk..",
+		"..kkRkkkkkkkk...",
+		"....k...........",
+		"................"
+	]
+}
+
+
+## Membangun seluruh ikon piksel 16x16 untuk tiap item inventori agar tampil kontras di slot gelap maupun detail.
+func _init_inventory_item_textures() -> void:
+	_inventory_item_textures.clear()
+	for item_id in INVENTORY_ITEM_PATTERNS.keys():
+		_inventory_item_textures[item_id] = _build_pixel_texture(16, 16, INVENTORY_ITEM_PATTERNS[item_id], INVENTORY_ITEM_PALETTE)
+
+
+## Mengambil tekstur ikon terbaik untuk item inventori (prioritas tekstur custom, ikon 16x16 per ID, lalu fallback atlas).
+func _resolve_inventory_item_texture(item: Dictionary) -> Texture2D:
+	if item.has("icon_texture") and item["icon_texture"] != null:
+		return item["icon_texture"]
+	var item_id: String = str(item.get("id", ""))
+	if _inventory_item_textures.has(item_id):
+		return _inventory_item_textures[item_id]
+	if item.has("icon_rect"):
+		return _create_atlas(preload("res://assets/ui/menus/common/ui_menu_sheet.png"), item["icon_rect"])
+	return null
+
+
+## Memainkan efek suara UI secara one-shot pada bus SFX (tetap aktif saat game di-pause).
+func _play_ui_sfx(stream: AudioStream, volume_db: float = 0.0, pitch_jitter: float = 0.0) -> void:
+	if not stream or not is_inside_tree():
+		return
+	var player := AudioStreamPlayer.new()
+	player.process_mode = Node.PROCESS_MODE_ALWAYS
+	if AudioServer.get_bus_index("SFX") != -1:
+		player.bus = "SFX"
+	player.stream = stream
+	player.volume_db = volume_db
+	if pitch_jitter > 0.0:
+		player.pitch_scale = randf_range(1.0 - pitch_jitter, 1.0 + pitch_jitter)
+	add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
+
+
+func _on_book_ctrl_hover(ctrl: Control, only_when_unpaused: bool, is_modal_ctrl: bool, tab_idx: int) -> void:
+	if not is_instance_valid(ctrl) or not ctrl.visible or not ctrl.is_visible_in_tree():
+		return
+	if ctrl is BaseButton and ctrl.disabled:
+		return
+	if only_when_unpaused:
+		if is_start_menu_mode or (is_instance_valid(pause_overlay) and pause_overlay.visible):
+			return
+	else:
+		if not is_instance_valid(pause_overlay) or not pause_overlay.visible:
+			return
+	if not is_modal_ctrl and is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
+		return
+	if _is_dragging:
+		return
+	if tab_idx != -1 and tab_idx == current_tab_index:
+		return
+
+	var now_msec := Time.get_ticks_msec()
+	if now_msec - _last_hover_sfx_msec < 45:
+		return
+	_last_hover_sfx_msec = now_msec
+	_play_ui_sfx(SFX_UI_HOVER, -9.0, 0.03)
+
+
+func _connect_book_hover_sfx(ctrl: Control, only_when_unpaused: bool = false, is_modal_ctrl: bool = false, tab_idx: int = -1) -> void:
+	if not is_instance_valid(ctrl):
+		return
+	if not ctrl.mouse_entered.is_connected(_on_book_ctrl_hover):
+		ctrl.mouse_entered.connect(_on_book_ctrl_hover.bind(ctrl, only_when_unpaused, is_modal_ctrl, tab_idx))
+
+
 func _init_pause_menu_ui() -> void:
 	# Click outside to close (backdrop overlays)
 	if is_instance_valid(pause_overlay):
@@ -911,6 +1374,7 @@ func _init_pause_menu_ui() -> void:
 	if is_instance_valid(btn_close_book):
 		if not btn_close_book.pressed.is_connected(_on_btn_close_book_pressed):
 			btn_close_book.pressed.connect(_on_btn_close_book_pressed)
+		_connect_book_hover_sfx(btn_close_book)
 
 	# Tab button signals
 	_connect_tab_click(tab_btn_inventory, 0)
@@ -922,8 +1386,10 @@ func _init_pause_menu_ui() -> void:
 	# Prev / Next character signals
 	if btn_prev_char:
 		btn_prev_char.pressed.connect(_on_btn_prev_char_pressed)
+		_connect_book_hover_sfx(btn_prev_char)
 	if btn_next_char:
 		btn_next_char.pressed.connect(_on_btn_next_char_pressed)
+		_connect_book_hover_sfx(btn_next_char)
 
 	# Party slot GUI inputs for drag-and-drop & click selection
 	for i in range(pause_party_slots.size()):
@@ -937,8 +1403,10 @@ func _init_pause_menu_ui() -> void:
 	# Inventory Category Buttons
 	if inv_btn_prev_cat:
 		inv_btn_prev_cat.pressed.connect(_on_btn_prev_category_pressed)
+		_connect_book_hover_sfx(inv_btn_prev_cat)
 	if inv_btn_next_cat:
 		inv_btn_next_cat.pressed.connect(_on_btn_next_category_pressed)
+		_connect_book_hover_sfx(inv_btn_next_cat)
 	for i in range(inv_cat_btns.size()):
 		var cat_box = inv_cat_btns[i]
 		if is_instance_valid(cat_box):
@@ -946,10 +1414,12 @@ func _init_pause_menu_ui() -> void:
 			if click_area:
 				var cat_idx: int = i
 				click_area.pressed.connect(func(): _set_inventory_category(cat_idx))
+				_connect_book_hover_sfx(click_area)
 
 	# Inventory Gunakan Button
 	if inv_btn_gunakan:
 		inv_btn_gunakan.pressed.connect(_on_btn_gunakan_pressed)
+		_connect_book_hover_sfx(inv_btn_gunakan)
 
 	# Ensure ONLY ONE slider in inventory: hide built-in scrollbar of ScrollContainer
 	if inv_scroll_container:
@@ -971,6 +1441,7 @@ func _init_pause_menu_ui() -> void:
 	# Journal UI
 	if journal_btn_navigasi:
 		journal_btn_navigasi.pressed.connect(_on_btn_navigasi_pressed)
+		_connect_book_hover_sfx(journal_btn_navigasi)
 
 	if journal_scroll_container:
 		journal_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
@@ -995,6 +1466,7 @@ func _init_pause_menu_ui() -> void:
 		var title_click = settings_btn_title.get_node_or_null("ClickArea") as TextureButton
 		if title_click:
 			title_click.pressed.connect(_on_btn_return_to_title_pressed)
+			_connect_book_hover_sfx(title_click)
 
 	# Settings Audio Sliders GUI Input
 	_connect_audio_slider(slider_ctrl_master, "master")
@@ -1029,17 +1501,21 @@ func enable_start_menu_mode() -> void:
 func open_as_start_menu_settings() -> void:
 	if not is_start_menu_mode:
 		enable_start_menu_mode()
+	var was_open := is_instance_valid(pause_overlay) and pause_overlay.visible
 	_outside_pause_pressed = false
 	_outside_modal_pressed = false
 	current_tab_index = 3
 	active_settings_submenu = 0
 	pause_overlay.visible = true
+	if not was_open:
+		_play_ui_sfx(SFX_BOOK_OPEN, -2.0)
 	_scan_all_save_slots()
 	_update_tab_navigation()
 	_switch_settings_submenu(0)
 
 
 func close_start_menu_settings() -> void:
+	var was_open := is_instance_valid(pause_overlay) and pause_overlay.visible
 	_outside_pause_pressed = false
 	_outside_modal_pressed = false
 	if _rebind_action_id != "":
@@ -1051,6 +1527,8 @@ func close_start_menu_settings() -> void:
 		save_feedback_label.visible = false
 	if is_instance_valid(pause_overlay):
 		pause_overlay.visible = false
+	if was_open:
+		_play_ui_sfx(SFX_BOOK_CLOSE, -2.0)
 	start_menu_settings_closed.emit()
 
 
@@ -1068,6 +1546,7 @@ func toggle_pause_menu(initial_tab: int = 2) -> void:
 	var is_paused := not pause_overlay.visible
 	pause_overlay.visible = is_paused
 	get_tree().paused = is_paused
+	_play_ui_sfx(SFX_BOOK_OPEN if is_paused else SFX_BOOK_CLOSE, -2.0)
 
 	if is_paused:
 		_set_quest_hud_modulate(Color.WHITE)
@@ -1157,6 +1636,10 @@ func _on_hud_shortcut_gui_input(event: InputEvent, source_widget: Control = null
 func _on_quest_container_mouse_entered() -> void:
 	if not is_start_menu_mode and (not is_instance_valid(pause_overlay) or not pause_overlay.visible):
 		_set_quest_hud_modulate(Color(1.08, 1.05, 0.92, 1.0))
+		var now_msec := Time.get_ticks_msec()
+		if now_msec - _last_hover_sfx_msec >= 45:
+			_last_hover_sfx_msec = now_msec
+			_play_ui_sfx(SFX_UI_HOVER, -9.0, 0.03)
 
 
 func _on_quest_container_mouse_exited() -> void:
@@ -1168,6 +1651,7 @@ func _on_tab_pressed(tab_idx: int) -> void:
 		return
 	if current_tab_index == tab_idx:
 		return
+	_play_ui_sfx(SFX_BOOK_PAGE_FLIP, -2.5, 0.03)
 	if tab_idx != 3:
 		if _rebind_action_id != "":
 			_cancel_rebind()
@@ -1195,6 +1679,7 @@ func _connect_tab_click(tab_node: Control, tab_idx: int) -> void:
 	if not is_instance_valid(tab_node):
 		return
 	tab_node.mouse_filter = Control.MOUSE_FILTER_STOP
+	_connect_book_hover_sfx(tab_node, false, false, tab_idx)
 	var click_area = tab_node.get_node_or_null("ClickArea") as BaseButton
 	if click_area:
 		click_area.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -1279,6 +1764,7 @@ func _start_drag(slot_idx: int, global_pos: Vector2) -> void:
 	var hero = party_members[slot_idx]
 	if not is_instance_valid(hero):
 		return
+	_play_ui_sfx(SFX_BOOK_TAB_SELECT, -4.0, 0.03)
 	var hero_type := get_hero_type_for_node(hero)
 
 	if is_instance_valid(drag_ghost):
@@ -1348,6 +1834,7 @@ func _finish_drag(global_pos: Vector2) -> void:
 
 	if from_idx != -1 and to_idx != -1 and from_idx != to_idx:
 		_reorder_party_members(from_idx, to_idx)
+		_play_ui_sfx(SFX_BOOK_CONFIRM, -4.0)
 
 	_dragging_slot_idx = -1
 	_current_hovered_target_slot = -1
@@ -1371,6 +1858,8 @@ func _reset_drag_visuals() -> void:
 
 func _on_party_slot_clicked(slot_idx: int) -> void:
 	if slot_idx >= 0 and slot_idx < party_members.size():
+		if current_viewed_party_slot != slot_idx:
+			_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5, 0.03)
 		current_viewed_party_slot = slot_idx
 		_update_character_info_ui()
 
@@ -1422,6 +1911,8 @@ func _on_btn_prev_char_pressed() -> void:
 	if party_members.is_empty():
 		return
 	var total_chars := party_members.size()
+	if total_chars > 1:
+		_play_ui_sfx(SFX_BOOK_PAGE_FLIP, -3.5, 0.04)
 	current_viewed_party_slot = (current_viewed_party_slot - 1 + total_chars) % total_chars
 	_update_character_info_ui()
 
@@ -1430,6 +1921,8 @@ func _on_btn_next_char_pressed() -> void:
 	if party_members.is_empty():
 		return
 	var total_chars := party_members.size()
+	if total_chars > 1:
+		_play_ui_sfx(SFX_BOOK_PAGE_FLIP, -3.5, 0.04)
 	current_viewed_party_slot = (current_viewed_party_slot + 1) % total_chars
 	_update_character_info_ui()
 
@@ -1775,9 +2268,13 @@ func update_leader_indicator() -> void:
 		var card = hero_card_map[h_type]
 		if not is_instance_valid(card):
 			continue
+		var is_active: bool = (h_type == active_type)
 		var indicator = card.get_node_or_null("LeaderIndicator") as Control
 		if indicator:
-			indicator.visible = (h_type == active_type)
+			indicator.visible = is_active
+		var frame = card.get_node_or_null("Frame") as TextureRect
+		if frame:
+			frame.texture = CARD_FRAME_SELECTED_TEX if is_active else CARD_FRAME_NORMAL_TEX
 
 
 # =========================================================
@@ -1886,7 +2383,10 @@ func show_location_banner(location_name: String) -> void:
 # =========================================================
 
 func _set_inventory_category(cat_idx: int) -> void:
-	current_inventory_category = clampi(cat_idx, 0, 3)
+	var target_cat := clampi(cat_idx, 0, 3)
+	if target_cat != current_inventory_category:
+		_play_ui_sfx(SFX_BOOK_PAGE_FLIP, -3.5, 0.04)
+	current_inventory_category = target_cat
 	selected_item_category_index = 0
 	if inv_scroll_container:
 		inv_scroll_container.scroll_vertical = 0
@@ -1983,18 +2483,14 @@ func _create_inventory_slot_node(slot_idx: int) -> Control:
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		icon.custom_minimum_size = Vector2(36, 36)
+		icon.custom_minimum_size = Vector2(32, 32)
 		icon.set_anchors_preset(Control.PRESET_CENTER)
-		icon.offset_left = -18
-		icon.offset_top = -18
-		icon.offset_right = 18
-		icon.offset_bottom = 18
+		icon.offset_left = -16
+		icon.offset_top = -16
+		icon.offset_right = 16
+		icon.offset_bottom = 16
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-		if item.has("icon_texture") and item["icon_texture"] != null:
-			icon.texture = item["icon_texture"]
-		elif item.has("icon_rect"):
-			icon.texture = _create_atlas(preload("res://assets/ui/menus/common/ui_menu_sheet.png"), item["icon_rect"])
+		icon.texture = _resolve_inventory_item_texture(item)
 		slot.add_child(icon)
 
 		# Quantity badge (if > 1)
@@ -2046,6 +2542,7 @@ func _create_inventory_slot_node(slot_idx: int) -> Control:
 
 func _on_inventory_slot_clicked(slot_idx: int) -> void:
 	if slot_idx >= 0 and slot_idx < _filtered_inventory_items.size():
+		_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5, 0.04)
 		selected_item_category_index = slot_idx
 		_update_inventory_selection_visuals()
 		_update_inventory_detail_panel()
@@ -2067,12 +2564,8 @@ func _update_inventory_detail_panel() -> void:
 	if selected_item_category_index >= 0 and selected_item_category_index < _filtered_inventory_items.size():
 		var item: Dictionary = _filtered_inventory_items[selected_item_category_index]
 		if inv_detail_icon:
-			if item.has("icon_texture") and item["icon_texture"] != null:
-				inv_detail_icon.texture = item["icon_texture"]
-			elif item.has("icon_rect"):
-				inv_detail_icon.texture = _create_atlas(preload("res://assets/ui/menus/common/ui_menu_sheet.png"), item["icon_rect"])
-			else:
-				inv_detail_icon.texture = null
+			inv_detail_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			inv_detail_icon.texture = _resolve_inventory_item_texture(item)
 		if inv_detail_name:
 			inv_detail_name.text = item.get("name", "Nama Barang")
 		if inv_detail_count_label:
@@ -2187,6 +2680,7 @@ func _on_btn_gunakan_pressed() -> void:
 	if not item.get("usable", false):
 		return
 
+	_play_ui_sfx(SFX_BOOK_CONFIRM, -2.5)
 	# Emit item_used signal so game logic applies effects (e.g. healing)
 	item_used.emit(item)
 
@@ -2342,7 +2836,10 @@ func _create_quest_item_node(quest: Dictionary, is_selected: bool) -> Control:
 	btn.anchors_preset = Control.PRESET_FULL_RECT
 	btn.mouse_filter = Control.MOUSE_FILTER_STOP
 	var q_id: String = quest.get("id", "")
-	btn.pressed.connect(func(): _select_quest(q_id))
+	btn.pressed.connect(func():
+		_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5, 0.04)
+		_select_quest(q_id)
+	)
 	box.add_child(btn)
 
 	row.set_meta("quest_id", q_id)
@@ -2420,6 +2917,7 @@ func _on_btn_navigasi_pressed() -> void:
 	if selected_quest.is_empty():
 		return
 
+	_play_ui_sfx(SFX_BOOK_CONFIRM, -2.5)
 	tracked_quest_id = selected_quest.get("id", "")
 	update_hud_quest_display(selected_quest)
 	quest_tracked.emit(selected_quest)
@@ -2456,7 +2954,12 @@ func _connect_submenu_click(btn_node: Control, sub_idx: int) -> void:
 		return
 	var click_area = btn_node.get_node_or_null("ClickArea") as TextureButton
 	if click_area:
-		click_area.pressed.connect(func(): _switch_settings_submenu(sub_idx))
+		_connect_book_hover_sfx(click_area)
+		click_area.pressed.connect(func():
+			if active_settings_submenu != sub_idx:
+				_play_ui_sfx(SFX_BOOK_PAGE_FLIP, -3.5, 0.03)
+			_switch_settings_submenu(sub_idx)
+		)
 
 
 func _connect_audio_slider(slider_ctrl: Control, type: String) -> void:
@@ -2609,18 +3112,22 @@ func _on_audio_slider_gui_input(type: String, event: InputEvent, slider_ctrl: Co
 				var click_x: float = event.position.x
 				var target_ratio: float = clampf((click_x - grab_w / 2.0) / travel, 0.0, 1.0)
 				_set_slider_value_from_ratio(type, target_ratio)
+				_play_ui_sfx(SFX_BOOK_TAB_SELECT, -5.0)
 			else:
 				if _active_dragging_slider == type:
 					_active_dragging_slider = ""
 					save_audio_settings()
+					_play_ui_sfx(SFX_BOOK_TAB_SELECT, -5.0)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
 			var cur_val: int = audio_settings.get(type, 50)
 			_set_slider_value(type, mini(100, cur_val + 5))
 			save_audio_settings()
+			_play_ui_sfx(SFX_BOOK_TAB_SELECT, -6.0, 0.02)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
 			var cur_val: int = audio_settings.get(type, 50)
 			_set_slider_value(type, maxi(0, cur_val - 5))
 			save_audio_settings()
+			_play_ui_sfx(SFX_BOOK_TAB_SELECT, -6.0, 0.02)
 
 	elif event is InputEventMouseMotion and _active_dragging_slider == type:
 		var current_x: float = event.position.x
@@ -2930,6 +3437,7 @@ func _apply_hud_keycap_widget(tex_rect: TextureRect, keycode: int, target_h: flo
 
 func _start_rebind(action_name: String) -> void:
 	_rebind_action_id = action_name
+	_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5)
 	_refresh_controls_ui()
 
 
@@ -2940,6 +3448,7 @@ func _cancel_rebind() -> void:
 
 func _apply_rebind(action_name: String, new_key: int) -> void:
 	if new_key == KEY_ESCAPE:
+		_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5)
 		_cancel_rebind()
 		return
 
@@ -2958,6 +3467,7 @@ func _apply_rebind(action_name: String, new_key: int) -> void:
 	control_bindings[action_name] = new_key
 	_bind_action_key(action_name, new_key)
 	save_control_settings()
+	_play_ui_sfx(SFX_BOOK_CONFIRM, -3.0)
 
 	_rebind_action_id = ""
 	_refresh_controls_ui()
@@ -2990,19 +3500,24 @@ func _init_save_load_system() -> void:
 	# Hubungkan Tombol Aksi Simpan & Muat
 	if is_instance_valid(btn_simpan_click) and not btn_simpan_click.pressed.is_connected(_on_btn_simpan_pressed):
 		btn_simpan_click.pressed.connect(_on_btn_simpan_pressed)
+		_connect_book_hover_sfx(btn_simpan_click)
 
 	if is_instance_valid(btn_muat_click) and not btn_muat_click.pressed.is_connected(_on_btn_muat_pressed):
 		btn_muat_click.pressed.connect(_on_btn_muat_pressed)
+		_connect_book_hover_sfx(btn_muat_click)
 
 	# Hubungkan Tombol Modal Konfirmasi
 	if is_instance_valid(btn_confirm_yes) and not btn_confirm_yes.pressed.is_connected(_on_confirm_yes_pressed):
 		btn_confirm_yes.pressed.connect(_on_confirm_yes_pressed)
+		_connect_book_hover_sfx(btn_confirm_yes, false, true)
 
 	if is_instance_valid(btn_confirm_timpa) and not btn_confirm_timpa.pressed.is_connected(_on_confirm_timpa_pressed):
 		btn_confirm_timpa.pressed.connect(_on_confirm_timpa_pressed)
+		_connect_book_hover_sfx(btn_confirm_timpa, false, true)
 
 	if is_instance_valid(btn_confirm_no) and not btn_confirm_no.pressed.is_connected(_on_confirm_no_pressed):
 		btn_confirm_no.pressed.connect(_on_confirm_no_pressed)
+		_connect_book_hover_sfx(btn_confirm_no, false, true)
 
 	if is_instance_valid(enter_hint) and not enter_hint.gui_input.is_connected(_on_enter_hint_gui_input):
 		enter_hint.gui_input.connect(_on_enter_hint_gui_input)
@@ -3050,6 +3565,7 @@ func _scan_all_save_slots() -> void:
 
 func _select_save_slot(slot_idx: int) -> void:
 	selected_save_slot = clampi(slot_idx, 1, 3)
+	_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5, 0.03)
 	_refresh_save_load_ui()
 
 
@@ -3141,6 +3657,7 @@ func _open_confirm_modal(message: String, action: String, show_timpa: bool = fal
 		btn_confirm_timpa_box.visible = show_timpa
 	if is_instance_valid(save_confirm_modal):
 		save_confirm_modal.visible = true
+		_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.0)
 
 
 func _close_confirm_modal() -> void:
@@ -3221,6 +3738,7 @@ func _on_save_confirm_dimmer_gui_input(event: InputEvent) -> void:
 	else:
 		if _outside_modal_pressed and not inside_dialog:
 			_outside_modal_pressed = false
+			_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5)
 			_close_confirm_modal()
 		else:
 			_outside_modal_pressed = false
@@ -3233,6 +3751,7 @@ func _on_enter_hint_gui_input(event: InputEvent) -> void:
 
 func _on_btn_simpan_pressed() -> void:
 	if is_start_menu_mode:
+		_play_ui_sfx(SFX_BOOK_TAB_SELECT, -4.0)
 		_show_save_feedback("Simpan & Muat hanya tersedia saat bermain!")
 		return
 	var cur_data = save_slots_data.get(selected_save_slot, null)
@@ -3244,6 +3763,7 @@ func _on_btn_simpan_pressed() -> void:
 
 func _on_btn_muat_pressed() -> void:
 	if is_start_menu_mode:
+		_play_ui_sfx(SFX_BOOK_TAB_SELECT, -4.0)
 		_show_save_feedback("Simpan & Muat hanya tersedia saat bermain!")
 		return
 	var cur_data = save_slots_data.get(selected_save_slot, null)
@@ -3312,6 +3832,7 @@ func _on_confirm_timpa_pressed() -> void:
 
 
 func _on_confirm_no_pressed() -> void:
+	_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5)
 	_close_confirm_modal()
 
 
@@ -3336,6 +3857,7 @@ func _show_save_feedback(message: String) -> void:
 func on_save_completed(slot_id: int, saved_data: Dictionary) -> void:
 	save_slots_data[slot_id] = saved_data
 	_refresh_save_load_ui()
+	_play_ui_sfx(SFX_BOOK_CONFIRM, -2.0)
 	_show_save_feedback("Progress berhasil disimpan di Slot %d!" % slot_id)
 
 
@@ -3346,4 +3868,5 @@ func on_load_completed(slot_id: int, _loaded_data: Dictionary) -> void:
 		save_feedback_label.visible = false
 	_scan_all_save_slots()
 	_refresh_save_load_ui()
+	_play_ui_sfx(SFX_BOOK_CONFIRM, -2.0)
 	show_speech_bubble("Progress berhasil dimuat dari Slot %d!" % slot_id)
