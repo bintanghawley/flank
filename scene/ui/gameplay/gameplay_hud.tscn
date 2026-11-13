@@ -4,7 +4,7 @@
 [ext_resource type="FontFile" uid="uid://cj7yrpsuc400b" path="res://assets/ui/fonts/Beholden-Bold.ttf" id="2_font"]
 [ext_resource type="Texture2D" uid="uid://bfa32ug12h1aw" path="res://assets/ui/menus/pause_menu/btn_pause_menu.png" id="3_book"]
 [ext_resource type="Texture2D" uid="uid://cdt67qa3yox00" path="res://assets/ui/gameplay/location/location_banner.png" id="4_banner"]
-[ext_resource type="Texture2D" uid="uid://dsoga573ka7uh" path="res://assets/ui/icons/actions/keycaps_crisp.png" id="5_action_buttons"]
+[ext_resource type="Texture2D" uid="uid://dmvf7owi6ynl1" path="res://assets/ui/icons/actions/action_buttons.png" id="5_action_buttons"]
 [ext_resource type="Texture2D" uid="uid://ctoceg4jcietr" path="res://assets/ui/gameplay/party_hud/hud_frame_character.png" id="6_card_frame"]
 [ext_resource type="Texture2D" uid="uid://btak806s1f8eb" path="res://assets/ui/gameplay/party_hud/portrait_arthur.png" id="7_port_arthur"]
 [ext_resource type="Texture2D" uid="uid://b5gdrwa8j1jm4" path="res://assets/ui/gameplay/party_hud/portrait_magnus.png" id="8_port_magnus"]

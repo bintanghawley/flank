@@ -302,7 +302,7 @@ const CONTROL_ACTION_INFO: Dictionary = {
 	"open_info":        { "name": "Karakter",          "default_key": KEY_C, "node_name": "RowInfo" }
 }
 
-const ACTION_BUTTONS_SHEET: Texture2D = preload("res://assets/ui/icons/actions/keycaps_crisp.png")
+const ACTION_BUTTONS_SHEET: Texture2D = preload("res://assets/ui/icons/actions/action_buttons.png")
 
 const CONTROL_KEYCAP_RECTS: Dictionary = {
 	KEY_A: Rect2(0, 208, 16, 16), KEY_B: Rect2(16, 208, 16, 16), KEY_C: Rect2(32, 208, 16, 16),
