@@ -19,6 +19,10 @@ config/icon="res://icon.svg"
 
 CursorManager="*res://scene/ui/cursor/cursor_manager.gd"
 
+[debug]
+
+gdscript/warnings/int_as_enum_without_cast=0
+
 [display]
 
 window/stretch/mode="canvas_items"
@@ -37,10 +41,6 @@ ui_skill={
 [physics]
 
 3d/physics_engine="Jolt Physics"
-
-[debug]
-
-gdscript/warnings/int_as_enum_without_cast=0
 
 [rendering]
 
