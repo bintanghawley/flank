@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://cmkcndgxhr4gq" path="res://scene/player/player_mage.tscn" id="4_mage"]
 [ext_resource type="PackedScene" uid="uid://c7yak2m4n8p1q" path="res://scene/player/player_knight.tscn" id="5_knight"]
 [ext_resource type="PackedScene" uid="uid://df7k2nab1nd1t" path="res://scene/player/player_bandit.tscn" id="6_bandit"]
+[ext_resource type="PackedScene" path="res://scene/enemy/enemy_knight.tscn" id="7_enemy_knight"]
 [ext_resource type="PackedScene" uid="uid://b5k8vyg6w3xqm" path="res://scene/ui/gameplay/gameplay_hud.tscn" id="8_hud"]
 
 [sub_resource type="Shader" id="Shader_iris"]
@@ -36,8 +37,8 @@ y_sort_enabled = true
 script = ExtResource("1_game_script")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=243320470]
-position = Vector2(3000, 1300)
-zoom = Vector2(0.65, 0.65)
+position = Vector2(2560, 2900)
+zoom = Vector2(0.75, 0.75)
 position_smoothing_enabled = true
 position_smoothing_speed = 7.0
 
@@ -45,25 +46,34 @@ position_smoothing_speed = 7.0
 
 [node name="Knight_1" parent="." unique_id=1280897880 instance=ExtResource("5_knight")]
 y_sort_enabled = true
-position = Vector2(3000, 1300)
+position = Vector2(2560, 2900)
 
 [node name="Bandit_1" parent="." unique_id=1680897880 instance=ExtResource("6_bandit")]
+visible = false
 y_sort_enabled = true
-position = Vector2(2915, 1300)
+position = Vector2(2560, 2900)
 
 [node name="Archer_1" parent="." unique_id=1380897880 instance=ExtResource("1_33cqm")]
+visible = false
 y_sort_enabled = true
-position = Vector2(2830, 1300)
+position = Vector2(2560, 2900)
 
 [node name="Mage_1" parent="." unique_id=1480987112 instance=ExtResource("4_mage")]
+visible = false
 y_sort_enabled = true
-position = Vector2(2745, 1300)
+position = Vector2(2560, 2900)
 
-[node name="Enemy1" parent="." unique_id=110304380 instance=ExtResource("2_xwcet")]
-position = Vector2(3700, 1000)
+[node name="Enemy_Knight_1" parent="." unique_id=110304380 instance=ExtResource("7_enemy_knight")]
+position = Vector2(4000, 1020)
+can_respawn = false
 
-[node name="Enemy2" parent="." unique_id=110304381 instance=ExtResource("2_xwcet")]
-position = Vector2(4100, 1000)
+[node name="Enemy_Knight_2" parent="." unique_id=110304381 instance=ExtResource("7_enemy_knight")]
+position = Vector2(4200, 1020)
+can_respawn = false
+
+[node name="Enemy_Archer_1" parent="." unique_id=110304382 instance=ExtResource("2_xwcet")]
+position = Vector2(4100, 940)
+can_respawn = false
 
 [node name="GameplayHud" parent="." unique_id=161884810 instance=ExtResource("8_hud")]
 

@@ -3,13 +3,19 @@ extends CharacterBody2D
 # =========================
 # STATS & SETTINGS
 # =========================
+enum EnemyType { ARCHER, KNIGHT }
+@export var enemy_type: EnemyType = EnemyType.ARCHER
 @export var max_health: int = 5
 @export var wander_speed: float = 40.0
 @export var chase_speed: float = 75.0
 @export var patrol_radius: float = 140.0
 @export var contact_damage: int = 1
 @export var attack_cooldown: float = 1.0  # Jeda memberi damage saat menyentuh player
-@export var respawn_time: float = 4.0     # Waktu tunggu respawn setelah mati (detik)
+@export var respawn_time: float = 5.0     # Waktu tunggu respawn setelah mati (detik)
+@export var can_respawn: bool = true
+@export var wait_for_arena: bool = false
+@export var melee_attack_range: float = 80.0
+@export var melee_damage: int = 1
 
 # =========================
 # RANGED ATTACK / TEMBAKAN MUSUH
@@ -26,6 +32,8 @@ const SFX_CONTACT_HIT = preload("res://assets/audio/sfx/enemy/enemy_contact_hit.
 const SFX_HURT = preload("res://assets/audio/sfx/enemy/enemy_hurt.wav")
 const SFX_DEATH = preload("res://assets/audio/sfx/enemy/enemy_death.wav")
 const SFX_RESPAWN = preload("res://assets/audio/sfx/enemy/enemy_respawn.wav")
+const SFX_KNIGHT_SLASH = preload("res://assets/audio/sfx/characters/knight/knight_slash.wav")
+const SFX_KNIGHT_SLASH_HIT = preload("res://assets/audio/sfx/characters/knight/knight_slash_hit.wav")
 
 func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 	if not stream:
@@ -84,6 +92,7 @@ var damage_timer: float = 0.0
 var is_touching_player: bool = false
 var touching_players: Array[CharacterBody2D] = []
 var stun_timer: float = 0.0
+var alert_sfx_cooldown_timer: float = 0.0
 
 # Node references
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -120,6 +129,8 @@ func _ready() -> void:
 
 
 func _setup_player_collision_exceptions() -> void:
+	if not is_inside_tree():
+		return
 	var party := get_tree().get_nodes_in_group("player")
 	for p in party:
 		if is_instance_valid(p) and p is CollisionObject2D:
@@ -130,14 +141,16 @@ func _setup_player_collision_exceptions() -> void:
 func alert_to_combat(target: CharacterBody2D = null) -> void:
 	if is_dead:
 		return
+	wait_for_arena = false
 	var was_patrolling: bool = (current_state == State.IDLE_PATROL)
 	if current_state != State.CHASE:
 		current_state = State.CHASE
 	var chosen: CharacterBody2D = target if target else get_best_target()
 	if chosen:
 		player = chosen
-	if was_patrolling:
+	if was_patrolling and alert_sfx_cooldown_timer <= 0.0:
 		play_sfx(SFX_ALERT, -2.0)
+		alert_sfx_cooldown_timer = 5.0
 
 func get_enemy_center() -> Vector2:
 	if has_node("Hurtbox/CollisionShape2D"):
@@ -154,7 +167,7 @@ func get_target_center(target: Node2D) -> Vector2:
 func get_best_target() -> CharacterBody2D:
 	# 1. Prioritaskan karakter yang baru saja memberi damage (threat/aggro priority)
 	if threat_timer > 0.0 and threat_target != null and is_instance_valid(threat_target):
-		if not ("is_dead" in threat_target and threat_target.is_dead) and threat_target.is_in_group("player"):
+		if not ("is_dead" in threat_target and threat_target.is_dead) and threat_target.is_in_group("player") and threat_target.visible:
 			return threat_target
 		else:
 			threat_target = null
@@ -169,7 +182,7 @@ func get_closest_target() -> CharacterBody2D:
 	var min_d := INF
 	var enemy_center := get_enemy_center()
 	for p in party:
-		if p is CharacterBody2D and is_instance_valid(p) and not ("is_dead" in p and p.is_dead):
+		if p is CharacterBody2D and is_instance_valid(p) and p.visible and not ("is_dead" in p and p.is_dead):
 			var d := enemy_center.distance_to(get_target_center(p))
 			if d < min_d:
 				min_d = d
@@ -233,6 +246,9 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 
+	if alert_sfx_cooldown_timer > 0.0:
+		alert_sfx_cooldown_timer -= delta
+
 	# Penanganan stun / knockup: musuh diam di tempat secara horizontal tanpa pergeseran
 	if stun_timer > 0.0:
 		stun_timer -= delta
@@ -289,8 +305,56 @@ func _physics_process(delta: float) -> void:
 		var has_los := has_clear_projectile_los_to(player, 12.0)
 		var dist_to_player: float = dist
 
-		# 1. Jarak tembak dan manuver penembak jarak jauh
-		if dist_to_player <= shoot_range and has_los:
+		# 1. Jarak serang & manuver AI Musuh (Melee Knight vs Ranged Archer)
+		if enemy_type == EnemyType.KNIGHT:
+			if dist_to_player <= melee_attack_range and has_los:
+				is_flanking = false
+				velocity = Vector2.ZERO
+				move_and_slide_with_separation()
+				update_direction_animation(dir)
+
+				if shoot_timer <= 0.0 and not is_shooting:
+					execute_melee_attack()
+				elif not is_shooting:
+					last_direction = get_8_direction(dir)
+					play_idle_animation()
+			elif has_los:
+				is_flanking = false
+				if is_shooting:
+					velocity = Vector2.ZERO
+					move_and_slide_with_separation()
+				else:
+					var move_dir: Vector2 = dir
+					velocity = move_dir * chase_speed
+					move_and_slide_with_separation()
+					apply_smoothed_facing(move_dir, delta)
+			else:
+				# Terhalang rintangan fisik: navigasi waypoint
+				if is_shooting:
+					velocity = Vector2.ZERO
+					move_and_slide_with_separation()
+				else:
+					flank_timeout -= delta
+					if not is_flanking or flank_timeout <= 0.0:
+						calculate_flank_waypoints(player)
+
+					var active_wp := flank_wp1
+					if flank_stage == 1:
+						if global_position.distance_to(flank_wp1) <= 28.0:
+							flank_stage = 2
+							active_wp = flank_wp2
+					else:
+						active_wp = flank_wp2
+						if global_position.distance_to(flank_wp2) <= 28.0:
+							is_flanking = false
+
+					var move_dir := global_position.direction_to(active_wp)
+					if move_dir == Vector2.ZERO:
+						move_dir = last_direction
+					velocity = move_dir * chase_speed
+					move_and_slide_with_separation()
+					apply_smoothed_facing(move_dir, delta)
+		elif dist_to_player <= shoot_range and has_los:
 			is_flanking = false
 			# Jika musuh terlalu dekat (< 80 px), mundur perlahan (kiting) agar tidak menempel ke badan player
 			if dist_to_player < 80.0:
@@ -380,7 +444,9 @@ func _physics_process(delta: float) -> void:
 		if current_state == State.IDLE_PATROL:
 			current_state = State.CHASE
 			player = target_touching
-			play_sfx(SFX_ALERT, -2.0)
+			if alert_sfx_cooldown_timer <= 0.0:
+				play_sfx(SFX_ALERT, -2.0)
+				alert_sfx_cooldown_timer = 5.0
 		if damage_timer <= 0.0:
 			if target_touching.has_method("take_damage"):
 				target_touching.take_damage(contact_damage, global_position)
@@ -670,6 +736,50 @@ func shoot_at_player() -> void:
 		play_idle_animation()
 
 
+func execute_melee_attack() -> void:
+	if player == null or not is_instance_valid(player) or is_dead or is_shooting:
+		return
+
+	is_shooting = true
+	var enemy_center := get_enemy_center()
+	var target_center := get_target_center(player)
+	var dir := (target_center - enemy_center).normalized()
+	if dir == Vector2.ZERO:
+		dir = last_direction
+
+	# Arah hadap ke player dan mainkan animasi serang sesuai arah
+	last_direction = get_8_direction(dir)
+	play_attack_animation()
+	play_sfx(SFX_KNIGHT_SLASH, 0.0)
+
+	# Jeda ancang-ancang (~0.18 detik) sebelum tebasan mengenai player
+	await get_tree().create_timer(0.18).timeout
+	if is_instance_valid(self) and not is_dead and player != null and is_instance_valid(player):
+		var cur_dist := global_position.distance_to(player.global_position)
+		if cur_dist <= melee_attack_range + 35.0:
+			if player.has_method("take_damage"):
+				player.take_damage(melee_damage, global_position)
+			elif "hp" in player:
+				player.hp -= melee_damage
+			elif "current_health" in player:
+				player.current_health -= melee_damage
+			play_sfx(SFX_KNIGHT_SLASH_HIT, -1.0)
+			damage_timer = max(damage_timer, 0.6)
+
+	shoot_timer = attack_cooldown
+	damage_timer = max(damage_timer, 0.6)
+
+	# Tunggu sisa durasi animasi tebasan (~0.25 detik), lalu kembali ke idle
+	await get_tree().create_timer(0.25).timeout
+	if is_instance_valid(self) and not is_dead:
+		is_shooting = false
+		if current_state == State.CHASE and player != null and is_instance_valid(player):
+			var chase_dir := (get_target_center(player) - get_enemy_center()).normalized()
+			if chase_dir != Vector2.ZERO:
+				last_direction = get_8_direction(chase_dir)
+		play_idle_animation()
+
+
 # =========================================================
 # UPDATE ARAH ANIMASI
 # =========================================================
@@ -842,6 +952,7 @@ func take_damage(amount: int, attacker: CharacterBody2D = null) -> void:
 	if is_dead:
 		return
 
+	wait_for_arena = false
 	current_health -= amount
 	play_sfx(SFX_HURT, -2.0)
 
@@ -931,14 +1042,26 @@ func die() -> void:
 	# Keluarkan dari grup enemy sementara agar tidak bisa ditembak saat mati
 	remove_from_group("enemy")
 
-	# Tunggu waktu respawn
+	if not can_respawn:
+		return
+
+	if not is_inside_tree():
+		return
+
+	# Tunggu waktu respawn (5 detik)
 	await get_tree().create_timer(respawn_time).timeout
+
+	if not is_inside_tree():
+		return
 
 	# Hidupkan kembali!
 	respawn()
 
 
 func respawn() -> void:
+	if not is_inside_tree():
+		return
+
 	# Kembalikan ke posisi awal
 	global_position = spawn_position
 	current_health = max_health
@@ -993,10 +1116,17 @@ func respawn() -> void:
 	is_dead = false
 	_setup_player_collision_exceptions()
 
+	# Jika tidak sedang menunggu arena dan ada player di sekitar, kejar
+	if not wait_for_arena:
+		var target := get_closest_target()
+		if target:
+			alert_to_combat(target)
+
 	# Efek fade-in halus saat respawn
 	modulate.a = 0.2
 	var tween = create_tween()
-	tween.tween_property(self, "modulate:a", 1.0, 0.35)
+	if tween:
+		tween.tween_property(self, "modulate:a", 1.0, 0.35)
 	play_sfx(SFX_RESPAWN, -2.0)
 
 
@@ -1005,19 +1135,20 @@ func respawn() -> void:
 # =========================================================
 
 func _on_detection_area_body_entered(body: Node2D) -> void:
-	if is_dead:
+	if is_dead or wait_for_arena:
 		return
 	if body.is_in_group("player") and not ("is_dead" in body and body.is_dead):
 		var was_patrolling: bool = (current_state == State.IDLE_PATROL)
 		var target := get_closest_target()
 		player = target if target else body
 		current_state = State.CHASE
-		if was_patrolling:
+		if was_patrolling and alert_sfx_cooldown_timer <= 0.0:
 			play_sfx(SFX_ALERT, -2.0)
+			alert_sfx_cooldown_timer = 5.0
 
 
 func _on_detection_area_body_exited(body: Node2D) -> void:
-	if is_dead:
+	if is_dead or wait_for_arena:
 		return
 	if body == player:
 		var next_target := get_closest_target()
@@ -1079,6 +1210,9 @@ func _on_hitbox_body_entered(body: Node2D) -> void:
 			if current_state == State.IDLE_PATROL:
 				current_state = State.CHASE
 				player = target_player
+				if alert_sfx_cooldown_timer <= 0.0:
+					play_sfx(SFX_ALERT, -2.0)
+					alert_sfx_cooldown_timer = 5.0
 			# Langsung berikan damage jika cooldown siap
 			if damage_timer <= 0.0:
 				if target_player.has_method("take_damage"):

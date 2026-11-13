@@ -26,6 +26,24 @@ const AGGRO_CHECK_INTERVAL: float = 0.15
 var combat_winddown_timer: float = 0.0
 const COMBAT_WINDDOWN_DELAY: float = 0.4
 
+# =========================================================
+# SISTEM ARENA HALAMAN ISTANA (GUARDIAN TALES STYLE)
+# =========================================================
+enum ArenaState { INACTIVE, COMBAT, CLEARED }
+var arena_state: ArenaState = ArenaState.INACTIVE
+var arena_bounds: Rect2 = Rect2(Vector2(3233.85, 601.54), Vector2(1772.31, 996.92))
+var arena_trigger_bounds: Rect2 = Rect2(Vector2(3700.0, 850.0), Vector2(950.0, 520.0))
+var arena_center: Vector2 = Vector2(4120.0, 1100.0)
+var arena_enemies: Array[CharacterBody2D] = []
+var arena_barrier_body: StaticBody2D = null
+const CAMERA_ZOOM_EXPLORE: Vector2 = Vector2(0.75, 0.75)
+const CAMERA_ZOOM_ARENA: Vector2 = Vector2(0.65, 0.65)
+var target_camera_zoom: Vector2 = CAMERA_ZOOM_EXPLORE
+var is_camera_locked_to_arena: bool = false
+var arena_clear_delay_timer: float = 0.0
+var arena_group_respawn_timer: float = 0.0
+const ARENA_GROUP_RESPAWN_DELAY: float = 5.0
+
 # Command Party Input (Tombol 'C' untuk Follow & 'V' untuk Attack)
 enum PartyCommand { ATTACK, FOLLOW }
 var current_party_command: PartyCommand = PartyCommand.ATTACK
@@ -94,6 +112,13 @@ func _ready() -> void:
 	set_active_leader(0)
 	_is_party_initialized = true
 
+	# Pastikan sisa rekan yang tidak aktif benar-benar dicopot dari SceneTree di mode eksplorasi
+	for i in range(party_members.size()):
+		if i != active_leader_index:
+			var member = party_members[i]
+			if is_instance_valid(member) and member.is_inside_tree():
+				remove_child(member)
+
 	# Inisialisasi item inventory & quest starter
 	_init_starter_inventory()
 	_init_starter_quests()
@@ -124,16 +149,27 @@ func _ready() -> void:
 			gameplay_hud.update_hud_quest_display(tracked_q)
 
 	# 5. Inisialisasi kamera dan batasan map
+	update_arena_bounds_from_camera()
+	_fix_road_texture_seams()
 	setup_camera_and_boundaries.call_deferred()
+	_init_arena_barrier.call_deferred()
+	_init_arena_enemies.call_deferred()
 
 	# 6. Jalankan efek pembukaan Circular Mask (Iris Open) saat masuk arena game
 	play_iris_opening_transition()
 
 
+func _fix_road_texture_seams() -> void:
+	var ground = get_node_or_null("map_region1/Ground") as TileMapLayer
+	if ground:
+		for y in range(13, 40):
+			ground.set_cell(Vector2i(35, y), 0, Vector2i(34, y))
+
+
 func setup_party_enemy_collision_exceptions() -> void:
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	for p in party_members:
-		if is_instance_valid(p) and p is CollisionObject2D:
+		if is_instance_valid(p) and p.is_inside_tree() and p is CollisionObject2D:
 			for e in enemies:
 				if is_instance_valid(e) and e is CollisionObject2D:
 					p.add_collision_exception_with(e)
@@ -176,7 +212,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func set_party_command(cmd: PartyCommand) -> void:
 	current_party_command = cmd
 	for member in party_members:
-		if is_instance_valid(member) and member.has_method("set_party_command"):
+		if is_instance_valid(member) and member.is_inside_tree() and member.visible and member.has_method("set_party_command"):
 			member.set_party_command(cmd)
 
 	if cmd == PartyCommand.ATTACK:
@@ -234,10 +270,25 @@ func set_active_leader(idx: int) -> void:
 	if idx < 0 or idx >= party_members.size():
 		return
 
+	var prev_leader: CharacterBody2D = null
+	if active_leader_index >= 0 and active_leader_index < party_members.size():
+		prev_leader = party_members[active_leader_index]
+
 	active_leader_index = idx
 	var leader := party_members[active_leader_index]
 	if not is_instance_valid(leader):
 		return
+
+	# Jika berganti karakter saat eksplorasi 1 karakter, posisikan karakter baru tepat di posisi karakter sebelumnya
+	if arena_state != ArenaState.COMBAT:
+		if prev_leader and is_instance_valid(prev_leader) and prev_leader != leader:
+			if prev_leader.is_inside_tree():
+				remove_child(prev_leader)
+			leader.global_position = prev_leader.global_position
+			if "last_direction" in prev_leader and "last_direction" in leader:
+				leader.last_direction = prev_leader.last_direction
+		if not leader.is_inside_tree():
+			add_child(leader)
 
 	# Berikan status Leader langsung ke karakter terpilih
 	breadcrumbs.clear()
@@ -250,9 +301,13 @@ func set_active_leader(idx: int) -> void:
 		var follower := party_members[follower_idx]
 		if is_instance_valid(follower):
 			follower.set_as_leader(false, leader, slot_order)
-			if follower.has_method("set_party_command"):
+			if follower.is_inside_tree() and follower.has_method("set_party_command"):
 				follower.set_party_command(current_party_command)
+			if arena_state != ArenaState.COMBAT and follower.is_inside_tree():
+				remove_child(follower)
 		slot_order += 1
+
+	update_party_visibility()
 
 	# Sinkronkan state combat jika pergantian karakter terjadi saat bertempur
 	if current_combat_state == PartyCombatState.COMBAT:
@@ -270,18 +325,74 @@ func set_active_leader(idx: int) -> void:
 	print("Party Switch -> Leader aktif: [", active_leader_index + 1, "] ", leader.name)
 
 
+func _set_character_collision_active(char_node: CharacterBody2D, active: bool) -> void:
+	if not char_node or not is_instance_valid(char_node) or not char_node.is_inside_tree():
+		return
+	if char_node.has_node("CollisionShape2D"):
+		var col = char_node.get_node("CollisionShape2D") as CollisionShape2D
+		if col:
+			col.set_deferred("disabled", not active)
+	if char_node.has_node("Hurtbox/CollisionShape2D"):
+		var hurt_col = char_node.get_node("Hurtbox/CollisionShape2D") as CollisionShape2D
+		if hurt_col:
+			hurt_col.set_deferred("disabled", not active)
+
+
+func update_party_visibility() -> void:
+	var in_arena_combat: bool = (arena_state == ArenaState.COMBAT)
+	for i in range(party_members.size()):
+		var member = party_members[i]
+		if not is_instance_valid(member):
+			continue
+
+		var is_dead_char: bool = ("is_dead" in member and member.is_dead)
+		var is_active: bool = false
+		if not is_dead_char:
+			if i == active_leader_index:
+				is_active = true
+			elif in_arena_combat:
+				is_active = true
+
+		if is_active:
+			if not member.is_inside_tree():
+				add_child(member)
+			if member.process_mode != Node.PROCESS_MODE_INHERIT:
+				member.process_mode = Node.PROCESS_MODE_INHERIT
+			if not member.visible:
+				member.visible = true
+			if not member.is_physics_processing():
+				member.set_physics_process(true)
+			if not member.is_processing():
+				member.set_process(true)
+			var should_input: bool = (i == active_leader_index)
+			if member.is_processing_unhandled_input() != should_input:
+				member.set_process_unhandled_input(should_input)
+			_set_character_collision_active(member, true)
+		else:
+			if member.is_inside_tree():
+				remove_child(member)
+			member.visible = false
+			if member.is_physics_processing():
+				member.set_physics_process(false)
+			if member.is_processing():
+				member.set_process(false)
+			if member.is_processing_unhandled_input():
+				member.set_process_unhandled_input(false)
+			if member.velocity != Vector2.ZERO:
+				member.velocity = Vector2.ZERO
+
+
 func trigger_hero_skill_by_slot(slot_idx: int) -> void:
 	if slot_idx < 0 or slot_idx >= party_members.size():
+		return
+	# Saat mode eksplorasi 1 karakter, tombol 1-4 tidak digunakan untuk memilih / beralih karakter
+	if slot_idx != active_leader_index:
 		return
 	var target_hero := party_members[slot_idx]
 	if not is_instance_valid(target_hero) or not is_character_alive(target_hero):
 		return
 
-	# Jika karakter yang dipilih belum menjadi leader aktif, beralih kendali seketika
-	if active_leader_index != slot_idx:
-		switch_to_character(slot_idx)
-
-	# Segera eksekusi skill / ultimate hero tersebut
+	# Eksekusi skill jika slot yang ditekan adalah Leader aktif
 	execute_hero_skill(target_hero)
 
 
@@ -655,11 +766,47 @@ func get_active_leader() -> CharacterBody2D:
 func _process(delta: float) -> void:
 	total_playtime += delta
 	handle_camera_shake(delta)
-	update_camera_target()
+	update_camera_target(delta)
+	update_party_skill_cooldowns(delta)
+	if arena_state == ArenaState.INACTIVE:
+		check_arena_trigger()
+	elif arena_state == ArenaState.COMBAT:
+		check_arena_completion(delta)
+	elif arena_state == ArenaState.CLEARED:
+		handle_arena_group_respawn(delta)
 	handle_viewport_aggro_detection(delta)
 	update_breadcrumbs()
 	check_active_leader_status()
 	_update_active_leader_indicator(delta)
+	update_party_visibility()
+
+
+func update_party_skill_cooldowns(delta: float) -> void:
+	for member in party_members:
+		if not is_instance_valid(member):
+			continue
+		# Jika karakter sedang tidak di scene tree atau physics_process tidak aktif,
+		# game controller yang melanjutkan countdown cooldown skill & perisai
+		if not member.is_inside_tree() or not member.is_physics_processing():
+			if "skill_cooldown_timer" in member and member.skill_cooldown_timer > 0.0:
+				member.skill_cooldown_timer = maxf(0.0, member.skill_cooldown_timer - delta)
+			if "shield_timer" in member and member.shield_timer > 0.0:
+				member.shield_timer = maxf(0.0, member.shield_timer - delta)
+				if member.shield_timer <= 0.0 and member.has_method("deactivate_shield"):
+					member.deactivate_shield()
+
+
+func _physics_process(_delta: float) -> void:
+	if arena_state == ArenaState.COMBAT:
+		# Fail-safe pembatas koordinat arena agar hero tidak tembus/glitch saat knockback keras
+		var min_x := arena_bounds.position.x + 15.0
+		var max_x := arena_bounds.end.x - 15.0
+		var min_y := arena_bounds.position.y + 15.0
+		var max_y := arena_bounds.end.y - 15.0
+		for member in party_members:
+			if is_instance_valid(member) and member.is_inside_tree() and member.visible:
+				member.global_position.x = clampf(member.global_position.x, min_x, max_x)
+				member.global_position.y = clampf(member.global_position.y, min_y, max_y)
 
 
 func check_active_leader_status() -> void:
@@ -682,72 +829,48 @@ func get_camera_world_rect() -> Rect2:
 
 
 func handle_viewport_aggro_detection(delta: float) -> void:
+	if arena_state != ArenaState.COMBAT:
+		return
+
 	aggro_check_timer -= delta
 	if aggro_check_timer > 0.0:
 		return
 	aggro_check_timer = AGGRO_CHECK_INTERVAL
 
-	var cam_rect := get_camera_world_rect()
-	var enemies := get_tree().get_nodes_in_group("enemy")
-	var found_enemies: Array[Node2D] = []
-
-	for enemy in enemies:
+	var alive_arena_enemies: Array[Node2D] = []
+	for enemy in arena_enemies:
 		if is_instance_valid(enemy) and not ("is_dead" in enemy and enemy.is_dead):
-			if cam_rect.has_point(enemy.global_position):
-				found_enemies.append(enemy)
+			alive_arena_enemies.append(enemy)
 
-	active_combat_targets = found_enemies
-	var should_be_combat := not found_enemies.is_empty()
-
-	if should_be_combat:
-		combat_winddown_timer = COMBAT_WINDDOWN_DELAY
-		if current_party_command == PartyCommand.FOLLOW:
-			# Saat pemain mengaktifkan PartyCommand.FOLLOW, jangan paksa anggota party masuk mode tempur
-			pass
-		elif current_combat_state == PartyCombatState.EXPLORING:
-			current_combat_state = PartyCombatState.COMBAT
-			notify_party_combat_state(true)
-		else:
-			# Pastikan seluruh anggota party yang valid dan hidup selalu dipastikan bernilai in_party_combat = true
-			# jika tidak dalam mode FOLLOW
-			for member in party_members:
-				if is_instance_valid(member) and not ("is_dead" in member and member.is_dead):
-					if "in_party_combat" in member and not member.in_party_combat:
-						if member.has_method("set_party_combat_mode"):
-							member.set_party_combat_mode(true)
-						else:
-							member.in_party_combat = true
-
-		# [BUG 2 FIX]: Alert seluruh musuh di dalam viewport ke mode tempur
-		for enemy in found_enemies:
-			if is_instance_valid(enemy) and enemy.has_method("alert_to_combat"):
-				enemy.alert_to_combat()
-	else:
-		# Combat Clear: Beri jeda 0.4 detik (wind-down) sebelum kembali ke mode EXPLORING
-		if current_combat_state == PartyCombatState.COMBAT:
-			combat_winddown_timer -= AGGRO_CHECK_INTERVAL
-			if combat_winddown_timer <= 0.0:
-				combat_winddown_timer = 0.0
-				current_combat_state = PartyCombatState.EXPLORING
-				notify_party_combat_state(false)
+	active_combat_targets = alive_arena_enemies
 
 
 func notify_party_combat_state(in_combat: bool) -> void:
 	for member in party_members:
-		if is_instance_valid(member) and member.has_method("set_party_combat_mode"):
+		if is_instance_valid(member) and member.is_inside_tree() and member.has_method("set_party_combat_mode"):
 			member.set_party_combat_mode(in_combat)
 
 
-func update_camera_target() -> void:
+func update_camera_target(delta: float = 0.0) -> void:
 	if not camera or party_members.is_empty():
 		return
 	var leader := party_members[active_leader_index]
 	if not is_instance_valid(leader):
 		return
 
-	# Fokus 100% pada posisi Leader dengan sedikit offset vertikal ke bawah (+45 px)
-	var camera_target: Vector2 = leader.global_position + Vector2(0.0, 45.0)
-	camera.global_position = camera_target
+	# Zoom smoothing dinamis
+	if delta > 0.0:
+		camera.zoom = camera.zoom.lerp(target_camera_zoom, clampf(delta * 3.0, 0.0, 1.0))
+	else:
+		camera.zoom = target_camera_zoom
+
+	if is_camera_locked_to_arena and arena_state == ArenaState.COMBAT:
+		# Kunci posisi kamera langsung ke tengah arena
+		camera.global_position = arena_center
+	else:
+		# Fokus 100% pada posisi Leader (tepat di pusat inti tubuh karakter)
+		var camera_target: Vector2 = leader.global_position
+		camera.global_position = camera_target
 
 func apply_camera_shake(intensity: float = 8.0) -> void:
 	shake_intensity = max(shake_intensity, intensity)
@@ -771,7 +894,7 @@ func setup_camera_and_boundaries() -> void:
 	if not camera:
 		return
 
-	camera.zoom = Vector2(0.65, 0.65)
+	camera.zoom = CAMERA_ZOOM_EXPLORE
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 7.0
 
@@ -828,6 +951,230 @@ func _create_wall_shape(parent: Node2D, pos: Vector2, size: Vector2) -> void:
 	col.shape = rect_shape
 	col.position = pos
 	parent.add_child(col)
+
+
+# =========================================================
+# ARENA HALAMAN ISTANA (INVISIBLE BARRIER & COMBAT TRIGGER)
+# =========================================================
+
+func update_arena_bounds_from_camera() -> void:
+	var vp_size: Vector2 = Vector2(1152.0, 648.0)
+	if is_inside_tree() and get_viewport():
+		var actual_size: Vector2 = get_viewport_rect().size
+		if actual_size.x > 0.0 and actual_size.y > 0.0:
+			vp_size = actual_size
+	var world_size: Vector2 = vp_size / CAMERA_ZOOM_ARENA
+	arena_bounds = Rect2(arena_center - world_size * 0.5, world_size)
+
+
+func _init_arena_barrier() -> void:
+	if arena_barrier_body != null and is_instance_valid(arena_barrier_body):
+		return
+
+	update_arena_bounds_from_camera()
+
+	arena_barrier_body = StaticBody2D.new()
+	arena_barrier_body.name = "ArenaInvisibleBarrier"
+	arena_barrier_body.collision_layer = 1
+	arena_barrier_body.collision_mask = 0
+
+	var thickness := 60.0
+	var west_x := arena_bounds.position.x
+	var east_x := arena_bounds.end.x
+	var north_y := arena_bounds.position.y
+	var south_y := arena_bounds.end.y
+	var width := arena_bounds.size.x
+	var height := arena_bounds.size.y
+
+	# 4 Dinding pembatas arena tanpa visual (barrier invisible) tepat di 4 batas tepi layar kamera
+	# Dinding barat (tepat di luar tepi layar kiri)
+	_create_barrier_shape(arena_barrier_body, Vector2(west_x - thickness * 0.5, north_y + height * 0.5), Vector2(thickness, height + thickness * 2.0))
+	# Dinding timur (tepat di luar tepi layar kanan)
+	_create_barrier_shape(arena_barrier_body, Vector2(east_x + thickness * 0.5, north_y + height * 0.5), Vector2(thickness, height + thickness * 2.0))
+	# Dinding utara (tepat di luar tepi layar atas)
+	_create_barrier_shape(arena_barrier_body, Vector2(west_x + width * 0.5, north_y - thickness * 0.5), Vector2(width + thickness * 2.0, thickness))
+	# Dinding selatan (tepat di luar tepi layar bawah)
+	_create_barrier_shape(arena_barrier_body, Vector2(west_x + width * 0.5, south_y + thickness * 0.5), Vector2(width + thickness * 2.0, thickness))
+
+	add_child(arena_barrier_body)
+	_set_arena_barrier_enabled(false)
+
+
+func _create_barrier_shape(parent: StaticBody2D, pos: Vector2, size: Vector2) -> void:
+	var col := CollisionShape2D.new()
+	var rect_shape := RectangleShape2D.new()
+	rect_shape.size = size
+	col.shape = rect_shape
+	col.position = pos
+	col.disabled = true
+	parent.add_child(col)
+
+
+func _set_arena_barrier_enabled(enabled: bool) -> void:
+	if not arena_barrier_body or not is_instance_valid(arena_barrier_body):
+		return
+	for child in arena_barrier_body.get_children():
+		if child is CollisionShape2D:
+			child.set_deferred("disabled", not enabled)
+
+
+func _init_arena_enemies() -> void:
+	arena_enemies.clear()
+	update_arena_bounds_from_camera()
+	var enemies := get_tree().get_nodes_in_group("enemy")
+	for e in enemies:
+		if is_instance_valid(e) and e is CharacterBody2D:
+			if arena_bounds.has_point(e.global_position):
+				arena_enemies.append(e)
+				if "wait_for_arena" in e:
+					e.wait_for_arena = true
+				if "can_respawn" in e:
+					e.can_respawn = false
+
+
+func check_arena_trigger() -> void:
+	if arena_state != ArenaState.INACTIVE:
+		return
+	var leader := get_active_leader()
+	if not leader or not is_instance_valid(leader):
+		return
+	if arena_trigger_bounds.has_point(leader.global_position):
+		start_arena_battle()
+
+
+func start_arena_battle() -> void:
+	if arena_state != ArenaState.INACTIVE:
+		return
+	arena_state = ArenaState.COMBAT
+	current_combat_state = PartyCombatState.COMBAT
+	arena_clear_delay_timer = 0.0
+
+	update_arena_bounds_from_camera()
+
+	# 1. Aktifkan invisible barrier penutup arena
+	_set_arena_barrier_enabled(true)
+
+	# 2. Pindahkan target kamera ke tengah arena dan perbesar sudut pandang (zoom out)
+	target_camera_zoom = CAMERA_ZOOM_ARENA
+	is_camera_locked_to_arena = true
+
+	# 3. Spawn / aktifkan 3 rekan party di sekitar leader
+	_deploy_party_for_combat()
+	update_party_visibility()
+	notify_party_combat_state(true)
+
+	# 4. Bangunkan seluruh musuh di arena untuk langsung mengejar party
+	var leader := get_active_leader()
+	for enemy in arena_enemies:
+		if is_instance_valid(enemy):
+			if "wait_for_arena" in enemy:
+				enemy.wait_for_arena = false
+			if enemy.has_method("alert_to_combat"):
+				enemy.alert_to_combat(leader)
+
+	if gameplay_hud and gameplay_hud.has_method("show_speech_bubble"):
+		gameplay_hud.show_speech_bubble("Musuh!")
+
+	print("Arena Battle Dimulai! Kamera fokus ke tengah arena (", arena_center, "), party 4 karakter aktif.")
+
+
+func _deploy_party_for_combat() -> void:
+	var leader := get_active_leader()
+	if not leader or not is_instance_valid(leader):
+		return
+
+	var offsets: Array[Vector2] = [
+		Vector2(-45.0, -30.0),
+		Vector2(-45.0, 30.0),
+		Vector2(-75.0, 0.0)
+	]
+	var off_idx: int = 0
+	for i in range(party_members.size()):
+		if i == active_leader_index:
+			continue
+		var member = party_members[i]
+		if not is_instance_valid(member):
+			continue
+		if "is_dead" in member and member.is_dead:
+			continue
+
+		if not member.is_inside_tree():
+			add_child(member)
+
+		var spawn_pos: Vector2 = leader.global_position + (offsets[off_idx] if off_idx < offsets.size() else Vector2(-50.0, 0.0))
+		spawn_pos.x = clampf(spawn_pos.x, arena_bounds.position.x + 25.0, arena_bounds.end.x - 25.0)
+		spawn_pos.y = clampf(spawn_pos.y, arena_bounds.position.y + 25.0, arena_bounds.end.y - 25.0)
+		member.global_position = spawn_pos
+		if "target_position" in member:
+			member.target_position = spawn_pos
+		if "velocity" in member:
+			member.velocity = Vector2.ZERO
+		off_idx += 1
+
+
+func check_arena_completion(delta: float) -> void:
+	if arena_state != ArenaState.COMBAT:
+		return
+
+	var all_dead: bool = true
+	for e in arena_enemies:
+		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead) and e.is_in_group("enemy"):
+			all_dead = false
+			break
+
+	if all_dead:
+		arena_clear_delay_timer += delta
+		# Jeda 0.6s agar momen kemenangan terasa natural sebelum transisi kembali
+		if arena_clear_delay_timer >= 0.6:
+			end_arena_battle()
+	else:
+		arena_clear_delay_timer = 0.0
+
+
+func end_arena_battle() -> void:
+	if arena_state != ArenaState.COMBAT:
+		return
+	arena_state = ArenaState.CLEARED
+	current_combat_state = PartyCombatState.EXPLORING
+	arena_group_respawn_timer = ARENA_GROUP_RESPAWN_DELAY
+
+	# 1. Buka batas arena (nonaktifkan barrier)
+	_set_arena_barrier_enabled(false)
+
+	# 2. Kembalikan kamera ke mode eksplorasi (zoom explore dan ikuti leader)
+	target_camera_zoom = CAMERA_ZOOM_EXPLORE
+	is_camera_locked_to_arena = false
+
+	# 3. Kembalikan party ke mode 1 karakter
+	notify_party_combat_state(false)
+	update_party_visibility()
+	breadcrumbs.clear()
+
+	if gameplay_hud and gameplay_hud.has_method("show_speech_bubble"):
+		gameplay_hud.show_speech_bubble("Aman!")
+
+	print("Arena Cleared! Seluruh musuh kalah. Kamera kembali ke Leader, party kembali 1 karakter. Grup musuh akan muncul lagi dalam 5 detik.")
+
+
+func handle_arena_group_respawn(delta: float) -> void:
+	if arena_state != ArenaState.CLEARED:
+		return
+	arena_group_respawn_timer -= delta
+	if arena_group_respawn_timer <= 0.0:
+		_respawn_arena_enemy_group()
+
+
+func _respawn_arena_enemy_group() -> void:
+	for e in arena_enemies:
+		if is_instance_valid(e):
+			if "wait_for_arena" in e:
+				e.wait_for_arena = true
+			if e.has_method("respawn"):
+				e.respawn()
+
+	arena_state = ArenaState.INACTIVE
+	arena_clear_delay_timer = 0.0
+	print("Grup musuh arena (2 Knight, 1 Archer) telah muncul kembali di posisinya! Siap untuk pertempuran berikutnya.")
 
 
 # =========================================================
@@ -1213,6 +1560,19 @@ func load_game_from_slot(slot_id: int) -> bool:
 	if not visited_locations.has(current_location_name):
 		enter_location(current_location_name)
 
+	# Restore Arena State
+	if data.has("arena_state"):
+		var saved_arena_val: int = clampi(int(data["arena_state"]), 0, ArenaState.values().size() - 1)
+		arena_state = ArenaState.values()[saved_arena_val]
+		if arena_state == ArenaState.CLEARED:
+			_set_arena_barrier_enabled(false)
+			target_camera_zoom = CAMERA_ZOOM_EXPLORE
+			is_camera_locked_to_arena = false
+		elif arena_state == ArenaState.COMBAT:
+			_set_arena_barrier_enabled(true)
+			target_camera_zoom = CAMERA_ZOOM_ARENA
+			is_camera_locked_to_arena = true
+
 	print("GAME LOADED: Slot %d | Leader: %s | HP: %d | Playtime: %f" % [slot_id, String(leader.name) if leader else "None", int(leader.current_health) if (leader and "current_health" in leader) else 0, total_playtime])
 	return true
 
@@ -1261,6 +1621,7 @@ func _collect_save_data(slot_id: int) -> Dictionary:
 	return {
 		"slot_id": slot_id,
 		"chapter": "Chapter 1.1",
+		"arena_state": int(arena_state),
 		"location": current_location,
 		"current_location_name": current_location_name,
 		"visited_locations": visited_locations.duplicate(),
