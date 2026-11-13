@@ -4739,7 +4739,7 @@ grow_vertical = 2
 theme_override_colors/font_color = Color(0.35, 0.25, 0.26, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 26
-text = "Credits"
+text = "Kredit"
 horizontal_alignment = 1
 vertical_alignment = 1
 

@@ -52,8 +52,8 @@ const BUTTON_TEXTS := {
 	"BtnStart": "Mulai Permainan",
 	"BtnContinue": "Lanjutkan",
 	"BtnSettings": "Pengaturan",
-	"BtnCredits": "Credits",
-	"BtnExit": "Exit"
+	"BtnCredits": "Kredit",
+	"BtnExit": "Keluar"
 }
 
 var _btn_tweens: Dictionary = {}
