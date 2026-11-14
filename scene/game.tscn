@@ -42,6 +42,7 @@ position_smoothing_enabled = true
 position_smoothing_speed = 7.0
 
 [node name="map_region1" parent="." unique_id=1420594985 instance=ExtResource("3_map")]
+y_sort_enabled = true
 
 [node name="Knight_1" parent="." unique_id=1280897880 instance=ExtResource("5_knight")]
 y_sort_enabled = true
