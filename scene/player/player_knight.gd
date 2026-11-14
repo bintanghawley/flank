@@ -300,9 +300,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not is_leader or is_dead:
 		return
 
-	# Tombol E: Aktivasi Skill Shield
+	# Tombol E: Aktivasi Skill Shield - hanya aktif saat mode tempur (ada musuh)
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E:
-		if skill_cooldown_timer <= 0.0 and not is_attacking:
+		if is_in_combat_mode() and skill_cooldown_timer <= 0.0 and not is_attacking:
 			activate_shield()
 			get_viewport().set_input_as_handled()
 
@@ -518,8 +518,8 @@ func execute_slash_damage(attack_dir: Vector2) -> void:
 # =========================================================
 
 func activate_shield() -> void:
-	# Skill aktif (tombol 'E') HANYA boleh digunakan saat Knight menjadi Leader yang dikendalikan pemain
-	if not is_leader or is_dead or is_skill_animating or is_shield_active:
+	# Skill aktif (tombol 'E') HANYA boleh digunakan saat Knight menjadi Leader yang dikendalikan pemain dan dalam mode tempur
+	if not is_in_combat_mode() or not is_leader or is_dead or is_skill_animating or is_shield_active:
 		return
 	is_moving = false
 	velocity = Vector2.ZERO

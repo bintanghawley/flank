@@ -68,9 +68,9 @@ var shake_decay: float = 35.0
 # Indikator segitiga kecil di atas kepala leader yang sedang aktif
 const HERO_INDICATOR_TIP_OFFSET_Y: Dictionary = {
 	"Knight_1": -58.0,
-	"Bandit_1": -30.0,
-	"Archer_1": -38.0,
-	"Mage_1": -43.0
+	"Bandit_1": -38.0,
+	"Archer_1": -60.0,
+	"Mage_1": -48.0
 }
 const DEFAULT_INDICATOR_TIP_OFFSET_Y: float = -42.0
 var _active_leader_indicator: Node2D = null
@@ -122,6 +122,8 @@ func _ready() -> void:
 		gameplay_hud.setup(party_members, active_leader_index, inventory_items, quest_list)
 		gameplay_hud.skill_activated.connect(_on_hud_skill_activated)
 		gameplay_hud.leader_switch_requested.connect(_on_hud_leader_switch_requested)
+		if gameplay_hud.has_signal("pause_menu_requested"):
+			gameplay_hud.pause_menu_requested.connect(_on_hud_pause_menu_requested)
 		if gameplay_hud.has_signal("party_reordered"):
 			gameplay_hud.party_reordered.connect(_on_hud_party_reordered)
 		if gameplay_hud.has_signal("item_used"):
@@ -170,22 +172,28 @@ func _unhandled_input(event: InputEvent) -> void:
 	# Tombol pintasan pergantian karakter, skill, dan perintah party berbasis action mapping
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.is_action_pressed("switch_character"):
-			switch_to_next_character()
+			if arena_state == ArenaState.COMBAT:
+				switch_to_next_character()
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("skill_1"):
-			trigger_hero_skill_by_slot(0)
+			if arena_state == ArenaState.COMBAT:
+				trigger_hero_skill_by_slot(0)
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("skill_2"):
-			trigger_hero_skill_by_slot(1)
+			if arena_state == ArenaState.COMBAT:
+				trigger_hero_skill_by_slot(1)
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("skill_3"):
-			trigger_hero_skill_by_slot(2)
+			if arena_state == ArenaState.COMBAT:
+				trigger_hero_skill_by_slot(2)
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("skill_4"):
-			trigger_hero_skill_by_slot(3)
+			if arena_state == ArenaState.COMBAT:
+				trigger_hero_skill_by_slot(3)
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_ESCAPE:
 			if gameplay_hud:
+				_on_hud_pause_menu_requested()
 				gameplay_hud.toggle_pause_menu()
 				if get_viewport():
 					get_viewport().set_input_as_handled()
@@ -199,7 +207,9 @@ func is_character_alive(character: CharacterBody2D) -> bool:
 	return true
 
 
-func switch_to_next_character() -> void:
+func switch_to_next_character(force: bool = false) -> void:
+	if not force and arena_state != ArenaState.COMBAT:
+		return
 	if party_members.is_empty():
 		return
 
@@ -209,13 +219,15 @@ func switch_to_next_character() -> void:
 		var target_idx := (active_leader_index + step) % count
 		var candidate := party_members[target_idx]
 		if is_character_alive(candidate):
-			switch_to_character(target_idx)
+			switch_to_character(target_idx, force)
 			return
 
 	print("Tidak ada anggota party lain yang masih hidup untuk dipilih.")
 
 
-func switch_to_character(idx: int) -> void:
+func switch_to_character(idx: int, force: bool = false) -> void:
+	if not force and arena_state != ArenaState.COMBAT:
+		return
 	if idx < 0 or idx >= party_members.size() or idx == active_leader_index:
 		return
 
@@ -227,13 +239,23 @@ func switch_to_character(idx: int) -> void:
 	set_active_leader(idx)
 
 
-func set_active_leader(idx: int) -> void:
+func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -> void:
 	if idx < 0 or idx >= party_members.size():
 		return
 
-	var prev_leader: CharacterBody2D = null
-	if active_leader_index >= 0 and active_leader_index < party_members.size():
+	var prev_leader: CharacterBody2D = prev_leader_override
+	if not prev_leader and active_leader_index >= 0 and active_leader_index < party_members.size():
 		prev_leader = party_members[active_leader_index]
+
+	# Fallback eksplorasi: jika prev_leader tidak valid atau sama dengan target,
+	# cari karakter lain yang saat ini masih aktif berada di dalam SceneTree
+	if _is_party_initialized and arena_state != ArenaState.COMBAT:
+		var target_candidate := party_members[idx]
+		if not prev_leader or prev_leader == target_candidate or not prev_leader.is_inside_tree():
+			for member in party_members:
+				if is_instance_valid(member) and member != target_candidate and member.is_inside_tree():
+					prev_leader = member
+					break
 
 	active_leader_index = idx
 	var leader := party_members[active_leader_index]
@@ -243,13 +265,31 @@ func set_active_leader(idx: int) -> void:
 	# Jika berganti karakter saat eksplorasi 1 karakter, posisikan karakter baru tepat di posisi karakter sebelumnya
 	if arena_state != ArenaState.COMBAT:
 		if prev_leader and is_instance_valid(prev_leader) and prev_leader != leader:
+			var prev_pos: Vector2 = prev_leader.global_position
+			var prev_last_dir: Vector2 = prev_leader.last_direction if "last_direction" in prev_leader else Vector2.DOWN
+			var prev_mov_dir: Vector2 = prev_leader.last_movement_direction if "last_movement_direction" in prev_leader else Vector2.DOWN
+
 			if prev_leader.is_inside_tree():
 				remove_child(prev_leader)
-			leader.global_position = prev_leader.global_position
-			if "last_direction" in prev_leader and "last_direction" in leader:
-				leader.last_direction = prev_leader.last_direction
-		if not leader.is_inside_tree():
+			if not leader.is_inside_tree():
+				add_child(leader)
+			leader.global_position = prev_pos
+			if "target_position" in leader:
+				leader.target_position = prev_pos
+			if "velocity" in leader:
+				leader.velocity = Vector2.ZERO
+			if "last_direction" in leader:
+				leader.last_direction = prev_last_dir
+			if "last_movement_direction" in leader:
+				leader.last_movement_direction = prev_mov_dir
+		elif not leader.is_inside_tree():
 			add_child(leader)
+		if camera:
+			camera.global_position = leader.global_position
+			if camera.has_method("reset_smoothing"):
+				camera.reset_smoothing()
+			if camera.has_method("force_update_scroll"):
+				camera.force_update_scroll()
 
 	# Berikan status Leader langsung ke karakter terpilih
 	breadcrumbs.clear()
@@ -343,6 +383,8 @@ func update_party_visibility() -> void:
 
 
 func trigger_hero_skill_by_slot(slot_idx: int) -> void:
+	if arena_state != ArenaState.COMBAT:
+		return
 	if slot_idx < 0 or slot_idx >= party_members.size():
 		return
 	# Saat mode eksplorasi 1 karakter, tombol 1-4 tidak digunakan untuk memilih / beralih karakter
@@ -357,6 +399,8 @@ func trigger_hero_skill_by_slot(slot_idx: int) -> void:
 
 
 func execute_hero_skill(hero: CharacterBody2D) -> void:
+	if arena_state != ArenaState.COMBAT:
+		return
 	if not is_instance_valid(hero) or not is_character_alive(hero):
 		return
 
@@ -390,10 +434,32 @@ func _on_hud_leader_switch_requested(hero_idx: int) -> void:
 		switch_to_character(hero_idx)
 
 
+func _on_hud_pause_menu_requested() -> void:
+	var leader := get_active_leader()
+	if is_instance_valid(leader) and is_instance_valid(camera):
+		camera.global_position = leader.global_position
+		if camera.has_method("reset_smoothing"):
+			camera.reset_smoothing()
+		if camera.has_method("force_update_scroll"):
+			camera.force_update_scroll()
+
+
 func _on_hud_party_reordered(new_party: Array[CharacterBody2D]) -> void:
+	if new_party.is_empty():
+		return
+
+	# Dapatkan leader lama yang saat ini sedang aktif dimainkan sebelum array party diperbarui
+	var old_leader: CharacterBody2D = get_active_leader()
+	if not old_leader or not old_leader.is_inside_tree():
+		for member in party_members:
+			if is_instance_valid(member) and member.is_inside_tree():
+				old_leader = member
+				break
+
 	party_members = new_party
 	# Karakter di slot pertama otomatis menjadi leader
-	set_active_leader(0)
+	set_active_leader(0, old_leader)
+	update_camera_target(0.0)
 
 
 func _init_starter_inventory() -> void:
@@ -831,6 +897,11 @@ func update_camera_target(delta: float = 0.0) -> void:
 		# Fokus 100% pada posisi Leader (tepat di pusat inti tubuh karakter)
 		var camera_target: Vector2 = leader.global_position
 		camera.global_position = camera_target
+		if delta == 0.0:
+			if camera.has_method("reset_smoothing"):
+				camera.reset_smoothing()
+			if camera.has_method("force_update_scroll"):
+				camera.force_update_scroll()
 
 func apply_camera_shake(intensity: float = 8.0) -> void:
 	shake_intensity = max(shake_intensity, intensity)

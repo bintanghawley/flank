@@ -559,7 +559,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	# Pemicu Aktivasi / Deaktivasi Skill Mode (Tombol E / ui_skill)
 	if is_skill_action_pressed(event):
-		if can_activate_skill():
+		if is_in_combat_mode() and can_activate_skill():
 			activate_skill_mode()
 		elif current_skill_state == SkillState.READY:
 			deactivate_skill_mode()
@@ -1573,7 +1573,8 @@ func can_activate_skill() -> bool:
 	return (not is_dead and 
 			not is_attacking and 
 			skill_cooldown_timer <= 0.0 and 
-			current_skill_state == SkillState.INACTIVE)
+			current_skill_state == SkillState.INACTIVE and
+			is_in_combat_mode())
 
 
 func is_skill_locked() -> bool:
@@ -1583,6 +1584,8 @@ func is_skill_locked() -> bool:
 
 
 func activate_skill_mode() -> void:
+	if not is_in_combat_mode():
+		return
 	current_skill_state = SkillState.READY
 	skill_charges = skill_max_charges
 	skill_mode_timer = skill_mode_duration
