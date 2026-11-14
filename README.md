@@ -15,16 +15,16 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 - **Sistem Party Empat Hero:** Regu beranggotakan Knight (`Knight_1` / Arthur), Bandit (`Bandit_1` / Hellene), Archer (`Archer_1` / Anastasya), dan Mage (`Mage_1` / Magnus). Pengecualian tabrakan (*collision exception*) diterapkan antaranggota party sehingga mereka tidak saling berkolisi melalui sistem fisika bawaan Godot. Pengaturan jarak antarunit tetap dilakukan secara terpisah menggunakan sistem separasi dinamis. Jika hero gugur, sistem secara otomatis mengalihkan kendali dari Leader yang mati ke anggota yang masih hidup, dan hero akan respawn secara dinamis di dekat Leader aktif dengan perlindungan invulnerability awal 1.5 detik.
 - **Pergantian Leader & Kamera:** Kendali aktif dapat dipindahkan secara instan ke hero mana pun menggunakan tombol `Tab`, `Q`, angka `1`–`4` (auto-switch & cast skill), maupun klik langsung pada kartu potret hero di HUD. Kamera permainan diatur dengan zoom `0.65x` dan secara otomatis mengikuti posisi Leader aktif dengan pergerakan yang halus (*position smoothing*).
 - **Formasi Breadcrumb Queue, Navigasi Sudut & Cascade Swap 180°:** Saat bergerak, Follower mengikuti jejak langkah kaki Leader (*breadcrumbs* hingga 300 titik) secara teratur. Ketika Leader berputar balik 180°, formasi antrean follower langsung berbalik secara estafet (*cascade swap*) agar regu tidak bertumpuk. Follower juga dilengkapi algoritma navigasi sudut dinamis (*Dynamic Corner Waypoint*) yang mengevaluasi garis pandang (*LoS*) dan melipir sudut bangunan map baru secara cerdas, didukung *corner-slide assist* serta proteksi *anti-stuck* (teleportasi catch-up otomatis jika terpisah > 650 px).
-- **Sistem Komando Party (Follow & Attack):**
-  - **Mode FOLLOW (`C`):** Follower merapatkan barisan di belakang Leader dan tidak melakukan serangan, disertai balon ucapan *"Ikuti"* di atas kepala Leader.
-  - **Mode ATTACK (`V`):** Follower diberi kebebasan untuk keluar dari barisan dan menyerang musuh terdekat dalam jangkauan tempur secara mandiri, disertai balon ucapan *"Serang"* di atas kepala Leader.
+- **Sistem Pertarungan Party Otonom:**
+  - Saat berada di luar pertempuran (mode eksplorasi), Follower merapatkan barisan mengekor di belakang Leader (*breadcrumbs*).
+  - Saat memasuki pertempuran arena, Follower secara otonom bergerak aktif dan menyerang musuh terdekat dalam jangkauan tempur masing-masing tanpa memerlukan komando manual.
 - **Gameplay HUD & Menu Jeda (Pause Menu):** Antarmuka in-game lengkap berbasis CanvasLayer yang menyajikan 4 kartu status party dengan bilah HP real-time, indikator status KO (potret meredup gelap dan label nama berubah menjadi teks merah "KO"), bar 4 skill dengan countdown cooldown berpresisi satu desimal (`"%.1f"`), balon ucapan dinamis di ruang layar (*screen-space*), banner lokasi, prompt kontrol, serta overlay Menu Jeda (*Pause Menu*) via tombol `ESC` atau ikon pause untuk melanjutkan atau kembali ke Start Menu.
 - **Start Menu Interaktif & Transisi Sinematik:** Permainan dimulai dari layar Start Menu interaktif dengan visual parallax dinamis (awan langit dan rumput berjalan), penempatan teks tombol yang seimbang di area rumput hijau, animasi berjalan di tempat empat hero party, pemilihan tombol interaktif, efek kilau bintang (*sword glint sparkle*) di ujung pedang Knight, dan transisi *Circular Mask* (Iris Wipe) yang menutup ke ujung pedang Knight sementara kawan-kawan party beralih ke animasi `idle_w` sebelum masuk ke arena pertempuran.
-- **Pertarungan Real-Time & Serangan Dasar:** Serangan diarahkan langsung ke posisi kursor mouse melalui klik kiri:
+- **Pertarungan Real-Time & Serangan Dasar:** Serangan dasar diarahkan langsung ke posisi kursor mouse melalui klik kiri, yang dinonaktifkan saat mode eksplorasi (di luar arena / tidak ada musuh) dan diaktifkan secara penuh tanpa batasan jarak saat memasuki arena tempur:
   - **Knight:** Tebasan pedang jarak dekat (*melee slash*) dengan area sapuan busur di depan karakter serta dorongan hentakan halus ke depan (*attack lunge* 140 px/s terurai halus).
   - **Bandit:** Tebasan ganda belati (*Double Slash Dagger*) secara ritmis untuk setiap siklus serangan. Dilengkapi kemampuan pasif *Out-of-Combat Ambush Lunge* setelah beberapa detik tanpa pertempuran: serangan pembuka memperoleh jangkauan serbu luas, Bandit meluncur cepat ke target, menghasilkan bonus damage pembuka, dan diperkuat perlindungan *Super Armor*.
-  - **Archer:** Tembakan anak panah lurus terarah dengan kecepatan proyektil stabil.
-  - **Mage:** Tembakan bola sihir (*magic bolt*) jarak jauh yang dilepaskan tepat dari ujung tongkat sihir.
+  - **Archer:** Tembakan anak panah lurus terarah dengan kecepatan proyektil stabil tanpa batasan jarak.
+  - **Mage:** Tembakan bola sihir (*magic bolt*) jarak jauh yang dilepaskan tepat dari ujung tongkat sihir ke arah kursor tanpa batasan jarak.
 - **Skill Khusus Hero (`E`):**
   - **Knight — *Shield Guard*:** Hanya dapat diaktifkan saat Knight menjadi Leader aktif (cooldown 6.0 detik). Knight merapalkan perisai pelindung serentak yang melindungi seluruh anggota party dari 100% damage serangan musuh selama 3.5 detik, dan efek perisai tetap bertahan pada masing-masing hero saat pemain berganti karakter hingga durasinya berakhir.
   - **Bandit — *Dash, Knockup & Triple Slash*:** Hanya dapat diaktifkan saat Bandit menjadi Leader aktif. Melesat cepat ke arah kursor mouse dengan proteksi benturan dinding rintangan solid (berhenti bersih disertai getaran kamera), berhenti seketika saat menabrak musuh pertama. Musuh yang tertabrak terangkat ke udara (*knockup*) serta terkena stun singkat, lalu seketika dieksekusi dengan kombo 3 tebasan beruntun disertai efek visual khusus *triple slash* dan perlindungan *Super Armor* (cooldown 5.0 detik).
@@ -50,8 +50,8 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 - [x] Pergantian Leader instan secara siklis (`Tab`) maupun langsung (`1`, `2`, `3`, `4`).
 - [x] Pelacakan kamera halus (*position smoothing*) yang terikat pada Leader aktif.
 - [x] Sistem pergerakan formasi barisan (*breadcrumb queue*) dan pembalikan barisan 180° (*cascade swap*).
-- [x] Perintah regu taktis: Mode **FOLLOW** (`C`) dan Mode **ATTACK** (`V`).
-- [x] Serangan dasar terarah mouse (tebasan pedang Knight, belati cepat Bandit, panah Archer, bola sihir Mage).
+- [x] Sistem pertarungan regu otonom: Follower berbaris rapi saat eksplorasi dan bertarung mandiri saat pertempuran arena.
+- [x] Serangan dasar terarah mouse (tebasan pedang Knight, belati cepat Bandit, panah Archer, bola sihir Mage) dengan sistem gating mode tempur dan tanpa batasan jarak serang.
 - [x] Skill khusus per kelas hero (*Shield Guard*, *Triple Slash*, *Charged Line Snipe*, *Meteor Strike*).
 - [x] AI musuh dengan status patroli, pengejaran (*aggro/chase*), serangan kontak, dan tembakan panah.
 - [x] Sistem kesehatan, bilah darah musuh, durasi kebal singkat pasca-hit (*invulnerability frame*), dan siklus respawn otomatis.
@@ -86,10 +86,8 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 | `1`, `2`, `3`, `4` | Auto-Switch & Skill Hero | Berganti kendali langsung ke hero terkait sekaligus melancarkan skill-nya (1: Arthur, 2: Hellene, 3: Anastasya, 4: Magnus; diabaikan jika hero berstatus KO) |
 | `ESC` / Klik Ikon Pause | Buka / Tutup Pause Menu | Menghentikan sementara permainan dan menampilkan panel jeda (Lanjutkan / Menu Utama) |
 | `B` | Buka / Tutup Inventori | Membuka layar tas inventori item party |
-| `U` | Buka / Tutup Info Karakter | Membuka layar statistik dan biografi karakter hero party |
+| `C` | Buka / Tutup Info Karakter | Membuka layar statistik dan biografi karakter hero party |
 | `J` | Buka / Tutup Jurnal Misi | Membuka layar pelacak jurnal misi aktif |
-| `C` | Perintah FOLLOW | Menginstruksikan regu merapatkan barisan + memunculkan balon ucapan *"Ikuti"* |
-| `V` | Perintah ATTACK | Mengizinkan follower bertarung mandiri + memunculkan balon ucapan *"Serang"* |
 | `Klik Kiri` (Kartu Party HUD) | Ganti Leader Langsung | Klik pada kartu potret hero di HUD kiri bawah untuk berpindah kendali (diabaikan jika hero berstatus KO) |
 | `Klik Kiri` (Slot Skill HUD) | Eksekusi Skill | Klik pada slot skill di HUD kanan bawah untuk melancarkan skill hero terkait (diabaikan jika hero berstatus KO) |
 | `Klik Kiri` (Di Arena Dunia) | Serangan Dasar | Menyerang ke arah kursor mouse (tebasan Knight, ayunan ganda Bandit, panah Archer, sihir Mage) |

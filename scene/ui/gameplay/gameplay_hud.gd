@@ -222,6 +222,8 @@ const BIO_CHAR_CENTER: Vector2 = Vector2(156.0, 120.0)
 var hero_skill_icons: Dictionary = {}
 var hero_portraits: Dictionary = {}
 var is_start_menu_mode: bool = false
+var is_combat_hud_visible: bool = false
+var _combat_hud_tween: Tween = null
 var _outside_pause_pressed: bool = false
 var _outside_modal_pressed: bool = false
 var cat_btn_normal_tex: Texture2D
@@ -274,8 +276,6 @@ var _active_dragging_slider: String = ""
 # Settings Controls State
 const CONTROL_ACTION_ORDER: Array[String] = [
 	"switch_character",
-	"party_attack",
-	"party_follow",
 	"skill_1",
 	"skill_2",
 	"skill_3",
@@ -289,8 +289,6 @@ const CONTROL_ACTION_ORDER: Array[String] = [
 
 const CONTROL_ACTION_INFO: Dictionary = {
 	"switch_character": { "name": "Beralih Karakter", "default_key": KEY_Q, "node_name": "RowSwitch" },
-	"party_attack":     { "name": "Serang",            "default_key": KEY_V, "node_name": "RowAttack" },
-	"party_follow":     { "name": "Ikuti",             "default_key": KEY_C, "node_name": "RowFollow" },
 	"skill_1":          { "name": "Skill 1",           "default_key": KEY_1, "node_name": "RowSkill1" },
 	"skill_2":          { "name": "Skill 2",           "default_key": KEY_2, "node_name": "RowSkill2" },
 	"skill_3":          { "name": "Skill 3",           "default_key": KEY_3, "node_name": "RowSkill3" },
@@ -299,7 +297,7 @@ const CONTROL_ACTION_INFO: Dictionary = {
 	"skip":             { "name": "Skip",              "default_key": KEY_SPACE, "node_name": "RowSkip" },
 	"open_journal":     { "name": "Jurnal",            "default_key": KEY_J, "node_name": "RowJournal" },
 	"open_inventory":   { "name": "Inventori",         "default_key": KEY_B, "node_name": "RowInventory" },
-	"open_info":        { "name": "Karakter",          "default_key": KEY_U, "node_name": "RowInfo" }
+	"open_info":        { "name": "Karakter",          "default_key": KEY_C, "node_name": "RowInfo" }
 }
 
 const ACTION_BUTTONS_SHEET: Texture2D = preload("res://assets/ui/icons/actions/action_buttons.png")
@@ -451,6 +449,8 @@ func _ready() -> void:
 		location_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
 		location_banner.visible = false
 		location_banner.modulate.a = 0.0
+
+	set_combat_hud_visible(false, false)
 
 	# Connect Pause Menu Buttons
 	if btn_pause_menu:
@@ -1472,6 +1472,10 @@ func _init_pause_menu_ui() -> void:
 
 func enable_start_menu_mode() -> void:
 	is_start_menu_mode = true
+	is_combat_hud_visible = false
+	if _combat_hud_tween and _combat_hud_tween.is_valid():
+		_combat_hud_tween.kill()
+	_combat_hud_tween = null
 	_outside_pause_pressed = false
 	_outside_modal_pressed = false
 	hide_location_banner()
@@ -2182,6 +2186,48 @@ func update_skill_slots_hud() -> void:
 			slot.visible = false
 
 	_update_skill_cooldowns()
+
+
+# =========================================================
+# COMBAT HUD VISIBILITY (ARENA ONLY)
+# =========================================================
+
+func set_combat_hud_visible(active: bool, animated: bool = true) -> void:
+	if is_start_menu_mode:
+		return
+	is_combat_hud_visible = active
+	if _combat_hud_tween and _combat_hud_tween.is_valid():
+		_combat_hud_tween.kill()
+	_combat_hud_tween = null
+
+	var targets: Array[Control] = []
+	if is_instance_valid(party_container):
+		targets.append(party_container)
+	if is_instance_valid(skill_container):
+		targets.append(skill_container)
+	if is_instance_valid(controls_prompt):
+		targets.append(controls_prompt)
+
+	if not animated:
+		for node in targets:
+			node.visible = active
+			node.modulate.a = 1.0 if active else 0.0
+		return
+
+	_combat_hud_tween = create_tween().set_parallel(true)
+	for node in targets:
+		if active:
+			node.visible = true
+			_combat_hud_tween.tween_property(node, "modulate:a", 1.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		else:
+			_combat_hud_tween.tween_property(node, "modulate:a", 0.0, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+	if not active:
+		_combat_hud_tween.chain().tween_callback(func():
+			for node in targets:
+				if is_instance_valid(node) and not is_combat_hud_visible:
+					node.visible = false
+		)
 
 
 func update_party_hud() -> void:
@@ -3285,8 +3331,8 @@ func load_control_settings() -> void:
 		var def_k: int = CONTROL_ACTION_INFO[action_name]["default_key"]
 		if err == OK and config.has_section_key("controls", action_name):
 			var loaded_key: int = int(config.get_value("controls", action_name, def_k))
-			# Migrasi otomatis jika settings.cfg lama masih menyimpan KEY_C pada open_info yang bertabrakan dengan party_follow
-			if action_name == "open_info" and loaded_key == KEY_C:
+			# Migrasi otomatis jika settings.cfg lama masih menyimpan KEY_U pada open_info yang sebelumnya dipindah
+			if action_name == "open_info" and loaded_key == KEY_U:
 				loaded_key = def_k
 			control_bindings[action_name] = loaded_key
 		else:
@@ -3399,8 +3445,6 @@ func _refresh_controls_ui() -> void:
 
 func _sync_gameplay_hud_controls_prompts() -> void:
 	var hud_bindings := {
-		"party_attack": { "node": controls_prompt.get_node_or_null("ActionV/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 24.0 },
-		"party_follow": { "node": controls_prompt.get_node_or_null("ActionC/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 24.0 },
 		"switch_character": { "node": controls_prompt.get_node_or_null("ActionQ/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 24.0 },
 		"skill_1": { "node": skill_container.get_node_or_null("SkillSlot1/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 24.0 },
 		"skill_2": { "node": skill_container.get_node_or_null("SkillSlot2/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 24.0 },

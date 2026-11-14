@@ -32,7 +32,7 @@ const COMBAT_WINDDOWN_DELAY: float = 0.4
 enum ArenaState { INACTIVE, COMBAT, CLEARED }
 var arena_state: ArenaState = ArenaState.INACTIVE
 var arena_bounds: Rect2 = Rect2(Vector2(3233.85, 601.54), Vector2(1772.31, 996.92))
-var arena_trigger_bounds: Rect2 = Rect2(Vector2(3700.0, 850.0), Vector2(950.0, 520.0))
+var arena_trigger_bounds: Rect2 = Rect2(Vector2(3420.0, 750.0), Vector2(1280.0, 680.0))
 var arena_center: Vector2 = Vector2(4120.0, 1100.0)
 var arena_enemies: Array[CharacterBody2D] = []
 var arena_barrier_body: StaticBody2D = null
@@ -44,16 +44,10 @@ var arena_clear_delay_timer: float = 0.0
 var arena_group_respawn_timer: float = 0.0
 const ARENA_GROUP_RESPAWN_DELAY: float = 5.0
 
-# Command Party Input (Tombol 'C' untuk Follow & 'V' untuk Attack)
-enum PartyCommand { ATTACK, FOLLOW }
-var current_party_command: PartyCommand = PartyCommand.ATTACK
-
 # =========================
 # AUDIO SFX (TACTICAL PARTY)
 # =========================
 const SFX_PARTY_SWITCH_LEADER = preload("res://assets/audio/sfx/party/party_switch_leader.wav")
-const SFX_PARTY_COMMAND_FOLLOW = preload("res://assets/audio/sfx/party/party_command_follow.wav")
-const SFX_PARTY_COMMAND_ATTACK = preload("res://assets/audio/sfx/party/party_command_attack.wav")
 var _is_party_initialized: bool = false
 
 func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
@@ -143,6 +137,10 @@ func _ready() -> void:
 		if gameplay_hud.has_signal("return_to_title_requested"):
 			gameplay_hud.return_to_title_requested.connect(_on_hud_return_to_title_requested)
 
+		# Sembunyikan elemen HUD pertarungan (Party & Skill) saat eksplorasi di luar arena
+		if gameplay_hud.has_method("set_combat_hud_visible"):
+			gameplay_hud.set_combat_hud_visible(false, false)
+
 		# Sinkronisasi quest aktif pertama ke overlay HUD
 		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
 		if not tracked_q.is_empty():
@@ -186,41 +184,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.is_action_pressed("skill_4"):
 			trigger_hero_skill_by_slot(3)
 			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("party_follow"):
-			set_party_command(PartyCommand.FOLLOW)
-			if get_viewport():
-				get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("party_attack"):
-			set_party_command(PartyCommand.ATTACK)
-			if get_viewport():
-				get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_ESCAPE:
 			if gameplay_hud:
 				gameplay_hud.toggle_pause_menu()
 				if get_viewport():
 					get_viewport().set_input_as_handled()
 
-
-func set_party_command(cmd: PartyCommand) -> void:
-	current_party_command = cmd
-	for member in party_members:
-		if is_instance_valid(member) and member.is_inside_tree() and member.visible and member.has_method("set_party_command"):
-			member.set_party_command(cmd)
-
-	if cmd == PartyCommand.ATTACK:
-		play_sfx(SFX_PARTY_COMMAND_ATTACK, -2.0)
-		if gameplay_hud:
-			gameplay_hud.show_speech_bubble("Serang")
-		if not active_combat_targets.is_empty():
-			current_combat_state = PartyCombatState.COMBAT
-			notify_party_combat_state(true)
-	elif cmd == PartyCommand.FOLLOW:
-		play_sfx(SFX_PARTY_COMMAND_FOLLOW, -2.0)
-		if gameplay_hud:
-			gameplay_hud.show_speech_bubble("Ikuti")
-		notify_party_combat_state(false)
-
-	print("Party Command -> ", "FOLLOW (Tombol C)" if cmd == PartyCommand.FOLLOW else "ATTACK (Tombol V)")
 
 func is_character_alive(character: CharacterBody2D) -> bool:
 	if not character or not is_instance_valid(character):
@@ -293,8 +262,6 @@ func set_active_leader(idx: int) -> void:
 		var follower := party_members[follower_idx]
 		if is_instance_valid(follower):
 			follower.set_as_leader(false, leader, slot_order)
-			if follower.is_inside_tree() and follower.has_method("set_party_command"):
-				follower.set_party_command(current_party_command)
 			if arena_state != ArenaState.COMBAT and follower.is_inside_tree():
 				remove_child(follower)
 		slot_order += 1
@@ -1068,6 +1035,10 @@ func start_arena_battle() -> void:
 	if gameplay_hud and gameplay_hud.has_method("show_speech_bubble"):
 		gameplay_hud.show_speech_bubble("Musuh!")
 
+	# Tampilkan elemen HUD pertarungan saat memasuki arena
+	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
+		gameplay_hud.set_combat_hud_visible(true, true)
+
 	print("Arena Battle Dimulai! Kamera fokus ke tengah arena (", arena_center, "), party 4 karakter aktif.")
 
 
@@ -1142,6 +1113,10 @@ func end_arena_battle() -> void:
 	notify_party_combat_state(false)
 	update_party_visibility()
 	breadcrumbs.clear()
+
+	# Sembunyikan kembali elemen HUD pertarungan setelah arena selesai
+	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
+		gameplay_hud.set_combat_hud_visible(false, true)
 
 	if gameplay_hud and gameplay_hud.has_method("show_speech_bubble"):
 		gameplay_hud.show_speech_bubble("Aman!")
@@ -1565,6 +1540,10 @@ func load_game_from_slot(slot_id: int) -> bool:
 			_set_arena_barrier_enabled(true)
 			target_camera_zoom = CAMERA_ZOOM_ARENA
 			is_camera_locked_to_arena = true
+
+	# Sinkronisasi status HUD pertarungan sesuai arena_state dari save data
+	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
+		gameplay_hud.set_combat_hud_visible(arena_state == ArenaState.COMBAT, false)
 
 	print("GAME LOADED: Slot %d | Leader: %s | HP: %d | Playtime: %f" % [slot_id, String(leader.name) if leader else "None", int(leader.current_health) if (leader and "current_health" in leader) else 0, total_playtime])
 	return true

@@ -532,7 +532,7 @@ offset_right = 10.0
 offset_bottom = 24.0
 grow_horizontal = 2
 mouse_filter = 2
-texture = SubResource("Atlas_btn_u")
+texture = SubResource("Atlas_btn_c")
 expand_mode = 1
 stretch_mode = 5
 
@@ -573,62 +573,12 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -250.0
-offset_top = -212.0
+offset_top = -152.0
 offset_right = -24.0
 offset_bottom = -122.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_constants/separation = 6
-
-[node name="ActionV" type="HBoxContainer" parent="RootControl/ControlsPrompt"]
-layout_mode = 2
-theme_override_constants/separation = 10
-alignment = 2
-
-[node name="Label" type="Label" parent="RootControl/ControlsPrompt/ActionV"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 1
-theme_override_fonts/font = SubResource("SystemFont_serif")
-theme_override_font_sizes/font_size = 17
-text = "Serang"
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionV"]
-texture_filter = 1
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-texture = SubResource("Atlas_btn_v")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ActionC" type="HBoxContainer" parent="RootControl/ControlsPrompt"]
-layout_mode = 2
-theme_override_constants/separation = 10
-alignment = 2
-
-[node name="Label" type="Label" parent="RootControl/ControlsPrompt/ActionC"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 1
-theme_override_fonts/font = SubResource("SystemFont_serif")
-theme_override_font_sizes/font_size = 17
-text = "Ikuti"
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionC"]
-texture_filter = 1
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-texture = SubResource("Atlas_btn_c")
-expand_mode = 1
-stretch_mode = 5
 
 [node name="ActionQ" type="HBoxContainer" parent="RootControl/ControlsPrompt"]
 layout_mode = 2
@@ -3474,132 +3424,6 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
 
-[node name="RowAttack" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows"]
-custom_minimum_size = Vector2(0, 32)
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowAttack"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
-theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 18
-text = "Serang"
-vertical_alignment = 1
-
-[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowAttack"]
-texture_filter = 1
-custom_minimum_size = Vector2(32, 32)
-layout_mode = 2
-size_flags_vertical = 4
-patch_margin_left = 4
-patch_margin_top = 4
-patch_margin_right = 4
-patch_margin_bottom = 4
-
-[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowAttack/KeyBox"]
-texture_filter = 1
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-texture = SubResource("Atlas_btn_v")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowAttack/KeyBox"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -1.0
-offset_bottom = -1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
-theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 14
-text = "V"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowAttack/KeyBox"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_default_cursor_shape = 2
-
-[node name="RowFollow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows"]
-custom_minimum_size = Vector2(0, 32)
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowFollow"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
-theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 18
-text = "Ikuti"
-vertical_alignment = 1
-
-[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowFollow"]
-texture_filter = 1
-custom_minimum_size = Vector2(32, 32)
-layout_mode = 2
-size_flags_vertical = 4
-patch_margin_left = 4
-patch_margin_top = 4
-patch_margin_right = 4
-patch_margin_bottom = 4
-
-[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowFollow/KeyBox"]
-texture_filter = 1
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-texture = SubResource("Atlas_btn_c")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowFollow/KeyBox"]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -1.0
-offset_bottom = -1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
-theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 14
-text = "C"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowFollow/KeyBox"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_default_cursor_shape = 2
-
 [node name="RowSkill1" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
@@ -4137,7 +3961,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = SubResource("Atlas_btn_u")
+texture = SubResource("Atlas_btn_c")
 expand_mode = 1
 stretch_mode = 5
 
@@ -4154,7 +3978,7 @@ grow_vertical = 2
 theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 14
-text = "U"
+text = "C"
 horizontal_alignment = 1
 vertical_alignment = 1
 

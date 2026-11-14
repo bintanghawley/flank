@@ -22,8 +22,6 @@ var leader_node: CharacterBody2D = null
 var queue_slot_index: int = 0
 var in_party_combat: bool = false
 var ai_attack_timer: float = 0.0
-enum PartyCommand { ATTACK, FOLLOW }
-var party_command: PartyCommand = PartyCommand.ATTACK
 const COMBAT_ATTACK_RANGE: float = 480.0
 var is_flanking: bool = false
 var flank_wp1: Vector2 = Vector2.ZERO
@@ -31,20 +29,6 @@ var flank_wp2: Vector2 = Vector2.ZERO
 var flank_stage: int = 1
 var flank_timeout: float = 0.0
 var facing_debounce_timer: float = 0.0
-
-func set_party_command(cmd: int) -> void:
-	party_command = cmd as PartyCommand
-	if party_command == PartyCommand.FOLLOW:
-		is_flanking = false
-		flank_wp1 = Vector2.ZERO
-		flank_wp2 = Vector2.ZERO
-		flank_stage = 1
-		flank_timeout = 0.0
-		is_attacking = false
-		velocity = Vector2.ZERO
-		if not is_leader and not is_dead:
-			if animated_sprite.animation.begins_with("atk_"):
-				play_idle_animation()
 
 func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: int = 0) -> void:
 	is_leader = active
@@ -55,15 +39,13 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 	velocity = Vector2.ZERO
 
 	attack_stuck_timer = 0.0
-	if new_leader and "party_command" in new_leader:
-		party_command = new_leader.party_command
-	elif is_inside_tree():
-		var p = get_parent()
-		if p and "current_party_command" in p:
-			party_command = p.current_party_command as PartyCommand
 
 	if is_leader:
-		in_party_combat = false
+		var game_node = get_tree().current_scene if is_inside_tree() else null
+		if game_node and "current_combat_state" in game_node and "PartyCombatState" in game_node:
+			in_party_combat = (game_node.current_combat_state == game_node.PartyCombatState.COMBAT)
+		elif not in_party_combat:
+			in_party_combat = false
 		ai_attack_timer = 0.0
 		is_flanking = false
 		flank_wp1 = Vector2.ZERO
@@ -102,7 +84,8 @@ func cancel_skill() -> void:
 func set_party_combat_mode(active: bool) -> void:
 	in_party_combat = active
 	if in_party_combat:
-		ai_attack_timer = randf_range(0.3, 0.7)
+		if not is_leader:
+			ai_attack_timer = randf_range(0.3, 0.7)
 	else:
 		ai_attack_timer = 0.0
 		is_flanking = false
@@ -114,6 +97,20 @@ func set_party_combat_mode(active: bool) -> void:
 		if not is_leader and leader_node and is_instance_valid(leader_node) and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
 			play_idle_animation()
+
+
+func is_in_combat_mode() -> bool:
+	if in_party_combat:
+		return true
+	var game_node = get_tree().current_scene if is_inside_tree() else null
+	if game_node:
+		if "current_combat_state" in game_node and "PartyCombatState" in game_node:
+			if game_node.current_combat_state == game_node.PartyCombatState.COMBAT:
+				return true
+		if "arena_state" in game_node and "ArenaState" in game_node:
+			if game_node.arena_state == game_node.ArenaState.COMBAT:
+				return true
+	return false
 
 # =========================
 # MOVEMENT SETTINGS
@@ -419,11 +416,11 @@ func _physics_process(delta: float) -> void:
 
 	# =====================================================
 	# SHOOT WITH LEFT CLICK (HOLD) - BASIC ATTACK
-	# Hanya aktif di luar Special Skill Mode
+	# Hanya aktif di luar Special Skill Mode dan saat mode tempur (ada musuh)
 	# =====================================================
 	if current_skill_state == SkillState.INACTIVE:
 		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-			if not require_mouse_release and attack_timer <= 0.0 and not is_attacking:
+			if is_in_combat_mode() and not require_mouse_release and attack_timer <= 0.0 and not is_attacking:
 				shoot_towards(get_global_mouse_position())
 
 	# =====================================================
@@ -593,7 +590,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
-				if not require_mouse_release and attack_timer <= 0.0 and not is_attacking:
+				if is_in_combat_mode() and not require_mouse_release and attack_timer <= 0.0 and not is_attacking:
 					shoot_towards(get_global_mouse_position())
 			else:
 				require_mouse_release = false
@@ -612,8 +609,7 @@ func process_follower_logic(delta: float) -> void:
 		return
 
 	# 1. POSISI BERTEMPUR (COMBAT STATE ALA GUARDIAN TALES)
-	# HANYA aktif jika party_command == PartyCommand.ATTACK dan in_party_combat == true
-	if party_command == PartyCommand.ATTACK and in_party_combat:
+	if in_party_combat:
 		process_follower_combat(delta)
 		return
 
@@ -1253,14 +1249,7 @@ func has_line_of_sight_to(target_node: Node2D) -> bool:
 
 
 func has_valid_attack_target() -> bool:
-	var cam_rect := get_camera_world_rect()
-	var enemies := get_tree().get_nodes_in_group("enemy")
-	for e in enemies:
-		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
-			if cam_rect.has_point(e.global_position):
-				if global_position.distance_to(e.global_position) <= attack_range:
-					return true
-	return false
+	return is_in_combat_mode()
 
 func get_camera_world_rect() -> Rect2:
 	var game_node = get_tree().current_scene
@@ -1281,8 +1270,8 @@ func shoot_towards(target_pos: Vector2) -> void:
 	if attack_timer > 0.0 or is_attacking or is_dead:
 		return
 
-	# [BATASI SERANGAN KOSONG]: Jika karakter aktif (Leader), wajib ada musuh valid di layar & jangkauan
-	if is_leader and not has_valid_attack_target():
+	# Hanya dapat menembak saat mode tempur (ada musuh) tanpa batasan jarak
+	if is_leader and not is_in_combat_mode():
 		return
 
 	# Hentikan pergerakan
@@ -1532,8 +1521,6 @@ func respawn() -> void:
 	var respawn_tween = create_tween()
 	respawn_tween.tween_property(self, "modulate:a", 1.0, 0.4)
 	is_dead = false
-	if game_node and "current_party_command" in game_node:
-		party_command = game_node.current_party_command as PartyCommand
 	if game_node and "current_combat_state" in game_node:
 		in_party_combat = (game_node.current_combat_state == game_node.PartyCombatState.COMBAT)
 	else:
