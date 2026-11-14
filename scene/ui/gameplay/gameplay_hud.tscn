@@ -125,6 +125,10 @@ region = Rect2(32, 224, 16, 16)
 atlas = ExtResource("5_action_buttons")
 region = Rect2(0, 256, 16, 16)
 
+[sub_resource type="AtlasTexture" id="Atlas_btn_b"]
+atlas = ExtResource("5_action_buttons")
+region = Rect2(16, 208, 16, 16)
+
 [sub_resource type="AtlasTexture" id="Atlas_btn_c"]
 atlas = ExtResource("5_action_buttons")
 region = Rect2(32, 208, 16, 16)
@@ -461,6 +465,25 @@ texture = SubResource("Atlas_tab_icon_inventory")
 expand_mode = 1
 stretch_mode = 5
 
+[node name="KeyHint" type="TextureRect" parent="RootControl/BtnHudInventory"]
+texture_filter = 1
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -10.0
+offset_top = 4.0
+offset_right = 10.0
+offset_bottom = 24.0
+grow_horizontal = 2
+mouse_filter = 2
+texture = SubResource("Atlas_btn_b")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="BtnHudInfo" type="TextureButton" parent="RootControl"]
 texture_filter = 1
 layout_mode = 1
@@ -487,6 +510,25 @@ offset_right = 28.0
 offset_bottom = 28.0
 mouse_filter = 2
 texture = SubResource("Atlas_tab_icon_info")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeyHint" type="TextureRect" parent="RootControl/BtnHudInfo"]
+texture_filter = 1
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -10.0
+offset_top = 4.0
+offset_right = 10.0
+offset_bottom = 24.0
+grow_horizontal = 2
+mouse_filter = 2
+texture = SubResource("Atlas_btn_c")
 expand_mode = 1
 stretch_mode = 5
 
@@ -526,17 +568,17 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -220.0
-offset_top = -196.0
+offset_left = -250.0
+offset_top = -212.0
 offset_right = -24.0
-offset_bottom = -116.0
+offset_bottom = -122.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_override_constants/separation = 5
+theme_override_constants/separation = 6
 
 [node name="ActionV" type="HBoxContainer" parent="RootControl/ControlsPrompt"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
 alignment = 2
 
 [node name="Label" type="Label" parent="RootControl/ControlsPrompt/ActionV"]
@@ -546,13 +588,14 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
 theme_override_fonts/font = SubResource("SystemFont_serif")
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 17
 text = "Serang"
 horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionV"]
 texture_filter = 1
-custom_minimum_size = Vector2(18, 18)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 texture = SubResource("Atlas_btn_v")
 expand_mode = 1
@@ -560,7 +603,7 @@ stretch_mode = 5
 
 [node name="ActionC" type="HBoxContainer" parent="RootControl/ControlsPrompt"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
 alignment = 2
 
 [node name="Label" type="Label" parent="RootControl/ControlsPrompt/ActionC"]
@@ -570,13 +613,14 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
 theme_override_fonts/font = SubResource("SystemFont_serif")
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 17
 text = "Ikuti"
 horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionC"]
 texture_filter = 1
-custom_minimum_size = Vector2(18, 18)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 texture = SubResource("Atlas_btn_c")
 expand_mode = 1
@@ -584,7 +628,7 @@ stretch_mode = 5
 
 [node name="ActionQ" type="HBoxContainer" parent="RootControl/ControlsPrompt"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
 alignment = 2
 
 [node name="Label" type="Label" parent="RootControl/ControlsPrompt/ActionQ"]
@@ -594,13 +638,14 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
 theme_override_fonts/font = SubResource("SystemFont_serif")
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 17
 text = "Beralih Karakter"
 horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionQ"]
 texture_filter = 1
-custom_minimum_size = Vector2(18, 18)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 texture = SubResource("Atlas_btn_q")
 expand_mode = 1
@@ -894,9 +939,9 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -260.0
-offset_top = -98.0
+offset_top = -104.0
 offset_right = -24.0
-offset_bottom = -24.0
+offset_bottom = -22.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_constants/separation = 14
@@ -950,9 +995,10 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Hotkey" type="TextureRect" parent="RootControl/SkillContainer/SkillSlot1"]
-custom_minimum_size = Vector2(18, 18)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_horizontal = 4
+texture_filter = 1
 texture = SubResource("Atlas_btn_1")
 expand_mode = 1
 stretch_mode = 5
@@ -1005,9 +1051,10 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Hotkey" type="TextureRect" parent="RootControl/SkillContainer/SkillSlot2"]
-custom_minimum_size = Vector2(18, 18)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_horizontal = 4
+texture_filter = 1
 texture = SubResource("Atlas_btn_2")
 expand_mode = 1
 stretch_mode = 5
@@ -1060,9 +1107,10 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Hotkey" type="TextureRect" parent="RootControl/SkillContainer/SkillSlot3"]
-custom_minimum_size = Vector2(18, 18)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_horizontal = 4
+texture_filter = 1
 texture = SubResource("Atlas_btn_3")
 expand_mode = 1
 stretch_mode = 5
@@ -1115,9 +1163,10 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Hotkey" type="TextureRect" parent="RootControl/SkillContainer/SkillSlot4"]
-custom_minimum_size = Vector2(18, 18)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_horizontal = 4
+texture_filter = 1
 texture = SubResource("Atlas_btn_4")
 expand_mode = 1
 stretch_mode = 5
@@ -3310,20 +3359,60 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="ControlRows" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls"]
+[node name="ControlsScrollBar" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls"]
 layout_mode = 0
-offset_left = 20.0
+offset_left = 264.0
 offset_top = 12.0
-offset_right = 268.0
+offset_right = 284.0
 offset_bottom = 384.0
+mouse_filter = 0
+
+[node name="Track" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScrollBar"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -4.0
+offset_right = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+patch_margin_top = 6
+patch_margin_bottom = 6
+
+[node name="Grabber" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScrollBar"]
+texture_filter = 1
+custom_minimum_size = Vector2(16, 14)
+layout_mode = 0
+offset_left = 2.0
+offset_top = 4.0
+offset_right = 18.0
+offset_bottom = 18.0
+mouse_filter = 2
+stretch_mode = 3
+
+[node name="ControlsScroll" type="ScrollContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls"]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 12.0
+offset_right = 258.0
+offset_bottom = 384.0
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="ControlRows" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 5
 
-[node name="RowSwitch" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+[node name="RowSwitch" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSwitch"]
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSwitch"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
@@ -3332,7 +3421,7 @@ theme_override_font_sizes/font_size = 18
 text = "Beralih Karakter"
 vertical_alignment = 1
 
-[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSwitch"]
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSwitch"]
 texture_filter = 1
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -3342,7 +3431,7 @@ patch_margin_top = 4
 patch_margin_right = 4
 patch_margin_bottom = 4
 
-[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSwitch/KeyBox"]
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSwitch/KeyBox"]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
@@ -3355,7 +3444,7 @@ texture = SubResource("Atlas_btn_q")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSwitch/KeyBox"]
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSwitch/KeyBox"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -3372,7 +3461,7 @@ text = "Q"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSwitch/KeyBox"]
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSwitch/KeyBox"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -3381,12 +3470,12 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
 
-[node name="RowAttack" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+[node name="RowAttack" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowAttack"]
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowAttack"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
@@ -3395,7 +3484,7 @@ theme_override_font_sizes/font_size = 18
 text = "Serang"
 vertical_alignment = 1
 
-[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowAttack"]
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowAttack"]
 texture_filter = 1
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -3405,7 +3494,7 @@ patch_margin_top = 4
 patch_margin_right = 4
 patch_margin_bottom = 4
 
-[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowAttack/KeyBox"]
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowAttack/KeyBox"]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
@@ -3418,7 +3507,7 @@ texture = SubResource("Atlas_btn_v")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowAttack/KeyBox"]
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowAttack/KeyBox"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -3435,7 +3524,7 @@ text = "V"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowAttack/KeyBox"]
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowAttack/KeyBox"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -3444,12 +3533,12 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
 
-[node name="RowFollow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+[node name="RowFollow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowFollow"]
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowFollow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
@@ -3458,7 +3547,7 @@ theme_override_font_sizes/font_size = 18
 text = "Ikuti"
 vertical_alignment = 1
 
-[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowFollow"]
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowFollow"]
 texture_filter = 1
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -3468,7 +3557,7 @@ patch_margin_top = 4
 patch_margin_right = 4
 patch_margin_bottom = 4
 
-[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowFollow/KeyBox"]
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowFollow/KeyBox"]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
@@ -3481,7 +3570,7 @@ texture = SubResource("Atlas_btn_c")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowFollow/KeyBox"]
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowFollow/KeyBox"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -3498,7 +3587,7 @@ text = "C"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowFollow/KeyBox"]
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowFollow/KeyBox"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -3507,12 +3596,12 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
 
-[node name="RowSkill1" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+[node name="RowSkill1" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill1"]
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill1"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
@@ -3521,7 +3610,7 @@ theme_override_font_sizes/font_size = 18
 text = "Skill 1"
 vertical_alignment = 1
 
-[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill1"]
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill1"]
 texture_filter = 1
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -3531,7 +3620,7 @@ patch_margin_top = 4
 patch_margin_right = 4
 patch_margin_bottom = 4
 
-[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill1/KeyBox"]
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill1/KeyBox"]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
@@ -3544,7 +3633,7 @@ texture = SubResource("Atlas_btn_1")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill1/KeyBox"]
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill1/KeyBox"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -3561,7 +3650,7 @@ text = "1"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill1/KeyBox"]
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill1/KeyBox"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -3570,12 +3659,12 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
 
-[node name="RowSkill2" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+[node name="RowSkill2" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill2"]
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill2"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
@@ -3584,7 +3673,7 @@ theme_override_font_sizes/font_size = 18
 text = "Skill 2"
 vertical_alignment = 1
 
-[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill2"]
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill2"]
 texture_filter = 1
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -3594,7 +3683,7 @@ patch_margin_top = 4
 patch_margin_right = 4
 patch_margin_bottom = 4
 
-[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill2/KeyBox"]
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill2/KeyBox"]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
@@ -3607,7 +3696,7 @@ texture = SubResource("Atlas_btn_2")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill2/KeyBox"]
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill2/KeyBox"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -3624,7 +3713,7 @@ text = "2"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill2/KeyBox"]
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill2/KeyBox"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -3633,12 +3722,12 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
 
-[node name="RowSkill3" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+[node name="RowSkill3" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill3"]
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill3"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
@@ -3647,7 +3736,7 @@ theme_override_font_sizes/font_size = 18
 text = "Skill 3"
 vertical_alignment = 1
 
-[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill3"]
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill3"]
 texture_filter = 1
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -3657,7 +3746,7 @@ patch_margin_top = 4
 patch_margin_right = 4
 patch_margin_bottom = 4
 
-[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill3/KeyBox"]
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill3/KeyBox"]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
@@ -3670,7 +3759,7 @@ texture = SubResource("Atlas_btn_3")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill3/KeyBox"]
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill3/KeyBox"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -3687,7 +3776,7 @@ text = "3"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill3/KeyBox"]
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill3/KeyBox"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -3696,12 +3785,12 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
 
-[node name="RowSkill4" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+[node name="RowSkill4" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill4"]
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill4"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
@@ -3710,7 +3799,7 @@ theme_override_font_sizes/font_size = 18
 text = "Skill 4"
 vertical_alignment = 1
 
-[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill4"]
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill4"]
 texture_filter = 1
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -3720,7 +3809,7 @@ patch_margin_top = 4
 patch_margin_right = 4
 patch_margin_bottom = 4
 
-[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill4/KeyBox"]
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill4/KeyBox"]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
@@ -3733,7 +3822,7 @@ texture = SubResource("Atlas_btn_4")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill4/KeyBox"]
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill4/KeyBox"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -3750,7 +3839,7 @@ text = "4"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkill4/KeyBox"]
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkill4/KeyBox"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -3759,12 +3848,12 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
 
-[node name="RowInteract" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+[node name="RowInteract" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowInteract"]
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowInteract"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
@@ -3773,7 +3862,7 @@ theme_override_font_sizes/font_size = 18
 text = "Interaksi"
 vertical_alignment = 1
 
-[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowInteract"]
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowInteract"]
 texture_filter = 1
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -3783,7 +3872,7 @@ patch_margin_top = 4
 patch_margin_right = 4
 patch_margin_bottom = 4
 
-[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowInteract/KeyBox"]
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowInteract/KeyBox"]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
@@ -3796,7 +3885,7 @@ texture = SubResource("Atlas_btn_e")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowInteract/KeyBox"]
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowInteract/KeyBox"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -3813,7 +3902,7 @@ text = "E"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowInteract/KeyBox"]
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowInteract/KeyBox"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -3822,12 +3911,12 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
 
-[node name="RowSkip" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+[node name="RowSkip" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkip"]
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkip"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
@@ -3836,7 +3925,7 @@ theme_override_font_sizes/font_size = 18
 text = "Skip"
 vertical_alignment = 1
 
-[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkip"]
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkip"]
 texture_filter = 1
 custom_minimum_size = Vector2(58, 32)
 layout_mode = 2
@@ -3846,7 +3935,7 @@ patch_margin_top = 4
 patch_margin_right = 4
 patch_margin_bottom = 4
 
-[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkip/KeyBox"]
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkip/KeyBox"]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
@@ -3859,7 +3948,7 @@ texture = SubResource("Atlas_btn_space")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkip/KeyBox"]
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkip/KeyBox"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -3876,7 +3965,7 @@ text = "SPACE"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowSkip/KeyBox"]
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowSkip/KeyBox"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -3885,12 +3974,12 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
 
-[node name="RowJournal" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows"]
+[node name="RowJournal" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowJournal"]
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowJournal"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
@@ -3899,7 +3988,7 @@ theme_override_font_sizes/font_size = 18
 text = "Jurnal"
 vertical_alignment = 1
 
-[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowJournal"]
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowJournal"]
 texture_filter = 1
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
@@ -3909,7 +3998,7 @@ patch_margin_top = 4
 patch_margin_right = 4
 patch_margin_bottom = 4
 
-[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowJournal/KeyBox"]
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowJournal/KeyBox"]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
@@ -3922,7 +4011,7 @@ texture = SubResource("Atlas_quest_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowJournal/KeyBox"]
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowJournal/KeyBox"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -3939,7 +4028,133 @@ text = "J"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows/RowJournal/KeyBox"]
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowJournal/KeyBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="RowInventory" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowInventory"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Inventori"
+vertical_alignment = 1
+
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowInventory"]
+texture_filter = 1
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowInventory/KeyBox"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_btn_b")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowInventory/KeyBox"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "B"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowInventory/KeyBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
+[node name="RowInfo" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ActionLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowInfo"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Karakter"
+vertical_alignment = 1
+
+[node name="KeyBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowInfo"]
+texture_filter = 1
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="KeyIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowInfo/KeyBox"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_btn_c")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeyLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowInfo/KeyBox"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "C"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClickBtn" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows/RowInfo/KeyBox"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -4524,7 +4739,7 @@ grow_vertical = 2
 theme_override_colors/font_color = Color(0.35, 0.25, 0.26, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 26
-text = "Credits"
+text = "Kredit"
 horizontal_alignment = 1
 vertical_alignment = 1
 

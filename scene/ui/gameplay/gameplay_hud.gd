@@ -97,7 +97,9 @@ signal start_menu_settings_closed
 @onready var slider_val_sfx: Label = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowSfx/ControlsRow/ValBox/ValLabel
 @onready var slider_ctrl_dialog: Control = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowDialog/ControlsRow/SliderDialog
 @onready var slider_val_dialog: Label = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuAudio/AudioRows/RowDialog/ControlsRow/ValBox/ValLabel
-@onready var control_rows_container: VBoxContainer = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlRows
+@onready var controls_scroll_container: ScrollContainer = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll
+@onready var controls_scrollbar: Control = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScrollBar
+@onready var control_rows_container: VBoxContainer = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuControls/ControlsScroll/ControlRows
 @onready var page_credits: Control = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits
 
 # Save & Load UI (SubmenuSaveLoad)
@@ -236,16 +238,14 @@ const CARD_FRAME_SELECTED_TEX: Texture2D = preload("res://assets/ui/gameplay/par
 var quest_list: Array[Dictionary] = []
 var selected_quest_id: String = ""
 var tracked_quest_id: String = ""
-var _is_dragging_journal_slider: bool = false
-var _journal_slider_drag_offset: float = 0.0
 
 # Inventory State
 var inventory_items: Array[Dictionary] = []
 var current_inventory_category: int = 0 # 0: Consumable, 1: Key, 2: Collectible, 3: Notes
 var selected_item_category_index: int = 0
 var _filtered_inventory_items: Array[Dictionary] = []
-var _is_dragging_inv_slider: bool = false
-var _inv_slider_drag_offset: float = 0.0
+var _active_v_scrollbar: Control = null
+var _v_scrollbar_drag_offset: float = 0.0
 
 const VSCROLL_INSET_TOP: float = 4.0
 const VSCROLL_INSET_BOTTOM: float = 4.0
@@ -282,7 +282,9 @@ const CONTROL_ACTION_ORDER: Array[String] = [
 	"skill_4",
 	"interact",
 	"skip",
-	"open_journal"
+	"open_journal",
+	"open_inventory",
+	"open_info"
 ]
 
 const CONTROL_ACTION_INFO: Dictionary = {
@@ -295,7 +297,9 @@ const CONTROL_ACTION_INFO: Dictionary = {
 	"skill_4":          { "name": "Skill 4",           "default_key": KEY_4, "node_name": "RowSkill4" },
 	"interact":         { "name": "Interaksi",         "default_key": KEY_E, "node_name": "RowInteract" },
 	"skip":             { "name": "Skip",              "default_key": KEY_SPACE, "node_name": "RowSkip" },
-	"open_journal":     { "name": "Jurnal",            "default_key": KEY_J, "node_name": "RowJournal" }
+	"open_journal":     { "name": "Jurnal",            "default_key": KEY_J, "node_name": "RowJournal" },
+	"open_inventory":   { "name": "Inventori",         "default_key": KEY_B, "node_name": "RowInventory" },
+	"open_info":        { "name": "Karakter",          "default_key": KEY_C, "node_name": "RowInfo" }
 }
 
 const ACTION_BUTTONS_SHEET: Texture2D = preload("res://assets/ui/icons/actions/action_buttons.png")
@@ -507,8 +511,16 @@ func _unhandled_input(event: InputEvent) -> void:
 				_on_save_load_enter_pressed()
 				get_viewport().set_input_as_handled()
 				return
+		if event.is_action_pressed("open_inventory") and not is_start_menu_mode:
+			if _toggle_or_switch_book_tab(0):
+				get_viewport().set_input_as_handled()
+				return
+		if event.is_action_pressed("open_info") and not is_start_menu_mode:
+			if _toggle_or_switch_book_tab(2):
+				get_viewport().set_input_as_handled()
+				return
 		if event.is_action_pressed("open_journal") and not is_start_menu_mode:
-			if _toggle_or_switch_journal_menu():
+			if _toggle_or_switch_book_tab(1):
 				get_viewport().set_input_as_handled()
 				return
 		if event.is_action_pressed("interact"):
@@ -555,11 +567,8 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
-	if _is_dragging_inv_slider and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
-		_is_dragging_inv_slider = false
-
-	if _is_dragging_journal_slider and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
-		_is_dragging_journal_slider = false
+	if is_instance_valid(_active_v_scrollbar) and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+		_active_v_scrollbar = null
 
 	if _active_dragging_slider != "" and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 		_active_dragging_slider = ""
@@ -707,7 +716,7 @@ func _init_pause_menu_textures() -> void:
 		v_grab_img.resize(16, 14, Image.INTERPOLATE_NEAREST)
 		v_scroll_grabber_tex = ImageTexture.create_from_image(v_grab_img)
 
-	for sb in [inv_scrollbar, journal_scrollbar, save_load_scrollbar]:
+	for sb in [inv_scrollbar, journal_scrollbar, save_load_scrollbar, controls_scrollbar]:
 		if is_instance_valid(sb):
 			var sb_track = sb.get_node_or_null("Track") as NinePatchRect
 			if sb_track and v_scroll_track_tex:
@@ -1424,42 +1433,16 @@ func _init_pause_menu_ui() -> void:
 		inv_btn_gunakan.pressed.connect(_on_btn_gunakan_pressed)
 		_connect_book_hover_sfx(inv_btn_gunakan)
 
-	# Ensure ONLY ONE slider in inventory: hide built-in scrollbar of ScrollContainer
-	if inv_scroll_container:
-		inv_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER as ScrollContainer.ScrollMode
-		var v_bar = inv_scroll_container.get_v_scroll_bar()
-		if v_bar:
-			v_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
-			v_bar.custom_minimum_size = Vector2.ZERO
-			v_bar.scale = Vector2.ZERO
-			v_bar.visible = false
-			v_bar.value_changed.connect(func(_val: float):
-				_update_inv_slider_grabber_pos()
-			)
-
-	# Custom Inventory Scrollbar GUI input
-	if inv_scrollbar:
-		inv_scrollbar.gui_input.connect(_on_inv_scrollbar_gui_input)
+	# Ensure ONLY ONE slider in inventory, journal, and controls: hide built-in ScrollContainer bars
+	_setup_custom_v_scrollbar(inv_scroll_container, inv_scrollbar, _update_inv_slider_grabber_pos)
 
 	# Journal UI
 	if journal_btn_navigasi:
 		journal_btn_navigasi.pressed.connect(_on_btn_navigasi_pressed)
 		_connect_book_hover_sfx(journal_btn_navigasi)
 
-	if journal_scroll_container:
-		journal_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER as ScrollContainer.ScrollMode
-		var j_v_bar = journal_scroll_container.get_v_scroll_bar()
-		if j_v_bar:
-			j_v_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
-			j_v_bar.custom_minimum_size = Vector2.ZERO
-			j_v_bar.scale = Vector2.ZERO
-			j_v_bar.visible = false
-			j_v_bar.value_changed.connect(func(_val: float):
-				_update_journal_slider_grabber_pos()
-			)
-
-	if journal_scrollbar:
-		journal_scrollbar.gui_input.connect(_on_journal_scrollbar_gui_input)
+	_setup_custom_v_scrollbar(journal_scroll_container, journal_scrollbar, _update_journal_slider_grabber_pos)
+	_setup_custom_v_scrollbar(controls_scroll_container, controls_scrollbar, _sync_controls_scrollbar)
 
 	# Settings Submenu Buttons
 	_connect_submenu_click(settings_btn_audio, 0)
@@ -1575,7 +1558,7 @@ func toggle_pause_menu(initial_tab: int = 2) -> void:
 		if _rebind_action_id != "":
 			_cancel_rebind()
 		_close_confirm_modal()
-		_is_dragging_inv_slider = false
+		_active_v_scrollbar = null
 		if _is_dragging or _drag_candidate_slot_idx != -1:
 			_cancel_drag()
 			_drag_candidate_slot_idx = -1
@@ -1596,8 +1579,8 @@ func _open_book_tab_from_hud(tab_idx: int) -> void:
 	toggle_pause_menu(tab_idx)
 
 
-## Handles the open_journal hotkey: opens to Journal, switches to Journal, or closes it.
-func _toggle_or_switch_journal_menu() -> bool:
+## Handles book menu tab hotkeys: opens directly to target_tab, switches to it, or closes if already open on it.
+func _toggle_or_switch_book_tab(target_tab: int) -> bool:
 	if is_start_menu_mode:
 		return false
 	if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
@@ -1605,12 +1588,12 @@ func _toggle_or_switch_journal_menu() -> bool:
 	if _is_dragging or _drag_candidate_slot_idx != -1:
 		return false
 	if not is_instance_valid(pause_overlay) or not pause_overlay.visible:
-		toggle_pause_menu(1)
+		toggle_pause_menu(target_tab)
 		return true
-	if current_tab_index == 1:
+	if current_tab_index == target_tab:
 		toggle_pause_menu()
 		return true
-	_on_tab_pressed(1)
+	_on_tab_pressed(target_tab)
 	return true
 
 
@@ -2653,7 +2636,25 @@ func _apply_v_scrollbar_pos(scrollbar: Control, scroll_container: ScrollContaine
 		scroll_container.scroll_vertical = int(round(ratio * max_scroll))
 
 
-func _handle_v_scrollbar_gui_input(scrollbar: Control, scroll_container: ScrollContainer, event: InputEvent, is_inventory: bool) -> void:
+## Hides the native vertical scrollbar and connects a matching custom parchment scrollbar.
+func _setup_custom_v_scrollbar(scroll_container: ScrollContainer, scrollbar: Control, on_changed: Callable) -> void:
+	if is_instance_valid(scroll_container):
+		scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER as ScrollContainer.ScrollMode
+		var v_bar = scroll_container.get_v_scroll_bar()
+		if v_bar:
+			v_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
+			v_bar.custom_minimum_size = Vector2.ZERO
+			v_bar.scale = Vector2.ZERO
+			v_bar.visible = false
+			if not v_bar.value_changed.is_connected(on_changed):
+				v_bar.value_changed.connect(func(_val: float): on_changed.call())
+	if is_instance_valid(scrollbar):
+		scrollbar.gui_input.connect(func(event: InputEvent):
+			_handle_v_scrollbar_gui_input(scrollbar, scroll_container, event)
+		)
+
+
+func _handle_v_scrollbar_gui_input(scrollbar: Control, scroll_container: ScrollContainer, event: InputEvent) -> void:
 	if not is_instance_valid(scrollbar) or not is_instance_valid(scroll_container):
 		return
 	var grabber = scrollbar.get_node_or_null("Grabber") as Control
@@ -2673,27 +2674,15 @@ func _handle_v_scrollbar_gui_input(scrollbar: Control, scroll_container: ScrollC
 				drag_off = grab_h / 2.0
 				var ratio: float = clampf((click_y - drag_off - VSCROLL_INSET_TOP) / travel, 0.0, 1.0)
 				_apply_v_scrollbar_pos(scrollbar, scroll_container, ratio, max_scroll)
-			if is_inventory:
-				_is_dragging_inv_slider = true
-				_inv_slider_drag_offset = drag_off
-			else:
-				_is_dragging_journal_slider = true
-				_journal_slider_drag_offset = drag_off
+			_active_v_scrollbar = scrollbar
+			_v_scrollbar_drag_offset = drag_off
 		else:
-			if is_inventory:
-				_is_dragging_inv_slider = false
-			else:
-				_is_dragging_journal_slider = false
+			if _active_v_scrollbar == scrollbar:
+				_active_v_scrollbar = null
 	elif event is InputEventMouseMotion:
-		var active: bool = _is_dragging_inv_slider if is_inventory else _is_dragging_journal_slider
-		if active:
-			var drag_off: float = _inv_slider_drag_offset if is_inventory else _journal_slider_drag_offset
-			var ratio: float = clampf((event.position.y - drag_off - VSCROLL_INSET_TOP) / travel, 0.0, 1.0)
+		if _active_v_scrollbar == scrollbar:
+			var ratio: float = clampf((event.position.y - _v_scrollbar_drag_offset - VSCROLL_INSET_TOP) / travel, 0.0, 1.0)
 			_apply_v_scrollbar_pos(scrollbar, scroll_container, ratio, max_scroll)
-
-
-func _on_inv_scrollbar_gui_input(event: InputEvent) -> void:
-	_handle_v_scrollbar_gui_input(inv_scrollbar, inv_scroll_container, event, true)
 
 
 func _update_inv_slider_grabber_pos() -> void:
@@ -2702,6 +2691,10 @@ func _update_inv_slider_grabber_pos() -> void:
 
 func _sync_inventory_scrollbar() -> void:
 	_update_inv_slider_grabber_pos()
+
+
+func _sync_controls_scrollbar() -> void:
+	_update_v_scrollbar_from_scroll(controls_scrollbar, controls_scroll_container)
 
 
 func _on_btn_gunakan_pressed() -> void:
@@ -2962,10 +2955,6 @@ func update_hud_quest_display(quest: Dictionary) -> void:
 
 # --- Journal Custom Vertical Scrollbar ---
 
-func _on_journal_scrollbar_gui_input(event: InputEvent) -> void:
-	_handle_v_scrollbar_gui_input(journal_scrollbar, journal_scroll_container, event, false)
-
-
 func _update_journal_slider_grabber_pos() -> void:
 	_update_v_scrollbar_from_scroll(journal_scrollbar, journal_scroll_container)
 
@@ -3076,6 +3065,8 @@ func _switch_settings_submenu(sub_idx: int) -> void:
 		submenu_controls.visible = (sub_idx == 1)
 		if sub_idx == 1:
 			_refresh_controls_ui()
+			_sync_controls_scrollbar()
+			call_deferred("_sync_controls_scrollbar")
 	if is_instance_valid(submenu_save_load):
 		submenu_save_load.visible = (sub_idx == 2)
 		if sub_idx == 2:
@@ -3404,14 +3395,16 @@ func _refresh_controls_ui() -> void:
 
 func _sync_gameplay_hud_controls_prompts() -> void:
 	var hud_bindings := {
-		"party_attack": { "node": controls_prompt.get_node_or_null("ActionV/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 18.0 },
-		"party_follow": { "node": controls_prompt.get_node_or_null("ActionC/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 18.0 },
-		"switch_character": { "node": controls_prompt.get_node_or_null("ActionQ/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 18.0 },
-		"skill_1": { "node": skill_container.get_node_or_null("SkillSlot1/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 18.0 },
-		"skill_2": { "node": skill_container.get_node_or_null("SkillSlot2/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 18.0 },
-		"skill_3": { "node": skill_container.get_node_or_null("SkillSlot3/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 18.0 },
-		"skill_4": { "node": skill_container.get_node_or_null("SkillSlot4/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 18.0 },
+		"party_attack": { "node": controls_prompt.get_node_or_null("ActionV/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 24.0 },
+		"party_follow": { "node": controls_prompt.get_node_or_null("ActionC/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 24.0 },
+		"switch_character": { "node": controls_prompt.get_node_or_null("ActionQ/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 24.0 },
+		"skill_1": { "node": skill_container.get_node_or_null("SkillSlot1/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 24.0 },
+		"skill_2": { "node": skill_container.get_node_or_null("SkillSlot2/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 24.0 },
+		"skill_3": { "node": skill_container.get_node_or_null("SkillSlot3/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 24.0 },
+		"skill_4": { "node": skill_container.get_node_or_null("SkillSlot4/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 24.0 },
 		"open_journal": { "node": quest_container.get_node_or_null("QuestIcon") if is_instance_valid(quest_container) else null, "fixed_square": false, "target_h": 26.0 },
+		"open_inventory": { "node": btn_hud_inventory.get_node_or_null("KeyHint") if is_instance_valid(btn_hud_inventory) else null, "fixed_square": false, "target_h": 20.0 },
+		"open_info": { "node": btn_hud_info.get_node_or_null("KeyHint") if is_instance_valid(btn_hud_info) else null, "fixed_square": false, "target_h": 20.0 },
 	}
 	for action_name in hud_bindings.keys():
 		var cfg: Dictionary = hud_bindings[action_name]
@@ -3735,7 +3728,7 @@ func _on_pause_overlay_gui_input(event: InputEvent) -> void:
 	if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
 		_outside_pause_pressed = false
 		return
-	if _is_dragging or _drag_candidate_slot_idx != -1 or _active_dragging_slider != "" or _is_dragging_inv_slider or _is_dragging_journal_slider:
+	if _is_dragging or _drag_candidate_slot_idx != -1 or _active_dragging_slider != "" or is_instance_valid(_active_v_scrollbar):
 		_outside_pause_pressed = false
 		return
 	if mb.button_index != MOUSE_BUTTON_LEFT:

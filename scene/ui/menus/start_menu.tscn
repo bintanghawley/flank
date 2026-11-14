@@ -771,7 +771,7 @@ theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
 theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
 theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
-text = "Credits"
+text = "Kredit"
 
 [node name="BtnExit" type="Button" parent="MenuContainer" unique_id=776174996]
 layout_mode = 2
@@ -789,7 +789,7 @@ theme_override_styles/pressed = SubResource("StyleBoxEmpty_pressed")
 theme_override_styles/hover = SubResource("StyleBoxEmpty_hover")
 theme_override_styles/disabled = SubResource("StyleBoxEmpty_disabled")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
-text = "Exit"
+text = "Keluar"
 
 [node name="IrisMask" type="ColorRect" parent="." unique_id=550409636]
 material = SubResource("ShaderMaterial_iris")
