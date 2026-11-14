@@ -133,6 +133,10 @@ region = Rect2(16, 208, 16, 16)
 atlas = ExtResource("5_action_buttons")
 region = Rect2(32, 208, 16, 16)
 
+[sub_resource type="AtlasTexture" id="Atlas_btn_u"]
+atlas = ExtResource("5_action_buttons")
+region = Rect2(96, 240, 16, 16)
+
 [sub_resource type="AtlasTexture" id="Atlas_btn_q"]
 atlas = ExtResource("5_action_buttons")
 region = Rect2(32, 240, 16, 16)
@@ -528,7 +532,7 @@ offset_right = 10.0
 offset_bottom = 24.0
 grow_horizontal = 2
 mouse_filter = 2
-texture = SubResource("Atlas_btn_c")
+texture = SubResource("Atlas_btn_u")
 expand_mode = 1
 stretch_mode = 5
 
@@ -4133,7 +4137,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = SubResource("Atlas_btn_c")
+texture = SubResource("Atlas_btn_u")
 expand_mode = 1
 stretch_mode = 5
 
@@ -4150,7 +4154,7 @@ grow_vertical = 2
 theme_override_colors/font_color = Color(0.98, 0.92, 0.8, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 14
-text = "C"
+text = "U"
 horizontal_alignment = 1
 vertical_alignment = 1
 

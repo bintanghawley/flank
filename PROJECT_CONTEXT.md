@@ -246,6 +246,9 @@ flank/
 - `Tab` / `Q`: Pergantian Leader berurutan secara siklis (1 ➔ 2 ➔ 3 ➔ 4 ➔ 1).
 - Angka `1`, `2`, `3`, `4`: Auto-switch ke karakter yang bersangkutan sekaligus langsung melancarkan skill khususnya (1: Arthur/Knight Shield Guard, 2: Hellene/Bandit Triple Slash, 3: Anastasya/Archer Line Snipe, 4: Magnus/Mage Meteor Strike; aksi diblokir jika hero yang dipilih berstatus KO).
 - Tombol `ESC` (atau klik ikon pause kiri atas): Membuka/menutup overlay Pause Menu di tengah permainan (`get_tree().paused = true/false`) dengan tombol Lanjutkan dan Menu Utama.
+- Tombol `B`: Membuka/menutup antarmuka layar tas Inventori item party.
+- Tombol `U`: Membuka/menutup antarmuka layar Status & Informasi Karakter party.
+- Tombol `J`: Membuka/menutup antarmuka layar pelacak Jurnal Misi / Quest Tracker.
 - Tombol `C`: Komando **FOLLOW** (follower merapatkan barisan dan dilarang menyerang) + memunculkan balon ucapan "Ikuti" di atas kepala Leader.
 - Tombol `V`: Komando **ATTACK** (follower diizinkan keluar barisan dan bertarung mandiri) + memunculkan balon ucapan "Serang" di atas kepala Leader.
 - `Klik Kiri`: Serangan dasar (Tebasan Melee Knight / Ayunan Ganda Double Damage Bandit / Panah Archer / Bola Sihir Mage).

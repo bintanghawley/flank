@@ -150,20 +150,12 @@ func _ready() -> void:
 
 	# 5. Inisialisasi kamera dan batasan map
 	update_arena_bounds_from_camera()
-	_fix_road_texture_seams()
 	setup_camera_and_boundaries.call_deferred()
 	_init_arena_barrier.call_deferred()
 	_init_arena_enemies.call_deferred()
 
 	# 6. Jalankan efek pembukaan Circular Mask (Iris Open) saat masuk arena game
 	play_iris_opening_transition()
-
-
-func _fix_road_texture_seams() -> void:
-	var ground = get_node_or_null("map_region1/Ground") as TileMapLayer
-	if ground:
-		for y in range(13, 40):
-			ground.set_cell(Vector2i(35, y), 0, Vector2i(34, y))
 
 
 func setup_party_enemy_collision_exceptions() -> void:
@@ -328,14 +320,15 @@ func set_active_leader(idx: int) -> void:
 func _set_character_collision_active(char_node: CharacterBody2D, active: bool) -> void:
 	if not char_node or not is_instance_valid(char_node) or not char_node.is_inside_tree():
 		return
+	var should_disable: bool = not active
 	if char_node.has_node("CollisionShape2D"):
 		var col = char_node.get_node("CollisionShape2D") as CollisionShape2D
-		if col:
-			col.set_deferred("disabled", not active)
+		if col and col.disabled != should_disable:
+			col.set_deferred("disabled", should_disable)
 	if char_node.has_node("Hurtbox/CollisionShape2D"):
 		var hurt_col = char_node.get_node("Hurtbox/CollisionShape2D") as CollisionShape2D
-		if hurt_col:
-			hurt_col.set_deferred("disabled", not active)
+		if hurt_col and hurt_col.disabled != should_disable:
+			hurt_col.set_deferred("disabled", should_disable)
 
 
 func update_party_visibility() -> void:

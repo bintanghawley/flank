@@ -85,6 +85,9 @@ Flank menggabungkan mekanika aksi *real-time* dengan manajemen regu taktis:
 | `Tab` / `Q` | Ganti Karakter Siklis | Berganti Leader secara berurutan (Knight → Bandit → Archer → Mage → Knight) |
 | `1`, `2`, `3`, `4` | Auto-Switch & Skill Hero | Berganti kendali langsung ke hero terkait sekaligus melancarkan skill-nya (1: Arthur, 2: Hellene, 3: Anastasya, 4: Magnus; diabaikan jika hero berstatus KO) |
 | `ESC` / Klik Ikon Pause | Buka / Tutup Pause Menu | Menghentikan sementara permainan dan menampilkan panel jeda (Lanjutkan / Menu Utama) |
+| `B` | Buka / Tutup Inventori | Membuka layar tas inventori item party |
+| `U` | Buka / Tutup Info Karakter | Membuka layar statistik dan biografi karakter hero party |
+| `J` | Buka / Tutup Jurnal Misi | Membuka layar pelacak jurnal misi aktif |
 | `C` | Perintah FOLLOW | Menginstruksikan regu merapatkan barisan + memunculkan balon ucapan *"Ikuti"* |
 | `V` | Perintah ATTACK | Mengizinkan follower bertarung mandiri + memunculkan balon ucapan *"Serang"* |
 | `Klik Kiri` (Kartu Party HUD) | Ganti Leader Langsung | Klik pada kartu potret hero di HUD kiri bawah untuk berpindah kendali (diabaikan jika hero berstatus KO) |

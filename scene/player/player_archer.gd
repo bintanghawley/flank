@@ -74,10 +74,6 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 		print(name, " maju sebagai Leader!")
 	else:
 		if current_skill_state != SkillState.INACTIVE:
-			cancel_skill()
-		ai_attack_timer = randf_range(0.3, 0.7)
-		if not is_attacking and current_skill_state == SkillState.INACTIVE:
-			play_idle_animation()
 			deactivate_skill_mode()
 		is_attacking = false
 		ai_attack_timer = randf_range(0.3, 0.7)

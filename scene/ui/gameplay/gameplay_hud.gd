@@ -299,7 +299,7 @@ const CONTROL_ACTION_INFO: Dictionary = {
 	"skip":             { "name": "Skip",              "default_key": KEY_SPACE, "node_name": "RowSkip" },
 	"open_journal":     { "name": "Jurnal",            "default_key": KEY_J, "node_name": "RowJournal" },
 	"open_inventory":   { "name": "Inventori",         "default_key": KEY_B, "node_name": "RowInventory" },
-	"open_info":        { "name": "Karakter",          "default_key": KEY_C, "node_name": "RowInfo" }
+	"open_info":        { "name": "Karakter",          "default_key": KEY_U, "node_name": "RowInfo" }
 }
 
 const ACTION_BUTTONS_SHEET: Texture2D = preload("res://assets/ui/icons/actions/action_buttons.png")
@@ -3284,7 +3284,11 @@ func load_control_settings() -> void:
 	for action_name in CONTROL_ACTION_ORDER:
 		var def_k: int = CONTROL_ACTION_INFO[action_name]["default_key"]
 		if err == OK and config.has_section_key("controls", action_name):
-			control_bindings[action_name] = int(config.get_value("controls", action_name, def_k))
+			var loaded_key: int = int(config.get_value("controls", action_name, def_k))
+			# Migrasi otomatis jika settings.cfg lama masih menyimpan KEY_C pada open_info yang bertabrakan dengan party_follow
+			if action_name == "open_info" and loaded_key == KEY_C:
+				loaded_key = def_k
+			control_bindings[action_name] = loaded_key
 		else:
 			control_bindings[action_name] = def_k
 
