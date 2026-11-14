@@ -149,6 +149,8 @@ func _ready() -> void:
 
 
 func _setup_enemy_collision_exceptions() -> void:
+	if not is_inside_tree():
+		return
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	for e in enemies:
 		if is_instance_valid(e) and e is CollisionObject2D:
@@ -163,8 +165,10 @@ func set_party_command(cmd: int) -> void:
 			cancel_attack()
 		if is_skill_active:
 			cancel_skill()
+		velocity = Vector2.ZERO
 		if not is_leader and not is_dead:
-			process_follower_exploring(0.0)
+			if animated_sprite.animation.begins_with("attack_"):
+				play_idle_animation()
 
 
 func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: int = 1) -> void:
@@ -172,12 +176,12 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 	leader_node = new_leader
 	queue_slot_index = slot_idx
 
-	var game_node = get_tree().current_scene
-	if not game_node or not ("current_party_command" in game_node):
-		if get_parent() and ("current_party_command" in get_parent()):
-			game_node = get_parent()
-	if game_node and "current_party_command" in game_node:
-		party_command = game_node.current_party_command as PartyCommand
+	if new_leader and "party_command" in new_leader:
+		party_command = new_leader.party_command
+	elif is_inside_tree():
+		var p = get_parent()
+		if p and "current_party_command" in p:
+			party_command = p.current_party_command as PartyCommand
 
 	if is_leader:
 		in_party_combat = false
@@ -1402,6 +1406,8 @@ func play_attack_animation() -> void:
 # =========================================================
 
 func get_separation_vector() -> Vector2:
+	if not is_inside_tree():
+		return Vector2.ZERO
 	var separation := Vector2.ZERO
 	const min_sep_dist: float = 38.0
 	var diff: Vector2 = Vector2.ZERO
@@ -1419,7 +1425,7 @@ func get_separation_vector() -> Vector2:
 
 	var players := get_tree().get_nodes_in_group("player")
 	for p in players:
-		if p != self and is_instance_valid(p) and not ("is_dead" in p and p.is_dead):
+		if p != self and is_instance_valid(p) and p.visible and not ("is_dead" in p and p.is_dead):
 			diff = global_position - p.global_position
 			d = diff.length()
 			if d < 35.0:
@@ -1430,6 +1436,8 @@ func get_separation_vector() -> Vector2:
 
 
 func move_and_slide_with_separation() -> void:
+	if not is_inside_tree() or not is_physics_processing():
+		return
 	var sep := get_separation_vector()
 	if sep != Vector2.ZERO:
 		velocity += sep.limit_length(35.0) * 4.0

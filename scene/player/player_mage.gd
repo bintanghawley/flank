@@ -162,6 +162,8 @@ func _ready() -> void:
 
 
 func _setup_enemy_collision_exceptions() -> void:
+	if not is_inside_tree():
+		return
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	for e in enemies:
 		if is_instance_valid(e) and e is CollisionObject2D:
@@ -202,9 +204,12 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 	velocity = Vector2.ZERO
 
 	attack_stuck_timer = 0.0
-	var game_node = get_tree().current_scene
-	if game_node and "current_party_command" in game_node:
-		party_command = game_node.current_party_command as PartyCommand
+	if new_leader and "party_command" in new_leader:
+		party_command = new_leader.party_command
+	elif is_inside_tree():
+		var p = get_parent()
+		if p and "current_party_command" in p:
+			party_command = p.current_party_command as PartyCommand
 
 	if is_leader:
 		in_party_combat = false
@@ -219,7 +224,8 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 	else:
 		cancel_skill()
 		ai_attack_timer = randf_range(0.3, 0.7)
-		play_idle_animation()
+		if not is_attacking and not is_aiming_skill and not is_skill_releasing:
+			play_idle_animation()
 
 func cancel_skill() -> void:
 	attack_token += 1
@@ -1616,6 +1622,8 @@ func get_4_direction_vector(dir_str: String) -> Vector2:
 
 
 func get_separation_vector() -> Vector2:
+	if not is_inside_tree():
+		return Vector2.ZERO
 	var separation := Vector2.ZERO
 	var min_sep_dist: float = 55.0 # Jarak personal aman antar karakter
 	var diff: Vector2 = Vector2.ZERO
@@ -1635,7 +1643,7 @@ func get_separation_vector() -> Vector2:
 	# 2. Pisahkan diri dari anggota tim terdekat jika saling menumpuk
 	var players := get_tree().get_nodes_in_group("player")
 	for p in players:
-		if p != self and is_instance_valid(p) and not ("is_dead" in p and p.is_dead):
+		if p != self and is_instance_valid(p) and p.visible and not ("is_dead" in p and p.is_dead):
 			diff = global_position - p.global_position
 			d = diff.length()
 			if d < 35.0:
@@ -1646,6 +1654,8 @@ func get_separation_vector() -> Vector2:
 
 
 func move_and_slide_with_separation() -> void:
+	if not is_inside_tree() or not is_physics_processing():
+		return
 	var sep := get_separation_vector()
 	if sep != Vector2.ZERO:
 		velocity += sep.limit_length(35.0) * 4.0

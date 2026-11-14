@@ -125,6 +125,8 @@ func _ready() -> void:
 
 
 func _setup_enemy_collision_exceptions() -> void:
+	if not is_inside_tree():
+		return
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	for e in enemies:
 		if is_instance_valid(e) and e is CollisionObject2D:
@@ -152,9 +154,12 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 	velocity = Vector2.ZERO
 
 	attack_stuck_timer = 0.0
-	var game_node = get_tree().current_scene
-	if game_node and "current_party_command" in game_node:
-		party_command = game_node.current_party_command as PartyCommand
+	if new_leader and "party_command" in new_leader:
+		party_command = new_leader.party_command
+	elif is_inside_tree():
+		var p = get_parent()
+		if p and "current_party_command" in p:
+			party_command = p.current_party_command as PartyCommand
 
 	if is_leader:
 		in_party_combat = false
@@ -162,9 +167,14 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 		facing_debounce_timer = 0.0
 		print(name, " maju sebagai Leader (Knight)!")
 	else:
-		# Catatan: Perisai aktif tetap dipertahankan sampai durasinya habis saat ganti karakter
+		# Jika sedang dalam animasi skill perisai saat ganti karakter, selesaikan pengerahan perisai langsung
+		if is_skill_animating:
+			is_skill_animating = false
+			_deploy_shield()
+		if is_attacking:
+			cancel_attack()
 		ai_attack_timer = randf_range(0.3, 0.7)
-		if not is_shield_active and not is_skill_animating:
+		if not is_shield_active:
 			play_idle_animation()
 
 
@@ -524,6 +534,9 @@ const SHIELD_CENTER_OFFSET: Vector2 = Vector2(0.0, 1.5)
 func _deploy_shield() -> void:
 	if is_dead:
 		return
+	if not is_inside_tree():
+		grant_shield(shield_duration)
+		return
 	# Aktifkan pelindung perisai ke seluruh anggota party (Knight, Mage, Archer)
 	var party := get_tree().get_nodes_in_group("player")
 	for member in party:
@@ -538,7 +551,7 @@ func grant_shield(duration: float) -> void:
 	is_shield_active = true
 	shield_timer = duration
 
-	if shield_sprite:
+	if shield_sprite and is_inside_tree():
 		shield_sprite.visible = true
 		shield_sprite.modulate.a = 0.0
 		update_shield_visual()
@@ -549,6 +562,8 @@ func grant_shield(duration: float) -> void:
 		shield_tween.tween_property(shield_sprite, "modulate:a", 1.0, 0.25)\
 			.set_trans(Tween.TRANS_QUAD)\
 			.set_ease(Tween.EASE_OUT)
+	elif shield_sprite:
+		shield_sprite.visible = false
 
 	print(name, " pelindung perisai aktif! Kebal terhadap serangan musuh selama ", duration, " detik.")
 
@@ -559,7 +574,7 @@ func deactivate_shield() -> void:
 	is_shield_active = false
 	shield_timer = 0.0
 
-	if shield_sprite and shield_sprite.visible:
+	if shield_sprite and shield_sprite.visible and is_inside_tree():
 		play_sfx(SFX_KNIGHT_SHIELD_FADE, -3.0)
 		if shield_tween and shield_tween.is_valid():
 			shield_tween.kill()
@@ -570,6 +585,8 @@ func deactivate_shield() -> void:
 		await shield_tween.finished
 		if not is_shield_active and shield_sprite:
 			shield_sprite.visible = false
+	elif shield_sprite:
+		shield_sprite.visible = false
 
 
 func update_shield_visual() -> void:
@@ -1047,6 +1064,8 @@ func apply_camera_shake(intensity: float = -1.0) -> void:
 
 
 func get_separation_vector() -> Vector2:
+	if not is_inside_tree():
+		return Vector2.ZERO
 	var separation := Vector2.ZERO
 	var min_sep_dist: float = 55.0 # Jarak personal aman antar karakter
 	var diff: Vector2 = Vector2.ZERO
@@ -1066,7 +1085,7 @@ func get_separation_vector() -> Vector2:
 	# 2. Pisahkan diri dari anggota tim terdekat jika saling menumpuk
 	var players := get_tree().get_nodes_in_group("player")
 	for p in players:
-		if p != self and is_instance_valid(p) and not ("is_dead" in p and p.is_dead):
+		if p != self and is_instance_valid(p) and p.visible and not ("is_dead" in p and p.is_dead):
 			diff = global_position - p.global_position
 			d = diff.length()
 			if d < 35.0:
@@ -1077,6 +1096,8 @@ func get_separation_vector() -> Vector2:
 
 
 func move_and_slide_with_separation() -> void:
+	if not is_inside_tree() or not is_physics_processing():
+		return
 	var sep := get_separation_vector()
 	if sep != Vector2.ZERO:
 		velocity += sep.limit_length(35.0) * 4.0
