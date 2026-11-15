@@ -63,6 +63,10 @@ signal start_menu_settings_closed
 @onready var tab_btn_info: Control = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer/Tab2
 @onready var tab_btn_settings: Control = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer/Tab3
 @onready var tab_btn_credits: Control = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/TabsContainer/Tab4
+var btn_tab_prev: TextureButton = null
+var btn_tab_next: TextureButton = null
+var tab_btn_prev_tex: Texture2D = null
+var tab_btn_next_tex: Texture2D = null
 
 # Pages
 @onready var page_info: Control = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi
@@ -263,8 +267,12 @@ const SETTINGS_FILE_PATH := "user://settings.cfg"
 var h_grabber_tex: ImageTexture = null
 var submenu_btn_selected_tex: Texture2D = null
 var submenu_btn_normal_tex: Texture2D = null
+var submenu_btn_hover_tex: Texture2D = null
+var ui_arrow_indicator_tex: Texture2D = null
 var slot_card_selected_tex: Texture2D = null
 var active_settings_submenu: int = 0
+var hovered_settings_submenu: int = -1
+var _submenu_arrow_tweens: Dictionary = {}
 var audio_settings: Dictionary = {
 	"master": 65,
 	"music": 50,
@@ -485,7 +493,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	if is_start_menu_mode and not pause_overlay.visible:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_ESCAPE:
+		var key_event := event as InputEventKey
+		if not key_event:
+			return
+		var key_code: int = key_event.keycode
+		if key_code == 0:
+			key_code = key_event.physical_keycode
+
+		if key_code == KEY_ESCAPE:
 			if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
 				_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5)
 				_close_confirm_modal()
@@ -502,13 +517,51 @@ func _unhandled_input(event: InputEvent) -> void:
 					toggle_pause_menu()
 					get_viewport().set_input_as_handled()
 				return
-		if (event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER) and pause_overlay.visible:
+
+		if (key_code == KEY_ENTER or key_code == KEY_KP_ENTER or key_code == KEY_SPACE or key_code == KEY_F) and pause_overlay.visible:
 			if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
 				_on_confirm_yes_pressed()
 				get_viewport().set_input_as_handled()
 				return
-			elif current_tab_index == 3 and active_settings_submenu == 2:
-				_on_save_load_enter_pressed()
+			elif current_tab_index == 3:
+				if active_settings_submenu == 2:
+					_on_save_load_enter_pressed()
+					get_viewport().set_input_as_handled()
+					return
+				elif active_settings_submenu == 3:
+					_on_btn_return_to_title_pressed()
+					get_viewport().set_input_as_handled()
+					return
+			elif current_tab_index == 0:
+				_play_tab_nav_btn_feedback(inv_btn_gunakan)
+				_on_btn_gunakan_pressed()
+				get_viewport().set_input_as_handled()
+				return
+			elif current_tab_index == 1:
+				_play_tab_nav_btn_feedback(journal_btn_navigasi)
+				_on_btn_navigasi_pressed()
+				get_viewport().set_input_as_handled()
+				return
+
+		if current_tab_index == 3 and pause_overlay.visible:
+			if key_code == KEY_UP:
+				_navigate_submenu_relative(-1)
+				get_viewport().set_input_as_handled()
+				return
+			elif key_code == KEY_DOWN:
+				_navigate_submenu_relative(1)
+				get_viewport().set_input_as_handled()
+				return
+
+		if not is_start_menu_mode and pause_overlay.visible:
+			if key_code == KEY_Q:
+				_play_tab_nav_btn_feedback(btn_tab_prev)
+				_navigate_tab_relative(-1)
+				get_viewport().set_input_as_handled()
+				return
+			elif key_code == KEY_E:
+				_play_tab_nav_btn_feedback(btn_tab_next)
+				_navigate_tab_relative(1)
 				get_viewport().set_input_as_handled()
 				return
 		if event.is_action_pressed("open_inventory") and not is_start_menu_mode:
@@ -524,13 +577,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 				return
 		if event.is_action_pressed("interact"):
-			if pause_overlay.visible:
-				if current_tab_index == 0:
-					_on_btn_gunakan_pressed()
-					get_viewport().set_input_as_handled()
-				elif current_tab_index == 1:
-					_on_btn_navigasi_pressed()
-					get_viewport().set_input_as_handled()
+			pass
 		elif event.is_action_pressed("skip"):
 			if speech_bubble.visible:
 				speech_bubble.visible = false
@@ -566,6 +613,55 @@ func _input(event: InputEvent) -> void:
 			_cancel_rebind()
 			get_viewport().set_input_as_handled()
 			return
+
+	if event is InputEventKey and event.pressed and not event.echo:
+		var key_event := event as InputEventKey
+		if key_event:
+			var key_code: int = key_event.keycode
+			if key_code == 0:
+				key_code = key_event.physical_keycode
+
+			if current_tab_index == 3:
+				if key_code == KEY_UP:
+					_navigate_submenu_relative(-1)
+					get_viewport().set_input_as_handled()
+					return
+				elif key_code == KEY_DOWN:
+					_navigate_submenu_relative(1)
+					get_viewport().set_input_as_handled()
+					return
+				elif (key_code == KEY_ENTER or key_code == KEY_KP_ENTER or key_code == KEY_SPACE) and active_settings_submenu == 2:
+					_on_save_load_enter_pressed()
+					get_viewport().set_input_as_handled()
+					return
+				elif (key_code == KEY_ENTER or key_code == KEY_KP_ENTER or key_code == KEY_SPACE) and active_settings_submenu == 3:
+					_on_btn_return_to_title_pressed()
+					get_viewport().set_input_as_handled()
+					return
+
+			if not is_start_menu_mode:
+				if key_code == KEY_Q:
+					_play_tab_nav_btn_feedback(btn_tab_prev)
+					_navigate_tab_relative(-1)
+					get_viewport().set_input_as_handled()
+					return
+				elif key_code == KEY_E:
+					_play_tab_nav_btn_feedback(btn_tab_next)
+					_navigate_tab_relative(1)
+					get_viewport().set_input_as_handled()
+					return
+
+			if key_code == KEY_F or key_code == KEY_ENTER or key_code == KEY_KP_ENTER or key_code == KEY_SPACE:
+				if current_tab_index == 0:
+					_play_tab_nav_btn_feedback(inv_btn_gunakan)
+					_on_btn_gunakan_pressed()
+					get_viewport().set_input_as_handled()
+					return
+				elif current_tab_index == 1:
+					_play_tab_nav_btn_feedback(journal_btn_navigasi)
+					_on_btn_navigasi_pressed()
+					get_viewport().set_input_as_handled()
+					return
 
 	if is_instance_valid(_active_v_scrollbar) and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 		_active_v_scrollbar = null
@@ -739,7 +835,11 @@ func _init_pause_menu_textures() -> void:
 
 	submenu_btn_selected_tex = _create_atlas(sheet, Rect2(65, 449, 62, 14))
 	submenu_btn_normal_tex = _create_atlas(sheet, Rect2(145, 433, 62, 14))
+	submenu_btn_hover_tex = _create_atlas(sheet, Rect2(145, 449, 62, 14))
 	slot_card_selected_tex = _create_atlas(sheet, Rect2(145, 449, 62, 14))
+	var action_sheet: Texture2D = preload("res://assets/ui/icons/actions/action_buttons.png")
+	tab_btn_prev_tex = _create_atlas(action_sheet, Rect2(32, 240, 16, 16))
+	tab_btn_next_tex = _create_atlas(action_sheet, Rect2(64, 208, 16, 16))
 
 	if is_instance_valid(btn_close_book):
 		var outline_col := Color8(61, 35, 38, 255)
@@ -796,11 +896,13 @@ func _init_pause_menu_textures() -> void:
 			hud_btn.texture_normal = hud_btn_normal
 			hud_btn.texture_hover = hud_btn_hover
 			hud_btn.texture_pressed = hud_btn_pressed
+	var backpack_icon_tex := _build_backpack_icon_texture(frame_outline)
 	for icon_cfg in [
-		[btn_hud_inventory, _build_backpack_icon_texture(frame_outline)],
+		[btn_hud_inventory, backpack_icon_tex],
+		[tab_btn_inventory, backpack_icon_tex],
 		[btn_hud_settings, _build_gear_icon_texture(frame_outline)],
 	]:
-		var target_btn := icon_cfg[0] as TextureButton
+		var target_btn := icon_cfg[0] as Control
 		if is_instance_valid(target_btn):
 			var btn_icon := target_btn.get_node_or_null("Icon") as TextureRect
 			if btn_icon:
@@ -1394,6 +1496,11 @@ func _init_pause_menu_ui() -> void:
 	_connect_tab_click(tab_btn_info, 2)
 	_connect_tab_click(tab_btn_settings, 3)
 	_connect_tab_click(tab_btn_credits, 4)
+	_init_tab_navigation_buttons()
+	if is_instance_valid(tab_btn_inventory):
+		var tab_icon := tab_btn_inventory.get_node_or_null("Icon") as TextureRect
+		if is_instance_valid(tab_icon):
+			tab_icon.texture = _build_backpack_icon_texture(Color8(66, 46, 47, 255))
 
 	# Prev / Next character signals
 	if btn_prev_char:
@@ -1432,6 +1539,9 @@ func _init_pause_menu_ui() -> void:
 	if inv_btn_gunakan:
 		inv_btn_gunakan.pressed.connect(_on_btn_gunakan_pressed)
 		_connect_book_hover_sfx(inv_btn_gunakan)
+		var icon_f := inv_btn_gunakan.get_node_or_null("IconE") as TextureRect
+		if is_instance_valid(icon_f):
+			_apply_hud_keycap_widget(icon_f, KEY_F, 18.0, true)
 
 	# Ensure ONLY ONE slider in inventory, journal, and controls: hide built-in ScrollContainer bars
 	_setup_custom_v_scrollbar(inv_scroll_container, inv_scrollbar, _update_inv_slider_grabber_pos)
@@ -1440,6 +1550,9 @@ func _init_pause_menu_ui() -> void:
 	if journal_btn_navigasi:
 		journal_btn_navigasi.pressed.connect(_on_btn_navigasi_pressed)
 		_connect_book_hover_sfx(journal_btn_navigasi)
+		var icon_f := journal_btn_navigasi.get_node_or_null("IconE") as TextureRect
+		if is_instance_valid(icon_f):
+			_apply_hud_keycap_widget(icon_f, KEY_F, 18.0, true)
 
 	_setup_custom_v_scrollbar(journal_scroll_container, journal_scrollbar, _update_journal_slider_grabber_pos)
 	_setup_custom_v_scrollbar(controls_scroll_container, controls_scrollbar, _sync_controls_scrollbar)
@@ -1453,6 +1566,12 @@ func _init_pause_menu_ui() -> void:
 		if title_click:
 			title_click.pressed.connect(_on_btn_return_to_title_pressed)
 			_connect_book_hover_sfx(title_click)
+			title_click.mouse_entered.connect(func():
+				_on_submenu_btn_hover(3, true)
+			)
+			title_click.mouse_exited.connect(func():
+				_on_submenu_btn_hover(3, false)
+			)
 
 	# Settings Audio Sliders GUI Input
 	_connect_audio_slider(slider_ctrl_master, "master")
@@ -1504,6 +1623,22 @@ func open_as_start_menu_settings() -> void:
 	_switch_settings_submenu(0)
 
 
+func open_as_start_menu_save_load() -> void:
+	if not is_start_menu_mode:
+		enable_start_menu_mode()
+	var was_open := is_instance_valid(pause_overlay) and pause_overlay.visible
+	_outside_pause_pressed = false
+	_outside_modal_pressed = false
+	current_tab_index = 3
+	active_settings_submenu = 2
+	pause_overlay.visible = true
+	if not was_open:
+		_play_ui_sfx(SFX_BOOK_OPEN, -2.0)
+	_scan_all_save_slots()
+	_update_tab_navigation()
+	_switch_settings_submenu(2)
+
+
 func close_start_menu_settings() -> void:
 	var was_open := is_instance_valid(pause_overlay) and pause_overlay.visible
 	_outside_pause_pressed = false
@@ -1519,6 +1654,7 @@ func close_start_menu_settings() -> void:
 		pause_overlay.visible = false
 	if was_open:
 		_play_ui_sfx(SFX_BOOK_CLOSE, -2.0)
+	_reset_submenu_hover_state()
 	start_menu_settings_closed.emit()
 
 
@@ -1568,6 +1704,7 @@ func toggle_pause_menu(initial_tab: int = 2) -> void:
 			_drag_candidate_slot_idx = -1
 			_is_dragging = false
 			_current_hovered_target_slot = -1
+		_reset_submenu_hover_state()
 
 
 func _on_btn_pause_menu_pressed() -> void:
@@ -1680,15 +1817,125 @@ func _connect_tab_click(tab_node: Control, tab_idx: int) -> void:
 	)
 
 
+func _init_tab_navigation_buttons() -> void:
+	if not is_instance_valid(tabs_container):
+		return
+	if is_instance_valid(btn_tab_prev) and is_instance_valid(btn_tab_next):
+		return
+
+	if not tab_btn_prev_tex or not tab_btn_next_tex:
+		var action_sheet: Texture2D = preload("res://assets/ui/icons/actions/action_buttons.png")
+		tab_btn_prev_tex = _create_atlas(action_sheet, Rect2(32, 240, 16, 16))
+		tab_btn_next_tex = _create_atlas(action_sheet, Rect2(64, 208, 16, 16))
+
+	tabs_container.z_index = 2
+
+	# Tombol Q (Pindah Tab ke Kiri)
+	btn_tab_prev = TextureButton.new()
+	btn_tab_prev.name = "BtnTabPrevQ"
+	btn_tab_prev.texture_normal = tab_btn_prev_tex
+	btn_tab_prev.ignore_texture_size = true
+	btn_tab_prev.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED as TextureButton.StretchMode
+	btn_tab_prev.custom_minimum_size = Vector2(22, 22)
+	btn_tab_prev.size_flags_vertical = Control.SIZE_SHRINK_CENTER as Control.SizeFlags
+	btn_tab_prev.texture_filter = Control.TEXTURE_FILTER_NEAREST as Control.TextureFilter
+	btn_tab_prev.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	btn_tab_prev.pivot_offset = Vector2(11.0, 11.0)
+	btn_tab_prev.z_index = 2
+	btn_tab_prev.pressed.connect(func():
+		_play_tab_nav_btn_feedback(btn_tab_prev)
+		_navigate_tab_relative(-1)
+	)
+	_connect_book_hover_sfx(btn_tab_prev)
+	btn_tab_prev.mouse_entered.connect(func():
+		btn_tab_prev.modulate = Color(1.25, 1.2, 1.0, 1.0)
+	)
+	btn_tab_prev.mouse_exited.connect(func():
+		btn_tab_prev.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	)
+
+	# Tombol E (Pindah Tab ke Kanan)
+	btn_tab_next = TextureButton.new()
+	btn_tab_next.name = "BtnTabNextE"
+	btn_tab_next.texture_normal = tab_btn_next_tex
+	btn_tab_next.ignore_texture_size = true
+	btn_tab_next.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED as TextureButton.StretchMode
+	btn_tab_next.custom_minimum_size = Vector2(22, 22)
+	btn_tab_next.size_flags_vertical = Control.SIZE_SHRINK_CENTER as Control.SizeFlags
+	btn_tab_next.texture_filter = Control.TEXTURE_FILTER_NEAREST as Control.TextureFilter
+	btn_tab_next.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	btn_tab_next.pivot_offset = Vector2(11.0, 11.0)
+	btn_tab_next.z_index = 2
+	btn_tab_next.pressed.connect(func():
+		_play_tab_nav_btn_feedback(btn_tab_next)
+		_navigate_tab_relative(1)
+	)
+	_connect_book_hover_sfx(btn_tab_next)
+	btn_tab_next.mouse_entered.connect(func():
+		btn_tab_next.modulate = Color(1.25, 1.2, 1.0, 1.0)
+	)
+	btn_tab_next.mouse_exited.connect(func():
+		btn_tab_next.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	)
+
+	tabs_container.add_child(btn_tab_prev)
+	tabs_container.move_child(btn_tab_prev, 0)
+	tabs_container.add_child(btn_tab_next)
+
+
+func _play_tab_nav_btn_feedback(btn: Control) -> void:
+	if not is_instance_valid(btn):
+		return
+	if btn.pivot_offset == Vector2.ZERO and btn.size != Vector2.ZERO:
+		btn.pivot_offset = btn.size * 0.5
+	var tw = create_tween()
+	tw.tween_property(btn, "scale", Vector2(0.88, 0.88), 0.05).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.08).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func _navigate_tab_relative(direction: int) -> void:
+	if is_start_menu_mode:
+		return
+	if not is_instance_valid(pause_overlay) or not pause_overlay.visible:
+		return
+	if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
+		return
+	if _rebind_action_id != "":
+		return
+	if _is_dragging:
+		return
+
+	const VALID_TABS: Array[int] = [0, 1, 2, 3]
+	var current_pos := VALID_TABS.find(current_tab_index)
+	if current_pos == -1:
+		current_pos = 0
+
+	# Siklus tanpa mentok (modulo wrap-around)
+	var next_pos := (current_pos + direction) % VALID_TABS.size()
+	if next_pos < 0:
+		next_pos += VALID_TABS.size()
+
+	var target_tab: int = VALID_TABS[next_pos]
+	_on_tab_pressed(target_tab)
+
+
 func _update_tab_navigation() -> void:
 	if pause_header_title:
-		pause_header_title.text = TAB_TITLES.get(current_tab_index, "INFORMASI")
+		if is_start_menu_mode and active_settings_submenu == 2:
+			pause_header_title.text = "MEMUAT PERMAINAN"
+		else:
+			pause_header_title.text = TAB_TITLES.get(current_tab_index, "INFORMASI")
 
 	var tab_btns: Array[Control] = [tab_btn_inventory, tab_btn_journal, tab_btn_info, tab_btn_settings]
 	var pages: Array[Control] = [page_inventory, page_journal, page_info, page_settings, page_credits]
 
 	if is_instance_valid(tab_btn_credits):
 		tab_btn_credits.visible = false
+
+	if is_instance_valid(btn_tab_prev):
+		btn_tab_prev.visible = not is_start_menu_mode
+	if is_instance_valid(btn_tab_next):
+		btn_tab_next.visible = not is_start_menu_mode
 
 	for i in range(tab_btns.size()):
 		var tab_node = tab_btns[i]
@@ -1712,10 +1959,11 @@ func _update_tab_navigation() -> void:
 				icon.modulate = Color(1.0, 1.0, 1.0, 1.0) if is_active else Color(1.0, 1.0, 1.0, 0.55)
 				var target_icon_size: float = 22.0 if is_active else 20.0
 				icon.custom_minimum_size = Vector2(target_icon_size, target_icon_size)
+				var y_nudge: float = 2.0 if is_active else 1.0
 				icon.offset_left = -target_icon_size / 2.0
-				icon.offset_top = -target_icon_size / 2.0
+				icon.offset_top = -target_icon_size / 2.0 + y_nudge
 				icon.offset_right = target_icon_size / 2.0
-				icon.offset_bottom = target_icon_size / 2.0
+				icon.offset_bottom = target_icon_size / 2.0 + y_nudge
 
 	for i in range(pages.size()):
 		var p = pages[i]
@@ -1732,6 +1980,8 @@ func _update_tab_navigation() -> void:
 		_sync_all_audio_sliders()
 		call_deferred("_sync_all_audio_sliders")
 		_switch_settings_submenu(active_settings_submenu)
+	else:
+		_reset_submenu_hover_state()
 
 
 # =========================================================
@@ -2523,8 +2773,12 @@ func _create_inventory_slot_node(slot_idx: int) -> Control:
 	slot.custom_minimum_size = Vector2(60, 58)
 	slot.mouse_filter = Control.MOUSE_FILTER_PASS as Control.MouseFilter
 
+	var has_item: bool = (slot_idx < _filtered_inventory_items.size())
+	var is_selected: bool = (has_item and slot_idx == selected_item_category_index)
+
 	# Base slot background
 	var bg := NinePatchRect.new()
+	bg.name = "SlotBg"
 	bg.texture = item_slot_tex
 	bg.patch_margin_left = 6
 	bg.patch_margin_top = 6
@@ -2532,25 +2786,71 @@ func _create_inventory_slot_node(slot_idx: int) -> Control:
 	bg.patch_margin_bottom = 6
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT as Control.LayoutPreset)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
+	bg.modulate = Color(1.3, 1.2, 1.05, 1.0) if is_selected else Color(1.0, 1.0, 1.0, 1.0)
 	slot.add_child(bg)
 
-	var has_item: bool = (slot_idx < _filtered_inventory_items.size())
+	# Selected Golden Highlight Panel (2px Gold Border & Warm Amber Inner Glow)
+	var sel_panel := Panel.new()
+	sel_panel.name = "SelectedHighlight"
+	var sel_sb := StyleBoxFlat.new()
+	sel_sb.draw_center = true
+	sel_sb.bg_color = Color(0.96, 0.76, 0.30, 0.16)
+	sel_sb.border_width_left = 2
+	sel_sb.border_width_top = 2
+	sel_sb.border_width_right = 2
+	sel_sb.border_width_bottom = 2
+	sel_sb.border_color = Color(0.96, 0.76, 0.30, 1.0)
+	sel_sb.corner_radius_top_left = 2
+	sel_sb.corner_radius_top_right = 2
+	sel_sb.corner_radius_bottom_left = 2
+	sel_sb.corner_radius_bottom_right = 2
+	sel_panel.add_theme_stylebox_override("panel", sel_sb)
+	sel_panel.set_anchors_preset(Control.PRESET_FULL_RECT as Control.LayoutPreset)
+	sel_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
+	sel_panel.visible = is_selected
+	slot.add_child(sel_panel)
+
+	# Hover Highlight Panel (Subtle White Tint & Outline)
+	var hov_panel := Panel.new()
+	hov_panel.name = "HoverHighlight"
+	var hov_sb := StyleBoxFlat.new()
+	hov_sb.draw_center = true
+	hov_sb.bg_color = Color(1.0, 1.0, 1.0, 0.08)
+	hov_sb.border_width_left = 1
+	hov_sb.border_width_top = 1
+	hov_sb.border_width_right = 1
+	hov_sb.border_width_bottom = 1
+	hov_sb.border_color = Color(1.0, 1.0, 1.0, 0.35)
+	hov_sb.corner_radius_top_left = 2
+	hov_sb.corner_radius_top_right = 2
+	hov_sb.corner_radius_bottom_left = 2
+	hov_sb.corner_radius_bottom_right = 2
+	hov_panel.add_theme_stylebox_override("panel", hov_sb)
+	hov_panel.set_anchors_preset(Control.PRESET_FULL_RECT as Control.LayoutPreset)
+	hov_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
+	hov_panel.visible = false
+	slot.add_child(hov_panel)
+
 	if has_item:
 		var item: Dictionary = _filtered_inventory_items[slot_idx]
 
 		# Item Icon
 		var icon := TextureRect.new()
+		icon.name = "ItemIcon"
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST as CanvasItem.TextureFilter
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED as TextureRect.StretchMode
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE as TextureRect.ExpandMode
 		icon.custom_minimum_size = Vector2(32, 32)
 		icon.set_anchors_preset(Control.PRESET_CENTER as Control.LayoutPreset)
+		icon.pivot_offset = Vector2(16.0, 16.0)
 		icon.offset_left = -16
 		icon.offset_top = -16
 		icon.offset_right = 16
 		icon.offset_bottom = 16
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
 		icon.texture = _resolve_inventory_item_texture(item)
+		if is_selected:
+			icon.scale = Vector2(1.10, 1.10)
 		slot.add_child(icon)
 
 		# Quantity badge (if > 1)
@@ -2575,7 +2875,6 @@ func _create_inventory_slot_node(slot_idx: int) -> Control:
 			slot.add_child(count_lbl)
 
 	# Selected bracket frame
-	var is_selected: bool = (has_item and slot_idx == selected_item_category_index)
 	var sel_frame := NinePatchRect.new()
 	sel_frame.name = "SelectedBorder"
 	sel_frame.texture = item_selected_tex
@@ -2585,16 +2884,27 @@ func _create_inventory_slot_node(slot_idx: int) -> Control:
 	sel_frame.patch_margin_bottom = 6
 	sel_frame.set_anchors_preset(Control.PRESET_FULL_RECT as Control.LayoutPreset)
 	sel_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
+	sel_frame.modulate = Color(1.25, 1.15, 0.85, 1.0)
 	sel_frame.visible = is_selected
 	slot.add_child(sel_frame)
 
 	# Click area button
 	var btn := TextureButton.new()
+	btn.name = "SlotBtn"
 	btn.set_anchors_preset(Control.PRESET_FULL_RECT as Control.LayoutPreset)
 	btn.mouse_filter = Control.MOUSE_FILTER_STOP as Control.MouseFilter
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if has_item else Control.CURSOR_ARROW
 	if has_item:
 		var click_idx: int = slot_idx
 		btn.pressed.connect(func(): _on_inventory_slot_clicked(click_idx))
+		btn.mouse_entered.connect(func():
+			if click_idx != selected_item_category_index:
+				hov_panel.visible = true
+				_play_ui_sfx(SFX_UI_HOVER, -9.0)
+		)
+		btn.mouse_exited.connect(func():
+			hov_panel.visible = false
+		)
 	slot.add_child(btn)
 
 	return slot
@@ -2606,6 +2916,13 @@ func _on_inventory_slot_clicked(slot_idx: int) -> void:
 		selected_item_category_index = slot_idx
 		_update_inventory_selection_visuals()
 		_update_inventory_detail_panel()
+		if is_instance_valid(inv_item_grid) and slot_idx < inv_item_grid.get_child_count():
+			var clicked_slot = inv_item_grid.get_child(slot_idx) as Control
+			if is_instance_valid(clicked_slot):
+				clicked_slot.pivot_offset = clicked_slot.size / 2.0
+				var tw := create_tween()
+				tw.tween_property(clicked_slot, "scale", Vector2(0.95, 0.95), 0.04).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+				tw.tween_property(clicked_slot, "scale", Vector2(1.0, 1.0), 0.07).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _update_inventory_selection_visuals() -> void:
@@ -2615,9 +2932,22 @@ func _update_inventory_selection_visuals() -> void:
 	for i in range(children.size()):
 		var slot_node = children[i] as Control
 		if is_instance_valid(slot_node):
-			var sel = slot_node.get_node_or_null("SelectedBorder") as NinePatchRect
-			if sel:
-				sel.visible = (i == selected_item_category_index)
+			var is_sel: bool = (i == selected_item_category_index)
+			var sel_panel = slot_node.get_node_or_null("SelectedHighlight") as Control
+			if sel_panel:
+				sel_panel.visible = is_sel
+			var sel_brackets = slot_node.get_node_or_null("SelectedBorder") as Control
+			if sel_brackets:
+				sel_brackets.visible = is_sel
+			var hov = slot_node.get_node_or_null("HoverHighlight") as Control
+			if hov and is_sel:
+				hov.visible = false
+			var bg = slot_node.get_node_or_null("SlotBg") as CanvasItem
+			if bg:
+				bg.modulate = Color(1.3, 1.2, 1.05, 1.0) if is_sel else Color(1.0, 1.0, 1.0, 1.0)
+			var icon = slot_node.get_node_or_null("ItemIcon") as Control
+			if icon:
+				icon.scale = Vector2(1.10, 1.10) if is_sel else Vector2(1.0, 1.0)
 
 
 func _update_inventory_detail_panel() -> void:
@@ -2744,6 +3074,8 @@ func _sync_controls_scrollbar() -> void:
 
 
 func _on_btn_gunakan_pressed() -> void:
+	if inv_btn_gunakan and inv_btn_gunakan.disabled:
+		return
 	if selected_item_category_index < 0 or selected_item_category_index >= _filtered_inventory_items.size():
 		return
 	var item: Dictionary = _filtered_inventory_items[selected_item_category_index]
@@ -2977,6 +3309,8 @@ func _update_journal_detail_panel(quest: Dictionary) -> void:
 
 
 func _on_btn_navigasi_pressed() -> void:
+	if journal_btn_navigasi and journal_btn_navigasi.disabled:
+		return
 	var selected_quest: Dictionary = {}
 	for q in quest_list:
 		if q.get("id", "") == selected_quest_id:
@@ -3023,6 +3357,12 @@ func _connect_submenu_click(btn_node: Control, sub_idx: int) -> void:
 			if active_settings_submenu != sub_idx:
 				_play_ui_sfx(SFX_BOOK_PAGE_FLIP, -3.5, 0.03)
 			_switch_settings_submenu(sub_idx)
+		)
+		click_area.mouse_entered.connect(func():
+			_on_submenu_btn_hover(sub_idx, true)
+		)
+		click_area.mouse_exited.connect(func():
+			_on_submenu_btn_hover(sub_idx, false)
 		)
 
 
@@ -3118,7 +3458,37 @@ func _switch_settings_submenu(sub_idx: int) -> void:
 		if sub_idx == 2:
 			_refresh_save_load_ui()
 
+	if pause_header_title and is_start_menu_mode:
+		if sub_idx == 2:
+			pause_header_title.text = "MEMUAT PERMAINAN"
+		else:
+			pause_header_title.text = "PENGATURAN"
+
 	_update_submenu_buttons_visual()
+
+
+func _navigate_submenu_relative(direction: int) -> void:
+	if not is_instance_valid(pause_overlay) or not pause_overlay.visible:
+		return
+	if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
+		return
+	if _rebind_action_id != "":
+		return
+	if current_tab_index != 3:
+		return
+
+	hovered_settings_submenu = -1
+	const TOTAL_SUBMENUS: int = 4
+	var next_sub: int = (active_settings_submenu + direction) % TOTAL_SUBMENUS
+	if next_sub < 0:
+		next_sub += TOTAL_SUBMENUS
+
+	_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5, 0.03)
+	if next_sub == 3:
+		active_settings_submenu = 3
+		_update_submenu_buttons_visual()
+	else:
+		_switch_settings_submenu(next_sub)
 
 
 func _update_submenu_buttons_visual() -> void:
@@ -3130,12 +3500,126 @@ func _update_submenu_buttons_visual() -> void:
 	var btns: Array[NinePatchRect] = [settings_btn_audio, settings_btn_controls, settings_btn_save_load, settings_btn_title]
 	for i in range(btns.size()):
 		var b = btns[i]
+		if not is_instance_valid(b):
+			continue
+		var is_sel: bool = (i == active_settings_submenu)
+		var is_hov: bool = (i == hovered_settings_submenu)
+		if is_sel:
+			b.texture = submenu_btn_selected_tex
+		elif is_hov:
+			b.texture = submenu_btn_hover_tex
+		else:
+			b.texture = submenu_btn_normal_tex
+
+		var title_lbl = b.get_node_or_null("Title") as Label
+		if title_lbl:
+			if is_sel:
+				title_lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+			elif is_hov:
+				title_lbl.add_theme_color_override("font_color", Color(0.22, 0.14, 0.15, 1.0))
+			else:
+				title_lbl.add_theme_color_override("font_color", Color(0.40, 0.30, 0.30, 1.0))
+
+		var show_arrow: bool = is_hov or (hovered_settings_submenu == -1 and is_sel)
+		_update_submenu_arrow_indicator(b, i, show_arrow)
+
+
+func _on_submenu_btn_hover(sub_idx: int, is_hover: bool) -> void:
+	if is_hover:
+		hovered_settings_submenu = sub_idx
+	else:
+		if hovered_settings_submenu == sub_idx:
+			hovered_settings_submenu = -1
+	_update_submenu_buttons_visual()
+
+
+func _reset_submenu_hover_state() -> void:
+	hovered_settings_submenu = -1
+	for idx in _submenu_arrow_tweens.keys():
+		if is_instance_valid(_submenu_arrow_tweens[idx]):
+			_submenu_arrow_tweens[idx].kill()
+	_submenu_arrow_tweens.clear()
+	var btns: Array[NinePatchRect] = [settings_btn_audio, settings_btn_controls, settings_btn_save_load, settings_btn_title]
+	for i in range(btns.size()):
+		var b = btns[i]
 		if is_instance_valid(b):
-			var is_sel: bool = (i == active_settings_submenu)
-			b.texture = submenu_btn_selected_tex if is_sel else submenu_btn_normal_tex
-			var title_lbl = b.get_node_or_null("Title") as Label
-			if title_lbl:
-				title_lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0) if is_sel else Color(0.40, 0.30, 0.30, 1.0))
+			var arrow = b.get_node_or_null("ArrowIndicator") as TextureRect
+			if arrow:
+				arrow.visible = false
+				arrow.modulate.a = 0.0
+				arrow.position.x = -19.0
+
+
+func _get_arrow_indicator_texture() -> Texture2D:
+	if ui_arrow_indicator_tex:
+		return ui_arrow_indicator_tex
+	if ResourceLoader.exists("res://assets/ui/menus/common/ui_arrow_indicator.png"):
+		ui_arrow_indicator_tex = load("res://assets/ui/menus/common/ui_arrow_indicator.png") as Texture2D
+	if not ui_arrow_indicator_tex:
+		var pattern := [
+			"##.......",
+			"###......",
+			"#####....",
+			"######...",
+			"########.",
+			"#########",
+			"########.",
+			"######...",
+			"#####....",
+			"###......",
+			"##......."
+		]
+		var palette := {
+			"#": Color8(61, 35, 20, 255),
+			".": Color(0, 0, 0, 0)
+		}
+		ui_arrow_indicator_tex = _build_pixel_texture(9, 11, pattern, palette)
+	return ui_arrow_indicator_tex
+
+
+func _get_or_create_submenu_arrow(btn_node: Control) -> TextureRect:
+	var arrow = btn_node.get_node_or_null("ArrowIndicator") as TextureRect
+	if not arrow:
+		arrow = TextureRect.new()
+		arrow.name = "ArrowIndicator"
+		arrow.texture = _get_arrow_indicator_texture()
+		arrow.texture_filter = Control.TEXTURE_FILTER_NEAREST as Control.TextureFilter
+		arrow.stretch_mode = TextureRect.STRETCH_KEEP
+		arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		arrow.position = Vector2(-19.0, 12.0)
+		arrow.size = Vector2(9.0, 11.0)
+		arrow.modulate.a = 0.0
+		arrow.visible = false
+		btn_node.add_child(arrow)
+	return arrow
+
+
+func _update_submenu_arrow_indicator(btn_node: Control, idx: int, show_arrow: bool) -> void:
+	var arrow := _get_or_create_submenu_arrow(btn_node)
+	if not arrow:
+		return
+
+	if _submenu_arrow_tweens.has(idx) and is_instance_valid(_submenu_arrow_tweens[idx]):
+		_submenu_arrow_tweens[idx].kill()
+
+	var tween := create_tween().set_parallel(true)
+	_submenu_arrow_tweens[idx] = tween
+
+	if show_arrow:
+		arrow.visible = true
+		if arrow.modulate.a < 0.1:
+			arrow.position.x = -19.0
+		tween.tween_property(arrow, "position:x", -15.0, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tween.tween_property(arrow, "modulate:a", 1.0, 0.10)
+	else:
+		tween.tween_property(arrow, "position:x", -19.0, 0.10).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tween.tween_property(arrow, "modulate:a", 0.0, 0.10)
+		tween.chain().tween_callback(func():
+			if is_instance_valid(arrow):
+				var should_be_shown: bool = (hovered_settings_submenu == idx) or (hovered_settings_submenu == -1 and active_settings_submenu == idx)
+				if not should_be_shown:
+					arrow.visible = false
+		)
 
 
 func _get_slider_ctrl(type: String) -> Control:
@@ -3461,12 +3945,11 @@ func _sync_gameplay_hud_controls_prompts() -> void:
 			var keycode: int = control_bindings.get(action_name, CONTROL_ACTION_INFO[action_name]["default_key"])
 			_apply_hud_keycap_widget(target_rect, keycode, float(cfg.get("target_h", 18.0)), bool(cfg.get("fixed_square", false)))
 
-	var interact_key: int = control_bindings.get("interact", CONTROL_ACTION_INFO["interact"]["default_key"])
 	for btn_node in [inv_btn_gunakan, journal_btn_navigasi]:
 		if is_instance_valid(btn_node):
 			var icon_e := btn_node.get_node_or_null("IconE") as TextureRect
 			if is_instance_valid(icon_e):
-				_apply_hud_keycap_widget(icon_e, interact_key, 18.0, true)
+				_apply_hud_keycap_widget(icon_e, KEY_F, 18.0, true)
 
 
 func _apply_hud_keycap_widget(tex_rect: TextureRect, keycode: int, target_h: float = 18.0, fixed_square: bool = false) -> void:
@@ -3689,20 +4172,22 @@ func _refresh_save_load_ui() -> void:
 	var has_data: bool = (cur_data != null and cur_data is Dictionary)
 	var is_cur_corrupt: bool = has_data and cur_data.get("corrupted", false)
 
-	# Tombol Simpan selalu aktif
+	# Tombol Simpan aktif saat mode in-game, disembunyikan saat start menu
 	if is_instance_valid(btn_simpan_click):
-		btn_simpan_click.disabled = false
+		btn_simpan_click.disabled = is_start_menu_mode
 	if is_instance_valid(btn_simpan_box):
+		btn_simpan_box.visible = not is_start_menu_mode
 		btn_simpan_box.modulate = Color(1.0, 1.0, 1.0, 1.0)
 		btn_simpan_box.texture = submenu_btn_selected_tex
 
-	# Tombol Muat hanya aktif jika slot terisi dan data valid
+	# Tombol Muat aktif jika slot terisi dan data valid
 	var can_load: bool = has_data and not is_cur_corrupt
 	if is_instance_valid(btn_muat_click):
 		btn_muat_click.disabled = not can_load
 	if is_instance_valid(btn_muat_box):
+		btn_muat_box.visible = true
 		btn_muat_box.modulate = Color(1.0, 1.0, 1.0, 1.0) if can_load else Color(0.65, 0.65, 0.65, 0.5)
-		btn_muat_box.texture = submenu_btn_normal_tex
+		btn_muat_box.texture = submenu_btn_selected_tex if (is_start_menu_mode and can_load) else submenu_btn_normal_tex
 
 
 func _format_playtime_str(seconds: float) -> String:
@@ -3832,24 +4317,27 @@ func _on_btn_simpan_pressed() -> void:
 
 
 func _on_btn_muat_pressed() -> void:
-	if is_start_menu_mode:
-		_play_ui_sfx(SFX_BOOK_TAB_SELECT, -4.0)
-		_show_save_feedback("Simpan & Muat hanya tersedia saat bermain!")
-		return
 	var cur_data = save_slots_data.get(selected_save_slot, null)
 	if cur_data != null and not cur_data.get("corrupted", false):
 		_open_confirm_modal("Muat data simpan ini?", "load")
+	else:
+		_play_ui_sfx(SFX_BOOK_TAB_SELECT, -4.0)
+		_show_save_feedback("Slot ini kosong atau rusak!")
 
 
 func _on_save_load_enter_pressed() -> void:
-	if is_start_menu_mode:
-		_show_save_feedback("Simpan & Muat hanya tersedia saat bermain!")
-		return
 	if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
 		_on_confirm_yes_pressed()
 		return
 
 	var cur_data = save_slots_data.get(selected_save_slot, null)
+	if is_start_menu_mode:
+		if cur_data != null and not cur_data.get("corrupted", false):
+			_open_confirm_modal("Muat data simpan ini?", "load")
+		else:
+			_show_save_feedback("Slot ini kosong atau rusak!")
+		return
+
 	if cur_data == null:
 		save_game_requested.emit(selected_save_slot)
 	elif cur_data.get("corrupted", false):
