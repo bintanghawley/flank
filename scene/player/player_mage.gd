@@ -342,7 +342,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			is_skill_key = true
 
 	if is_skill_key:
-		if not is_aiming_skill and not is_skill_releasing and not is_attacking and skill_cooldown_timer <= 0.0:
+		if is_in_combat_mode() and not is_aiming_skill and not is_skill_releasing and not is_attacking and skill_cooldown_timer <= 0.0:
 			start_skill_aiming()
 			if get_viewport():
 				get_viewport().set_input_as_handled()
@@ -1409,7 +1409,7 @@ func update_shield_visual() -> void:
 # =========================================================
 
 func start_skill_aiming() -> void:
-	if not is_leader or is_dead or is_aiming_skill or is_skill_releasing or is_attacking:
+	if not is_in_combat_mode() or not is_leader or is_dead or is_aiming_skill or is_skill_releasing or is_attacking:
 		return
 	if skill_cooldown_timer > 0.0:
 		return

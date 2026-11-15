@@ -1121,7 +1121,7 @@ script = ExtResource("1_04l4p")
 texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_84mjf")
 animation = &"idle_s"
-offset = Vector2(0, 4)
+offset = Vector2(-1, -1)
 metadata/_aseprite_wizard_interface_config_ = {
 "animation_section": false,
 "pending_changes": {

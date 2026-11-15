@@ -1086,7 +1086,7 @@ script = ExtResource("1_script")
 texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_mage")
 animation = &"idle_s"
-offset = Vector2(0, 5)
+offset = Vector2(-0.5, 4)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1152115999]
 visible = false
