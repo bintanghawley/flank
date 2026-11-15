@@ -47,6 +47,11 @@ var _ground_offset: float = 0.0
 var _is_starting: bool = false
 var _is_settings_open: bool = false
 var _settings_overlay_hud: CanvasLayer = null
+var _last_opened_menu_btn: Button = null
+
+const SWORD_INDICATOR_PATH := "res://assets/ui/menus/start_menu/menu_sword_indicator.png"
+var _sword_indicator: TextureRect = null
+var _sword_indicator_tween: Tween = null
 
 const BUTTON_TEXTS := {
 	"BtnStart": "Mulai Permainan",
@@ -77,9 +82,13 @@ func _ready() -> void:
 			_settings_overlay_hud.call("enable_start_menu_mode")
 		if _settings_overlay_hud.has_signal("start_menu_settings_closed"):
 			_settings_overlay_hud.connect("start_menu_settings_closed", _on_settings_closed)
+		if _settings_overlay_hud.has_signal("load_game_requested"):
+			_settings_overlay_hud.connect("load_game_requested", _on_load_game_requested)
 	
 	# Tunggu 1 frame agar ukuran container terkalkulasi sempurna
 	await get_tree().process_frame
+	
+	_setup_sword_indicator()
 	
 	for btn_name in BUTTON_TEXTS:
 		var btn: Button = get_node_or_null("MenuContainer/" + btn_name)
@@ -88,13 +97,19 @@ func _ready() -> void:
 			btn.pivot_offset = Vector2(btn.size.x / 2.0, btn.size.y / 2.0)
 			btn.mouse_entered.connect(_on_button_hovered.bind(btn))
 			btn.focus_entered.connect(_on_button_hovered.bind(btn))
-			if btn != btn_start and btn != btn_settings and btn != btn_exit:
+			if btn != btn_start and btn != btn_continue and btn != btn_settings and btn != btn_exit:
 				btn.pressed.connect(_on_regular_button_clicked)
 			_set_button_state(btn, false, true)
 	
 	btn_start.pressed.connect(_on_start_pressed)
+	btn_continue.pressed.connect(_on_continue_pressed)
 	btn_settings.pressed.connect(_on_settings_pressed)
 	btn_exit.pressed.connect(_on_exit_pressed)
+	
+	get_viewport().size_changed.connect(func():
+		if _current_selected and is_instance_valid(_current_selected) and not _is_settings_open and not _is_starting:
+			_update_sword_indicator(_current_selected, true)
+	)
 	
 	# Set pilihan awal ke tombol Mulai Permainan
 	_select_button(btn_start, true)
@@ -163,19 +178,17 @@ func _set_button_state(btn: Button, is_selected: bool, instant: bool = false) ->
 		if old_t and old_t.is_valid():
 			old_t.kill()
 	
+	btn.text = base_text
 	btn.pivot_offset = Vector2(btn.size.x / 2.0, btn.size.y / 2.0)
 	
 	var target_scale: Vector2
 	var target_modulate: Color
 	
 	if is_selected:
-		btn.text = "▶ " + base_text + " ◀"
-		btn.pivot_offset = Vector2(btn.size.x / 2.0, btn.size.y / 2.0)
 		target_scale = Vector2(1.18, 1.18)
 		target_modulate = Color(1.0, 1.0, 1.0, 1.0)
+		_update_sword_indicator(btn, instant)
 	else:
-		btn.text = base_text
-		btn.pivot_offset = Vector2(btn.size.x / 2.0, btn.size.y / 2.0)
 		target_scale = Vector2(1.0, 1.0)
 		target_modulate = Color(1.0, 1.0, 1.0, 0.85)
 	
@@ -187,6 +200,66 @@ func _set_button_state(btn: Button, is_selected: bool, instant: bool = false) ->
 		_btn_tweens[btn] = tween
 		tween.tween_property(btn, "scale", target_scale, 0.12).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		tween.tween_property(btn, "modulate", target_modulate, 0.12)
+
+
+func _setup_sword_indicator() -> void:
+	if not _sword_indicator:
+		_sword_indicator = TextureRect.new()
+		_sword_indicator.name = "MenuSwordIndicator"
+		if ResourceLoader.exists(SWORD_INDICATOR_PATH):
+			_sword_indicator.texture = load(SWORD_INDICATOR_PATH)
+		_sword_indicator.texture_filter = Control.TEXTURE_FILTER_NEAREST as Control.TextureFilter
+		_sword_indicator.stretch_mode = TextureRect.STRETCH_KEEP
+		_sword_indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
+		_sword_indicator.scale = Vector2(2.0, 2.0)
+		_sword_indicator.visible = false
+		add_child(_sword_indicator)
+		if is_instance_valid(iris_mask):
+			move_child(_sword_indicator, iris_mask.get_index())
+
+
+func _get_sword_target_pos(btn: Button) -> Vector2:
+	if not is_instance_valid(btn):
+		return Vector2.ZERO
+	var font: Font = btn.get_theme_font("font")
+	var font_size: int = btn.get_theme_font_size("font_size")
+	var base_text: String = BUTTON_TEXTS.get(btn.name, btn.text)
+	var tw: float = font.get_string_size(base_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	
+	var btn_center_x: float = btn.global_position.x + btn.size.x / 2.0
+	var btn_center_y: float = btn.global_position.y + btn.size.y / 2.0
+	
+	# Skala visual tombol yang sedang aktif adalah 1.18
+	var text_left: float = btn_center_x - (tw * 1.18) / 2.0
+	var sword_w: float = 24.0 * 2.0
+	var sword_h: float = 9.0 * 2.0
+	if _sword_indicator and _sword_indicator.texture:
+		sword_w = _sword_indicator.texture.get_width() * _sword_indicator.scale.x
+		sword_h = _sword_indicator.texture.get_height() * _sword_indicator.scale.y
+		
+	return Vector2(text_left - sword_w - 10.0, btn_center_y - sword_h / 2.0)
+
+
+func _update_sword_indicator(btn: Button, instant: bool = false) -> void:
+	if not _sword_indicator or not is_instance_valid(btn):
+		return
+	if _is_settings_open or _is_starting:
+		_sword_indicator.visible = false
+		return
+		
+	var target_pos := _get_sword_target_pos(btn)
+	_sword_indicator.visible = true
+	_sword_indicator.modulate.a = 1.0
+	
+	if _sword_indicator_tween and _sword_indicator_tween.is_valid():
+		_sword_indicator_tween.kill()
+		
+	if instant:
+		_sword_indicator.global_position = target_pos
+	else:
+		_sword_indicator_tween = create_tween().set_parallel(true)
+		_sword_indicator_tween.tween_property(_sword_indicator, "global_position", target_pos, 0.12).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
 
 func _on_start_pressed() -> void:
 	if _is_starting or _is_settings_open:
@@ -202,10 +275,12 @@ func _on_start_pressed() -> void:
 			btn.disabled = true
 			btn.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
 	
-	# Fade out menu buttons dan logo
+	# Fade out menu buttons, logo, dan indikator pedang
 	var fade_tween: Tween = create_tween().set_parallel(true)
 	fade_tween.tween_property(menu_container, "modulate:a", 0.0, 0.3)
 	fade_tween.tween_property(logo_rect, "modulate:a", 0.0, 0.3)
+	if _sword_indicator:
+		fade_tween.tween_property(_sword_indicator, "modulate:a", 0.0, 0.3)
 	
 	# Ubah animasi kawan-kawan party menjadi idle saat Knight cast skill
 	mage.play("idle_w")
@@ -265,7 +340,10 @@ func _on_settings_pressed() -> void:
 	if _is_starting or _is_settings_open:
 		return
 	_is_settings_open = true
+	_last_opened_menu_btn = btn_settings
 	_play_sfx(SFX_CLICK, -2.0)
+	if _sword_indicator:
+		_sword_indicator.visible = false
 
 	for btn_name in BUTTON_TEXTS:
 		var btn: Button = get_node_or_null("MenuContainer/" + btn_name)
@@ -277,6 +355,25 @@ func _on_settings_pressed() -> void:
 	if is_instance_valid(_settings_overlay_hud) and _settings_overlay_hud.has_method("open_as_start_menu_settings"):
 		_settings_overlay_hud.call("open_as_start_menu_settings")
 
+func _on_continue_pressed() -> void:
+	if _is_starting or _is_settings_open:
+		return
+	_is_settings_open = true
+	_last_opened_menu_btn = btn_continue
+	_play_sfx(SFX_CLICK, -2.0)
+	if _sword_indicator:
+		_sword_indicator.visible = false
+
+	for btn_name in BUTTON_TEXTS:
+		var btn: Button = get_node_or_null("MenuContainer/" + btn_name)
+		if btn:
+			btn.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
+			btn.focus_mode = Control.FOCUS_NONE as Control.FocusMode
+	get_viewport().gui_release_focus()
+
+	if is_instance_valid(_settings_overlay_hud) and _settings_overlay_hud.has_method("open_as_start_menu_save_load"):
+		_settings_overlay_hud.call("open_as_start_menu_save_load")
+
 func _on_settings_closed() -> void:
 	_is_settings_open = false
 	for btn_name in BUTTON_TEXTS:
@@ -284,7 +381,18 @@ func _on_settings_closed() -> void:
 		if btn:
 			btn.mouse_filter = Control.MOUSE_FILTER_STOP as Control.MouseFilter
 			btn.focus_mode = Control.FOCUS_ALL as Control.FocusMode
-	_select_button(btn_settings, true)
+	var restore_btn: Button = _last_opened_menu_btn if is_instance_valid(_last_opened_menu_btn) else btn_settings
+	_select_button(restore_btn, true)
+
+func _on_load_game_requested(slot_id: int) -> void:
+	if _is_starting:
+		return
+	var game_script = load(GAME_SCENE_PATH.replace(".tscn", ".gd"))
+	if game_script and "pending_load_slot_id" in game_script:
+		game_script.pending_load_slot_id = slot_id
+	if is_instance_valid(_settings_overlay_hud) and _settings_overlay_hud.has_method("close_start_menu_settings"):
+		_settings_overlay_hud.call("close_start_menu_settings")
+	_on_start_pressed()
 
 func _on_exit_pressed() -> void:
 	if _is_starting or _is_settings_open:
