@@ -2141,9 +2141,9 @@ mouse_filter = 2
 [node name="CategoryRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage"]
 layout_mode = 0
 offset_left = 16.0
-offset_top = 24.0
+offset_top = 10.0
 offset_right = 264.0
-offset_bottom = 58.0
+offset_bottom = 44.0
 theme_override_constants/separation = 5
 alignment = 1
 
@@ -2314,9 +2314,9 @@ stretch_mode = 5
 [node name="InventoryScrollBar" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage"]
 layout_mode = 0
 offset_left = 16.0
-offset_top = 68.0
+offset_top = 55.0
 offset_right = 36.0
-offset_bottom = 351.0
+offset_bottom = 338.0
 mouse_filter = 0
 
 [node name="Track" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/InventoryScrollBar"]
@@ -2348,9 +2348,9 @@ stretch_mode = 3
 [node name="ScrollContainer" type="ScrollContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage"]
 layout_mode = 0
 offset_left = 44.0
-offset_top = 68.0
+offset_top = 55.0
 offset_right = 264.0
-offset_bottom = 351.0
+offset_bottom = 338.0
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 3
 
@@ -2365,9 +2365,9 @@ columns = 3
 [node name="BottomRow" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage"]
 layout_mode = 0
 offset_left = 18.0
-offset_top = 360.0
+offset_top = 348.0
 offset_right = 294.0
-offset_bottom = 390.0
+offset_bottom = 378.0
 
 [node name="BtnGunakan" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/BottomRow"]
 layout_mode = 0
@@ -2432,9 +2432,9 @@ mouse_filter = 2
 [node name="DetailBox" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage"]
 layout_mode = 0
 offset_left = 24.0
-offset_top = 68.0
+offset_top = 55.0
 offset_right = 96.0
-offset_bottom = 140.0
+offset_bottom = 127.0
 texture = SubResource("Atlas_item_slot")
 patch_margin_left = 8
 patch_margin_top = 8
@@ -2459,9 +2459,9 @@ stretch_mode = 5
 [node name="DetailName" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage"]
 layout_mode = 0
 offset_left = 108.0
-offset_top = 65.0
+offset_top = 52.0
 offset_right = 296.0
-offset_bottom = 103.0
+offset_bottom = 90.0
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 17
@@ -2472,9 +2472,9 @@ autowrap_mode = 3
 [node name="DetailCountContainer" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage"]
 layout_mode = 0
 offset_left = 108.0
-offset_top = 105.0
+offset_top = 92.0
 offset_right = 200.0
-offset_bottom = 129.0
+offset_bottom = 116.0
 theme_override_constants/separation = 4
 
 [node name="BagIcon" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/DetailCountContainer"]
@@ -2495,9 +2495,9 @@ vertical_alignment = 1
 [node name="DetailDesc" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage"]
 layout_mode = 0
 offset_left = 24.0
-offset_top = 158.0
+offset_top = 145.0
 offset_right = 296.0
-offset_bottom = 363.0
+offset_bottom = 350.0
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 18

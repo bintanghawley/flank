@@ -7,8 +7,6 @@ extends Node2D
 @onready var camera: Camera2D = $Camera2D
 @onready var gameplay_hud = get_node_or_null("GameplayHud")
 
-static var pending_load_slot_id: int = -1
-
 var party_members: Array[CharacterBody2D] = []
 var active_leader_index: int = 0
 var inventory_items: Array[Dictionary] = []
@@ -158,12 +156,6 @@ func _ready() -> void:
 
 	# 6. Jalankan efek pembukaan Circular Mask (Iris Open) saat masuk arena game
 	play_iris_opening_transition()
-
-	# Jika masuk melalui menu 'Lanjutkan' di Start Menu, muat save slot tertunda
-	if pending_load_slot_id > 0:
-		var slot_to_load := pending_load_slot_id
-		pending_load_slot_id = -1
-		call_deferred("load_game_from_slot", slot_to_load)
 
 
 func setup_party_enemy_collision_exceptions() -> void:
