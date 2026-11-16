@@ -71,23 +71,23 @@ var shake_decay: float = 35.0
 
 # Indikator segitiga kecil di atas kepala leader yang sedang aktif
 const HERO_INDICATOR_OFFSETS: Dictionary = {
-	"Knight_1": Vector2(2.5, -41.0),
-	"Player_Knight": Vector2(2.5, -41.0),
-	"Bandit_1": Vector2(0.0, -31.0),
-	"Player_Bandit": Vector2(0.0, -31.0),
-	"Archer_1": Vector2(0.0, -56.0),
-	"Player_Archer": Vector2(0.0, -56.0),
-	"Mage_1": Vector2(0.0, -41.0),
-	"Player_Mage": Vector2(0.0, -41.0)
+	"Knight_1": Vector2(2.5, -49.0),
+	"Player_Knight": Vector2(2.5, -49.0),
+	"Bandit_1": Vector2(0.0, -39.0),
+	"Player_Bandit": Vector2(0.0, -39.0),
+	"Archer_1": Vector2(0.0, -64.0),
+	"Player_Archer": Vector2(0.0, -64.0),
+	"Mage_1": Vector2(0.0, -49.0),
+	"Player_Mage": Vector2(0.0, -49.0)
 }
-const DEFAULT_INDICATOR_OFFSET: Vector2 = Vector2(0.0, -38.0)
+const DEFAULT_INDICATOR_OFFSET: Vector2 = Vector2(0.0, -46.0)
 const HERO_INDICATOR_TIP_OFFSET_Y: Dictionary = {
-	"Knight_1": -41.0,
-	"Bandit_1": -31.0,
-	"Archer_1": -56.0,
-	"Mage_1": -41.0
+	"Knight_1": -49.0,
+	"Bandit_1": -39.0,
+	"Archer_1": -64.0,
+	"Mage_1": -49.0
 }
-const DEFAULT_INDICATOR_TIP_OFFSET_Y: float = -38.0
+const DEFAULT_INDICATOR_TIP_OFFSET_Y: float = -46.0
 var _active_leader_indicator: Node2D = null
 var _active_indicator_bob_time: float = 0.0
 
@@ -1247,6 +1247,11 @@ func _start_party_combat_fade_out() -> void:
 		return
 	is_party_fading_out = true
 
+	# Reset seketika seluruh skill aktif dan cooldown pada seluruh hero (termasuk Leader)
+	for member in party_members:
+		if is_instance_valid(member) and member.has_method("reset_combat_skills"):
+			member.reset_combat_skills()
+
 	# Pemicu fade out UI tempur secara bersamaan dan serentak dengan rekan party
 	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
 		gameplay_hud.set_combat_hud_visible(false, true)
@@ -1320,7 +1325,10 @@ func end_arena_battle() -> void:
 		if is_instance_valid(member):
 			member.modulate.a = 1.0
 
-	# 4. Kembalikan party ke mode 1 karakter
+	# 4. Kembalikan party ke mode 1 karakter dan pastikan seluruh skill & cooldown ter-reset
+	for member in party_members:
+		if is_instance_valid(member) and member.has_method("reset_combat_skills"):
+			member.reset_combat_skills()
 	notify_party_combat_state(false)
 	update_party_visibility()
 	breadcrumbs.clear()

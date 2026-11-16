@@ -227,6 +227,17 @@ func cancel_skill() -> void:
 	if not is_dead and not is_moving:
 		play_idle_animation()
 
+
+func reset_combat_skills() -> void:
+	cancel_skill()
+	skill_cooldown_timer = 0.0
+	attack_timer = 0.0
+	is_attacking = false
+	attack_stuck_timer = 0.0
+	if not is_dead and not is_moving:
+		play_idle_animation()
+
+
 func set_party_combat_mode(active: bool) -> void:
 	in_party_combat = active
 	if in_party_combat:
@@ -240,6 +251,7 @@ func set_party_combat_mode(active: bool) -> void:
 		flank_stage = 1
 		flank_timeout = 0.0
 		facing_debounce_timer = 0.0
+		reset_combat_skills()
 		if not is_leader and leader_node and is_instance_valid(leader_node) and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
 			play_idle_animation()
@@ -284,6 +296,10 @@ func _physics_process(delta: float) -> void:
 	# Cooldown timer skill aktif
 	if skill_cooldown_timer > 0.0:
 		skill_cooldown_timer -= delta
+
+	# Pastikan skill mode otomatis reset jika tidak dalam mode combat
+	if (is_aiming_skill or is_skill_releasing) and not is_in_combat_mode():
+		reset_combat_skills()
 
 	# Shield timer & visual update (aktif konsisten baik sebagai Leader maupun Follower)
 	if is_shield_active or (shield_sprite and shield_sprite.visible):
@@ -350,6 +366,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	# Kontrol saat sedang membidik skill
 	if is_aiming_skill:
+		if not is_in_combat_mode():
+			reset_combat_skills()
+			return
 		if event is InputEventMouseButton and event.pressed:
 			if event.button_index == MOUSE_BUTTON_LEFT:
 				execute_meteor_strike()
@@ -365,6 +384,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	# Jika sedang memutar animasi release skill, klik kanan membatalkan
 	if is_skill_releasing:
+		if not is_in_combat_mode():
+			reset_combat_skills()
+			return
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 			cancel_skill()
 			if get_viewport():
@@ -1183,9 +1205,6 @@ func take_damage(amount: int, _source_position = null) -> void:
 		return
 	invulnerability_timer = invulnerability_duration
 
-	# [BUG 1 FIX]: Batalkan serangan dan bebaskan kontrol jika terkena hit
-	cancel_skill()
-
 	# Shield Guard: menahan seluruh damage serangan musuh
 	if is_shield_active:
 		modulate = Color(1.8, 1.8, 2.4)
@@ -1526,6 +1545,9 @@ func process_skill_aiming() -> void:
 
 
 func execute_meteor_strike() -> void:
+	if not is_in_combat_mode():
+		reset_combat_skills()
+		return
 	if not is_aiming_skill:
 		return
 

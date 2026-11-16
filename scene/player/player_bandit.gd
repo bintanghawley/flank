@@ -209,6 +209,21 @@ func cancel_attack() -> void:
 		play_idle_animation()
 
 
+func reset_combat_skills() -> void:
+	cancel_skill()
+	cancel_attack()
+	is_ambush_lunging = false
+	is_ambush_attack = false
+	passive_timer = 0.0
+	is_passive_ready = false
+	skill_cooldown_timer = 0.0
+	attack_timer = 0.0
+	is_attacking = false
+	attack_stuck_timer = 0.0
+	if not is_dead and not is_moving:
+		play_idle_animation()
+
+
 func set_party_combat_mode(active: bool) -> void:
 	in_party_combat = active
 	if in_party_combat:
@@ -216,6 +231,7 @@ func set_party_combat_mode(active: bool) -> void:
 			ai_attack_timer = randf_range(0.2, 0.5)
 	else:
 		ai_attack_timer = 0.0
+		reset_combat_skills()
 		if not is_leader and leader_node and is_instance_valid(leader_node) and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
 			play_idle_animation()
@@ -260,6 +276,10 @@ func _physics_process(delta: float) -> void:
 	# Cooldown skill Triple Slash
 	if skill_cooldown_timer > 0.0:
 		skill_cooldown_timer -= delta
+
+	# Pastikan skill dan lunge otomatis reset jika tidak dalam mode combat
+	if not is_in_combat_mode() and (is_skill_active or is_ambush_lunging):
+		reset_combat_skills()
 
 	# Penghitungan Pasif Out-of-Combat Ambush Lunge (5 detik)
 	if not is_passive_ready:
@@ -355,9 +375,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not is_leader or is_dead:
 		return
 
-	# Tombol E: Aktivasi Skill Triple Slash (HANYA Leader)
+	# Tombol E: Aktivasi Skill Triple Slash (HANYA Leader dan dalam mode combat)
 	if is_skill_action_pressed(event):
-		if skill_cooldown_timer <= 0.0 and not is_attacking and not is_skill_active and not is_ambush_lunging:
+		if is_in_combat_mode() and skill_cooldown_timer <= 0.0 and not is_attacking and not is_skill_active and not is_ambush_lunging:
 			activate_triple_slash()
 			get_viewport().set_input_as_handled()
 		return
@@ -425,8 +445,8 @@ func process_leader_movement(_delta: float) -> void:
 # =========================================================
 
 func activate_triple_slash(target_pos: Vector2 = Vector2.ZERO) -> void:
-	# Skill E HANYA boleh digunakan saat Bandit menjadi karakter aktif (Leader)
-	if not is_leader or is_skill_active or is_dead or is_attacking or is_ambush_lunging or skill_cooldown_timer > 0.0:
+	# Skill E HANYA boleh digunakan saat Bandit menjadi karakter aktif (Leader) dan berada dalam mode combat
+	if not is_in_combat_mode() or not is_leader or is_skill_active or is_dead or is_attacking or is_ambush_lunging or skill_cooldown_timer > 0.0:
 		return
 
 	is_skill_active = true
@@ -1113,12 +1133,11 @@ func take_damage(amount: int, source_position = null) -> void:
 		print(name, " [SUPER ARMOR AKTIF]: Menerima damage namun aksi lunge/skill dilarang batal!")
 		return
 
-	# 4. JIKA TIDAK MEMILIKI SUPER ARMOR: Batalkan aksi dan terapkan knockback
+	# 4. TERAPKAN KNOCKBACK HANYA JIKA TIDAK SEDANG MENYERANG ATAU MENGGUNAKAN SKILL
 	passive_timer = 0.0
 	is_passive_ready = false
-	cancel_attack()
-	cancel_skill()
-	apply_knockback(knockback_dir * knockback_strength)
+	if not in_super_armor and not is_attacking and not is_skill_active:
+		apply_knockback(knockback_dir * knockback_strength)
 
 
 func apply_knockback(force: Vector2) -> void:
