@@ -921,7 +921,6 @@ size = Vector2(14.0, 5.6)
 size = Vector2(20, 22)
 
 [node name="Player_Knight" type="CharacterBody2D" unique_id=1580987111]
-y_sort_origin = 8
 z_index = 4
 scale = Vector2(5, 5)
 script = ExtResource("ext_script")
