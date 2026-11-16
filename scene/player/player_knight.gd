@@ -174,6 +174,18 @@ func cancel_skill() -> void:
 		play_idle_animation()
 
 
+func reset_combat_skills() -> void:
+	cancel_skill()
+	deactivate_shield()
+	skill_cooldown_timer = 0.0
+	attack_timer = 0.0
+	is_attacking = false
+	attack_stuck_timer = 0.0
+	attack_lunge_velocity = Vector2.ZERO
+	if not is_dead and not is_moving:
+		play_idle_animation()
+
+
 func set_party_combat_mode(active: bool) -> void:
 	in_party_combat = active
 	if in_party_combat:
@@ -182,6 +194,7 @@ func set_party_combat_mode(active: bool) -> void:
 	else:
 		ai_attack_timer = 0.0
 		facing_debounce_timer = 0.0
+		reset_combat_skills()
 		if not is_leader and leader_node and is_instance_valid(leader_node) and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
 			play_idle_animation()
@@ -226,6 +239,10 @@ func _physics_process(delta: float) -> void:
 	# Cooldown skill Shield
 	if skill_cooldown_timer > 0.0:
 		skill_cooldown_timer -= delta
+
+	# Pastikan skill dan efek shield otomatis reset jika tidak dalam mode combat
+	if not is_in_combat_mode() and (is_skill_animating or is_shield_active):
+		reset_combat_skills()
 
 	# Timeout pengaman animasi skill
 	if is_skill_animating:
@@ -819,9 +836,6 @@ func take_damage(amount: int, _source_position = null) -> void:
 	if is_dead or invulnerability_timer > 0.0:
 		return
 	invulnerability_timer = invulnerability_duration
-
-	# Batalkan tebasan aktif agar Knight responsif terhadap hit
-	cancel_attack()
 
 	# Shield Guard: menahan seluruh damage serangan musuh
 	if is_shield_active:

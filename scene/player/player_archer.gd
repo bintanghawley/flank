@@ -81,6 +81,18 @@ func cancel_skill() -> void:
 	if not is_dead and not is_moving:
 		play_idle_animation()
 
+func reset_combat_skills() -> void:
+	if current_skill_state != SkillState.INACTIVE:
+		deactivate_skill_mode()
+	cancel_skill()
+	skill_cooldown_timer = 0.0
+	attack_timer = 0.0
+	is_attacking = false
+	attack_stuck_timer = 0.0
+	if not is_dead and not is_moving:
+		play_idle_animation()
+
+
 func set_party_combat_mode(active: bool) -> void:
 	in_party_combat = active
 	if in_party_combat:
@@ -94,6 +106,7 @@ func set_party_combat_mode(active: bool) -> void:
 		flank_stage = 1
 		flank_timeout = 0.0
 		facing_debounce_timer = 0.0
+		reset_combat_skills()
 		if not is_leader and leader_node and is_instance_valid(leader_node) and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
 			play_idle_animation()
@@ -338,6 +351,10 @@ func _physics_process(delta: float) -> void:
 	else:
 		skill_stuck_timer = 0.0
 
+	# Pastikan skill mode otomatis reset jika tidak dalam mode combat
+	if current_skill_state != SkillState.INACTIVE and not is_in_combat_mode():
+		reset_combat_skills()
+
 	if current_skill_state != SkillState.INACTIVE:
 		skill_mode_timer -= delta
 		if skill_mode_timer <= 0.0:
@@ -567,6 +584,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	# Penanganan Input Selama Dalam Mode Skill
 	if current_skill_state != SkillState.INACTIVE:
+		if not is_in_combat_mode():
+			reset_combat_skills()
+			return
 		if event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_LEFT:
 				if event.pressed:
@@ -1377,9 +1397,6 @@ func take_damage(amount: int, _source_position = null) -> void:
 		return
 	invulnerability_timer = invulnerability_duration
 
-	# Batalkan tembakan/skill aktif agar Archer bebas bergerak
-	cancel_skill()
-
 	# Shield Guard: menahan seluruh damage serangan musuh
 	if is_shield_active:
 		modulate = Color(1.8, 1.8, 2.4)
@@ -1635,6 +1652,9 @@ func deactivate_skill_mode() -> void:
 
 
 func start_skill_charge() -> void:
+	if not is_in_combat_mode():
+		reset_combat_skills()
+		return
 	current_skill_state = SkillState.STARTING
 	skill_release_queued = false
 
@@ -1675,6 +1695,9 @@ func start_skill_charge() -> void:
 
 
 func execute_skill_release() -> void:
+	if not is_in_combat_mode():
+		reset_combat_skills()
+		return
 	if current_skill_state == SkillState.RELEASING or is_dead:
 		return
 
