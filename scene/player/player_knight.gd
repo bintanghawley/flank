@@ -756,7 +756,11 @@ func process_follower_combat(delta: float) -> void:
 					target_enemy = e
 
 	if not target_enemy:
-		process_follower_exploring(delta)
+		velocity = knockback_velocity
+		is_moving = false
+		move_and_slide_with_separation()
+		if not is_attacking and not is_skill_animating:
+			play_idle_animation()
 		return
 
 	var dist_to_enemy := global_position.distance_to(target_enemy.global_position)

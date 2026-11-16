@@ -13,8 +13,6 @@
 [ext_resource type="Texture2D" uid="uid://dsch2aqt1lv2" path="res://assets/ui/gameplay/party_hud/life_bar_empty.png" id="11_hp_empty"]
 [ext_resource type="Texture2D" uid="uid://gcwmjphxgo1h" path="res://assets/ui/gameplay/party_hud/life_bar_filled.png" id="12_hp_filled"]
 [ext_resource type="Texture2D" uid="uid://v16ihw7j2one" path="res://assets/ui/icons/skills/skill.png" id="13_skills"]
-[ext_resource type="Texture2D" uid="uid://fncqxrchs5er" path="res://assets/ui/gameplay/dialogue/bubble_talk_left-sheet.png" id="14_bubble"]
-
 [ext_resource type="Texture2D" uid="uid://c8dldu13jie8e" path="res://assets/ui/menus/common/ui_menu_sheet.png" id="15_ui_sheet"]
 [ext_resource type="Texture2D" uid="uid://bfwgtr40gwji" path="res://assets/characters/knight/walk/walk-s.png" id="16_knight_walk"]
 [ext_resource type="Texture2D" uid="uid://b6j5wh2jatmow" path="res://assets/characters/bandit/walk/walk-s.png" id="17_bandit_walk"]
@@ -1124,45 +1122,6 @@ texture_filter = 1
 texture = SubResource("Atlas_btn_4")
 expand_mode = 1
 stretch_mode = 5
-
-[node name="SpeechBubble" type="Control" parent="RootControl"]
-layout_mode = 3
-anchors_preset = 0
-offset_right = 92.0
-offset_bottom = 52.0
-pivot_offset = Vector2(28, 52)
-mouse_filter = 2
-
-[node name="BubblePanel" type="NinePatchRect" parent="RootControl/SpeechBubble"]
-texture_filter = 1
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("14_bubble")
-region_rect = Rect2(8, 0, 176, 108)
-patch_margin_left = 14
-patch_margin_top = 12
-patch_margin_right = 14
-patch_margin_bottom = 24
-
-[node name="BubbleLabel" type="Label" parent="RootControl/SpeechBubble/BubblePanel"]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_left = 6.0
-offset_top = 2.0
-offset_right = -6.0
-offset_bottom = 32.0
-grow_horizontal = 2
-theme_override_colors/font_color = Color(0.1, 0.08, 0.15, 1)
-theme_override_fonts/font = SubResource("SystemFont_serif")
-theme_override_font_sizes/font_size = 14
-text = "Serang"
-horizontal_alignment = 1
-vertical_alignment = 1
 
 [node name="PauseOverlay" type="ColorRect" parent="RootControl"]
 process_mode = 3

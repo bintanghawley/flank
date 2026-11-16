@@ -45,6 +45,8 @@ var is_camera_locked_to_arena: bool = false
 var arena_clear_delay_timer: float = 0.0
 var arena_group_respawn_timer: float = 0.0
 const ARENA_GROUP_RESPAWN_DELAY: float = 5.0
+var is_party_fading_out: bool = false
+var _party_fade_tweens: Array[Tween] = []
 
 # =========================
 # AUDIO SFX (TACTICAL PARTY)
@@ -68,13 +70,24 @@ var shake_intensity: float = 0.0
 var shake_decay: float = 35.0
 
 # Indikator segitiga kecil di atas kepala leader yang sedang aktif
-const HERO_INDICATOR_TIP_OFFSET_Y: Dictionary = {
-	"Knight_1": -58.0,
-	"Bandit_1": -38.0,
-	"Archer_1": -60.0,
-	"Mage_1": -48.0
+const HERO_INDICATOR_OFFSETS: Dictionary = {
+	"Knight_1": Vector2(2.5, -41.0),
+	"Player_Knight": Vector2(2.5, -41.0),
+	"Bandit_1": Vector2(0.0, -31.0),
+	"Player_Bandit": Vector2(0.0, -31.0),
+	"Archer_1": Vector2(0.0, -56.0),
+	"Player_Archer": Vector2(0.0, -56.0),
+	"Mage_1": Vector2(0.0, -41.0),
+	"Player_Mage": Vector2(0.0, -41.0)
 }
-const DEFAULT_INDICATOR_TIP_OFFSET_Y: float = -42.0
+const DEFAULT_INDICATOR_OFFSET: Vector2 = Vector2(0.0, -38.0)
+const HERO_INDICATOR_TIP_OFFSET_Y: Dictionary = {
+	"Knight_1": -41.0,
+	"Bandit_1": -31.0,
+	"Archer_1": -56.0,
+	"Mage_1": -41.0
+}
+const DEFAULT_INDICATOR_TIP_OFFSET_Y: float = -38.0
 var _active_leader_indicator: Node2D = null
 var _active_indicator_bob_time: float = 0.0
 
@@ -180,23 +193,23 @@ func _unhandled_input(event: InputEvent) -> void:
 	# Tombol pintasan pergantian karakter, skill, dan perintah party berbasis action mapping
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.is_action_pressed("switch_character"):
-			if arena_state == ArenaState.COMBAT:
+			if arena_state == ArenaState.COMBAT and not is_party_fading_out:
 				switch_to_next_character()
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("skill_1"):
-			if arena_state == ArenaState.COMBAT:
+			if arena_state == ArenaState.COMBAT and not is_party_fading_out:
 				trigger_hero_skill_by_slot(0)
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("skill_2"):
-			if arena_state == ArenaState.COMBAT:
+			if arena_state == ArenaState.COMBAT and not is_party_fading_out:
 				trigger_hero_skill_by_slot(1)
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("skill_3"):
-			if arena_state == ArenaState.COMBAT:
+			if arena_state == ArenaState.COMBAT and not is_party_fading_out:
 				trigger_hero_skill_by_slot(2)
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("skill_4"):
-			if arena_state == ArenaState.COMBAT:
+			if arena_state == ArenaState.COMBAT and not is_party_fading_out:
 				trigger_hero_skill_by_slot(3)
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_ESCAPE:
@@ -269,6 +282,8 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 	var leader := party_members[active_leader_index]
 	if not is_instance_valid(leader):
 		return
+	leader.visible = true
+	leader.modulate.a = 1.0
 
 	# Jika berganti karakter saat eksplorasi 1 karakter, posisikan karakter baru tepat di posisi karakter sebelumnya
 	if arena_state != ArenaState.COMBAT:
@@ -368,14 +383,17 @@ func update_party_visibility() -> void:
 				member.process_mode = Node.PROCESS_MODE_INHERIT
 			if not member.visible:
 				member.visible = true
-			if not member.is_physics_processing():
-				member.set_physics_process(true)
-			if not member.is_processing():
-				member.set_process(true)
+			if not is_party_fading_out or i == active_leader_index:
+				member.modulate.a = 1.0
+				if not member.is_physics_processing():
+					member.set_physics_process(true)
+				if not member.is_processing():
+					member.set_process(true)
 			var should_input: bool = (i == active_leader_index)
 			if member.is_processing_unhandled_input() != should_input:
 				member.set_process_unhandled_input(should_input)
-			_set_character_collision_active(member, true)
+			if not is_party_fading_out or i == active_leader_index:
+				_set_character_collision_active(member, true)
 		else:
 			if member.is_inside_tree():
 				remove_child(member)
@@ -695,8 +713,6 @@ func _on_hud_item_used(item_data: Dictionary) -> void:
 				leader.current_health = mini(leader.max_health, leader.current_health + heal_val)
 				var healed: int = leader.current_health - old_hp
 				print("ITEM DIGUNAKAN: %s | +%d HP | Sisa HP: %d/%d" % [item_data.get("name", "Item"), healed, leader.current_health, leader.max_health])
-				if gameplay_hud:
-					gameplay_hud.show_speech_bubble("+%d HP" % healed)
 
 
 func _init_starter_quests() -> void:
@@ -771,9 +787,6 @@ func _on_hud_quest_navigation_requested(quest: Dictionary) -> void:
 	tracked_quest_id = quest.get("id", "")
 	if gameplay_hud:
 		gameplay_hud.update_hud_quest_display(quest)
-		var loc: String = quest.get("location", "")
-		if loc != "":
-			gameplay_hud.show_speech_bubble("Navigasi: " + loc)
 
 
 func enter_location(location_name: String) -> void:
@@ -1111,9 +1124,6 @@ func start_arena_battle() -> void:
 			if enemy.has_method("alert_to_combat"):
 				enemy.alert_to_combat(leader)
 
-	if gameplay_hud and gameplay_hud.has_method("show_speech_bubble"):
-		gameplay_hud.show_speech_bubble("Musuh!")
-
 	# Tampilkan elemen HUD pertarungan saat memasuki arena
 	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
 		gameplay_hud.set_combat_hud_visible(true, true)
@@ -1121,17 +1131,68 @@ func start_arena_battle() -> void:
 	print("Arena Battle Dimulai! Kamera fokus ke tengah arena (", arena_center, "), party 4 karakter aktif.")
 
 
+func get_hero_type_index(char_node: CharacterBody2D) -> int:
+	if not is_instance_valid(char_node):
+		return -1
+	var script_path := ""
+	if char_node.get_script():
+		script_path = str(char_node.get_script().resource_path).to_lower()
+	var n := str(char_node.name).to_lower()
+	if "knight" in script_path or "knight" in n or "arthur" in n:
+		return 0 # Arthur / Knight
+	elif "bandit" in script_path or "bandit" in n or "hellene" in n:
+		return 1 # Hellene / Bandit
+	elif "archer" in script_path or "archer" in n or "anastasya" in n:
+		return 2 # Anastasya / Archer
+	elif "mage" in script_path or "mage" in n or "magnus" in n:
+		return 3 # Magnus / Mage
+	return -1
+
+
+func _get_combat_deploy_offset(hero_type: int, leader_type: int, forward: Vector2, lateral: Vector2) -> Vector2:
+	var leader_is_ranged: bool = (leader_type == 2 or leader_type == 3)
+
+	if not leader_is_ranged:
+		# Leader adalah petarung melee di garis depan (Arthur / Hellene)
+		match hero_type:
+			0: # Knight (off-tank)
+				return -forward * 60.0 + lateral * 45.0
+			1: # Bandit (flanker)
+				return -forward * 60.0 - lateral * 45.0
+			2: # Archer (Anastasya) - Backline berjarak aman dan natural
+				return -forward * 180.0 - lateral * 60.0
+			3: # Mage (Magnus) - Backline berjarak aman dan natural
+				return -forward * 210.0 + lateral * 60.0
+			_:
+				return -forward * 120.0
+	else:
+		# Leader adalah karakter ranged di lini belakang (Anastasya / Magnus)
+		match hero_type:
+			0: # Knight maju ke depan melindungi leader
+				return forward * 70.0 - lateral * 45.0
+			1: # Bandit maju ke depan mengapit musuh
+				return forward * 70.0 + lateral * 45.0
+			2: # Archer berdiri di samping / belakang rekan ranged
+				return -forward * 30.0 - lateral * 70.0
+			3: # Mage berdiri di samping / belakang rekan ranged
+				return -forward * 30.0 + lateral * 70.0
+			_:
+				return forward * 50.0
+
+
 func _deploy_party_for_combat() -> void:
 	var leader := get_active_leader()
 	if not leader or not is_instance_valid(leader):
 		return
 
-	var offsets: Array[Vector2] = [
-		Vector2(-45.0, -30.0),
-		Vector2(-45.0, 30.0),
-		Vector2(-75.0, 0.0)
-	]
-	var off_idx: int = 0
+	# Tentukan arah hadap formasi ke pusat arena pertempuran
+	var forward_dir: Vector2 = (arena_center - leader.global_position).normalized()
+	if forward_dir.length_squared() < 0.01:
+		forward_dir = Vector2.RIGHT
+	var lateral_dir: Vector2 = Vector2(-forward_dir.y, forward_dir.x)
+
+	var leader_type := get_hero_type_index(leader)
+
 	for i in range(party_members.size()):
 		if i == active_leader_index:
 			continue
@@ -1144,19 +1205,29 @@ func _deploy_party_for_combat() -> void:
 		if not member.is_inside_tree():
 			add_child(member)
 
-		var spawn_pos: Vector2 = leader.global_position + (offsets[off_idx] if off_idx < offsets.size() else Vector2(-50.0, 0.0))
-		spawn_pos.x = clampf(spawn_pos.x, arena_bounds.position.x + 25.0, arena_bounds.end.x - 25.0)
-		spawn_pos.y = clampf(spawn_pos.y, arena_bounds.position.y + 25.0, arena_bounds.end.y - 25.0)
+		var h_type := get_hero_type_index(member)
+		var offset := _get_combat_deploy_offset(h_type, leader_type, forward_dir, lateral_dir)
+		var spawn_pos: Vector2 = leader.global_position + offset
+		spawn_pos.x = clampf(spawn_pos.x, arena_bounds.position.x + 35.0, arena_bounds.end.x - 35.0)
+		spawn_pos.y = clampf(spawn_pos.y, arena_bounds.position.y + 35.0, arena_bounds.end.y - 35.0)
+
 		member.global_position = spawn_pos
+		member.modulate.a = 1.0
 		if "target_position" in member:
 			member.target_position = spawn_pos
 		if "velocity" in member:
 			member.velocity = Vector2.ZERO
-		off_idx += 1
+		if member.has_method("get_cardinal_direction"):
+			member.last_direction = member.get_cardinal_direction(forward_dir)
+		if member.has_method("play_idle_animation"):
+			member.play_idle_animation()
 
 
-func check_arena_completion(delta: float) -> void:
+func check_arena_completion(_delta: float) -> void:
 	if arena_state != ArenaState.COMBAT:
+		return
+
+	if is_party_fading_out:
 		return
 
 	var all_dead: bool = true
@@ -1166,18 +1237,69 @@ func check_arena_completion(delta: float) -> void:
 			break
 
 	if all_dead:
-		arena_clear_delay_timer += delta
-		# Jeda 0.6s agar momen kemenangan terasa natural sebelum transisi kembali
-		if arena_clear_delay_timer >= 0.6:
-			end_arena_battle()
+		_start_party_combat_fade_out()
 	else:
 		arena_clear_delay_timer = 0.0
+
+
+func _start_party_combat_fade_out() -> void:
+	if is_party_fading_out:
+		return
+	is_party_fading_out = true
+
+	# Pemicu fade out UI tempur secara bersamaan dan serentak dengan rekan party
+	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
+		gameplay_hud.set_combat_hud_visible(false, true)
+
+	# Bersihkan tween fade sebelumnya jika ada
+	for tw in _party_fade_tweens:
+		if is_instance_valid(tw) and tw.is_valid():
+			tw.kill()
+	_party_fade_tweens.clear()
+
+	var fade_duration: float = 0.35
+	var has_companion_to_fade: bool = false
+
+	for i in range(party_members.size()):
+		if i == active_leader_index:
+			continue
+		var member = party_members[i]
+		if not is_instance_valid(member) or not member.is_inside_tree():
+			continue
+
+		# Hentikan seketika agar tidak melangkah atau mengikuti leader saat musuh gugur
+		if "velocity" in member:
+			member.velocity = Vector2.ZERO
+		if "is_moving" in member:
+			member.is_moving = false
+		if member.has_method("play_idle_animation"):
+			member.play_idle_animation()
+
+		# Matikan physics dan collision agar rekan party tetap diam di tempat selama proses fade
+		member.set_physics_process(false)
+		member.set_process(false)
+		_set_character_collision_active(member, false)
+
+		has_companion_to_fade = true
+		var tw := create_tween()
+		tw.tween_property(member, "modulate:a", 0.0, fade_duration)\
+			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		_party_fade_tweens.append(tw)
+
+	if has_companion_to_fade:
+		get_tree().create_timer(fade_duration).timeout.connect(func():
+			if arena_state == ArenaState.COMBAT:
+				end_arena_battle()
+		, CONNECT_ONE_SHOT)
+	else:
+		end_arena_battle()
 
 
 func end_arena_battle() -> void:
 	if arena_state != ArenaState.COMBAT:
 		return
 	arena_state = ArenaState.CLEARED
+	is_party_fading_out = false
 	current_combat_state = PartyCombatState.EXPLORING
 	arena_group_respawn_timer = ARENA_GROUP_RESPAWN_DELAY
 
@@ -1188,17 +1310,24 @@ func end_arena_battle() -> void:
 	target_camera_zoom = CAMERA_ZOOM_EXPLORE
 	is_camera_locked_to_arena = false
 
-	# 3. Kembalikan party ke mode 1 karakter
+	# 3. Bersihkan seluruh tween fade dan kembalikan alpha seluruh member menjadi 1.0
+	for tw in _party_fade_tweens:
+		if is_instance_valid(tw) and tw.is_valid():
+			tw.kill()
+	_party_fade_tweens.clear()
+
+	for member in party_members:
+		if is_instance_valid(member):
+			member.modulate.a = 1.0
+
+	# 4. Kembalikan party ke mode 1 karakter
 	notify_party_combat_state(false)
 	update_party_visibility()
 	breadcrumbs.clear()
 
-	# Sembunyikan kembali elemen HUD pertarungan setelah arena selesai
+	# Pastikan status HUD pertarungan tersembunyi
 	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
-		gameplay_hud.set_combat_hud_visible(false, true)
-
-	if gameplay_hud and gameplay_hud.has_method("show_speech_bubble"):
-		gameplay_hud.show_speech_bubble("Aman!")
+		gameplay_hud.set_combat_hud_visible(false, false)
 
 	print("Arena Cleared! Seluruh musuh kalah. Kamera kembali ke Leader, party kembali 1 karakter. Grup musuh akan muncul lagi dalam 5 detik.")
 
@@ -1771,9 +1900,27 @@ func _init_active_leader_indicator() -> void:
 	_active_leader_indicator = indicator
 
 
+func _get_leader_indicator_offset(leader: CharacterBody2D) -> Vector2:
+	"""Mengambil koordinat offset ujung segitiga agar pas dan presisi di tengah-tengah atas kepala masing-masing karakter."""
+	if leader == null:
+		return DEFAULT_INDICATOR_OFFSET
+	if HERO_INDICATOR_OFFSETS.has(leader.name):
+		return HERO_INDICATOR_OFFSETS[leader.name]
+	var lname := leader.name.to_lower()
+	if "knight" in lname:
+		return HERO_INDICATOR_OFFSETS["Knight_1"]
+	elif "bandit" in lname:
+		return HERO_INDICATOR_OFFSETS["Bandit_1"]
+	elif "archer" in lname:
+		return HERO_INDICATOR_OFFSETS["Archer_1"]
+	elif "mage" in lname:
+		return HERO_INDICATOR_OFFSETS["Mage_1"]
+	return DEFAULT_INDICATOR_OFFSET
+
+
 func _get_leader_indicator_offset_y(leader: CharacterBody2D) -> float:
 	"""Mengambil jarak vertikal ujung segitiga agar pas di atas kepala masing-masing karakter."""
-	return float(HERO_INDICATOR_TIP_OFFSET_Y.get(leader.name, DEFAULT_INDICATOR_TIP_OFFSET_Y))
+	return _get_leader_indicator_offset(leader).y
 
 
 func _update_active_leader_indicator(delta: float) -> void:
@@ -1787,9 +1934,9 @@ func _update_active_leader_indicator(delta: float) -> void:
 		return
 
 	if delta > 0.0:
-		_active_indicator_bob_time = fmod(_active_indicator_bob_time + delta * 4.5, TAU)
+		_active_indicator_bob_time = fmod(_active_indicator_bob_time + delta * 4.0, TAU)
 
-	var bob_offset: float = sin(_active_indicator_bob_time) * 3.5
-	var base_tip_y: float = _get_leader_indicator_offset_y(leader)
-	_active_leader_indicator.global_position = leader.global_position + Vector2(0.0, base_tip_y + bob_offset)
+	var bob_offset: float = sin(_active_indicator_bob_time) * 2.5
+	var base_offset: Vector2 = _get_leader_indicator_offset(leader)
+	_active_leader_indicator.global_position = leader.global_position + Vector2(base_offset.x, base_offset.y + bob_offset)
 	_active_leader_indicator.visible = true

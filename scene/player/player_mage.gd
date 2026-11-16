@@ -630,7 +630,11 @@ func process_follower_combat(delta: float) -> void:
 					
 	if not target_enemy:
 		is_flanking = false
-		process_follower_exploring(delta)
+		velocity = knockback_velocity
+		is_moving = false
+		move_and_slide_with_separation()
+		if not is_attacking:
+			play_idle_animation()
 		return
 		
 	# 2. Uji koridor tembak

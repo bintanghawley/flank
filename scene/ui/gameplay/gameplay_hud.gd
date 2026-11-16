@@ -41,10 +41,6 @@ signal start_menu_settings_closed
 # Bottom-Right Skill Bar
 @onready var skill_container: HBoxContainer = $RootControl/SkillContainer
 
-# Speech Bubble
-@onready var speech_bubble: Control = $RootControl/SpeechBubble
-@onready var bubble_label: Label = $RootControl/SpeechBubble/BubblePanel/BubbleLabel
-
 # Pause Popup Overlay & Book Menu
 @onready var pause_overlay: ColorRect = $RootControl/PauseOverlay
 @onready var drag_ghost: Control = $RootControl/PauseOverlay/DragGhost
@@ -187,8 +183,6 @@ var hero_skill_map: Dictionary = {} # hero_type -> Skill slot node
 var skill_slot_nodes: Array = [] # Ordered SkillSlot1..SkillSlot4 nodes matching party_members[0..3]
 var skill_slot_cd_overlays: Array[ColorRect] = []
 var skill_slot_cd_labels: Array[Label] = []
-
-var _bubble_tween: Tween = null
 
 const LOCATION_BANNER_SLIDE_OFFSET: float = 52.0
 const LOCATION_BANNER_IN_DURATION: float = 0.45
@@ -449,8 +443,6 @@ func _ready() -> void:
 	layer = 15 # Di atas elemen world game, di bawah TransitionLayer (layer 100)
 	process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
 
-	speech_bubble.visible = false
-	speech_bubble.modulate.a = 0.0
 	pause_overlay.visible = false
 	if is_instance_valid(location_banner):
 		_location_banner_rest_y = location_banner.offset_top
@@ -576,12 +568,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			if _toggle_or_switch_book_tab(1):
 				get_viewport().set_input_as_handled()
 				return
-		if event.is_action_pressed("interact"):
-			pass
-		elif event.is_action_pressed("skip"):
-			if speech_bubble.visible:
-				speech_bubble.visible = false
-				get_viewport().set_input_as_handled()
 
 
 func _input(event: InputEvent) -> void:
@@ -650,6 +636,24 @@ func _input(event: InputEvent) -> void:
 					_navigate_tab_relative(1)
 					get_viewport().set_input_as_handled()
 					return
+
+				if current_tab_index == 2:
+					if key_code == KEY_A or key_code == KEY_LEFT:
+						_play_tab_nav_btn_feedback(btn_prev_char)
+						_on_btn_prev_char_pressed()
+						get_viewport().set_input_as_handled()
+						return
+					elif key_code == KEY_D or key_code == KEY_RIGHT:
+						_play_tab_nav_btn_feedback(btn_next_char)
+						_on_btn_next_char_pressed()
+						get_viewport().set_input_as_handled()
+						return
+					elif key_code >= KEY_1 and key_code <= KEY_4:
+						var target_slot := key_code - KEY_1
+						if target_slot < party_members.size():
+							_on_party_slot_clicked(target_slot)
+							get_viewport().set_input_as_handled()
+							return
 
 			if key_code == KEY_F or key_code == KEY_ENTER or key_code == KEY_KP_ENTER or key_code == KEY_SPACE:
 				if current_tab_index == 0:
@@ -743,7 +747,6 @@ func _process(delta: float) -> void:
 		return
 	_update_hp_bars()
 	_update_skill_cooldowns()
-	_update_speech_bubble_position()
 	if pause_overlay.visible:
 		_update_pause_party_hp_bars()
 		if current_tab_index == 2:
@@ -1598,7 +1601,7 @@ func enable_start_menu_mode() -> void:
 	_outside_pause_pressed = false
 	_outside_modal_pressed = false
 	hide_location_banner()
-	for hud_node in [btn_pause_menu, btn_hud_inventory, btn_hud_info, btn_hud_settings, quest_header, quest_container, location_banner, controls_prompt, party_container, skill_container, speech_bubble]:
+	for hud_node in [btn_pause_menu, btn_hud_inventory, btn_hud_info, btn_hud_settings, quest_header, quest_container, location_banner, controls_prompt, party_container, skill_container]:
 		if is_instance_valid(hud_node):
 			hud_node.visible = false
 	current_tab_index = 3
@@ -1790,6 +1793,10 @@ func _on_tab_pressed(tab_idx: int) -> void:
 	elif tab_idx == 1:
 		_sync_journal_scrollbar()
 	elif tab_idx == 2:
+		if active_leader_index >= 0 and active_leader_index < party_members.size():
+			current_viewed_party_slot = active_leader_index
+		else:
+			current_viewed_party_slot = 0
 		_update_character_info_ui()
 		_update_pause_party_display()
 	elif tab_idx == 3:
@@ -2046,6 +2053,8 @@ func _update_drag_hover_visuals() -> void:
 		elif i == _current_hovered_target_slot and _current_hovered_target_slot != _dragging_slot_idx:
 			# Highlight hangat keemasan pada target hover
 			frame.modulate = Color(1.3, 1.2, 0.7, 1.0)
+		elif i == current_viewed_party_slot:
+			frame.modulate = Color(1.35, 1.25, 0.75, 1.0)
 		else:
 			frame.modulate = Color.WHITE
 
@@ -2089,11 +2098,15 @@ func _cancel_drag() -> void:
 func _reset_drag_visuals() -> void:
 	if is_instance_valid(drag_ghost):
 		drag_ghost.visible = false
-	for slot_node in pause_party_slots:
+	for slot_idx in range(pause_party_slots.size()):
+		var slot_node = pause_party_slots[slot_idx]
 		if is_instance_valid(slot_node):
 			var frame = slot_node.get_node_or_null("Frame") as CanvasItem
 			if frame:
-				frame.modulate = Color.WHITE
+				if slot_idx == current_viewed_party_slot:
+					frame.modulate = Color(1.35, 1.25, 0.75, 1.0)
+				else:
+					frame.modulate = Color.WHITE
 
 
 func _on_party_slot_clicked(slot_idx: int) -> void:
@@ -2102,6 +2115,7 @@ func _on_party_slot_clicked(slot_idx: int) -> void:
 			_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5, 0.03)
 		current_viewed_party_slot = slot_idx
 		_update_character_info_ui()
+		_update_pause_party_display()
 
 
 func _reorder_party_members(from_idx: int, to_idx: int) -> void:
@@ -2112,11 +2126,6 @@ func _reorder_party_members(from_idx: int, to_idx: int) -> void:
 	if from_idx == to_idx:
 		return
 
-	# Simpan referensi hero yang sedang dilihat agar seleksi tetap terjaga
-	var currently_viewed_hero: CharacterBody2D = null
-	if current_viewed_party_slot >= 0 and current_viewed_party_slot < party_members.size():
-		currently_viewed_hero = party_members[current_viewed_party_slot]
-
 	# Sisipkan hero ke posisi target
 	var moving_hero = party_members.pop_at(from_idx)
 	party_members.insert(to_idx, moving_hero)
@@ -2125,18 +2134,18 @@ func _reorder_party_members(from_idx: int, to_idx: int) -> void:
 	active_leader_index = 0
 	active_leader_node = party_members[0]
 
-	# Pertahankan tampilan karakter yang sedang dilihat
-	if is_instance_valid(currently_viewed_hero):
-		var new_slot_idx = party_members.find(currently_viewed_hero)
-		if new_slot_idx != -1:
-			current_viewed_party_slot = new_slot_idx
+	# Jika hero ditaruh di slot 0 (Leader) atau posisi slot 0 berubah, langsung tampilkan biodata hero leader di slot 0
+	if to_idx == 0 or from_idx == 0:
+		current_viewed_party_slot = 0
+	else:
+		current_viewed_party_slot = to_idx
 
 	# Pancarkan signal ke game controller untuk sinkronisasi runtime gameplay
 	party_reordered.emit(party_members)
 
 	# Perbarui UI pause menu
-	_update_pause_party_display()
 	_update_character_info_ui()
+	_update_pause_party_display()
 
 	# Perbarui gameplay HUD
 	update_leader_indicator()
@@ -2155,6 +2164,7 @@ func _on_btn_prev_char_pressed() -> void:
 		_play_ui_sfx(SFX_BOOK_PAGE_FLIP, -3.5, 0.04)
 	current_viewed_party_slot = (current_viewed_party_slot - 1 + total_chars) % total_chars
 	_update_character_info_ui()
+	_update_pause_party_display()
 
 
 func _on_btn_next_char_pressed() -> void:
@@ -2165,6 +2175,7 @@ func _on_btn_next_char_pressed() -> void:
 		_play_ui_sfx(SFX_BOOK_PAGE_FLIP, -3.5, 0.04)
 	current_viewed_party_slot = (current_viewed_party_slot + 1) % total_chars
 	_update_character_info_ui()
+	_update_pause_party_display()
 
 
 func _update_character_info_ui() -> void:
@@ -2306,7 +2317,10 @@ func _update_pause_party_display() -> void:
 				hp_bar.value = cur_hp
 
 			if frame:
-				frame.modulate = Color.WHITE
+				if slot_idx == current_viewed_party_slot:
+					frame.modulate = Color(1.35, 1.25, 0.75, 1.0)
+				else:
+					frame.modulate = Color.WHITE
 		else:
 			slot_node.visible = false
 
@@ -2470,7 +2484,7 @@ func set_combat_hud_visible(active: bool, animated: bool = true) -> void:
 			node.visible = true
 			_combat_hud_tween.tween_property(node, "modulate:a", 1.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		else:
-			_combat_hud_tween.tween_property(node, "modulate:a", 0.0, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			_combat_hud_tween.tween_property(node, "modulate:a", 0.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 	if not active:
 		_combat_hud_tween.chain().tween_callback(func():
@@ -2585,49 +2599,6 @@ func update_leader_indicator() -> void:
 		var frame = card.get_node_or_null("Frame") as TextureRect
 		if frame:
 			frame.texture = CARD_FRAME_SELECTED_TEX if is_active else CARD_FRAME_NORMAL_TEX
-
-
-# =========================================================
-# SPEECH BUBBLE POPUP ("Serang" / "Ikuti")
-# =========================================================
-
-func show_speech_bubble(text: String) -> void:
-	if not speech_bubble or not bubble_label:
-		return
-
-	bubble_label.text = text
-	speech_bubble.visible = true
-	_update_speech_bubble_position()
-
-	if _bubble_tween and _bubble_tween.is_valid():
-		_bubble_tween.kill()
-
-	speech_bubble.scale = Vector2(0.6, 0.6)
-	speech_bubble.modulate.a = 0.0
-
-	_bubble_tween = create_tween()
-	# Pop in
-	_bubble_tween.parallel().tween_property(speech_bubble, "scale", Vector2.ONE, 0.15)\
-		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_bubble_tween.parallel().tween_property(speech_bubble, "modulate:a", 1.0, 0.12)
-	# Tahan 1.2 detik
-	_bubble_tween.tween_interval(1.2)
-	# Fade out
-	_bubble_tween.tween_property(speech_bubble, "modulate:a", 0.0, 0.25)
-	_bubble_tween.tween_callback(func(): speech_bubble.visible = false)
-
-
-func _update_speech_bubble_position() -> void:
-	if not speech_bubble.visible or not is_instance_valid(active_leader_node):
-		return
-
-	var vp := get_viewport()
-	if not vp:
-		return
-	var canvas_transform := vp.get_canvas_transform()
-	var screen_pos := canvas_transform * active_leader_node.global_position
-	# Posisikan bubble tepat di atas kepala karakter leader (offset Y sekitar -96px, X sesuai pivot tail)
-	speech_bubble.position = screen_pos + Vector2(-28, -96)
 
 
 # =========================================================
@@ -4427,4 +4398,4 @@ func on_load_completed(slot_id: int, _loaded_data: Dictionary) -> void:
 	_scan_all_save_slots()
 	_refresh_save_load_ui()
 	_play_ui_sfx(SFX_BOOK_CONFIRM, -2.0)
-	show_speech_bubble("Progress berhasil dimuat dari Slot %d!" % slot_id)
+	_show_save_feedback("Progress berhasil dimuat dari Slot %d!" % slot_id)
