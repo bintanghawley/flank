@@ -5313,8 +5313,6 @@ func _set_gameplay_hud_visible_for_dialogue(show_hud: bool) -> void:
 		btn_hud_inventory.visible = show_hud
 	if is_instance_valid(btn_hud_info):
 		btn_hud_info.visible = show_hud
-	if is_instance_valid(btn_hud_settings):
-		btn_hud_settings.visible = show_hud
 	if is_instance_valid(btn_pause_menu):
 		btn_pause_menu.visible = show_hud
 	if is_instance_valid(quest_header):
