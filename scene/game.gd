@@ -95,6 +95,7 @@ var arena_group_respawn_timer: float = 0.0
 const ARENA_GROUP_RESPAWN_DELAY: float = 5.0
 var is_party_fading_out: bool = false
 var _party_fade_tweens: Array[Tween] = []
+var is_transitioning: bool = false
 
 # =========================
 # AUDIO SFX (TACTICAL PARTY)
@@ -246,6 +247,8 @@ func setup_party_enemy_collision_exceptions() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if is_transitioning:
+		return
 	# Tombol pintasan pergantian karakter, skill, dan perintah party berbasis action mapping
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.is_action_pressed("switch_character"):
@@ -441,11 +444,11 @@ func update_party_visibility() -> void:
 				member.visible = true
 			if not is_party_fading_out or i == active_leader_index:
 				member.modulate.a = 1.0
-				if not member.is_physics_processing():
+				if not member.is_physics_processing() and not is_transitioning:
 					member.set_physics_process(true)
-				if not member.is_processing():
+				if not member.is_processing() and not is_transitioning:
 					member.set_process(true)
-			var should_input: bool = (i == active_leader_index)
+			var should_input: bool = (i == active_leader_index) and not is_transitioning
 			if member.is_processing_unhandled_input() != should_input:
 				member.set_process_unhandled_input(should_input)
 			if not is_party_fading_out or i == active_leader_index:
@@ -1589,6 +1592,17 @@ func play_iris_opening_transition() -> void:
 	var transition_layer := get_node_or_null("TransitionLayer")
 	var iris: ColorRect = transition_layer.get_node_or_null("IrisMask") as ColorRect if transition_layer else null
 	if iris and (iris.material is ShaderMaterial):
+		is_transitioning = true
+		if is_instance_valid(gameplay_hud):
+			gameplay_hud.is_hud_input_blocked = true
+		for p in party_members:
+			if is_instance_valid(p):
+				p.set_physics_process(false)
+				p.set_process_unhandled_input(false)
+				p.velocity = Vector2.ZERO
+				if p.has_method("play_idle_animation"):
+					p.play_idle_animation()
+
 		var mat := iris.material as ShaderMaterial
 		mat.set_shader_parameter("center", Vector2(0.5, 0.5))
 		mat.set_shader_parameter("radius", 0.0)
@@ -1616,6 +1630,7 @@ func play_iris_opening_transition() -> void:
 			sfx_player.play()
 
 		var tween := create_tween()
+		tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 		tween.tween_property(mat, "shader_parameter/radius", 1.5, 1.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		await tween.finished
 	else:
@@ -1624,6 +1639,16 @@ func play_iris_opening_transition() -> void:
 	# Hapus node transisi setelah selesai agar memori dan render pass bersih
 	if is_instance_valid(transition_layer):
 		transition_layer.queue_free()
+
+	is_transitioning = false
+	if is_instance_valid(gameplay_hud):
+		gameplay_hud.is_hud_input_blocked = false
+	for i in range(party_members.size()):
+		var p = party_members[i]
+		if is_instance_valid(p):
+			p.set_physics_process(true)
+			var should_input: bool = (i == active_leader_index)
+			p.set_process_unhandled_input(should_input)
 
 	if not is_inside_tree():
 		return
@@ -1926,6 +1951,15 @@ func _collect_save_data(slot_id: int) -> Dictionary:
 	elif not current_location_name.is_empty():
 		current_location = current_location_name
 
+	var thumb_b64: String = ""
+	if is_instance_valid(gameplay_hud):
+		if "last_gameplay_thumbnail_b64" in gameplay_hud and not str(gameplay_hud.last_gameplay_thumbnail_b64).is_empty():
+			thumb_b64 = str(gameplay_hud.last_gameplay_thumbnail_b64)
+		elif gameplay_hud.has_method("_capture_gameplay_screenshot"):
+			gameplay_hud.call("_capture_gameplay_screenshot")
+			if "last_gameplay_thumbnail_b64" in gameplay_hud:
+				thumb_b64 = str(gameplay_hud.last_gameplay_thumbnail_b64)
+
 	return {
 		"slot_id": slot_id,
 		"chapter": "Chapter 1.1",
@@ -1941,7 +1975,8 @@ func _collect_save_data(slot_id: int) -> Dictionary:
 		"party": party_data,
 		"inventory_items": _serialize_inventory(inventory_items),
 		"quest_list": _serialize_quests(quest_list),
-		"tracked_quest_id": tracked_quest_id
+		"tracked_quest_id": tracked_quest_id,
+		"thumbnail_b64": thumb_b64
 	}
 
 
