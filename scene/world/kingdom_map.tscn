@@ -3753,8 +3753,11 @@ texture = ExtResource("2_building")
 34:1/0 = 0
 34:1/0/z_index = 1
 40:1/0 = 0
+40:1/0/z_index = 1
 41:1/0 = 0
+41:1/0/z_index = 1
 42:1/0 = 0
+42:1/0/z_index = 1
 27:2/0 = 0
 27:2/0/z_index = 1
 28:2/0 = 0
@@ -3776,8 +3779,11 @@ texture = ExtResource("2_building")
 40:2/0 = 0
 40:2/0/z_index = 1
 41:2/0 = 0
+41:2/0/z_index = 1
 42:2/0 = 0
+42:2/0/z_index = 1
 43:2/0 = 0
+43:2/0/z_index = 1
 23:3/0 = 0
 23:3/0/z_index = 1
 24:3/0 = 0
@@ -3815,11 +3821,17 @@ texture = ExtResource("2_building")
 40:3/0 = 0
 40:3/0/z_index = 1
 41:3/0 = 0
+41:3/0/z_index = 1
 42:3/0 = 0
+42:3/0/z_index = 1
 43:3/0 = 0
+43:3/0/z_index = 1
 3:4/0 = 0
+3:4/0/z_index = 1
 4:4/0 = 0
+4:4/0/z_index = 1
 5:4/0 = 0
+5:4/0/z_index = 1
 23:4/0 = 0
 23:4/0/z_index = 1
 24:4/0 = 0
@@ -3857,13 +3869,21 @@ texture = ExtResource("2_building")
 40:4/0 = 0
 40:4/0/z_index = 1
 41:4/0 = 0
+41:4/0/z_index = 1
 42:4/0 = 0
+42:4/0/z_index = 1
 43:4/0 = 0
+43:4/0/z_index = 1
 2:5/0 = 0
+2:5/0/z_index = 1
 3:5/0 = 0
+3:5/0/z_index = 1
 4:5/0 = 0
+4:5/0/z_index = 1
 5:5/0 = 0
+5:5/0/z_index = 1
 6:5/0 = 0
+6:5/0/z_index = 1
 23:5/0 = 0
 23:5/0/z_index = 1
 24:5/0 = 0
@@ -3902,19 +3922,32 @@ texture = ExtResource("2_building")
 40:5/0 = 0
 40:5/0/z_index = 1
 41:5/0 = 0
+41:5/0/z_index = 1
 42:5/0 = 0
+42:5/0/z_index = 1
 43:5/0 = 0
+43:5/0/z_index = 1
 64:5/0 = 0
+64:5/0/z_index = 1
 65:5/0 = 0
+65:5/0/z_index = 1
 66:5/0 = 0
+66:5/0/z_index = 1
 67:5/0 = 0
+67:5/0/z_index = 1
 68:5/0 = 0
+68:5/0/z_index = 1
 2:6/0 = 0
+2:6/0/z_index = 1
 2:6/0/y_sort_origin = -16
 3:6/0 = 0
+3:6/0/z_index = 1
 4:6/0 = 0
+4:6/0/z_index = 1
 5:6/0 = 0
+5:6/0/z_index = 1
 6:6/0 = 0
+6:6/0/z_index = 1
 6:6/0/y_sort_origin = -16
 11:6/0 = 0
 11:6/0/z_index = 1
@@ -3923,8 +3956,11 @@ texture = ExtResource("2_building")
 13:6/0 = 0
 13:6/0/z_index = 1
 20:6/0 = 0
+20:6/0/z_index = 1
 21:6/0 = 0
+21:6/0/z_index = 1
 22:6/0 = 0
+22:6/0/z_index = 1
 23:6/0 = 0
 23:6/0/z_index = 1
 24:6/0 = 0
@@ -3960,7 +3996,9 @@ texture = ExtResource("2_building")
 40:6/0 = 0
 40:6/0/z_index = 1
 41:6/0 = 0
+41:6/0/z_index = 1
 42:6/0 = 0
+42:6/0/z_index = 1
 43:6/0 = 0
 43:6/0/z_index = 1
 44:6/0 = 0
@@ -3972,26 +4010,47 @@ texture = ExtResource("2_building")
 53:6/0 = 0
 53:6/0/z_index = 1
 54:6/0 = 0
+54:6/0/z_index = 1
 60:6/0 = 0
+60:6/0/z_index = 1
 61:6/0 = 0
+61:6/0/z_index = 1
 62:6/0 = 0
+62:6/0/z_index = 1
 63:6/0 = 0
+63:6/0/z_index = 1
 64:6/0 = 0
+64:6/0/z_index = 1
 65:6/0 = 0
+65:6/0/z_index = 1
 66:6/0 = 0
+66:6/0/z_index = 1
 67:6/0 = 0
+67:6/0/z_index = 1
 68:6/0 = 0
+68:6/0/z_index = 1
 70:6/0 = 0
+70:6/0/z_index = 1
 71:6/0 = 0
+71:6/0/z_index = 1
 72:6/0 = 0
+72:6/0/z_index = 1
 3:7/0 = 0
+3:7/0/z_index = 1
 4:7/0 = 0
+4:7/0/z_index = 1
 5:7/0 = 0
+5:7/0/z_index = 1
 6:7/0 = 0
+6:7/0/z_index = 1
 7:7/0 = 0
+7:7/0/z_index = 1
 8:7/0 = 0
+8:7/0/z_index = 1
 9:7/0 = 0
+9:7/0/z_index = 1
 10:7/0 = 0
+10:7/0/z_index = 1
 11:7/0 = 0
 11:7/0/z_index = 1
 12:7/0 = 0
@@ -4011,8 +4070,11 @@ texture = ExtResource("2_building")
 19:7/0 = 0
 19:7/0/z_index = 1
 20:7/0 = 0
+20:7/0/z_index = 1
 21:7/0 = 0
+21:7/0/z_index = 1
 22:7/0 = 0
+22:7/0/z_index = 1
 23:7/0 = 0
 23:7/0/z_index = 1
 24:7/0 = 0
@@ -4050,7 +4112,9 @@ texture = ExtResource("2_building")
 40:7/0 = 0
 40:7/0/z_index = 1
 41:7/0 = 0
+41:7/0/z_index = 1
 42:7/0 = 0
+42:7/0/z_index = 1
 43:7/0 = 0
 43:7/0/z_index = 1
 44:7/0 = 0
@@ -4074,49 +4138,93 @@ texture = ExtResource("2_building")
 53:7/0 = 0
 53:7/0/z_index = 1
 54:7/0 = 0
+54:7/0/z_index = 1
 55:7/0 = 0
+55:7/0/z_index = 1
 56:7/0 = 0
+56:7/0/z_index = 1
 57:7/0 = 0
+57:7/0/z_index = 1
 58:7/0 = 0
+58:7/0/z_index = 1
 59:7/0 = 0
+59:7/0/z_index = 1
 60:7/0 = 0
+60:7/0/z_index = 1
 61:7/0 = 0
+61:7/0/z_index = 1
 62:7/0 = 0
+62:7/0/z_index = 1
 63:7/0 = 0
+63:7/0/z_index = 1
 64:7/0 = 0
+64:7/0/z_index = 1
 65:7/0 = 0
+65:7/0/z_index = 1
 66:7/0 = 0
+66:7/0/z_index = 1
 67:7/0 = 0
+67:7/0/z_index = 1
 68:7/0 = 0
+68:7/0/z_index = 1
 69:7/0 = 0
+69:7/0/z_index = 1
 70:7/0 = 0
+70:7/0/z_index = 1
 71:7/0 = 0
+71:7/0/z_index = 1
 72:7/0 = 0
+72:7/0/z_index = 1
 73:7/0 = 0
+73:7/0/z_index = 1
 74:7/0 = 0
+74:7/0/z_index = 1
 75:7/0 = 0
+75:7/0/z_index = 1
 76:7/0 = 0
+76:7/0/z_index = 1
 77:7/0 = 0
+77:7/0/z_index = 1
 78:7/0 = 0
+78:7/0/z_index = 1
 79:7/0 = 0
+79:7/0/z_index = 1
 80:7/0 = 0
+80:7/0/z_index = 1
 81:7/0 = 0
+81:7/0/z_index = 1
 82:7/0 = 0
+82:7/0/z_index = 1
 83:7/0 = 0
+83:7/0/z_index = 1
 84:7/0 = 0
+84:7/0/z_index = 1
 85:7/0 = 0
+85:7/0/z_index = 1
 86:7/0 = 0
+86:7/0/z_index = 1
 87:7/0 = 0
+87:7/0/z_index = 1
 88:7/0 = 0
+88:7/0/z_index = 1
 89:7/0 = 0
+89:7/0/z_index = 1
 3:8/0 = 0
+3:8/0/z_index = 1
 4:8/0 = 0
+4:8/0/z_index = 1
 5:8/0 = 0
+5:8/0/z_index = 1
 6:8/0 = 0
+6:8/0/z_index = 1
 7:8/0 = 0
+7:8/0/z_index = 1
 8:8/0 = 0
+8:8/0/z_index = 1
 9:8/0 = 0
+9:8/0/z_index = 1
 10:8/0 = 0
+10:8/0/z_index = 1
 11:8/0 = 0
 11:8/0/z_index = 1
 12:8/0 = 0
@@ -4136,183 +4244,351 @@ texture = ExtResource("2_building")
 19:8/0 = 0
 19:8/0/z_index = 1
 20:8/0 = 0
+20:8/0/z_index = 1
 21:8/0 = 0
+21:8/0/z_index = 1
 22:8/0 = 0
+22:8/0/z_index = 1
 23:8/0 = 0
+23:8/0/z_index = 1
 24:8/0 = 0
+24:8/0/z_index = 1
 25:8/0 = 0
+25:8/0/z_index = 1
 26:8/0 = 0
+26:8/0/z_index = 1
 27:8/0 = 0
+27:8/0/z_index = 1
 28:8/0 = 0
+28:8/0/z_index = 1
 29:8/0 = 0
+29:8/0/z_index = 1
 30:8/0 = 0
+30:8/0/z_index = 1
 31:8/0 = 0
+31:8/0/z_index = 1
 32:8/0 = 0
+32:8/0/z_index = 1
 33:8/0 = 0
+33:8/0/z_index = 1
 34:8/0 = 0
+34:8/0/z_index = 1
 35:8/0 = 0
+35:8/0/z_index = 1
 36:8/0 = 0
+36:8/0/z_index = 1
 37:8/0 = 0
+37:8/0/z_index = 1
 38:8/0 = 0
+38:8/0/z_index = 1
 39:8/0 = 0
+39:8/0/z_index = 1
 40:8/0 = 0
+40:8/0/z_index = 1
 41:8/0 = 0
+41:8/0/z_index = 1
 42:8/0 = 0
+42:8/0/z_index = 1
 43:8/0 = 0
+43:8/0/z_index = 1
 44:8/0 = 0
+44:8/0/z_index = 1
 45:8/0 = 0
+45:8/0/z_index = 1
 46:8/0 = 0
+46:8/0/z_index = 1
 47:8/0 = 0
+47:8/0/z_index = 1
 48:8/0 = 0
+48:8/0/z_index = 1
 49:8/0 = 0
+49:8/0/z_index = 1
 50:8/0 = 0
+50:8/0/z_index = 1
 51:8/0 = 0
+51:8/0/z_index = 1
 52:8/0 = 0
+52:8/0/z_index = 1
 53:8/0 = 0
+53:8/0/z_index = 1
 54:8/0 = 0
+54:8/0/z_index = 1
 55:8/0 = 0
+55:8/0/z_index = 1
 56:8/0 = 0
+56:8/0/z_index = 1
 57:8/0 = 0
+57:8/0/z_index = 1
 58:8/0 = 0
+58:8/0/z_index = 1
 59:8/0 = 0
+59:8/0/z_index = 1
 60:8/0 = 0
+60:8/0/z_index = 1
 61:8/0 = 0
+61:8/0/z_index = 1
 62:8/0 = 0
+62:8/0/z_index = 1
 63:8/0 = 0
+63:8/0/z_index = 1
 64:8/0 = 0
+64:8/0/z_index = 1
 65:8/0 = 0
+65:8/0/z_index = 1
 66:8/0 = 0
+66:8/0/z_index = 1
 67:8/0 = 0
+67:8/0/z_index = 1
 68:8/0 = 0
+68:8/0/z_index = 1
 69:8/0 = 0
+69:8/0/z_index = 1
 70:8/0 = 0
+70:8/0/z_index = 1
 71:8/0 = 0
+71:8/0/z_index = 1
 72:8/0 = 0
+72:8/0/z_index = 1
 73:8/0 = 0
+73:8/0/z_index = 1
 74:8/0 = 0
+74:8/0/z_index = 1
 75:8/0 = 0
+75:8/0/z_index = 1
 76:8/0 = 0
+76:8/0/z_index = 1
 77:8/0 = 0
+77:8/0/z_index = 1
 78:8/0 = 0
+78:8/0/z_index = 1
 79:8/0 = 0
+79:8/0/z_index = 1
 80:8/0 = 0
+80:8/0/z_index = 1
 81:8/0 = 0
+81:8/0/z_index = 1
 82:8/0 = 0
+82:8/0/z_index = 1
 83:8/0 = 0
+83:8/0/z_index = 1
 84:8/0 = 0
+84:8/0/z_index = 1
 85:8/0 = 0
+85:8/0/z_index = 1
 86:8/0 = 0
+86:8/0/z_index = 1
 87:8/0 = 0
+87:8/0/z_index = 1
 88:8/0 = 0
+88:8/0/z_index = 1
 89:8/0 = 0
+89:8/0/z_index = 1
 0:9/0 = 0
+0:9/0/z_index = 1
 1:9/0 = 0
+1:9/0/z_index = 1
 2:9/0 = 0
+2:9/0/z_index = 1
 3:9/0 = 0
+3:9/0/z_index = 1
 4:9/0 = 0
+4:9/0/z_index = 1
 5:9/0 = 0
+5:9/0/z_index = 1
 6:9/0 = 0
+6:9/0/z_index = 1
 7:9/0 = 0
+7:9/0/z_index = 1
 8:9/0 = 0
+8:9/0/z_index = 1
 9:9/0 = 0
+9:9/0/z_index = 1
 10:9/0 = 0
+10:9/0/z_index = 1
 11:9/0 = 0
 11:9/0/z_index = 1
 12:9/0 = 0
+12:9/0/z_index = 1
 13:9/0 = 0
+13:9/0/z_index = 1
 14:9/0 = 0
+14:9/0/z_index = 1
 15:9/0 = 0
+15:9/0/z_index = 1
 16:9/0 = 0
+16:9/0/z_index = 1
 17:9/0 = 0
+17:9/0/z_index = 1
 18:9/0 = 0
+18:9/0/z_index = 1
 19:9/0 = 0
+19:9/0/z_index = 1
 20:9/0 = 0
+20:9/0/z_index = 1
 21:9/0 = 0
+21:9/0/z_index = 1
 22:9/0 = 0
+22:9/0/z_index = 1
 23:9/0 = 0
+23:9/0/z_index = 1
 24:9/0 = 0
+24:9/0/z_index = 1
 25:9/0 = 0
+25:9/0/z_index = 1
 26:9/0 = 0
+26:9/0/z_index = 1
 27:9/0 = 0
+27:9/0/z_index = 1
 28:9/0 = 0
+28:9/0/z_index = 1
 29:9/0 = 0
+29:9/0/z_index = 1
 30:9/0 = 0
+30:9/0/z_index = 1
 31:9/0 = 0
+31:9/0/z_index = 1
 32:9/0 = 0
+32:9/0/z_index = 1
 33:9/0 = 0
+33:9/0/z_index = 1
 34:9/0 = 0
+34:9/0/z_index = 1
 35:9/0 = 0
+35:9/0/z_index = 1
 36:9/0 = 0
+36:9/0/z_index = 1
 37:9/0 = 0
+37:9/0/z_index = 1
 38:9/0 = 0
+38:9/0/z_index = 1
 39:9/0 = 0
+39:9/0/z_index = 1
 40:9/0 = 0
+40:9/0/z_index = 1
 41:9/0 = 0
+41:9/0/z_index = 1
 42:9/0 = 0
+42:9/0/z_index = 1
 43:9/0 = 0
+43:9/0/z_index = 1
 44:9/0 = 0
+44:9/0/z_index = 1
 45:9/0 = 0
+45:9/0/z_index = 1
 46:9/0 = 0
+46:9/0/z_index = 1
 47:9/0 = 0
+47:9/0/z_index = 1
 48:9/0 = 0
+48:9/0/z_index = 1
 49:9/0 = 0
+49:9/0/z_index = 1
 50:9/0 = 0
+50:9/0/z_index = 1
 51:9/0 = 0
+51:9/0/z_index = 1
 52:9/0 = 0
+52:9/0/z_index = 1
 53:9/0 = 0
+53:9/0/z_index = 1
 54:9/0 = 0
+54:9/0/z_index = 1
 55:9/0 = 0
+55:9/0/z_index = 1
 56:9/0 = 0
+56:9/0/z_index = 1
 57:9/0 = 0
+57:9/0/z_index = 1
 58:9/0 = 0
+58:9/0/z_index = 1
 59:9/0 = 0
+59:9/0/z_index = 1
 60:9/0 = 0
+60:9/0/z_index = 1
 61:9/0 = 0
+61:9/0/z_index = 1
 62:9/0 = 0
+62:9/0/z_index = 1
 63:9/0 = 0
+63:9/0/z_index = 1
 64:9/0 = 0
+64:9/0/z_index = 1
 64:9/0/y_sort_origin = 20
 65:9/0 = 0
+65:9/0/z_index = 1
 65:9/0/y_sort_origin = 20
 66:9/0 = 0
+66:9/0/z_index = 1
 66:9/0/y_sort_origin = 20
 67:9/0 = 0
+67:9/0/z_index = 1
 67:9/0/y_sort_origin = 20
 68:9/0 = 0
+68:9/0/z_index = 1
 68:9/0/y_sort_origin = 20
 69:9/0 = 0
+69:9/0/z_index = 1
 69:9/0/y_sort_origin = 20
 70:9/0 = 0
+70:9/0/z_index = 1
 70:9/0/y_sort_origin = 20
 71:9/0 = 0
+71:9/0/z_index = 1
 71:9/0/y_sort_origin = 20
 72:9/0 = 0
+72:9/0/z_index = 1
 73:9/0 = 0
+73:9/0/z_index = 1
 74:9/0 = 0
+74:9/0/z_index = 1
 75:9/0 = 0
+75:9/0/z_index = 1
 76:9/0 = 0
+76:9/0/z_index = 1
 77:9/0 = 0
+77:9/0/z_index = 1
 78:9/0 = 0
+78:9/0/z_index = 1
 79:9/0 = 0
+79:9/0/z_index = 1
 80:9/0 = 0
+80:9/0/z_index = 1
 81:9/0 = 0
+81:9/0/z_index = 1
 82:9/0 = 0
+82:9/0/z_index = 1
 83:9/0 = 0
+83:9/0/z_index = 1
 84:9/0 = 0
+84:9/0/z_index = 1
 85:9/0 = 0
+85:9/0/z_index = 1
 86:9/0 = 0
+86:9/0/z_index = 1
 87:9/0 = 0
+87:9/0/z_index = 1
 88:9/0 = 0
+88:9/0/z_index = 1
 89:9/0 = 0
+89:9/0/z_index = 1
 0:10/0 = 0
+0:10/0/z_index = 1
 1:10/0 = 0
+1:10/0/z_index = 1
 2:10/0 = 0
+2:10/0/z_index = 1
 3:10/0 = 0
+3:10/0/z_index = 1
 4:10/0 = 0
+4:10/0/z_index = 1
 5:10/0 = 0
+5:10/0/z_index = 1
 6:10/0 = 0
+6:10/0/z_index = 1
 7:10/0 = 0
+7:10/0/z_index = 1
 8:10/0 = 0
+8:10/0/z_index = 1
 9:10/0 = 0
 9:10/0/z_index = 1
 10:10/0 = 0
@@ -4416,14 +4692,23 @@ texture = ExtResource("2_building")
 88:10/0 = 0
 89:10/0 = 0
 0:11/0 = 0
+0:11/0/z_index = 1
 1:11/0 = 0
+1:11/0/z_index = 1
 2:11/0 = 0
+2:11/0/z_index = 1
 3:11/0 = 0
+3:11/0/z_index = 1
 4:11/0 = 0
+4:11/0/z_index = 1
 5:11/0 = 0
+5:11/0/z_index = 1
 6:11/0 = 0
+6:11/0/z_index = 1
 7:11/0 = 0
+7:11/0/z_index = 1
 8:11/0 = 0
+8:11/0/z_index = 1
 9:11/0 = 0
 9:11/0/z_index = 1
 10:11/0 = 0
@@ -5358,6 +5643,7 @@ texture = ExtResource("2_building")
 87:21/0 = 0
 88:21/0 = 0
 89:21/0 = 0
+89:21/0/y_sort_origin = -16
 0:22/0 = 0
 1:22/0 = 0
 2:22/0 = 0
@@ -5555,7 +5841,9 @@ texture = ExtResource("2_building")
 87:23/0 = 0
 88:23/0 = 0
 89:23/0 = 0
+89:23/0/z_index = 1
 90:23/0 = 0
+90:23/0/z_index = 1
 0:24/0 = 0
 1:24/0 = 0
 2:24/0 = 0
@@ -6451,6 +6739,7 @@ texture = ExtResource("2_building")
 64:34/0 = 0
 65:34/0 = 0
 66:34/0 = 0
+66:34/0/y_sort_origin = -16
 0:35/0 = 0
 1:35/0 = 0
 2:35/0 = 0
@@ -6515,6 +6804,7 @@ texture = ExtResource("2_building")
 64:35/0 = 0
 65:35/0 = 0
 66:35/0 = 0
+66:35/0/y_sort_origin = -16
 0:36/0 = 0
 1:36/0 = 0
 2:36/0 = 0
@@ -6874,6 +7164,7 @@ texture = ExtResource("2_building")
 64:42/0 = 0
 65:42/0 = 0
 66:42/0 = 0
+66:42/0/y_sort_origin = -16
 0:43/0 = 0
 1:43/0 = 0
 2:43/0 = 0
@@ -6934,6 +7225,7 @@ texture = ExtResource("2_building")
 64:43/0 = 0
 65:43/0 = 0
 66:43/0 = 0
+66:43/0/y_sort_origin = -16
 0:44/0 = 0
 1:44/0 = 0
 2:44/0 = 0
@@ -7813,13 +8105,25 @@ physics_layer_0/collision_layer = 1
 sources/0 = SubResource("TileSetAtlasSource_nature")
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_0"]
-size = Vector2(560, 439)
+size = Vector2(186.5, 76.625)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_uma22"]
-size = Vector2(240, 3355)
+size = Vector2(226, 3139)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lercb"]
+size = Vector2(186.5, 351)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3bmir"]
+size = Vector2(15, 1041.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_licnx"]
+size = Vector2(16, 443)
 
 [sub_resource type="RectangleShape2D" id="Rect_1"]
-size = Vector2(241, 1016)
+size = Vector2(241, 135.25)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_oo827"]
+size = Vector2(506, 24)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lvong"]
 size = Vector2(111.999985, 21)
@@ -7840,67 +8144,70 @@ size = Vector2(720, 109)
 size = Vector2(320, 160)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_5"]
-size = Vector2(80, 440)
+size = Vector2(13, 372)
 
 [sub_resource type="RectangleShape2D" id="Rect_5"]
-size = Vector2(80, 3760)
+size = Vector2(80, 2884)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_7"]
-size = Vector2(400, 440)
+size = Vector2(1251, 439)
 
 [sub_resource type="RectangleShape2D" id="Rect_7"]
-size = Vector2(80, 3680)
-
-[sub_resource type="RectangleShape2D" id="Rect_8"]
-size = Vector2(80, 1784)
+size = Vector2(80, 2884)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_10"]
-size = Vector2(240, 493)
+size = Vector2(241, 473)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ou61h"]
+size = Vector2(13, 400.5)
 
 [sub_resource type="RectangleShape2D" id="Rect_10"]
-size = Vector2(400, 480)
+size = Vector2(218, 25.5)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_12"]
 size = Vector2(497, 62.5)
 
 [sub_resource type="RectangleShape2D" id="Rect_Wall_13"]
-size = Vector2(1360, 191)
+size = Vector2(1599.5, 156.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_w47py"]
+size = Vector2(451, 90.9375)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_14"]
-size = Vector2(1692, 295)
+size = Vector2(3765, 154.5)
 
 [sub_resource type="RectangleShape2D" id="Rect_14"]
-size = Vector2(1680, 333)
+size = Vector2(268, 25.25)
 
 [sub_resource type="RectangleShape2D" id="Rect_11"]
-size = Vector2(80, 400)
+size = Vector2(103, 230)
 
 [sub_resource type="RectangleShape2D" id="Rect_15"]
-size = Vector2(189, 553)
+size = Vector2(189, 212)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_q4vr2"]
-size = Vector2(25.15625, 171.73438)
+size = Vector2(25.15625, 158.73438)
 
 [sub_resource type="RectangleShape2D" id="Rect_Wall_18"]
-size = Vector2(880, 477)
+size = Vector2(880, 485)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_19"]
-size = Vector2(800, 656)
+size = Vector2(800, 663)
 
 [sub_resource type="RectangleShape2D" id="Rect_18"]
 size = Vector2(160, 125)
 
 [sub_resource type="RectangleShape2D" id="Rect_19"]
-size = Vector2(400, 105)
+size = Vector2(330, 53)
 
 [sub_resource type="RectangleShape2D" id="Rect_20"]
-size = Vector2(1040, 80)
+size = Vector2(802, 96)
 
 [sub_resource type="RectangleShape2D" id="Rect_21"]
-size = Vector2(877, 80)
+size = Vector2(639, 87)
 
 [sub_resource type="RectangleShape2D" id="Rect_24"]
-size = Vector2(560, 254)
+size = Vector2(319, 243)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_27"]
 size = Vector2(80, 154)
@@ -7930,7 +8237,7 @@ size = Vector2(84, 233.82349)
 size = Vector2(80, 242)
 
 [sub_resource type="RectangleShape2D" id="Rect_36"]
-size = Vector2(240, 1040)
+size = Vector2(240, 506)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_46"]
 size = Vector2(238, 303)
@@ -7972,25 +8279,28 @@ size = Vector2(41, 303)
 size = Vector2(38, 63)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_61"]
-size = Vector2(400, 132)
+size = Vector2(242, 290)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_62"]
-size = Vector2(487, 132)
+size = Vector2(226, 200)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_63"]
-size = Vector2(960, 132)
+size = Vector2(1847, 134)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_64"]
 size = Vector2(249, 378)
 
 [sub_resource type="RectangleShape2D" id="Rect_47"]
-size = Vector2(80, 1840)
+size = Vector2(80, 1510)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_66"]
 size = Vector2(240, 316)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_67"]
 size = Vector2(240, 148)
+
+[sub_resource type="RectangleShape2D" id="Rect_8"]
+size = Vector2(80, 1442)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_69"]
 size = Vector2(320, 316)
@@ -8014,13 +8324,13 @@ size = Vector2(80, 148)
 size = Vector2(270, 412)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_76"]
-size = Vector2(408, 92)
+size = Vector2(407, 39)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_77"]
-size = Vector2(240, 92)
+size = Vector2(186, 160)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_78"]
-size = Vector2(240, 92)
+size = Vector2(186, 92)
 
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_79"]
 size = Vector2(240, 793)
@@ -8028,8 +8338,11 @@ size = Vector2(240, 793)
 [sub_resource type="RectangleShape2D" id="Rect_54"]
 size = Vector2(728, 148)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_evdoi"]
+size = Vector2(187, 351)
+
 [sub_resource type="RectangleShape2D" id="Rect_55"]
-size = Vector2(247, 1600)
+size = Vector2(235, 1626)
 
 [sub_resource type="RectangleShape2D" id="Rect_27"]
 size = Vector2(236, 80)
@@ -8074,34 +8387,34 @@ size = Vector2(26, 214)
 size = Vector2(31, 230.25)
 
 [sub_resource type="RectangleShape2D" id="Rect_59"]
-size = Vector2(702, 92.1875)
+size = Vector2(185, 25)
 
 [sub_resource type="RectangleShape2D" id="Rect_56"]
-size = Vector2(80, 518)
+size = Vector2(80, 193)
 
 [sub_resource type="RectangleShape2D" id="Rect_Gate_Tower"]
-size = Vector2(320, 200)
+size = Vector2(320, 187)
 
 [sub_resource type="RectangleShape2D" id="Rect_Gate_122"]
-size = Vector2(560, 330)
+size = Vector2(186, 24)
 
 [sub_resource type="RectangleShape2D" id="Rect_Gate_123"]
-size = Vector2(400, 165)
+size = Vector2(187, 23.75)
 
 [sub_resource type="RectangleShape2D" id="Rect_51"]
-size = Vector2(30, 471)
+size = Vector2(30, 458)
 
 [sub_resource type="RectangleShape2D" id="Rect_Gate_127"]
-size = Vector2(633, 330)
+size = Vector2(1760, 316)
 
 [sub_resource type="RectangleShape2D" id="Rect_Gate_128"]
-size = Vector2(320, 165)
+size = Vector2(187, 24)
 
 [sub_resource type="RectangleShape2D" id="Rect_Gate_129"]
-size = Vector2(480, 165)
+size = Vector2(507, 24)
 
 [sub_resource type="RectangleShape2D" id="Rect_Gate_130"]
-size = Vector2(770, 165)
+size = Vector2(2000, 152)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8hmx5"]
 size = Vector2(125.375, 114)
@@ -8116,7 +8429,7 @@ size = Vector2(84.5, 129.75)
 size = Vector2(241, 78)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_u6h35"]
-size = Vector2(41.75, 1343.3125)
+size = Vector2(34, 1330.3125)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_0uui3"]
 size = Vector2(759, 26)
@@ -8154,7 +8467,7 @@ size = Vector2(34.75, 56.5)
 size = Vector2(26, 505)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_atsxw"]
-size = Vector2(231, 65)
+size = Vector2(241, 578)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_gvh8e"]
 size = Vector2(151.875, 88.75)
@@ -8191,6 +8504,9 @@ size = Vector2(274, 7)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fyw7y"]
 size = Vector2(304, 8)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6gudt"]
+size = Vector2(81, 1318)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4nb8p"]
 size = Vector2(210, 5)
@@ -8244,16 +8560,32 @@ tile_set = SubResource("TileSet_nature")
 collision_mask = 0
 
 [node name="Wall_0" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1227976241]
-position = Vector2(2440, 837.5)
+position = Vector2(1747.25, 852.6875)
 shape = SubResource("Rect_Adj_Wall_0")
 
 [node name="CollisionShape2D54" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1262234240]
-position = Vector2(120, 2407.5)
+position = Vector2(127, 2496.5)
 shape = SubResource("RectangleShape2D_uma22")
 
+[node name="CollisionShape2D60" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1372598333]
+position = Vector2(92.75, 3914.5)
+shape = SubResource("RectangleShape2D_lercb")
+
+[node name="CollisionShape2D59" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1714265364]
+position = Vector2(6.5, 2289.75)
+shape = SubResource("RectangleShape2D_3bmir")
+
+[node name="CollisionShape2D61" type="CollisionShape2D" parent="BuildingBoundary" unique_id=744456816]
+position = Vector2(6, 1148.5)
+shape = SubResource("RectangleShape2D_licnx")
+
 [node name="Wall_1" type="CollisionShape2D" parent="BuildingBoundary" unique_id=275067617]
-position = Vector2(3314.5, 588)
+position = Vector2(3314.5, 1022.375)
 shape = SubResource("Rect_1")
+
+[node name="CollisionShape2D62" type="CollisionShape2D" parent="BuildingBoundary" unique_id=472514243]
+position = Vector2(2067, 4078)
+shape = SubResource("RectangleShape2D_oo827")
 
 [node name="CollisionShape2D34" type="CollisionShape2D" parent="BuildingBoundary" unique_id=750346915]
 position = Vector2(1250, 3127.5)
@@ -8284,31 +8616,31 @@ shape = SubResource("Rect_3")
 disabled = true
 
 [node name="Wall_5" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1552632400]
-position = Vector2(3158, 838)
+position = Vector2(5354.5, 2625)
 shape = SubResource("Rect_Adj_Wall_5")
 
 [node name="Wall_6" type="CollisionShape2D" parent="BuildingBoundary" unique_id=114706095]
-position = Vector2(360, 2200)
+position = Vector2(360, 2308)
 shape = SubResource("Rect_5")
 
 [node name="Wall_7" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1187308746]
-position = Vector2(2919, 837)
+position = Vector2(2809.5, 837.5)
 shape = SubResource("Rect_Adj_Wall_7")
 
 [node name="Wall_8" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1512972490]
-position = Vector2(280, 2240)
+position = Vector2(280, 2308)
 shape = SubResource("Rect_7")
 
-[node name="Wall_9" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1794190084]
-position = Vector2(440, 1292)
-shape = SubResource("Rect_8")
-
 [node name="Wall_10" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1464193173]
-position = Vector2(1960, 846.5)
+position = Vector2(1959.5, 854.5)
 shape = SubResource("Rect_Adj_Wall_10")
 
+[node name="CollisionShape2D56" type="CollisionShape2D" parent="BuildingBoundary" unique_id=116316422]
+position = Vector2(5354.5, 3249.75)
+shape = SubResource("RectangleShape2D_ou61h")
+
 [node name="Wall_11" type="CollisionShape2D" parent="BuildingBoundary" unique_id=738719089]
-position = Vector2(5320, 640)
+position = Vector2(3511, 877.75)
 shape = SubResource("Rect_10")
 
 [node name="Wall_12" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1692422835]
@@ -8316,35 +8648,39 @@ position = Vector2(5052.5, 1661.75)
 shape = SubResource("Rect_Adj_Wall_12")
 
 [node name="Wall_13" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1367240500]
-position = Vector2(1160, 795.5)
+position = Vector2(1039.75, 787.75)
 shape = SubResource("Rect_Wall_13")
 
+[node name="CollisionShape2D55" type="CollisionShape2D" parent="BuildingBoundary" unique_id=103489633]
+position = Vector2(6735.5, 1085.5313)
+shape = SubResource("RectangleShape2D_w47py")
+
 [node name="Wall_14" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1398332326]
-position = Vector2(4274, 747.5)
+position = Vector2(5317.5, 787.75)
 shape = SubResource("Rect_Adj_Wall_14")
 
 [node name="Wall_15" type="CollisionShape2D" parent="BuildingBoundary" unique_id=420520194]
-position = Vector2(6360, 726.5)
+position = Vector2(5654, 877.375)
 shape = SubResource("Rect_14")
 
 [node name="Wall_16" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1408425299]
-position = Vector2(2121, 857)
+position = Vector2(2132.5, 942)
 shape = SubResource("Rect_11")
 
 [node name="Wall_17" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1053028551]
-position = Vector2(1289.5, 3814.5)
+position = Vector2(1289.5, 3644)
 shape = SubResource("Rect_15")
 
 [node name="CollisionShape2D25" type="CollisionShape2D" parent="BuildingBoundary" unique_id=969540981]
-position = Vector2(1394.5781, 3677.1328)
+position = Vector2(1394.5781, 3670.6328)
 shape = SubResource("RectangleShape2D_q4vr2")
 
 [node name="Wall_18" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1916118873]
-position = Vector2(920, 1112.5)
+position = Vector2(920, 1108.5)
 shape = SubResource("Rect_Wall_18")
 
 [node name="Wall_19" type="CollisionShape2D" parent="BuildingBoundary" unique_id=805780662]
-position = Vector2(5040, 1200)
+position = Vector2(5040, 1196.5)
 shape = SubResource("Rect_Adj_Wall_19")
 
 [node name="Wall_20" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1927023589]
@@ -8352,19 +8688,19 @@ position = Vector2(5600, 942.5)
 shape = SubResource("Rect_18")
 
 [node name="Wall_21" type="CollisionShape2D" parent="BuildingBoundary" unique_id=48693684]
-position = Vector2(5960, 932.5)
+position = Vector2(5922, 953.5)
 shape = SubResource("Rect_19")
 
 [node name="Wall_22" type="CollisionShape2D" parent="BuildingBoundary" unique_id=500030462]
-position = Vector2(6680, 920)
+position = Vector2(6561, 912)
 shape = SubResource("Rect_20")
 
 [node name="Wall_23" type="CollisionShape2D" parent="BuildingBoundary" unique_id=935258934]
-position = Vector2(6761.5, 1000)
+position = Vector2(6642.5, 1003.5)
 shape = SubResource("Rect_21")
 
 [node name="Wall_26" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1455653067]
-position = Vector2(6920, 1247)
+position = Vector2(6799.5, 1252.5)
 shape = SubResource("Rect_24")
 
 [node name="Wall_27" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1200741090]
@@ -8412,7 +8748,7 @@ position = Vector2(5880, 1657)
 shape = SubResource("Rect_Adj_Wall_44")
 
 [node name="Wall_45" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1638588395]
-position = Vector2(7080, 1960)
+position = Vector2(7080, 2182)
 shape = SubResource("Rect_36")
 
 [node name="Wall_46" type="CollisionShape2D" parent="BuildingBoundary" unique_id=49127970]
@@ -8468,15 +8804,15 @@ position = Vector2(2339, 2031.5)
 shape = SubResource("Rect_31")
 
 [node name="Wall_61" type="CollisionShape2D" parent="BuildingBoundary" unique_id=2091114197]
-position = Vector2(5800, 2346)
+position = Vector2(7080, 1585)
 shape = SubResource("Rect_Adj_Wall_61")
 
 [node name="Wall_62" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1152237873]
-position = Vector2(5356.5, 2346)
+position = Vector2(7072, 1829)
 shape = SubResource("Rect_Adj_Wall_62")
 
 [node name="Wall_63" type="CollisionShape2D" parent="BuildingBoundary" unique_id=29471043]
-position = Vector2(6480, 2346)
+position = Vector2(6036.5, 2347)
 shape = SubResource("Rect_Adj_Wall_63")
 
 [node name="Wall_64" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1201869657]
@@ -8484,7 +8820,7 @@ position = Vector2(1155.5, 2523)
 shape = SubResource("Rect_Adj_Wall_64")
 
 [node name="Wall_65" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1926326964]
-position = Vector2(440, 3160)
+position = Vector2(440, 2995)
 shape = SubResource("Rect_47")
 
 [node name="Wall_66" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1379083723]
@@ -8496,7 +8832,7 @@ position = Vector2(4920, 2739)
 shape = SubResource("Rect_Adj_Wall_67")
 
 [node name="Wall_68" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1375631187]
-position = Vector2(520, 3200)
+position = Vector2(520, 3029)
 shape = SubResource("Rect_8")
 
 [node name="Wall_69" type="CollisionShape2D" parent="BuildingBoundary" unique_id=871924665]
@@ -8528,15 +8864,15 @@ position = Vector2(1225, 1554)
 shape = SubResource("Rect_52")
 
 [node name="Wall_76" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1197860740]
-position = Vector2(5317, 2447)
+position = Vector2(5316.5, 2420.5)
 shape = SubResource("Rect_Adj_Wall_76")
 
 [node name="Wall_77" type="CollisionShape2D" parent="BuildingBoundary" unique_id=327322768]
-position = Vector2(6120, 2446)
+position = Vector2(6147, 2360)
 shape = SubResource("Rect_Adj_Wall_77")
 
 [node name="Wall_78" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1705156019]
-position = Vector2(6840, 2446)
+position = Vector2(6867, 2389)
 shape = SubResource("Rect_Adj_Wall_78")
 
 [node name="Wall_79" type="CollisionShape2D" parent="BuildingBoundary" unique_id=204471943]
@@ -8547,8 +8883,12 @@ shape = SubResource("Rect_Adj_Wall_79")
 position = Vector2(4116, 2739)
 shape = SubResource("Rect_54")
 
+[node name="CollisionShape2D57" type="CollisionShape2D" parent="BuildingBoundary" unique_id=2130910947]
+position = Vector2(5267.5, 3914.5)
+shape = SubResource("RectangleShape2D_evdoi")
+
 [node name="Wall_81" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1494713204]
-position = Vector2(5236.5, 3280)
+position = Vector2(5230.5, 3253)
 shape = SubResource("Rect_55")
 
 [node name="Wall_82" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1591064746]
@@ -8622,11 +8962,11 @@ position = Vector2(1045.5, 2449.125)
 shape = SubResource("Rect_34")
 
 [node name="Wall_115" type="CollisionShape2D" parent="BuildingBoundary" unique_id=853109465]
-position = Vector2(6855, 1086.9063)
+position = Vector2(4252.5, 877.5)
 shape = SubResource("Rect_59")
 
 [node name="Wall_117" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1238946331]
-position = Vector2(1160, 3816)
+position = Vector2(1160, 3653.5)
 shape = SubResource("Rect_56")
 
 [node name="Wall_119" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1465863822]
@@ -8634,35 +8974,35 @@ position = Vector2(2160, 3980)
 shape = SubResource("Rect_Gate_Tower")
 
 [node name="Wall_120" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1832409104]
-position = Vector2(2960, 3980)
+position = Vector2(2960, 3973.5)
 shape = SubResource("Rect_Gate_Tower")
 
 [node name="Wall_122" type="CollisionShape2D" parent="BuildingBoundary" unique_id=2076502089]
-position = Vector2(840, 3915)
+position = Vector2(1187, 4078)
 shape = SubResource("Rect_Gate_122")
 
 [node name="Wall_123" type="CollisionShape2D" parent="BuildingBoundary" unique_id=170623663]
-position = Vector2(3640, 3997.5)
+position = Vector2(4732.5, 4078.875)
 shape = SubResource("Rect_Gate_123")
 
 [node name="Wall_124" type="CollisionShape2D" parent="BuildingBoundary" unique_id=492429728]
-position = Vector2(4335, 3844.5)
+position = Vector2(4335, 3838)
 shape = SubResource("Rect_51")
 
 [node name="Wall_127" type="CollisionShape2D" parent="BuildingBoundary" unique_id=752515695]
-position = Vector2(1683.5, 3915)
+position = Vector2(1120, 3908)
 shape = SubResource("Rect_Gate_127")
 
 [node name="Wall_128" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1036861039]
-position = Vector2(3280, 3997.5)
+position = Vector2(4012.5, 4079)
 shape = SubResource("Rect_Gate_128")
 
 [node name="Wall_129" type="CollisionShape2D" parent="BuildingBoundary" unique_id=536727539]
-position = Vector2(4080, 3997.5)
+position = Vector2(3052.5, 4079)
 shape = SubResource("Rect_Gate_129")
 
 [node name="Wall_130" type="CollisionShape2D" parent="BuildingBoundary" unique_id=964980401]
-position = Vector2(4735, 3997.5)
+position = Vector2(4120, 3991)
 shape = SubResource("Rect_Gate_130")
 
 [node name="Wall_131" type="CollisionShape2D" parent="BuildingBoundary" unique_id=470077611]
@@ -8682,7 +9022,7 @@ position = Vector2(6749.5, 1975)
 shape = SubResource("RectangleShape2D_dp1it")
 
 [node name="Wall_137" type="CollisionShape2D" parent="BuildingBoundary" unique_id=2034978456]
-position = Vector2(573.125, 3091.3438)
+position = Vector2(577, 3084.8438)
 shape = SubResource("RectangleShape2D_u6h35")
 
 [node name="Wall_138" type="CollisionShape2D" parent="BuildingBoundary" unique_id=313279167]
@@ -8793,7 +9133,7 @@ position = Vector2(4333, 3065.5)
 shape = SubResource("RectangleShape2D_fence_ext")
 
 [node name="CollisionShape2D20" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1225368059]
-position = Vector2(7082, 1407.5)
+position = Vector2(7079.5, 1154)
 shape = SubResource("RectangleShape2D_atsxw")
 
 [node name="CollisionShape2D26" type="CollisionShape2D" parent="BuildingBoundary" unique_id=903206956]
@@ -8847,6 +9187,10 @@ shape = SubResource("RectangleShape2D_yib25")
 [node name="CollisionShape2D51" type="CollisionShape2D" parent="BuildingBoundary" unique_id=650091390]
 position = Vector2(1250, 3274)
 shape = SubResource("RectangleShape2D_fyw7y")
+
+[node name="CollisionShape2D58" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1195832263]
+position = Vector2(440.5, 1525)
+shape = SubResource("RectangleShape2D_6gudt")
 
 [node name="CollisionShape2D53" type="CollisionShape2D" parent="BuildingBoundary" unique_id=88954792]
 position = Vector2(1250, 3287.5)
