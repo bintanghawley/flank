@@ -7,7 +7,7 @@ path="res://.godot/imported/Beholden-Bold.ttf-57b9512f5499ccb2461c70a5ad887674.f
 
 [deps]
 
-source_file="res://assets/ui/fonts/Beholden-Bold.ttf"
+source_file="res://assets/ui/fonts/beholden-bold.ttf"
 dest_files=["res://.godot/imported/Beholden-Bold.ttf-57b9512f5499ccb2461c70a5ad887674.fontdata"]
 
 [params]

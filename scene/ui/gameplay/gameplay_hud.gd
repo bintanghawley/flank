@@ -3349,7 +3349,7 @@ func _create_inventory_slot_node(slot_idx: int) -> Control:
 			count_lbl.offset_bottom = -2
 			count_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT as HorizontalAlignment
 			count_lbl.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM as VerticalAlignment
-			count_lbl.add_theme_font_override("font", preload("res://assets/ui/fonts/Beholden-Bold.ttf"))
+			count_lbl.add_theme_font_override("font", preload("res://assets/ui/fonts/beholden-bold.ttf"))
 			count_lbl.add_theme_font_size_override("font_size", 13)
 			count_lbl.add_theme_color_override("font_color", Color(0.95, 0.90, 0.85, 1))
 			count_lbl.add_theme_color_override("font_shadow_color", Color(0.15, 0.10, 0.10, 0.9))
@@ -3918,7 +3918,7 @@ func _create_quest_item_node(quest: Dictionary, is_selected: bool) -> Control:
 	row.add_theme_constant_override("separation", 4)
 	row.mouse_filter = Control.MOUSE_FILTER_PASS as Control.MouseFilter
 
-	var serif_font: Font = preload("res://assets/ui/fonts/Beholden-Bold.ttf")
+	var serif_font: Font = preload("res://assets/ui/fonts/beholden-bold.ttf")
 
 	# Arrow indicator (visible if is_selected)
 	var arrow := Label.new()
@@ -4802,7 +4802,7 @@ func _apply_hud_keycap_widget(tex_rect: TextureRect, keycode: int, target_h: flo
 			fallback_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER as HorizontalAlignment
 			fallback_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER as VerticalAlignment
 			fallback_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
-			fallback_lbl.add_theme_font_override("font", preload("res://assets/ui/fonts/Beholden-Bold.ttf"))
+			fallback_lbl.add_theme_font_override("font", preload("res://assets/ui/fonts/beholden-bold.ttf"))
 			fallback_lbl.add_theme_color_override("font_color", Color(0.98, 0.92, 0.8, 1.0))
 			tex_rect.add_child(fallback_lbl)
 		fallback_lbl.add_theme_font_size_override("font_size", 8 if key_str.length() > 2 else 10)
