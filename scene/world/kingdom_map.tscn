@@ -8215,7 +8215,6 @@ tile_map_data = PackedByteArray("AAAbAAAAAAAbAAAAAAAcAAAAAAAcAAAAAAAdAAAAAAAdAAA
 tile_set = SubResource("TileSet_ground")
 
 [node name="Structures" type="TileMapLayer" parent="." unique_id=1118296621]
-visible = false
 z_index = 4
 y_sort_enabled = true
 texture_filter = 1
