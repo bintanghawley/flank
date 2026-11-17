@@ -14,6 +14,7 @@ enum EnemyType { ARCHER, KNIGHT }
 @export var respawn_time: float = 5.0     # Waktu tunggu respawn setelah mati (detik)
 @export var can_respawn: bool = true
 @export var wait_for_arena: bool = false
+@export var in_arena_combat: bool = false
 @export var melee_attack_range: float = 80.0
 @export var melee_damage: int = 1
 
@@ -142,6 +143,7 @@ func alert_to_combat(target: CharacterBody2D = null) -> void:
 	if is_dead:
 		return
 	wait_for_arena = false
+	in_arena_combat = true
 	var was_patrolling: bool = (current_state == State.IDLE_PATROL)
 	if current_state != State.CHASE:
 		current_state = State.CHASE
@@ -276,15 +278,16 @@ func _physics_process(delta: float) -> void:
 		var target := get_best_target()
 		if target == null:
 			player = null
-			current_state = State.IDLE_PATROL
+			if not in_arena_combat:
+				current_state = State.IDLE_PATROL
 			return
 		player = target
 
 		var target_center := get_target_center(player)
 		var enemy_center := get_enemy_center()
 		var dist := enemy_center.distance_to(target_center)
-		# Jika pemain kabur terlalu jauh di luar layar (leash limit), musuh kembali patroli
-		if dist > 850.0:
+		# Jika pemain kabur terlalu jauh di luar layar (leash limit), musuh kembali patroli (hanya di luar arena)
+		if not in_arena_combat and dist > 850.0:
 			player = null
 			is_flanking = false
 			flank_wp1 = Vector2.ZERO
@@ -431,9 +434,15 @@ func _physics_process(delta: float) -> void:
 				move_and_slide_with_separation()
 				apply_smoothed_facing(move_dir, delta)
 	else:
-		# Patroli mutar-mutar santai di area
-		handle_idle_patrol(delta)
-		move_and_slide_with_separation()
+		if in_arena_combat:
+			var arena_t := get_best_target()
+			if arena_t != null:
+				current_state = State.CHASE
+				player = arena_t
+		else:
+			# Patroli mutar-mutar santai di area
+			handle_idle_patrol(delta)
+			move_and_slide_with_separation()
 
 	# ---------------------------------------------------------
 	# 2. LOGIKA DAMAGE KONTAK SAAT MENYENTUH HERO
@@ -455,6 +464,13 @@ func _physics_process(delta: float) -> void:
 
 
 func handle_idle_patrol(delta: float) -> void:
+	if in_arena_combat:
+		var t := get_best_target()
+		if t != null:
+			current_state = State.CHASE
+			player = t
+			return
+
 	wander_timer -= delta
 
 	# Pilih titik acak baru setiap beberapa detik
@@ -1074,6 +1090,7 @@ func respawn() -> void:
 	flank_stage = 1
 	flank_timeout = 0.0
 	facing_debounce_timer = 0.0
+	in_arena_combat = false
 	current_state = State.IDLE_PATROL
 	wander_target = spawn_position
 	wander_timer = 0.0
@@ -1149,6 +1166,11 @@ func _on_detection_area_body_entered(body: Node2D) -> void:
 
 func _on_detection_area_body_exited(body: Node2D) -> void:
 	if is_dead or wait_for_arena:
+		return
+	if in_arena_combat:
+		var next_target := get_best_target()
+		if next_target:
+			player = next_target
 		return
 	if body == player:
 		var next_target := get_closest_target()

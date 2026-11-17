@@ -59,6 +59,9 @@ const SWORD_INDICATOR_PATH := "res://assets/ui/menus/start_menu/menu_sword_indic
 var _sword_indicator: TextureRect = null
 var _sword_indicator_tween: Tween = null
 
+const BASE_FONT_SIZE: int = 32
+const SELECTED_FONT_SIZE: int = 38
+
 const BUTTON_TEXTS := {
 	"BtnStart": "Mulai Permainan",
 	"BtnContinue": "Lanjutkan",
@@ -103,9 +106,6 @@ func _ready() -> void:
 	# Tunggu 1 frame agar ukuran container terkalkulasi sempurna
 	await get_tree().process_frame
 
-	if is_instance_valid(mode_container):
-		mode_container.visible = false
-	
 	_setup_sword_indicator()
 	
 	for btn_name in BUTTON_TEXTS:
@@ -114,12 +114,16 @@ func _ready() -> void:
 			btn = get_node_or_null("ModeContainer/" + btn_name)
 		if btn:
 			btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND as Control.CursorShape
-			btn.pivot_offset = Vector2(btn.size.x / 2.0, btn.size.y / 2.0)
+			btn.scale = Vector2.ONE
+			btn.add_theme_font_size_override("font_size", BASE_FONT_SIZE)
 			btn.mouse_entered.connect(_on_button_hovered.bind(btn))
 			btn.focus_entered.connect(_on_button_hovered.bind(btn))
 			if btn != btn_start and btn != btn_continue and btn != btn_settings and btn != btn_exit and btn != btn_story and btn != btn_open_world and btn != btn_back:
 				btn.pressed.connect(_on_regular_button_clicked)
 			_set_button_state(btn, false, true)
+
+	if is_instance_valid(mode_container):
+		mode_container.visible = false
 	
 	btn_start.pressed.connect(_on_start_pressed)
 	btn_continue.pressed.connect(_on_continue_pressed)
@@ -179,12 +183,20 @@ func _select_button(btn: Button, instant: bool = false) -> void:
 	if _is_starting or _is_settings_open:
 		return
 	if _current_selected == btn and not instant:
+		if is_instance_valid(btn) and btn.get_theme_font_size("font_size") != SELECTED_FONT_SIZE:
+			_set_button_state(btn, true)
 		return
 	
 	if not instant and _current_selected != null and _current_selected != btn:
 		_play_sfx(SFX_HOVER, -6.0)
 	
-	if _current_selected and is_instance_valid(_current_selected) and _current_selected != btn:
+	# Pastikan seluruh tombol lain di container yang sama dinormalisasi ke ukuran normal
+	var parent_container := btn.get_parent()
+	if parent_container:
+		for sibling in parent_container.get_children():
+			if sibling is Button and sibling != btn:
+				_set_button_state(sibling, false)
+	elif _current_selected and is_instance_valid(_current_selected) and _current_selected != btn:
 		_set_button_state(_current_selected, false)
 	
 	_current_selected = btn
@@ -198,6 +210,9 @@ func _on_button_hovered(btn: Button) -> void:
 		_select_button(btn)
 
 func _set_button_state(btn: Button, is_selected: bool, instant: bool = false) -> void:
+	if not is_instance_valid(btn):
+		return
+
 	var base_text: String = BUTTON_TEXTS.get(btn.name, btn.text)
 	
 	if _btn_tweens.has(btn):
@@ -206,27 +221,36 @@ func _set_button_state(btn: Button, is_selected: bool, instant: bool = false) ->
 			old_t.kill()
 	
 	btn.text = base_text
-	btn.pivot_offset = Vector2(btn.size.x / 2.0, btn.size.y / 2.0)
+	btn.scale = Vector2.ONE
 	
-	var target_scale: Vector2
-	var target_modulate: Color
-	
-	if is_selected:
-		target_scale = Vector2(1.18, 1.18)
-		target_modulate = Color(1.0, 1.0, 1.0, 1.0)
-		_update_sword_indicator(btn, instant)
-	else:
-		target_scale = Vector2(1.0, 1.0)
-		target_modulate = Color(1.0, 1.0, 1.0, 0.85)
+	var target_font_size: int = SELECTED_FONT_SIZE if is_selected else BASE_FONT_SIZE
+	var target_modulate: Color = Color(1.0, 1.0, 1.0, 1.0) if is_selected else Color(1.0, 1.0, 1.0, 0.85)
+	var cur_font_size: int = btn.get_theme_font_size("font_size")
+	if cur_font_size <= 0:
+		cur_font_size = BASE_FONT_SIZE
 	
 	if instant:
-		btn.scale = target_scale
+		btn.add_theme_font_size_override("font_size", target_font_size)
 		btn.modulate = target_modulate
+		if is_selected:
+			_update_sword_indicator(btn, true)
 	else:
 		var tween: Tween = create_tween().set_parallel(true)
 		_btn_tweens[btn] = tween
-		tween.tween_property(btn, "scale", target_scale, 0.12).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		tween.tween_property(btn, "modulate", target_modulate, 0.12)
+		if cur_font_size != target_font_size:
+			tween.tween_method(
+				func(sz: int):
+					if is_instance_valid(btn):
+						btn.add_theme_font_size_override("font_size", sz)
+						if is_selected and _current_selected == btn:
+							_update_sword_indicator(btn, true),
+				cur_font_size,
+				target_font_size,
+				0.12
+			).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		if is_selected:
+			_update_sword_indicator(btn, false)
 
 
 func _setup_sword_indicator() -> void:
@@ -250,18 +274,15 @@ func _get_sword_target_pos(btn: Button) -> Vector2:
 		return Vector2.ZERO
 	var font: Font = btn.get_theme_font("font")
 	var font_size: int = btn.get_theme_font_size("font_size")
+	if font_size <= 0:
+		font_size = BASE_FONT_SIZE
 	var base_text: String = BUTTON_TEXTS.get(btn.name, btn.text)
 	var tw: float = font.get_string_size(base_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	
-	var pivot: Vector2 = btn.pivot_offset
-	if pivot == Vector2.ZERO and btn.size.x > 0.0:
-		pivot = btn.size / 2.0
-	var center_offset: Vector2 = pivot * btn.scale
-	var btn_center_x: float = btn.global_position.x + center_offset.x
-	var btn_center_y: float = btn.global_position.y + center_offset.y
+	var btn_center_x: float = btn.global_position.x + btn.size.x / 2.0
+	var btn_center_y: float = btn.global_position.y + btn.size.y / 2.0
 	
-	# Skala visual teks tombol yang sedang aktif adalah 1.18
-	var text_left: float = btn_center_x - (tw * 1.18) / 2.0
+	var text_left: float = btn_center_x - tw / 2.0
 	var sword_w: float = 24.0 * 2.0
 	var sword_h: float = 9.0 * 2.0
 	if _sword_indicator and _sword_indicator.texture:
@@ -309,20 +330,22 @@ func _open_mode_selection() -> void:
 	if _sword_indicator:
 		_sword_indicator.visible = false
 
-	# Nonaktifkan interaksi menu utama
+	# Nonaktifkan interaksi menu utama dan pastikan tombolnya ternormalisasi
 	menu_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for child in menu_container.get_children():
-		if child is Control:
+		if child is Button:
 			child.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			child.focus_mode = Control.FOCUS_NONE
+			_set_button_state(child, false, true)
 
 	mode_container.visible = true
 	mode_container.modulate.a = 0.0
 	mode_container.mouse_filter = Control.MOUSE_FILTER_STOP
 	for child in mode_container.get_children():
-		if child is Control:
+		if child is Button:
 			child.mouse_filter = Control.MOUSE_FILTER_STOP
 			child.focus_mode = Control.FOCUS_ALL
+			_set_button_state(child, false, true)
 
 	# Tunggu 1 frame agar engine menyelesaikan pass layout dan penempatan posisi tombol
 	await get_tree().process_frame
@@ -353,17 +376,19 @@ func _close_mode_selection() -> void:
 	if is_instance_valid(mode_container):
 		mode_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		for child in mode_container.get_children():
-			if child is Control:
+			if child is Button:
 				child.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				child.focus_mode = Control.FOCUS_NONE
+				_set_button_state(child, false, true)
 
 	menu_container.visible = true
 	menu_container.modulate.a = 0.0
 	menu_container.mouse_filter = Control.MOUSE_FILTER_STOP
 	for child in menu_container.get_children():
-		if child is Control:
+		if child is Button:
 			child.mouse_filter = Control.MOUSE_FILTER_STOP
 			child.focus_mode = Control.FOCUS_ALL
+			_set_button_state(child, false, true)
 
 	await get_tree().process_frame
 	if _is_mode_select_open:
@@ -531,6 +556,7 @@ func _on_settings_closed() -> void:
 		if btn:
 			btn.mouse_filter = Control.MOUSE_FILTER_STOP as Control.MouseFilter
 			btn.focus_mode = Control.FOCUS_ALL as Control.FocusMode
+			_set_button_state(btn, false, true)
 	var restore_btn: Button = _last_opened_menu_btn if is_instance_valid(_last_opened_menu_btn) else btn_settings
 	_select_button(restore_btn, true)
 

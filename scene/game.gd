@@ -1182,6 +1182,8 @@ func start_arena_battle() -> void:
 		if is_instance_valid(enemy):
 			if "wait_for_arena" in enemy:
 				enemy.wait_for_arena = false
+			if "in_arena_combat" in enemy:
+				enemy.in_arena_combat = true
 			if enemy.has_method("alert_to_combat"):
 				enemy.alert_to_combat(leader)
 
@@ -1216,27 +1218,27 @@ func _get_combat_deploy_offset(hero_type: int, leader_type: int, forward: Vector
 	if not leader_is_ranged:
 		# Leader adalah petarung melee di garis depan (Arthur / Hellene)
 		match hero_type:
-			0: # Knight (off-tank)
-				return -forward * 60.0 + lateral * 45.0
-			1: # Bandit (flanker)
-				return -forward * 60.0 - lateral * 45.0
-			2: # Archer (Anastasya) - Backline berjarak aman dan natural
-				return -forward * 180.0 - lateral * 60.0
-			3: # Mage (Magnus) - Backline berjarak aman dan natural
-				return -forward * 210.0 + lateral * 60.0
+			0: # Knight (off-tank) bersanding di samping depan
+				return -forward * 20.0 + lateral * 50.0
+			1: # Bandit (flanker) bersanding di samping depan
+				return -forward * 20.0 - lateral * 50.0
+			2: # Archer (Anastasya) di sayap kiri belakang
+				return -forward * 70.0 - lateral * 65.0
+			3: # Mage (Magnus) di sayap kanan belakang
+				return -forward * 70.0 + lateral * 65.0
 			_:
-				return -forward * 120.0
+				return -forward * 60.0
 	else:
 		# Leader adalah karakter ranged di lini belakang (Anastasya / Magnus)
 		match hero_type:
-			0: # Knight maju ke depan melindungi leader
-				return forward * 70.0 - lateral * 45.0
-			1: # Bandit maju ke depan mengapit musuh
-				return forward * 70.0 + lateral * 45.0
-			2: # Archer berdiri di samping / belakang rekan ranged
-				return -forward * 30.0 - lateral * 70.0
-			3: # Mage berdiri di samping / belakang rekan ranged
-				return -forward * 30.0 + lateral * 70.0
+			0: # Knight maju ke depan kiri melindungi leader
+				return forward * 65.0 - lateral * 45.0
+			1: # Bandit maju ke depan kanan mengapit musuh
+				return forward * 65.0 + lateral * 45.0
+			2: # Archer berdiri di sayap kiri mendampingi rekan ranged
+				return -forward * 15.0 - lateral * 70.0
+			3: # Mage berdiri di sayap kanan mendampingi rekan ranged
+				return -forward * 15.0 + lateral * 70.0
 			_:
 				return forward * 50.0
 
@@ -1254,6 +1256,14 @@ func _deploy_party_for_combat() -> void:
 
 	var leader_type := get_hero_type_index(leader)
 
+	var deploy_members: Array[CharacterBody2D] = []
+	var deploy_positions: Array[Vector2] = []
+
+	var min_x := arena_bounds.position.x + 45.0
+	var max_x := arena_bounds.end.x - 45.0
+	var min_y := arena_bounds.position.y + 45.0
+	var max_y := arena_bounds.end.y - 45.0
+
 	for i in range(party_members.size()):
 		if i == active_leader_index:
 			continue
@@ -1269,9 +1279,46 @@ func _deploy_party_for_combat() -> void:
 		var h_type := get_hero_type_index(member)
 		var offset := _get_combat_deploy_offset(h_type, leader_type, forward_dir, lateral_dir)
 		var spawn_pos: Vector2 = leader.global_position + offset
-		spawn_pos.x = clampf(spawn_pos.x, arena_bounds.position.x + 35.0, arena_bounds.end.x - 35.0)
-		spawn_pos.y = clampf(spawn_pos.y, arena_bounds.position.y + 35.0, arena_bounds.end.y - 35.0)
+		spawn_pos.x = clampf(spawn_pos.x, min_x, max_x)
+		spawn_pos.y = clampf(spawn_pos.y, min_y, max_y)
 
+		deploy_members.append(member)
+		deploy_positions.append(spawn_pos)
+
+	# Iterative Relaxation Pass: Jaga jarak alami antar karakter agar tidak saling menumpuk
+	const MIN_MEMBER_DISTANCE: float = 65.0
+	const MIN_LEADER_DISTANCE: float = 55.0
+	var leader_pos := leader.global_position
+
+	for _iter in range(8):
+		for i in range(deploy_positions.size()):
+			# 1. Jaga jarak dari Leader
+			var d_leader := deploy_positions[i].distance_to(leader_pos)
+			if d_leader < MIN_LEADER_DISTANCE:
+				var push_dir := (deploy_positions[i] - leader_pos).normalized()
+				if push_dir.length_squared() < 0.01:
+					push_dir = -forward_dir
+				deploy_positions[i] = leader_pos + push_dir * MIN_LEADER_DISTANCE
+
+			# 2. Jaga jarak antar rekan party satu sama lain
+			for j in range(i + 1, deploy_positions.size()):
+				var d_pair := deploy_positions[i].distance_to(deploy_positions[j])
+				if d_pair < MIN_MEMBER_DISTANCE:
+					var sep_dir := (deploy_positions[i] - deploy_positions[j]).normalized()
+					if sep_dir.length_squared() < 0.01:
+						sep_dir = lateral_dir
+					var overlap := (MIN_MEMBER_DISTANCE - d_pair) * 0.5
+					deploy_positions[i] += sep_dir * overlap
+					deploy_positions[j] -= sep_dir * overlap
+
+			# 3. Batasi posisi tetap di dalam batas arena
+			deploy_positions[i].x = clampf(deploy_positions[i].x, min_x, max_x)
+			deploy_positions[i].y = clampf(deploy_positions[i].y, min_y, max_y)
+
+	# Terapkan posisi akhir ke masing-masing anggota party
+	for k in range(deploy_members.size()):
+		var member = deploy_members[k]
+		var spawn_pos = deploy_positions[k]
 		member.global_position = spawn_pos
 		member.modulate.a = 1.0
 		if "target_position" in member:
@@ -1292,10 +1339,16 @@ func check_arena_completion(_delta: float) -> void:
 		return
 
 	var all_dead: bool = true
+	var leader := get_active_leader()
 	for e in arena_enemies:
 		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead) and e.is_in_group("enemy"):
 			all_dead = false
-			break
+			# Pastikan seluruh musuh arena yang masih hidup selalu aktif mengejar party
+			if "in_arena_combat" in e and not e.in_arena_combat:
+				e.in_arena_combat = true
+			if "current_state" in e and e.current_state != 1: # State.CHASE
+				if e.has_method("alert_to_combat"):
+					e.alert_to_combat(leader)
 
 	if all_dead:
 		_start_party_combat_fade_out()
@@ -1349,16 +1402,13 @@ func _start_party_combat_fade_out() -> void:
 		has_companion_to_fade = true
 		var tw := create_tween()
 		tw.tween_property(member, "modulate:a", 0.0, fade_duration)\
-			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		_party_fade_tweens.append(tw)
 
-	if has_companion_to_fade:
-		get_tree().create_timer(fade_duration).timeout.connect(func():
-			if arena_state == ArenaState.COMBAT:
-				end_arena_battle()
-		, CONNECT_ONE_SHOT)
-	else:
-		end_arena_battle()
+	get_tree().create_timer(fade_duration).timeout.connect(func():
+		if arena_state == ArenaState.COMBAT:
+			end_arena_battle()
+	, CONNECT_ONE_SHOT)
 
 
 func end_arena_battle() -> void:
@@ -1394,9 +1444,15 @@ func end_arena_battle() -> void:
 	update_party_visibility()
 	breadcrumbs.clear()
 
-	# Pastikan status HUD pertarungan tersembunyi
+	# Pastikan status HUD pertarungan tersembunyi jika masih aktif
 	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
-		gameplay_hud.set_combat_hud_visible(false, false)
+		if gameplay_hud.get("is_combat_hud_visible") == true:
+			gameplay_hud.set_combat_hud_visible(false, false)
+
+	# Matikan mode tempur arena pada musuh arena yang tersisa
+	for e in arena_enemies:
+		if is_instance_valid(e) and "in_arena_combat" in e:
+			e.in_arena_combat = false
 
 	print("Arena Cleared! Seluruh musuh kalah. Kamera kembali ke Leader, party kembali 1 karakter. Grup musuh akan muncul lagi dalam 5 detik.")
 
@@ -1414,6 +1470,8 @@ func _respawn_arena_enemy_group() -> void:
 		if is_instance_valid(e):
 			if "wait_for_arena" in e:
 				e.wait_for_arena = true
+			if "in_arena_combat" in e:
+				e.in_arena_combat = false
 			if e.has_method("respawn"):
 				e.respawn()
 

@@ -2052,7 +2052,7 @@ func _on_hud_shortcut_gui_input(event: InputEvent, source_widget: Control = null
 	var mb := event as InputEventMouseButton
 	if mb.button_index != MOUSE_BUTTON_LEFT:
 		return
-	if is_start_menu_mode or (is_instance_valid(pause_overlay) and pause_overlay.visible):
+	if is_start_menu_mode or is_combat_hud_visible or (is_instance_valid(pause_overlay) and pause_overlay.visible):
 		return
 	if is_instance_valid(source_widget):
 		source_widget.accept_event()
@@ -2061,7 +2061,7 @@ func _on_hud_shortcut_gui_input(event: InputEvent, source_widget: Control = null
 
 
 func _on_quest_container_mouse_entered() -> void:
-	if not is_start_menu_mode and (not is_instance_valid(pause_overlay) or not pause_overlay.visible):
+	if not is_start_menu_mode and not is_combat_hud_visible and (not is_instance_valid(pause_overlay) or not pause_overlay.visible):
 		_set_quest_hud_modulate(Color(1.08, 1.05, 0.92, 1.0))
 		var now_msec := Time.get_ticks_msec()
 		if now_msec - _last_hover_sfx_msec >= 45:
@@ -2070,7 +2070,8 @@ func _on_quest_container_mouse_entered() -> void:
 
 
 func _on_quest_container_mouse_exited() -> void:
-	_set_quest_hud_modulate(Color.WHITE)
+	if not is_combat_hud_visible:
+		_set_quest_hud_modulate(Color.WHITE)
 
 
 func _on_tab_pressed(tab_idx: int) -> void:
@@ -2835,26 +2836,85 @@ func set_combat_hud_visible(active: bool, animated: bool = true) -> void:
 	if is_instance_valid(controls_prompt):
 		targets.append(controls_prompt)
 
+	var quest_targets: Array[Control] = []
+	if is_instance_valid(quest_header):
+		quest_targets.append(quest_header)
+	if is_instance_valid(quest_container):
+		quest_targets.append(quest_container)
+
 	if not animated:
 		for node in targets:
 			node.visible = active
 			node.modulate.a = 1.0 if active else 0.0
+		var show_quest: bool = (not active) and (not _is_dialogue_active)
+		for node in quest_targets:
+			node.visible = show_quest
+			node.modulate.a = 1.0 if show_quest else 0.0
 		return
 
+	# Animasi Fade Tersinkronisasi Sempurna:
+	# Mulai dan selesai pada milidetik yang sama persis dengan kurva identik (TRANS_SINE, EASE_IN_OUT).
 	_combat_hud_tween = create_tween().set_parallel(true)
-	for node in targets:
-		if active:
-			node.visible = true
-			_combat_hud_tween.tween_property(node, "modulate:a", 1.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		else:
-			_combat_hud_tween.tween_property(node, "modulate:a", 0.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	var fade_dur: float = 0.35
 
-	if not active:
-		_combat_hud_tween.chain().tween_callback(func():
+	if active:
+		# --- MODE PERANG MULAI ---
+		# UI Perang: fade IN dari 0.0 -> 1.0
+		for node in targets:
+			if is_instance_valid(node):
+				node.visible = true
+				node.modulate.a = 0.0
+				_combat_hud_tween.tween_property(node, "modulate:a", 1.0, fade_dur)\
+					.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		# UI Quest: fade OUT dari 1.0 -> 0.0 (mulai dan selesai barengan)
+		for node in quest_targets:
+			if is_instance_valid(node):
+				node.visible = true
+				node.modulate.a = 1.0
+				_combat_hud_tween.tween_property(node, "modulate:a", 0.0, fade_dur)\
+					.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	else:
+		# --- MODE PERANG SELESAI ---
+		# UI Perang: fade OUT dari 1.0 -> 0.0
+		for node in targets:
+			if is_instance_valid(node):
+				node.visible = true
+				_combat_hud_tween.tween_property(node, "modulate:a", 0.0, fade_dur)\
+					.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		# UI Quest: fade IN dari 0.0 -> 1.0 (mulai dan selesai barengan)
+		var show_quest: bool = not _is_dialogue_active
+		for node in quest_targets:
+			if is_instance_valid(node):
+				if show_quest:
+					node.visible = true
+					node.modulate.a = 0.0
+					_combat_hud_tween.tween_property(node, "modulate:a", 1.0, fade_dur)\
+						.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+				else:
+					node.visible = false
+					node.modulate.a = 0.0
+
+	_combat_hud_tween.chain().tween_callback(func():
+		if is_combat_hud_visible:
+			for node in quest_targets:
+				if is_instance_valid(node) and is_combat_hud_visible:
+					node.visible = false
+					node.modulate.a = 0.0
+			for node in targets:
+				if is_instance_valid(node) and is_combat_hud_visible:
+					node.visible = true
+					node.modulate.a = 1.0
+		else:
 			for node in targets:
 				if is_instance_valid(node) and not is_combat_hud_visible:
 					node.visible = false
-		)
+					node.modulate.a = 0.0
+			if not _is_dialogue_active:
+				for node in quest_targets:
+					if is_instance_valid(node) and not is_combat_hud_visible:
+						node.visible = true
+						node.modulate.a = 1.0
+	)
 
 
 func update_party_hud() -> void:
@@ -5316,9 +5376,9 @@ func _set_gameplay_hud_visible_for_dialogue(show_hud: bool) -> void:
 	if is_instance_valid(btn_pause_menu):
 		btn_pause_menu.visible = show_hud
 	if is_instance_valid(quest_header):
-		quest_header.visible = show_hud
+		quest_header.visible = show_hud and not is_combat_hud_visible
 	if is_instance_valid(quest_container):
-		quest_container.visible = show_hud
+		quest_container.visible = show_hud and not is_combat_hud_visible
 
 
 func _display_current_dialogue_entry() -> void:
