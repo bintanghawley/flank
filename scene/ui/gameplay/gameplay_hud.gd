@@ -215,7 +215,7 @@ var _current_bio_hero_type: int = 0
 var _bio_anim_timer: float = 0.0
 var _bio_anim_frame: int = -1
 const BIO_WALK_ANIM_FPS: float = 10.0
-const BIO_CHAR_PIXEL_SCALE: float = 5.4
+const BIO_CHAR_PIXEL_SCALE: float = 5.0
 const BIO_CHAR_CENTER: Vector2 = Vector2(156.0, 120.0)
 var hero_skill_icons: Dictionary = {}
 var hero_portraits: Dictionary = {}
@@ -2239,10 +2239,12 @@ func _update_character_info_ui() -> void:
 				var reg_size: Vector2 = (display_tex as AtlasTexture).region.size
 				var box_size := Vector2(round(reg_size.x * BIO_CHAR_PIXEL_SCALE), round(reg_size.y * BIO_CHAR_PIXEL_SCALE))
 				bio_char_sprite.custom_minimum_size = box_size
-				bio_char_sprite.offset_left = BIO_CHAR_CENTER.x - box_size.x * 0.5
-				bio_char_sprite.offset_top = BIO_CHAR_CENTER.y - box_size.y * 0.5
-				bio_char_sprite.offset_right = BIO_CHAR_CENTER.x + box_size.x * 0.5
-				bio_char_sprite.offset_bottom = BIO_CHAR_CENTER.y + box_size.y * 0.5
+				var left: float = floor(BIO_CHAR_CENTER.x - box_size.x * 0.5)
+				var top: float = floor(BIO_CHAR_CENTER.y - box_size.y * 0.5)
+				bio_char_sprite.offset_left = left
+				bio_char_sprite.offset_top = top
+				bio_char_sprite.offset_right = left + box_size.x
+				bio_char_sprite.offset_bottom = top + box_size.y
 
 	if bio_name_label:
 		bio_name_label.text = data.get("display_name", "-")
