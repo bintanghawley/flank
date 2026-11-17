@@ -8,6 +8,7 @@ extends Node2D
 @onready var gameplay_hud = get_node_or_null("GameplayHud")
 
 static var pending_load_slot_id: int = -1
+static var selected_game_mode: String = "story" # "story" atau "open_world"
 
 var party_members: Array[CharacterBody2D] = []
 var active_leader_index: int = 0
@@ -228,6 +229,8 @@ func _ready() -> void:
 		var slot_to_load := pending_load_slot_id
 		pending_load_slot_id = -1
 		call_deferred("load_game_from_slot", slot_to_load)
+	elif selected_game_mode == "open_world":
+		_setup_open_world_mode.call_deferred()
 	else:
 		_trigger_prologue_cutscene.call_deferred()
 
@@ -1680,8 +1683,23 @@ func _on_prologue_dialogue_completed() -> void:
 		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
 		if not tracked_q.is_empty() and gameplay_hud.has_method("update_hud_quest_display"):
 			gameplay_hud.update_hud_quest_display(tracked_q)
-		if gameplay_hud.has_method("show_location_banner"):
-			gameplay_hud.show_location_banner("Hutan Depan Istana")
+
+
+func _setup_open_world_mode() -> void:
+	is_prologue_completed = true
+	# Selesaikan quest main_01 dan aktifkan main_02 agar pemain langsung bebas bereksplorasi
+	for q in quest_list:
+		if q.get("id") == "main_01":
+			q["status"] = "completed"
+		elif q.get("id") == "main_02":
+			q["status"] = "active"
+	tracked_quest_id = "main_02"
+	if gameplay_hud:
+		if gameplay_hud.has_method("set_quests"):
+			gameplay_hud.set_quests(quest_list, tracked_quest_id)
+		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
+		if not tracked_q.is_empty() and gameplay_hud.has_method("update_hud_quest_display"):
+			gameplay_hud.update_hud_quest_display(tracked_q)
 
 
 func set_party_movement_locked(locked: bool) -> void:

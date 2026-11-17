@@ -217,7 +217,8 @@ const SFX_BOOK_CONFIRM: AudioStream = preload("res://assets/audio/sfx/ui/book_co
 var _last_hover_sfx_msec: int = 0
 
 # Dialogue State & Portraits
-const PORTRAIT_RAVEN: Texture2D = preload("res://assets/ui/gameplay/dialogue/portrait_raven.png")
+const RAVEN_SHEET: Texture2D = preload("res://assets/characters/animal/raven/raven.png")
+var portrait_raven: Texture2D = null
 const PORTRAIT_ARTHUR: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_arthur.png")
 const PORTRAIT_MAGNUS: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_magnus.png")
 const PORTRAIT_ANASTASYA: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_anastasya.png")
@@ -4488,7 +4489,7 @@ func show_dialogue(dialogue_id: String, entries: Array[Dictionary], on_complete:
 		return
 
 	_dialogue_id = dialogue_id
-	_dialogue_queue = entries
+	_dialogue_queue = entries.duplicate()
 	_dialogue_index = 0
 	_dialogue_callback = on_complete
 	_is_dialogue_active = true
@@ -4589,8 +4590,10 @@ func _on_typewriter_step(curr_chars: int) -> void:
 
 func resolve_dialogue_portrait(key: String) -> Texture2D:
 	var lower := key.to_lower().strip_edges()
-	if "gagak" in lower or "raven" in lower:
-		return PORTRAIT_RAVEN
+	if "gagak" in lower or "raven" in lower or "crow" in lower:
+		if portrait_raven == null:
+			portrait_raven = _create_atlas(RAVEN_SHEET, Rect2(6, 8, 18, 18))
+		return portrait_raven
 	elif "arthur" in lower or "knight" in lower or "pangeran" in lower:
 		return PORTRAIT_ARTHUR
 	elif "magnus" in lower or "mage" in lower or "wizard" in lower or "penasehat" in lower:
@@ -4649,18 +4652,21 @@ func close_dialogue() -> void:
 		_arrow_tween.kill()
 		_arrow_tween = null
 
-	var fade_out := create_tween()
-	fade_out.tween_property(dialogue_container, "modulate:a", 0.0, 0.15)
-	fade_out.tween_callback(func():
-		if is_instance_valid(dialogue_container):
-			dialogue_container.visible = false
-			dialogue_container.modulate.a = 1.0
+	if is_instance_valid(dialogue_container):
+		var fade_out := create_tween()
+		fade_out.tween_property(dialogue_container, "modulate:a", 0.0, 0.15)
+		fade_out.tween_callback(func():
+			if is_instance_valid(dialogue_container):
+				dialogue_container.visible = false
+				dialogue_container.modulate.a = 1.0
+			_set_gameplay_hud_visible_for_dialogue(true)
+		)
+	else:
 		_set_gameplay_hud_visible_for_dialogue(true)
-	)
 
 	var cb := _dialogue_callback
 	var finished_id := _dialogue_id
-	_dialogue_queue.clear()
+	_dialogue_queue = []
 	_dialogue_index = 0
 	_dialogue_id = ""
 	_dialogue_callback = Callable()

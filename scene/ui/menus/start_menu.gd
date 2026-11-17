@@ -25,6 +25,11 @@ extends Control
 @onready var btn_credits: Button = $MenuContainer/BtnCredits
 @onready var btn_exit: Button = $MenuContainer/BtnExit
 
+@onready var mode_container: VBoxContainer = get_node_or_null("ModeContainer")
+@onready var btn_story: Button = get_node_or_null("ModeContainer/BtnStory")
+@onready var btn_open_world: Button = get_node_or_null("ModeContainer/BtnOpenWorld")
+@onready var btn_back: Button = get_node_or_null("ModeContainer/BtnBack")
+
 @onready var iris_mask: ColorRect = $IrisMask
 
 const GAME_SCENE_PATH := "res://scene/game.tscn"
@@ -46,6 +51,7 @@ var _ground_offset: float = 0.0
 
 var _is_starting: bool = false
 var _is_settings_open: bool = false
+var _is_mode_select_open: bool = false
 var _settings_overlay_hud: CanvasLayer = null
 var _last_opened_menu_btn: Button = null
 
@@ -58,7 +64,10 @@ const BUTTON_TEXTS := {
 	"BtnContinue": "Lanjutkan",
 	"BtnSettings": "Pengaturan",
 	"BtnCredits": "Kredit",
-	"BtnExit": "Keluar"
+	"BtnExit": "Keluar",
+	"BtnStory": "Mode Cerita",
+	"BtnOpenWorld": "Mode Jelajah",
+	"BtnBack": "Kembali"
 }
 
 var _btn_tweens: Dictionary = {}
@@ -85,19 +94,30 @@ func _ready() -> void:
 		if _settings_overlay_hud.has_signal("load_game_requested"):
 			_settings_overlay_hud.connect("load_game_requested", _on_load_game_requested)
 	
+	# Pastikan container mode terinisialisasi layout-nya di frame pertama (transparan)
+	if is_instance_valid(mode_container):
+		mode_container.visible = true
+		mode_container.modulate.a = 0.0
+		mode_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
 	# Tunggu 1 frame agar ukuran container terkalkulasi sempurna
 	await get_tree().process_frame
+
+	if is_instance_valid(mode_container):
+		mode_container.visible = false
 	
 	_setup_sword_indicator()
 	
 	for btn_name in BUTTON_TEXTS:
 		var btn: Button = get_node_or_null("MenuContainer/" + btn_name)
+		if not btn:
+			btn = get_node_or_null("ModeContainer/" + btn_name)
 		if btn:
 			btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND as Control.CursorShape
 			btn.pivot_offset = Vector2(btn.size.x / 2.0, btn.size.y / 2.0)
 			btn.mouse_entered.connect(_on_button_hovered.bind(btn))
 			btn.focus_entered.connect(_on_button_hovered.bind(btn))
-			if btn != btn_start and btn != btn_continue and btn != btn_settings and btn != btn_exit:
+			if btn != btn_start and btn != btn_continue and btn != btn_settings and btn != btn_exit and btn != btn_story and btn != btn_open_world and btn != btn_back:
 				btn.pressed.connect(_on_regular_button_clicked)
 			_set_button_state(btn, false, true)
 	
@@ -105,6 +125,13 @@ func _ready() -> void:
 	btn_continue.pressed.connect(_on_continue_pressed)
 	btn_settings.pressed.connect(_on_settings_pressed)
 	btn_exit.pressed.connect(_on_exit_pressed)
+
+	if btn_story:
+		btn_story.pressed.connect(_on_mode_story_pressed)
+	if btn_open_world:
+		btn_open_world.pressed.connect(_on_mode_open_world_pressed)
+	if btn_back:
+		btn_back.pressed.connect(_on_mode_back_pressed)
 	
 	get_viewport().size_changed.connect(func():
 		if _current_selected and is_instance_valid(_current_selected) and not _is_settings_open and not _is_starting:
@@ -226,10 +253,14 @@ func _get_sword_target_pos(btn: Button) -> Vector2:
 	var base_text: String = BUTTON_TEXTS.get(btn.name, btn.text)
 	var tw: float = font.get_string_size(base_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	
-	var btn_center_x: float = btn.global_position.x + btn.size.x / 2.0
-	var btn_center_y: float = btn.global_position.y + btn.size.y / 2.0
+	var pivot: Vector2 = btn.pivot_offset
+	if pivot == Vector2.ZERO and btn.size.x > 0.0:
+		pivot = btn.size / 2.0
+	var center_offset: Vector2 = pivot * btn.scale
+	var btn_center_x: float = btn.global_position.x + center_offset.x
+	var btn_center_y: float = btn.global_position.y + center_offset.y
 	
-	# Skala visual tombol yang sedang aktif adalah 1.18
+	# Skala visual teks tombol yang sedang aktif adalah 1.18
 	var text_left: float = btn_center_x - (tw * 1.18) / 2.0
 	var sword_w: float = 24.0 * 2.0
 	var sword_h: float = 9.0 * 2.0
@@ -262,49 +293,168 @@ func _update_sword_indicator(btn: Button, instant: bool = false) -> void:
 
 
 func _on_start_pressed() -> void:
+	if _is_starting or _is_settings_open or _is_mode_select_open:
+		return
+	_play_sfx(SFX_CLICK, -2.0)
+	_open_mode_selection()
+
+
+func _open_mode_selection() -> void:
+	if not is_instance_valid(mode_container):
+		_launch_game("story")
+		return
+	_is_mode_select_open = true
+
+	# Sembunyikan pedang sejenak saat transisi antar menu agar tidak melayang di posisi lama
+	if _sword_indicator:
+		_sword_indicator.visible = false
+
+	# Nonaktifkan interaksi menu utama
+	menu_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for child in menu_container.get_children():
+		if child is Control:
+			child.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			child.focus_mode = Control.FOCUS_NONE
+
+	mode_container.visible = true
+	mode_container.modulate.a = 0.0
+	mode_container.mouse_filter = Control.MOUSE_FILTER_STOP
+	for child in mode_container.get_children():
+		if child is Control:
+			child.mouse_filter = Control.MOUSE_FILTER_STOP
+			child.focus_mode = Control.FOCUS_ALL
+
+	# Tunggu 1 frame agar engine menyelesaikan pass layout dan penempatan posisi tombol
+	await get_tree().process_frame
+	if not _is_mode_select_open:
+		return
+
+	if btn_story and is_instance_valid(btn_story):
+		_select_button(btn_story, true)
+
+	var t := create_tween().set_parallel(true)
+	t.tween_property(menu_container, "modulate:a", 0.0, 0.15)
+	t.tween_property(mode_container, "modulate:a", 1.0, 0.15)
+	await t.finished
+
+	if _is_mode_select_open:
+		menu_container.visible = false
+
+
+func _close_mode_selection() -> void:
+	if not _is_mode_select_open:
+		return
+	_is_mode_select_open = false
+	_play_sfx(SFX_CLICK, -2.0)
+
+	if _sword_indicator:
+		_sword_indicator.visible = false
+
+	if is_instance_valid(mode_container):
+		mode_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		for child in mode_container.get_children():
+			if child is Control:
+				child.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				child.focus_mode = Control.FOCUS_NONE
+
+	menu_container.visible = true
+	menu_container.modulate.a = 0.0
+	menu_container.mouse_filter = Control.MOUSE_FILTER_STOP
+	for child in menu_container.get_children():
+		if child is Control:
+			child.mouse_filter = Control.MOUSE_FILTER_STOP
+			child.focus_mode = Control.FOCUS_ALL
+
+	await get_tree().process_frame
+	if _is_mode_select_open:
+		return
+
+	_select_button(btn_start, true)
+
+	var t := create_tween().set_parallel(true)
+	if is_instance_valid(mode_container):
+		t.tween_property(mode_container, "modulate:a", 0.0, 0.15)
+	t.tween_property(menu_container, "modulate:a", 1.0, 0.15)
+	await t.finished
+
+	if not _is_mode_select_open and is_instance_valid(mode_container):
+		mode_container.visible = false
+
+
+func _on_mode_story_pressed() -> void:
+	_launch_game("story")
+
+
+func _on_mode_open_world_pressed() -> void:
+	_launch_game("open_world")
+
+
+func _on_mode_back_pressed() -> void:
+	_close_mode_selection()
+
+
+func _unhandled_input(event: InputEvent) -> void:
 	if _is_starting or _is_settings_open:
+		return
+	if _is_mode_select_open and event.is_action_pressed("ui_cancel"):
+		_close_mode_selection()
+		get_viewport().set_input_as_handled()
+
+
+func _launch_game(mode: String) -> void:
+	if _is_starting:
 		return
 	_is_starting = true
 	_play_sfx(SFX_CLICK, -2.0)
 	_play_sfx(SFX_SWORD_RAISE, 0.0)
-	
+
+	var game_script = load(GAME_SCENE_PATH.replace(".tscn", ".gd"))
+	if game_script and "selected_game_mode" in game_script:
+		game_script.selected_game_mode = mode
+
 	# Matikan interaksi menu
-	for btn_name in BUTTON_TEXTS:
-		var btn: Button = get_node_or_null("MenuContainer/" + btn_name)
-		if btn:
-			btn.disabled = true
-			btn.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
-	
-	# Fade out menu buttons, logo, dan indikator pedang
+	for container in [menu_container, mode_container]:
+		if is_instance_valid(container):
+			container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			for child in container.get_children():
+				if child is Button:
+					child.disabled = true
+					child.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	# Fade out menu buttons, mode container, logo, dan indikator pedang
 	var fade_tween: Tween = create_tween().set_parallel(true)
-	fade_tween.tween_property(menu_container, "modulate:a", 0.0, 0.3)
-	fade_tween.tween_property(logo_rect, "modulate:a", 0.0, 0.3)
+	if is_instance_valid(menu_container):
+		fade_tween.tween_property(menu_container, "modulate:a", 0.0, 0.3)
+	if is_instance_valid(mode_container):
+		fade_tween.tween_property(mode_container, "modulate:a", 0.0, 0.3)
+	if is_instance_valid(logo_rect):
+		fade_tween.tween_property(logo_rect, "modulate:a", 0.0, 0.3)
 	if _sword_indicator:
 		fade_tween.tween_property(_sword_indicator, "modulate:a", 0.0, 0.3)
-	
+
 	# Ubah animasi kawan-kawan party menjadi idle saat Knight cast skill
 	mage.play("idle_w")
 	archer.play("idle_w")
 	bandit.play("idle_w")
-	
+
 	# Knight memainkan animasi mengangkat pedang ke atas
 	knight.play("skill_w")
-	
+
 	# Hitung koordinat UV ujung pedang Knight yang terangkat
 	var screen_w: float = size.x if size.x > 0.0 else 1152.0
 	var screen_h: float = size.y if size.y > 0.0 else 648.0
 	# Knight berada di Vector2(820, 353). Ujung pedang terangkat ada di offset (-17 px X, -36 px Y)
 	var sword_tip_pos: Vector2 = knight.position + Vector2(-17.0, -36.0)
 	var sword_uv: Vector2 = Vector2(sword_tip_pos.x / screen_w, sword_tip_pos.y / screen_h)
-	
+
 	var mat: ShaderMaterial = iris_mask.material as ShaderMaterial
 	if mat:
 		mat.set_shader_parameter("center", sword_uv)
 		mat.set_shader_parameter("radius", 1.45)
-	
+
 	# Tunggu jeda agar pedang terangkat penuh ke atas (sekitar frame 5-6 pada 10 FPS = ~0.4 detik)
 	await get_tree().create_timer(0.4).timeout
-	
+
 	# Mulai efek Circular Mask (Iris Wipe) menutup ke ujung pedang bersamaan dengan kilau senjata
 	_play_sfx(SFX_IRIS_CLOSE, -2.0)
 	if sword_glint:
@@ -319,11 +469,11 @@ func _on_start_pressed() -> void:
 		await iris_tween.finished
 	else:
 		await get_tree().create_timer(0.85).timeout
-	
+
 	if sword_glint:
 		sword_glint.stop()
 		sword_glint.visible = false
-	
+
 	# Jeda sejenak saat layar sudah hitam total sebelum masuk ke scene game utama
 	await get_tree().create_timer(0.15).timeout
 	get_tree().change_scene_to_file(GAME_SCENE_PATH)
@@ -337,7 +487,7 @@ func _on_regular_button_clicked() -> void:
 	_play_sfx(SFX_CLICK, -2.0)
 
 func _on_settings_pressed() -> void:
-	if _is_starting or _is_settings_open:
+	if _is_starting or _is_settings_open or _is_mode_select_open:
 		return
 	_is_settings_open = true
 	_last_opened_menu_btn = btn_settings
@@ -356,7 +506,7 @@ func _on_settings_pressed() -> void:
 		_settings_overlay_hud.call("open_as_start_menu_settings")
 
 func _on_continue_pressed() -> void:
-	if _is_starting or _is_settings_open:
+	if _is_starting or _is_settings_open or _is_mode_select_open:
 		return
 	_is_settings_open = true
 	_last_opened_menu_btn = btn_continue
@@ -392,10 +542,10 @@ func _on_load_game_requested(slot_id: int) -> void:
 		game_script.pending_load_slot_id = slot_id
 	if is_instance_valid(_settings_overlay_hud) and _settings_overlay_hud.has_method("close_start_menu_settings"):
 		_settings_overlay_hud.call("close_start_menu_settings")
-	_on_start_pressed()
+	_launch_game("story")
 
 func _on_exit_pressed() -> void:
-	if _is_starting or _is_settings_open:
+	if _is_starting or _is_settings_open or _is_mode_select_open:
 		return
 	_play_sfx(SFX_CLICK, -2.0)
 	await get_tree().create_timer(0.12).timeout

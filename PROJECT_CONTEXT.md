@@ -102,7 +102,7 @@ flank/
 │   └── ui/                                # SELURUH ASET GRAFIS MENTAH UI & FONT
 │       ├── fonts/                         # Tipografi pixel (Beholden-Bold.ttf)
 │       ├── gameplay/                      # Grafis Antarmuka In-Game
-│       │   ├── dialogue/                  # Balon dialog (bubble_talk_left-sheet.png)
+│       │   ├── dialogue/                  # Frame box dialog & nama pembicara (dialogue_box_bg.png, dialogue_name_bg.png)
 │       │   ├── location/                  # Banner lokasi (location_banner.png)
 │       │   └── party_hud/                 # Frame kartu hero, portrait 4 hero, life bar empty/filled
 │       ├── icons/                         # Ikon-Ikon UI

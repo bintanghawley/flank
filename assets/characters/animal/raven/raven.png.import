@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://fncqxrchs5er"
-path="res://.godot/imported/bubble_talk_left-sheet.png-804682a4d332ab576a245feea8ba9f24.ctex"
+uid="uid://dia5050n6gulj"
+path="res://.godot/imported/raven.png-5b59c1f9bf7e40a00db5c2003e4b0d05.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/gameplay/dialogue/bubble_talk_left-sheet.png"
-dest_files=["res://.godot/imported/bubble_talk_left-sheet.png-804682a4d332ab576a245feea8ba9f24.ctex"]
+source_file="res://assets/characters/animal/raven/raven.png"
+dest_files=["res://.godot/imported/raven.png-5b59c1f9bf7e40a00db5c2003e4b0d05.ctex"]
 
 [params]
 
