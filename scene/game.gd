@@ -1087,6 +1087,8 @@ func _init_arena_enemies() -> void:
 func check_arena_trigger() -> void:
 	if arena_state != ArenaState.INACTIVE:
 		return
+	if arena_enemies.is_empty():
+		return
 	var leader := get_active_leader()
 	if not leader or not is_instance_valid(leader):
 		return
