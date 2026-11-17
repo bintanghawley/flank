@@ -765,13 +765,14 @@ func _init_starter_inventory() -> void:
 func _on_hud_item_used(item_data: Dictionary) -> void:
 	if item_data.has("heal_amount"):
 		var heal_val: int = item_data.get("heal_amount", 5)
-		if active_leader_index >= 0 and active_leader_index < party_members.size():
-			var leader = party_members[active_leader_index]
-			if is_instance_valid(leader) and "current_health" in leader and "max_health" in leader:
-				var old_hp: int = leader.current_health
-				leader.current_health = mini(leader.max_health, leader.current_health + heal_val)
-				var healed: int = leader.current_health - old_hp
-				print("ITEM DIGUNAKAN: %s | +%d HP | Sisa HP: %d/%d" % [item_data.get("name", "Item"), healed, leader.current_health, leader.max_health])
+		var target_idx: int = int(item_data.get("target_index", active_leader_index))
+		if target_idx >= 0 and target_idx < party_members.size():
+			var target_hero = party_members[target_idx]
+			if is_instance_valid(target_hero) and "current_health" in target_hero and "max_health" in target_hero:
+				var old_hp: int = target_hero.current_health
+				target_hero.current_health = mini(target_hero.max_health, target_hero.current_health + heal_val)
+				var healed: int = target_hero.current_health - old_hp
+				print("ITEM DIGUNAKAN: %s pada %s | +%d HP | Sisa HP: %d/%d" % [item_data.get("name", "Item"), target_hero.name, healed, target_hero.current_health, target_hero.max_health])
 
 
 func _init_starter_quests() -> void:
@@ -2066,6 +2067,8 @@ func _deserialize_inventory(items: Array) -> Array[Dictionary]:
 		if not (it is Dictionary):
 			continue
 		var d: Dictionary = it.duplicate(true)
+		if d.has("quantity"):
+			d["quantity"] = int(d["quantity"])
 		if d.has("icon_rect"):
 			if d["icon_rect"] is Array and d["icon_rect"].size() == 4:
 				var a = d["icon_rect"]

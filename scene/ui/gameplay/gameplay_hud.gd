@@ -191,6 +191,15 @@ var tab_btn_next_tex: Texture2D = null
 @onready var inv_detail_count_container: HBoxContainer = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/DetailCountContainer
 @onready var inv_detail_count_label: Label = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/DetailCountContainer/DetailCountLabel
 @onready var inv_detail_desc: Label = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/DetailDesc
+@onready var inv_target_slots_container: HBoxContainer = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots
+@onready var inv_target_slots: Array = [
+	$RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot0,
+	$RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot1,
+	$RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot2,
+	$RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot3
+]
+var _is_selecting_item_target: bool = false
+var selected_target_slot_index: int = -1
 
 var party_members: Array[CharacterBody2D] = []
 var active_leader_index: int = 0
@@ -580,6 +589,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				_close_confirm_modal()
 				return
 			if pause_overlay.visible:
+				if _is_selecting_item_target:
+					_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5)
+					_cancel_item_targeting()
+					_safe_set_input_handled()
+					return
 				if _is_dragging:
 					_cancel_drag()
 					_drag_candidate_slot_idx = -1
@@ -629,16 +643,42 @@ func _unhandled_input(event: InputEvent) -> void:
 		if current_tab_index == 0 and pause_overlay.visible:
 			if _is_dragging:
 				return
-			if key_code == KEY_A or key_code == KEY_LEFT:
-				_play_tab_nav_btn_feedback(inv_btn_prev_cat)
-				_on_btn_prev_category_pressed()
-				_safe_set_input_handled()
-				return
-			elif key_code == KEY_D or key_code == KEY_RIGHT:
-				_play_tab_nav_btn_feedback(inv_btn_next_cat)
-				_on_btn_next_category_pressed()
-				_safe_set_input_handled()
-				return
+			if _is_selecting_item_target:
+				if key_code == KEY_ESCAPE:
+					_cancel_item_targeting()
+					_safe_set_input_handled()
+					return
+				if key_code >= KEY_1 and key_code <= KEY_4:
+					var target_slot: int = key_code - KEY_1
+					if target_slot < party_members.size():
+						_safe_set_input_handled()
+						selected_target_slot_index = target_slot
+						_use_item_on_party_member(target_slot)
+						return
+				if key_code == KEY_A or key_code == KEY_LEFT:
+					_safe_set_input_handled()
+					_navigate_target_slot(-1)
+					return
+				elif key_code == KEY_D or key_code == KEY_RIGHT:
+					_safe_set_input_handled()
+					_navigate_target_slot(1)
+					return
+				elif key_code == KEY_F or key_code == KEY_ENTER or key_code == KEY_SPACE:
+					if selected_target_slot_index >= 0 and selected_target_slot_index < party_members.size():
+						_safe_set_input_handled()
+						_use_item_on_party_member(selected_target_slot_index)
+						return
+			else:
+				if key_code == KEY_A or key_code == KEY_LEFT:
+					_play_tab_nav_btn_feedback(inv_btn_prev_cat)
+					_on_btn_prev_category_pressed()
+					_safe_set_input_handled()
+					return
+				elif key_code == KEY_D or key_code == KEY_RIGHT:
+					_play_tab_nav_btn_feedback(inv_btn_next_cat)
+					_on_btn_next_category_pressed()
+					_safe_set_input_handled()
+					return
 
 		if current_tab_index == 1 and pause_overlay.visible:
 			if key_code == KEY_UP or key_code == KEY_W:
@@ -763,6 +803,12 @@ func _input(event: InputEvent) -> void:
 			if key_code == 0:
 				key_code = key_event.physical_keycode
 
+			if key_code == KEY_ESCAPE and _is_selecting_item_target:
+				_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5)
+				_cancel_item_targeting()
+				_safe_set_input_handled()
+				return
+
 			if current_tab_index == 1:
 				if key_code == KEY_UP or key_code == KEY_W:
 					_navigate_quest_relative(-1)
@@ -815,16 +861,42 @@ func _input(event: InputEvent) -> void:
 				if current_tab_index == 0:
 					if _is_dragging:
 						return
-					if key_code == KEY_A or key_code == KEY_LEFT:
-						_play_tab_nav_btn_feedback(inv_btn_prev_cat)
-						_on_btn_prev_category_pressed()
-						_safe_set_input_handled()
-						return
-					elif key_code == KEY_D or key_code == KEY_RIGHT:
-						_play_tab_nav_btn_feedback(inv_btn_next_cat)
-						_on_btn_next_category_pressed()
-						_safe_set_input_handled()
-						return
+					if _is_selecting_item_target:
+						if key_code == KEY_ESCAPE:
+							_cancel_item_targeting()
+							_safe_set_input_handled()
+							return
+						if key_code >= KEY_1 and key_code <= KEY_4:
+							var target_slot := key_code - KEY_1
+							if target_slot < party_members.size():
+								_safe_set_input_handled()
+								selected_target_slot_index = target_slot
+								_use_item_on_party_member(target_slot)
+								return
+						if key_code == KEY_A or key_code == KEY_LEFT:
+							_safe_set_input_handled()
+							_navigate_target_slot(-1)
+							return
+						elif key_code == KEY_D or key_code == KEY_RIGHT:
+							_safe_set_input_handled()
+							_navigate_target_slot(1)
+							return
+						elif key_code == KEY_F or key_code == KEY_ENTER or key_code == KEY_SPACE:
+							if selected_target_slot_index >= 0 and selected_target_slot_index < party_members.size():
+								_safe_set_input_handled()
+								_use_item_on_party_member(selected_target_slot_index)
+								return
+					else:
+						if key_code == KEY_A or key_code == KEY_LEFT:
+							_play_tab_nav_btn_feedback(inv_btn_prev_cat)
+							_on_btn_prev_category_pressed()
+							_safe_set_input_handled()
+							return
+						elif key_code == KEY_D or key_code == KEY_RIGHT:
+							_play_tab_nav_btn_feedback(inv_btn_next_cat)
+							_on_btn_next_category_pressed()
+							_safe_set_input_handled()
+							return
 
 				if current_tab_index == 2:
 					if key_code == KEY_A or key_code == KEY_LEFT:
@@ -1835,6 +1907,21 @@ func _init_pause_menu_ui() -> void:
 		if is_instance_valid(icon_f):
 			_apply_hud_keycap_widget(icon_f, KEY_F, 18.0, true)
 
+	# Inventory Target Party Slots
+	for i in range(inv_target_slots.size()):
+		var slot_node = inv_target_slots[i]
+		if is_instance_valid(slot_node):
+			var slot_idx: int = i
+			var frame = slot_node.get_node_or_null("Frame") as Control
+			if frame:
+				frame.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+				frame.gui_input.connect(func(event: InputEvent):
+					if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+						_on_target_slot_clicked(slot_idx)
+				)
+				frame.mouse_entered.connect(func(): _on_inv_target_slot_hover(slot_idx, true))
+				frame.mouse_exited.connect(func(): _on_inv_target_slot_hover(slot_idx, false))
+
 	# Ensure ONLY ONE slider in inventory, journal, and controls: hide built-in ScrollContainer bars
 	_setup_custom_v_scrollbar(inv_scroll_container, inv_scrollbar, _update_inv_slider_grabber_pos)
 
@@ -1991,6 +2078,7 @@ func toggle_pause_menu(initial_tab: int = 3) -> void:
 
 
 	else:
+		_cancel_item_targeting()
 		if _rebind_action_id != "":
 			_cancel_rebind()
 		_close_confirm_modal()
@@ -2084,6 +2172,7 @@ func _on_tab_pressed(tab_idx: int) -> void:
 		if _rebind_action_id != "":
 			_cancel_rebind()
 		_close_confirm_modal()
+	_cancel_item_targeting()
 	current_tab_index = tab_idx
 	_update_tab_navigation()
 	if tab_idx == 0:
@@ -3090,6 +3179,7 @@ func _set_inventory_category(cat_idx: int) -> void:
 	var target_cat := clampi(cat_idx, 0, 3)
 	if target_cat != current_inventory_category:
 		_play_ui_sfx(SFX_BOOK_PAGE_FLIP, -3.5, 0.04)
+	_cancel_item_targeting()
 	current_inventory_category = target_cat
 	selected_item_category_index = 0
 	if inv_scroll_container:
@@ -3307,6 +3397,7 @@ func _create_inventory_slot_node(slot_idx: int) -> Control:
 func _on_inventory_slot_clicked(slot_idx: int) -> void:
 	if slot_idx >= 0 and slot_idx < _filtered_inventory_items.size():
 		_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5, 0.04)
+		_cancel_item_targeting()
 		selected_item_category_index = slot_idx
 		_update_inventory_selection_visuals()
 		_update_inventory_detail_panel()
@@ -3353,7 +3444,7 @@ func _update_inventory_detail_panel() -> void:
 		if inv_detail_name:
 			inv_detail_name.text = item.get("name", "Nama Barang")
 		if inv_detail_count_label:
-			inv_detail_count_label.text = str(item.get("quantity", 1))
+			inv_detail_count_label.text = str(int(item.get("quantity", 1)))
 		if inv_detail_count_container:
 			inv_detail_count_container.visible = true
 		if inv_detail_desc:
@@ -3375,6 +3466,8 @@ func _update_inventory_detail_panel() -> void:
 		if inv_btn_gunakan:
 			inv_btn_gunakan.disabled = true
 			inv_btn_gunakan.modulate = Color(0.6, 0.6, 0.6, 0.5)
+
+	_update_inventory_target_slots()
 
 
 func _apply_v_scrollbar_visual(scrollbar: Control, ratio: float) -> void:
@@ -3476,8 +3569,16 @@ func _on_btn_gunakan_pressed() -> void:
 	if not item.get("usable", false):
 		return
 
+	if item.has("heal_amount") or current_inventory_category == 0:
+		if not _is_selecting_item_target:
+			_start_item_targeting()
+			return
+		else:
+			if selected_target_slot_index >= 0 and selected_target_slot_index < party_members.size():
+				_use_item_on_party_member(selected_target_slot_index)
+			return
+
 	_play_ui_sfx(SFX_BOOK_CONFIRM, -2.5)
-	# Emit item_used signal so game logic applies effects (e.g. healing)
 	item_used.emit(item)
 
 	var qty: int = item.get("quantity", 1) - 1
@@ -3491,6 +3592,242 @@ func _on_btn_gunakan_pressed() -> void:
 		else:
 			selected_item_category_index = clampi(selected_item_category_index, 0, _filtered_inventory_items.size() - 1)
 
+	_refresh_inventory_ui()
+
+
+func _start_item_targeting() -> void:
+	_is_selecting_item_target = true
+	selected_target_slot_index = -1
+	_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.0)
+	_update_inventory_target_slots()
+
+
+func _navigate_target_slot(delta: int) -> void:
+	if party_members.is_empty():
+		return
+	if selected_target_slot_index < 0:
+		if delta > 0:
+			selected_target_slot_index = 0
+		else:
+			selected_target_slot_index = party_members.size() - 1
+	else:
+		selected_target_slot_index = clampi(selected_target_slot_index + delta, 0, party_members.size() - 1)
+	_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.0)
+	_update_target_slot_selection_visuals()
+
+
+func _on_target_slot_clicked(slot_idx: int) -> void:
+	if not _is_selecting_item_target:
+		return
+	if slot_idx < 0 or slot_idx >= party_members.size():
+		return
+	selected_target_slot_index = slot_idx
+	_use_item_on_party_member(slot_idx)
+
+
+func _update_target_slot_selection_visuals() -> void:
+	for slot_idx in range(inv_target_slots.size()):
+		var slot_node = inv_target_slots[slot_idx]
+		if not is_instance_valid(slot_node):
+			continue
+		var frame := slot_node.get_node_or_null("Frame") as CanvasItem
+		if frame:
+			if selected_target_slot_index >= 0 and slot_idx == selected_target_slot_index:
+				frame.modulate = Color(1.35, 1.25, 0.75, 1.0)
+			else:
+				frame.modulate = Color.WHITE
+
+
+func _cancel_item_targeting() -> void:
+	_is_selecting_item_target = false
+	selected_target_slot_index = -1
+	if is_instance_valid(inv_target_slots_container):
+		inv_target_slots_container.visible = false
+	for i in range(inv_target_slots.size()):
+		var slot_node = inv_target_slots[i]
+		if is_instance_valid(slot_node):
+			var frame = slot_node.get_node_or_null("Frame") as CanvasItem
+			if frame:
+				frame.modulate = Color.WHITE
+
+
+func _update_inventory_target_slots() -> void:
+	if not is_instance_valid(inv_target_slots_container):
+		return
+
+	var is_consumable: bool = false
+	if selected_item_category_index >= 0 and selected_item_category_index < _filtered_inventory_items.size():
+		var item: Dictionary = _filtered_inventory_items[selected_item_category_index]
+		if item.get("usable", false) and (item.has("heal_amount") or current_inventory_category == 0):
+			is_consumable = true
+
+	if not _is_selecting_item_target or not is_consumable:
+		inv_target_slots_container.visible = false
+		return
+
+	inv_target_slots_container.visible = true
+
+	for slot_idx in range(inv_target_slots.size()):
+		var slot_node = inv_target_slots[slot_idx]
+		if not is_instance_valid(slot_node):
+			continue
+
+		if slot_idx < party_members.size() and is_instance_valid(party_members[slot_idx]):
+			var hero = party_members[slot_idx]
+			var hero_type := get_hero_type_for_node(hero)
+			slot_node.visible = true
+
+			var frame := slot_node.get_node_or_null("Frame") as TextureRect
+			var portrait := slot_node.get_node_or_null("Frame/Portrait") as TextureRect
+			var leader_lbl := slot_node.get_node_or_null("Leader") as Label
+			var hp_bar := slot_node.get_node_or_null("HpBar") as TextureProgressBar
+			var hp_label := slot_node.get_node_or_null("HpLabel") as Label
+
+			if portrait and hero_portraits.has(hero_type):
+				portrait.texture = hero_portraits[hero_type]
+
+			if leader_lbl:
+				leader_lbl.visible = true
+				leader_lbl.modulate.a = 1.0 if (slot_idx == active_leader_index) else 0.0
+
+			var max_hp: int = hero.get("max_health") if "max_health" in hero else 10
+			var cur_hp: int = hero.get("current_health") if "current_health" in hero else max_hp
+
+			if hp_bar:
+				hp_bar.max_value = max_hp
+				hp_bar.value = cur_hp
+
+			if hp_label:
+				hp_label.text = "%d/%d" % [cur_hp, max_hp]
+				hp_label.modulate = Color(0.24, 0.15, 0.16, 1.0)
+
+			if frame:
+				if selected_target_slot_index >= 0 and slot_idx == selected_target_slot_index:
+					frame.modulate = Color(1.35, 1.25, 0.75, 1.0)
+				else:
+					frame.modulate = Color.WHITE
+		else:
+			slot_node.visible = false
+
+
+func _on_inv_target_slot_hover(slot_idx: int, is_hover: bool) -> void:
+	if not _is_selecting_item_target:
+		return
+	if slot_idx < 0 or slot_idx >= party_members.size() or slot_idx >= inv_target_slots.size():
+		return
+	var slot_node = inv_target_slots[slot_idx]
+	if not is_instance_valid(slot_node) or not slot_node.visible:
+		return
+
+	var hero = party_members[slot_idx]
+	if not is_instance_valid(hero):
+		return
+
+	var hp_label = slot_node.get_node_or_null("HpLabel") as Label
+	var frame = slot_node.get_node_or_null("Frame") as CanvasItem
+
+	var max_hp: int = hero.get("max_health") if "max_health" in hero else 10
+	var cur_hp: int = hero.get("current_health") if "current_health" in hero else max_hp
+
+	if is_hover:
+		if frame:
+			if selected_target_slot_index >= 0 and slot_idx == selected_target_slot_index:
+				frame.modulate = Color(1.45, 1.35, 0.85, 1.0)
+			else:
+				frame.modulate = Color(1.2, 1.2, 1.15, 1.0)
+		if hp_label:
+			hp_label.text = "%d/%d" % [cur_hp, max_hp]
+			if cur_hp < max_hp:
+				hp_label.modulate = Color(0.12, 0.65, 0.2, 1.0)
+			else:
+				hp_label.modulate = Color(0.24, 0.15, 0.16, 1.0)
+	else:
+		if frame:
+			if selected_target_slot_index >= 0 and slot_idx == selected_target_slot_index:
+				frame.modulate = Color(1.35, 1.25, 0.75, 1.0)
+			else:
+				frame.modulate = Color.WHITE
+		if hp_label:
+			hp_label.text = "%d/%d" % [cur_hp, max_hp]
+			hp_label.modulate = Color(0.24, 0.15, 0.16, 1.0)
+
+
+func _use_item_on_party_member(slot_idx: int) -> void:
+	if selected_item_category_index < 0 or selected_item_category_index >= _filtered_inventory_items.size():
+		return
+	var item: Dictionary = _filtered_inventory_items[selected_item_category_index]
+	if not item.get("usable", false):
+		return
+	if slot_idx < 0 or slot_idx >= party_members.size():
+		return
+	var hero = party_members[slot_idx]
+	if not is_instance_valid(hero):
+		return
+
+	var heal_val: int = int(item.get("heal_amount", 5))
+	var old_hp: int = hero.get("current_health") if "current_health" in hero else 10
+	var max_hp: int = hero.get("max_health") if "max_health" in hero else 10
+	var new_hp: int = mini(max_hp, old_hp + heal_val)
+	var healed: int = new_hp - old_hp
+	hero.current_health = new_hp
+
+	_play_ui_sfx(SFX_BOOK_CONFIRM, -2.5)
+
+	# Emit signal dengan target_index agar game.gd dan sistem lain sinkron
+	var payload := item.duplicate()
+	payload["target_index"] = slot_idx
+	item_used.emit(payload)
+
+	var qty: int = item.get("quantity", 1) - 1
+	item["quantity"] = qty
+	if qty <= 0:
+		inventory_items.erase(item)
+		_filtered_inventory_items = _get_filtered_inventory_items()
+		if _filtered_inventory_items.is_empty():
+			selected_item_category_index = -1
+		else:
+			selected_item_category_index = clampi(selected_item_category_index, 0, _filtered_inventory_items.size() - 1)
+		_cancel_item_targeting()
+
+	# Animasi feedback visual perubahan HP pada slot terpilih
+	if slot_idx < inv_target_slots.size():
+		var slot_node = inv_target_slots[slot_idx]
+		if is_instance_valid(slot_node):
+			var hp_bar = slot_node.get_node_or_null("HpBar") as TextureProgressBar
+			var hp_label = slot_node.get_node_or_null("HpLabel") as Label
+			var frame = slot_node.get_node_or_null("Frame") as CanvasItem
+			var float_lbl = slot_node.get_node_or_null("Frame/FloatFeedback") as Label
+
+			if hp_bar:
+				var tw := create_tween()
+				tw.tween_property(hp_bar, "value", float(new_hp), 0.35).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+			if hp_label:
+				hp_label.text = "%d/%d" % [new_hp, max_hp]
+				hp_label.modulate = Color(0.12, 0.65, 0.2, 1.0)
+				var tw_lbl := create_tween()
+				tw_lbl.tween_property(hp_label, "modulate", Color(0.24, 0.15, 0.16, 1.0), 0.8)
+
+			if frame:
+				var tw_fr := create_tween()
+				frame.modulate = Color(1.5, 1.5, 1.2, 1.0)
+				tw_fr.tween_property(frame, "modulate", Color(1.35, 1.25, 0.75, 1.0) if slot_idx == selected_target_slot_index else Color.WHITE, 0.35)
+
+			if float_lbl:
+				float_lbl.text = "+%d HP" % heal_val if healed > 0 else "Penuh"
+				float_lbl.visible = true
+				float_lbl.modulate.a = 1.0
+				var orig_y: float = float_lbl.position.y
+				var tw_fl := create_tween()
+				tw_fl.parallel().tween_property(float_lbl, "position:y", orig_y - 12.0, 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+				tw_fl.parallel().tween_property(float_lbl, "modulate:a", 0.0, 0.7)
+				tw_fl.tween_callback(func():
+					float_lbl.visible = false
+					float_lbl.position.y = orig_y
+				)
+
+	_update_hp_bars()
+	_update_pause_party_hp_bars()
 	_refresh_inventory_ui()
 
 

@@ -2042,14 +2042,6 @@ stretch_margin_right = 12
 texture_under = ExtResource("11_hp_empty")
 texture_progress = ExtResource("12_hp_filled")
 
-[node name="Badge" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot0"]
-texture_filter = 1
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-size_flags_horizontal = 4
-texture = SubResource("Atlas_btn_1")
-stretch_mode = 5
-
 [node name="Slot1" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots"]
 layout_mode = 2
 theme_override_constants/separation = 6
@@ -2103,14 +2095,6 @@ stretch_margin_left = 12
 stretch_margin_right = 12
 texture_under = ExtResource("11_hp_empty")
 texture_progress = ExtResource("12_hp_filled")
-
-[node name="Badge" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot1"]
-texture_filter = 1
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-size_flags_horizontal = 4
-texture = SubResource("Atlas_btn_2")
-stretch_mode = 5
 
 [node name="Slot2" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots"]
 layout_mode = 2
@@ -2166,14 +2150,6 @@ stretch_margin_right = 12
 texture_under = ExtResource("11_hp_empty")
 texture_progress = ExtResource("12_hp_filled")
 
-[node name="Badge" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot2"]
-texture_filter = 1
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-size_flags_horizontal = 4
-texture = SubResource("Atlas_btn_3")
-stretch_mode = 5
-
 [node name="Slot3" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots"]
 layout_mode = 2
 theme_override_constants/separation = 6
@@ -2227,14 +2203,6 @@ stretch_margin_left = 12
 stretch_margin_right = 12
 texture_under = ExtResource("11_hp_empty")
 texture_progress = ExtResource("12_hp_filled")
-
-[node name="Badge" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot3"]
-texture_filter = 1
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-size_flags_horizontal = 4
-texture = SubResource("Atlas_btn_4")
-stretch_mode = 5
 
 [node name="PageInventory" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer"]
 visible = false
@@ -2611,14 +2579,347 @@ vertical_alignment = 1
 [node name="DetailDesc" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage"]
 layout_mode = 0
 offset_left = 24.0
-offset_top = 158.0
+offset_top = 154.0
 offset_right = 296.0
-offset_bottom = 363.0
+offset_bottom = 240.0
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 17
 text = "Deskripsi barang bisa satu sampai dua kalimat"
 autowrap_mode = 3
+
+[node name="TargetPartySlots" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage"]
+visible = false
+layout_mode = 0
+offset_left = 12.0
+offset_top = 252.0
+offset_right = 300.0
+offset_bottom = 375.0
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Slot0" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Leader" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot0"]
+custom_minimum_size = Vector2(63, 14)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "Leader"
+horizontal_alignment = 1
+
+[node name="Frame" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot0"]
+texture_filter = 1
+custom_minimum_size = Vector2(63, 63)
+layout_mode = 2
+mouse_filter = 0
+texture = SubResource("Atlas_party_frame")
+expand_mode = 1
+
+[node name="Portrait" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot0/Frame"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("7_port_arthur")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FloatFeedback" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot0/Frame"]
+visible = false
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -30.0
+offset_top = -10.0
+offset_right = 30.0
+offset_bottom = 8.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.12, 0.65, 0.2, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "+5 HP"
+horizontal_alignment = 1
+
+[node name="HpBar" type="TextureProgressBar" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot0"]
+texture_filter = 1
+custom_minimum_size = Vector2(60, 12)
+layout_mode = 2
+size_flags_horizontal = 4
+max_value = 10.0
+value = 10.0
+nine_patch_stretch = true
+stretch_margin_left = 12
+stretch_margin_right = 12
+texture_under = ExtResource("11_hp_empty")
+texture_progress = ExtResource("12_hp_filled")
+
+[node name="HpLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot0"]
+custom_minimum_size = Vector2(63, 14)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "10/10"
+horizontal_alignment = 1
+
+[node name="Slot1" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Leader" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot1"]
+modulate = Color(1, 1, 1, 0)
+custom_minimum_size = Vector2(63, 14)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "Leader"
+horizontal_alignment = 1
+
+[node name="Frame" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot1"]
+texture_filter = 1
+custom_minimum_size = Vector2(63, 63)
+layout_mode = 2
+mouse_filter = 0
+texture = SubResource("Atlas_party_frame")
+expand_mode = 1
+
+[node name="Portrait" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot1/Frame"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("10_port_hellene")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FloatFeedback" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot1/Frame"]
+visible = false
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -30.0
+offset_top = -10.0
+offset_right = 30.0
+offset_bottom = 8.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.12, 0.65, 0.2, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "+5 HP"
+horizontal_alignment = 1
+
+[node name="HpBar" type="TextureProgressBar" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot1"]
+texture_filter = 1
+custom_minimum_size = Vector2(60, 12)
+layout_mode = 2
+size_flags_horizontal = 4
+max_value = 10.0
+value = 10.0
+nine_patch_stretch = true
+stretch_margin_left = 12
+stretch_margin_right = 12
+texture_under = ExtResource("11_hp_empty")
+texture_progress = ExtResource("12_hp_filled")
+
+[node name="HpLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot1"]
+custom_minimum_size = Vector2(63, 14)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "10/10"
+horizontal_alignment = 1
+
+[node name="Slot2" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Leader" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot2"]
+modulate = Color(1, 1, 1, 0)
+custom_minimum_size = Vector2(63, 14)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "Leader"
+horizontal_alignment = 1
+
+[node name="Frame" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot2"]
+texture_filter = 1
+custom_minimum_size = Vector2(63, 63)
+layout_mode = 2
+mouse_filter = 0
+texture = SubResource("Atlas_party_frame")
+expand_mode = 1
+
+[node name="Portrait" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot2/Frame"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("9_port_anastasya")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FloatFeedback" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot2/Frame"]
+visible = false
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -30.0
+offset_top = -10.0
+offset_right = 30.0
+offset_bottom = 8.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.12, 0.65, 0.2, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "+5 HP"
+horizontal_alignment = 1
+
+[node name="HpBar" type="TextureProgressBar" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot2"]
+texture_filter = 1
+custom_minimum_size = Vector2(60, 12)
+layout_mode = 2
+size_flags_horizontal = 4
+max_value = 10.0
+value = 10.0
+nine_patch_stretch = true
+stretch_margin_left = 12
+stretch_margin_right = 12
+texture_under = ExtResource("11_hp_empty")
+texture_progress = ExtResource("12_hp_filled")
+
+[node name="HpLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot2"]
+custom_minimum_size = Vector2(63, 14)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "10/10"
+horizontal_alignment = 1
+
+[node name="Slot3" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Leader" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot3"]
+modulate = Color(1, 1, 1, 0)
+custom_minimum_size = Vector2(63, 14)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "Leader"
+horizontal_alignment = 1
+
+[node name="Frame" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot3"]
+texture_filter = 1
+custom_minimum_size = Vector2(63, 63)
+layout_mode = 2
+mouse_filter = 0
+texture = SubResource("Atlas_party_frame")
+expand_mode = 1
+
+[node name="Portrait" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot3/Frame"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Atlas_port_magnus_slot")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FloatFeedback" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot3/Frame"]
+visible = false
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -30.0
+offset_top = -10.0
+offset_right = 30.0
+offset_bottom = 8.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.12, 0.65, 0.2, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "+5 HP"
+horizontal_alignment = 1
+
+[node name="HpBar" type="TextureProgressBar" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot3"]
+texture_filter = 1
+custom_minimum_size = Vector2(60, 12)
+layout_mode = 2
+size_flags_horizontal = 4
+max_value = 10.0
+value = 10.0
+nine_patch_stretch = true
+stretch_margin_left = 12
+stretch_margin_right = 12
+texture_under = ExtResource("11_hp_empty")
+texture_progress = ExtResource("12_hp_filled")
+
+[node name="HpLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot3"]
+custom_minimum_size = Vector2(63, 14)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "10/10"
+horizontal_alignment = 1
 
 [node name="PageJournal" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer"]
 visible = false
