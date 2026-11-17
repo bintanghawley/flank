@@ -5546,8 +5546,11 @@ texture = ExtResource("2_building")
 62:23/0 = 0
 62:23/0/y_sort_origin = -16
 83:23/0 = 0
+83:23/0/z_index = 1
 84:23/0 = 0
+84:23/0/z_index = 1
 85:23/0 = 0
+85:23/0/z_index = 1
 86:23/0 = 0
 87:23/0 = 0
 88:23/0 = 0
@@ -6034,6 +6037,7 @@ texture = ExtResource("2_building")
 84:29/0 = 0
 85:29/0 = 0
 86:29/0 = 0
+86:29/0/z_index = 1
 87:29/0 = 0
 88:29/0 = 0
 89:29/0 = 0
@@ -7810,6 +7814,9 @@ sources/0 = SubResource("TileSetAtlasSource_nature")
 [sub_resource type="RectangleShape2D" id="Rect_Adj_Wall_0"]
 size = Vector2(560, 439)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_uma22"]
+size = Vector2(240, 3355)
+
 [sub_resource type="RectangleShape2D" id="Rect_1"]
 size = Vector2(241, 1016)
 
@@ -8207,6 +8214,7 @@ tile_map_data = PackedByteArray("AAAbAAAAAAAbAAAAAAAcAAAAAAAcAAAAAAAdAAAAAAAdAAA
 tile_set = SubResource("TileSet_ground")
 
 [node name="Structures" type="TileMapLayer" parent="." unique_id=1118296621]
+visible = false
 z_index = 4
 y_sort_enabled = true
 texture_filter = 1
@@ -8238,6 +8246,10 @@ collision_mask = 0
 [node name="Wall_0" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1227976241]
 position = Vector2(2440, 837.5)
 shape = SubResource("Rect_Adj_Wall_0")
+
+[node name="CollisionShape2D54" type="CollisionShape2D" parent="BuildingBoundary" unique_id=1262234240]
+position = Vector2(120, 2407.5)
+shape = SubResource("RectangleShape2D_uma22")
 
 [node name="Wall_1" type="CollisionShape2D" parent="BuildingBoundary" unique_id=275067617]
 position = Vector2(3314.5, 588)
