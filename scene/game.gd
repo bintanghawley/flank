@@ -1791,6 +1791,14 @@ func load_game_from_slot(slot_id: int) -> bool:
 		push_error("Struktur data save tidak lengkap pada Slot %d" % slot_id)
 		return false
 
+	# Restore Game Mode
+	if data.has("game_mode"):
+		selected_game_mode = str(data["game_mode"])
+	elif str(data.get("chapter", "")) == "Mode Jelajah":
+		selected_game_mode = "open_world"
+	else:
+		selected_game_mode = "story"
+
 	# Restore Playtime
 	total_playtime = float(data.get("playtime", 0.0))
 	is_prologue_completed = bool(data.get("is_prologue_completed", true))
@@ -1960,9 +1968,12 @@ func _collect_save_data(slot_id: int) -> Dictionary:
 			if "last_gameplay_thumbnail_b64" in gameplay_hud:
 				thumb_b64 = str(gameplay_hud.last_gameplay_thumbnail_b64)
 
+	var raw_mode := selected_game_mode
+	var is_explore := (raw_mode == "open_world" or raw_mode == "jelajah")
 	return {
 		"slot_id": slot_id,
-		"chapter": "Chapter 1.1",
+		"chapter": "Mode Jelajah" if is_explore else "Chapter 1.1",
+		"game_mode": raw_mode,
 		"is_prologue_completed": is_prologue_completed,
 		"arena_state": int(arena_state),
 		"location": current_location,

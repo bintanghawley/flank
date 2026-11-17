@@ -4828,14 +4828,28 @@ func _refresh_save_load_ui() -> void:
 
 			var is_corrupt: bool = data.get("corrupted", false)
 			var chapter_lbl = row.get_node_or_null("SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol/Chapter") as Label
+			var mode_lbl = row.get_node_or_null("SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol/Mode") as Label
 			var loc_lbl = row.get_node_or_null("SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol/Location") as Label
 			var play_lbl = row.get_node_or_null("SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol/Playtime") as Label
 			var time_lbl = row.get_node_or_null("SlotCard/ContentMargin/OccupiedView/SaveTime") as Label
 			var thumb = row.get_node_or_null("SlotCard/ContentMargin/OccupiedView/TopRow/Thumbnail") as TextureRect
 
+			var raw_mode: String = str(data.get("game_mode", "")).to_lower().strip_edges()
+			var chapter_val: String = str(data.get("chapter", "")).strip_edges()
+			var is_explore: bool = (raw_mode == "open_world" or raw_mode == "jelajah" or chapter_val == "Mode Jelajah" or chapter_val.to_lower().contains("jelajah"))
+			var mode_display: String = "Mode: Jelajah" if is_explore else "Mode: Cerita"
+
 			if chapter_lbl:
-				chapter_lbl.text = data.get("chapter", "Chapter 1.1")
+				if is_corrupt:
+					chapter_lbl.text = "Data Rusak"
+				elif is_explore:
+					chapter_lbl.text = "Mode Jelajah"
+				else:
+					chapter_lbl.text = data.get("chapter", "Chapter 1.1")
 				chapter_lbl.add_theme_color_override("font_color", Color(0.75, 0.2, 0.2, 1.0) if is_corrupt else Color(0.24, 0.15, 0.16, 1.0))
+			if mode_lbl:
+				mode_lbl.visible = not is_corrupt
+				mode_lbl.text = mode_display
 			if loc_lbl:
 				loc_lbl.text = "Lokasi: " + str(data.get("location", "Istana Kerajaan"))
 			if play_lbl:

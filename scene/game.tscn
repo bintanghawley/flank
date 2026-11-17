@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://df7k2nab1nd1t" path="res://scene/player/player_bandit.tscn" id="6_bandit"]
 [ext_resource type="PackedScene" path="res://scene/enemy/enemy_knight.tscn" id="7_enemy_knight"]
 [ext_resource type="PackedScene" uid="uid://b5k8vyg6w3xqm" path="res://scene/ui/gameplay/gameplay_hud.tscn" id="8_hud"]
+[ext_resource type="PackedScene" uid="uid://df7k2nguard1t" path="res://scene/npc/npc_guard.tscn" id="9_npc_guard"]
 
 [sub_resource type="Shader" id="Shader_iris"]
 code = "shader_type canvas_item;
@@ -75,6 +76,10 @@ can_respawn = false
 [node name="Enemy_Archer_1" parent="." unique_id=110304382 instance=ExtResource("2_xwcet")]
 position = Vector2(6280, 3230)
 can_respawn = false
+
+[node name="Npc_Guard_1" parent="." unique_id=1290897880 instance=ExtResource("9_npc_guard")]
+y_sort_enabled = true
+position = Vector2(2320, 2780)
 
 [node name="GameplayHud" parent="." unique_id=161884810 instance=ExtResource("8_hud")]
 

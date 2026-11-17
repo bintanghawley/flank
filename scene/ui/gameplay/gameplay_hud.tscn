@@ -4186,6 +4186,15 @@ text = "Chapter 1.1"
 clip_text = true
 text_overrun_behavior = 3
 
+[node name="Mode" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "Mode: Cerita"
+clip_text = true
+text_overrun_behavior = 3
+
 [node name="Location" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
@@ -4327,6 +4336,15 @@ text = "Chapter 1.1"
 clip_text = true
 text_overrun_behavior = 3
 
+[node name="Mode" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "Mode: Cerita"
+clip_text = true
+text_overrun_behavior = 3
+
 [node name="Location" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
@@ -4464,6 +4482,15 @@ theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 17
 text = "Chapter 1.1"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="Mode" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard/ContentMargin/OccupiedView/TopRow/InfoCol"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "Mode: Cerita"
 clip_text = true
 text_overrun_behavior = 3
 
