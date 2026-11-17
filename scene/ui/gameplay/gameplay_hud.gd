@@ -20,6 +20,7 @@ signal start_menu_settings_closed
 @onready var btn_pause_menu: TextureButton = $RootControl/BtnPauseMenu
 @onready var quest_header: Label = $RootControl/QuestHeader
 @onready var quest_container: HBoxContainer = $RootControl/QuestContainer
+@onready var btn_hud_quest: TextureButton = $RootControl/QuestContainer/BtnHudQuest
 @onready var quest_title: Label = $RootControl/QuestContainer/TextContainer/QuestTitle
 @onready var quest_objective: Label = $RootControl/QuestContainer/TextContainer/QuestObjective
 
@@ -27,10 +28,9 @@ signal start_menu_settings_closed
 @onready var location_banner: TextureRect = $RootControl/LocationBanner
 @onready var location_label: Label = $RootControl/LocationBanner/LocationRow/LocationLabel
 
-# Top-Right Inventory, Info & Settings Shortcuts
+# Top-Right Inventory & Info Shortcuts
 @onready var btn_hud_inventory: TextureButton = $RootControl/BtnHudInventory
 @onready var btn_hud_info: TextureButton = $RootControl/BtnHudInfo
-@onready var btn_hud_settings: TextureButton = $RootControl/BtnHudSettings
 
 # Bottom-Left Controls Prompt
 @onready var controls_prompt: VBoxContainer = $RootControl/ControlsPrompt
@@ -45,6 +45,7 @@ signal start_menu_settings_closed
 @onready var pause_overlay: ColorRect = $RootControl/PauseOverlay
 @onready var drag_ghost: Control = $RootControl/PauseOverlay/DragGhost
 @onready var drag_ghost_portrait: TextureRect = $RootControl/PauseOverlay/DragGhost/Frame/Portrait
+@onready var drag_ghost_indicator: TextureRect = $RootControl/PauseOverlay/DragGhost/Indicator
 @onready var pause_book_root: Control = $RootControl/PauseOverlay/PauseBookRoot
 @onready var pause_header_banner: TextureRect = $RootControl/PauseOverlay/PauseBookRoot/HeaderContainer/HeaderBanner
 @onready var pause_header_title: Label = $RootControl/PauseOverlay/PauseBookRoot/HeaderContainer/HeaderTitle
@@ -108,7 +109,10 @@ var tab_btn_next_tex: Texture2D = null
 	$RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2,
 	$RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3
 ]
-@onready var save_load_scrollbar: Control = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/DecorativeScrollbar
+@onready var save_page_label: Label = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/PageIndicator/PageLabel
+@onready var btn_save_prev_page: Label = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/PageIndicator/BtnPrevPage
+@onready var btn_save_next_page: Label = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/PageIndicator/BtnNextPage
+@onready var save_bottom_row: Control = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/BottomRow
 @onready var btn_simpan_box: NinePatchRect = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/BottomRow/BtnSimpan
 @onready var btn_simpan_click: TextureButton = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/BottomRow/BtnSimpan/ClickBtn
 @onready var btn_muat_box: NinePatchRect = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/BottomRow/BtnMuat
@@ -119,10 +123,12 @@ var tab_btn_next_tex: Texture2D = null
 @onready var save_confirm_dimmer: ColorRect = $RootControl/PauseOverlay/SaveConfirmModal/Dimmer
 @onready var save_confirm_dialog_box: NinePatchRect = $RootControl/PauseOverlay/SaveConfirmModal/DialogBox
 @onready var save_confirm_msg: Label = $RootControl/PauseOverlay/SaveConfirmModal/DialogBox/DialogMessage
+@onready var btn_confirm_yes_box: NinePatchRect = $RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow/BtnYes
 @onready var btn_confirm_yes_lbl: Label = $RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow/BtnYes/Label
 @onready var btn_confirm_yes: TextureButton = $RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow/BtnYes/ClickBtn
 @onready var btn_confirm_timpa_box: NinePatchRect = $RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow/BtnTimpa
 @onready var btn_confirm_timpa: TextureButton = $RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow/BtnTimpa/ClickBtn
+@onready var btn_confirm_no_box: NinePatchRect = $RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow/BtnNo
 @onready var btn_confirm_no_lbl: Label = $RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow/BtnNo/Label
 @onready var btn_confirm_no: TextureButton = $RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow/BtnNo/ClickBtn
 
@@ -220,6 +226,7 @@ const BIO_CHAR_CENTER: Vector2 = Vector2(156.0, 120.0)
 var hero_skill_icons: Dictionary = {}
 var hero_portraits: Dictionary = {}
 var is_start_menu_mode: bool = false
+var is_hud_input_blocked: bool = false
 var is_combat_hud_visible: bool = false
 var _combat_hud_tween: Tween = null
 var _outside_pause_pressed: bool = false
@@ -266,6 +273,7 @@ var ui_arrow_indicator_tex: Texture2D = null
 var slot_card_selected_tex: Texture2D = null
 var active_settings_submenu: int = 0
 var hovered_settings_submenu: int = -1
+var confirm_modal_selected_idx: int = 0
 var _submenu_arrow_tweens: Dictionary = {}
 var audio_settings: Dictionary = {
 	"master": 65,
@@ -338,13 +346,19 @@ var _keycap_blank_tex: Texture2D = null
 var _control_keycap_cache: Dictionary = {}
 
 # Save & Load State (TASK 05C)
-const DEFAULT_THUMB_B64: String = "iVBORw0KGgoAAAANSUhEUgAAAC4AAAAcCAIAAACRaRrGAAAGq0lEQVR4nK1X245dRxGtqu7et3PzXJTgXBARUUwwCBEki0hI4CCEeOCBT0HihUf+APEd+QSLKO9cEgJSgkMc2YwvcWLPnJlz2d1dVah6n7GdYcbjB9dTnz29e69etWpVDcaDf6ACACjC0xeKtj5rMewkBQLMqSenBPLxn997cPu/yHzp8ne2v/1yypkAnCCUF0+Ed/bX5xaKsGbVUFWkwIJZNSmKaua07jNBVVXaZ8RTPuqfJxAABQTvlURAHIpzwYEjkLaqAQwHEaF3IHoKFON2c8o5Cy3rsxabnacx/yiGJJ4VPnqB5xhKjgWUERQUBIVJVIEJwiM0ZwDypIRid1HSpy+U7IyzFsNOsp9CIIQMKIrKKEqWj8eEDWj+jz/vGVFNMKry9IWq8XfWYtgJIEUvYqw8oYiC85zwSgnRQ1IFYKeJHKIjIZ8E1epUke1UysafIigb9RZZNzgMCXoCAXAVSC9qZ6AgAyA6REAWh4Rq54GKkntCPQKQANT3mAIIOhWERBSD3c8TGdWWGcku6+YNNg0MVz8+JmBlv1gFsjB6tA2ChKDOkDzaaJbzNVHZ86J4NRoB0f/l6PMg7MFSy0jsHCKSQkMeC/9KLJZ1UaDUZy3sD0GCPocL7WxntF1DVVMNxtD5udjUnRrJjxP0p8+uVbxs4oJUDYUafkHwIRRB2iXtDcsWVqtSEeXepETsLvDke9+8/MPXf7AVZkFCiuJNu+fhECMMgYqEERAVxU/auuZeO4cgQSAIGgcOD+KRfVHBFV8v+oRuZ0yFFS5QPDuZI7UuNGZlxes3STknHnFhErUQAb/mhYdVbuLi8HAqblp1q369VmhmzTplWcVpN8s5L/qIqNnLmvt1TkmBFDvXBXSR42q5nFLreoTkwD8DlEE4ppJCIXpQ8VHzUhKz+NA0kcJhzpFjoP0cq7pt3BgPGmIdU+gmVUz3URyx1gE1s8bsFY1LdYEJJAALkIA7N0Nf+yVIDOCZBcnV6hrCLmb54gBFQ0ezetLASFZ668NbacXNeDp7cVxdVKJAwuDNRCUr4RDH/eMZ/ANQyj4pjliyj1C1rd9tdmj9MBzyJFK9d3BleqkZTz7d//KL/Xod4d5/7v3r3X8u5msBnybp13+42s06AlHmAN47MqYdiFNGBp+N8xNVe1oUkz5elCZ6e++2v3BfdyY786h+xXdu3Hn3+rV21Nzrj+Ztu1pL/zBdffvno2br5s27H9z+MCrvtCNK2OuiqqvGB52Xo0gZMzsGsXnlhCROzY8Wdz7uqdTUY7/8+MFLl1/+7P1PXO/GdCHsxhs3r3fTZouEFw/7xfIXv3x71G1f/+Tmt+KLD7fvL9JchFNODCoCITlkCYoBUJWd98pWbUWNYq5kXjDUv6XGVGQFrFbJm1IGMUd1nh6sPv/g+t61T/N+VohXf/XWC9/dnu52C5j/PX6099Xd3/7x94tVarrZzmvbP/r+61iFmlC9CS1nQfWozgmVyjnpKE8qZ1DT8bxXuBuaYnFUT95X3XTVry6OtpfLw/kq7n+1Lw3/e+/GHt+hSX3lN+984/KltUgEWafDWZuQs2QhAnUezHTIbq6egJw4tCd50xnOlG1hDKm0h+NG4ciPXtjiubvb3/cVjncnbqepOsLFglLbbncwCUs6CpN2VFe0DuSjWCvKTE5QqNCum+mQ7LrPUkFqsEuzOsaG6Jzzt8KtIzr4ye/e6fveB/rbR39txrXu4muvvjmejZpJfRj3+/glmaHrQWYCxYA5QFSBFGdkUij1mQHYMqByLqDSe8p8UxCRCiH40au09cr2AucC1Cu/8dM3VVmLEtjJkhcULLcqiYVNloiq2q9TBCImjtyv1n3fa6UGyFcQ48kPqyIiM4cQEBHcYwe0AUNVQaq68c5zYWyJwzSmBXJ5GW3CcKRB1TqLTSHovJjuoqhNK0JNDCNsWqorHxJnTQvvh9Hx/DimRgFyWh/5K6O30Fryaqgwm0sLEEXDbkm0Ki3QAZQl2BADSSXZ7OZmbftKc7HpKxEMdVum2fRsSEqBq50OQI6c/9kbP1YgZ2kWa7lgE4IYrGFwQQK3waFKToMggSTICU0gsJAdN5mGEfaOgcQGW1PzU9mwofO4mM17hr7vX+pHxWXaYaoyv7SvsiXVPN0R2MgIYpwxJQ+WNgbpycgT1JYDZpezhC4QquT1+akpFouQixGUR568YmeroVcDbAafJ/57s0kWN1r3UA0migDNcHPzKDvNObPnUxuidUtV54xdS35WmwpQbRiz6RFBKo35f/RIJjRcbHNWAAAAAElFTkSuQmCC"
+const DEFAULT_THUMB_B64: String = "iVBORw0KGgoAAAANSUhEUgAAACwAAAAcCAIAAACVnMr7AAAFb0lEQVR4nMVXXYscVRCte/v2TM/Mzsx+kZhowIAoGnyJsBAQZBURH3zwpwi++Og/EH9HfkJAfDeaGAXjxmzYdU02MdnZ2Z2Z/rp95ZzqmWnBh4UV0g89t6vvrTpVdaqqx+THP4uICbK4gpFzSnSt11kkLirt8uklXe7lQxBxdRhleWmMzyNpZOlMEpe76jxO/C+XswEJMdXSq2DDOSW61ussEuc8RIZQanWhOqdE17XJM0hcsAVeGIenAugUoY/wW9iIb3G3FQ67Qo3RG+4Nxi9OVbbETo2u0i3o2yYHyiWHuNNlBiBioWoa1hgXFq/zeOmfo0R9N1Ri6U0ZUWmjaVRCw4zxUtYIxWIZmxY0/3D6CA8VjjkeFoMD3sCcjzQSUKdJTCxiZhrBDBanKp4KeifUIlNwhNDEw8tS5MoY928f3hKRlp/CQD6hMViLaLgGTfuqyMXxAujcJTVPQBRpIlozOmMVlkJhLBlX6+Hequ9DZ7/TFpG2z7C1S7+plHmQmJZrLyOsj/PThWEFwRzOPa4Djlt3YwXGGpHwDRCOIKox45F6eO9khuwmuYhMTk5EZFBh06DVFZFZlopIqukYJlgXCHU1w/5Bd4izJSSTDBJDdCU7UEr30rKY814s8XYjaI5JeZcHHJ5W2OQ9jrkYZpIceOMTvC1zZD2PIRmVMNNqd7Angq/mGPuth4UVi2R1+6BbXjxj3qLF23bMmipJ27xcNGynhg1LsR1wTxjBLjdVT4+pCCriLkAM28hiIj1GAvL9u/vwcgbVycoAey4CXOsSK4iwLImvk6oi56qSb8k8t5ls4CE9ot/Y2mcM2gcwvzV4i6ph+MHobxF5OgKHUoRDDv84FJFfb/6CRIyRskpQO0Ufcf3s6204M0TYrZLXQ3/MPS5SfhDb6jP8bvQBZZxj7ejT493HInJzB7XT6SHghxkoOe4gEbMUSrMjGNu+8ZGI9JI1EdnbeyIid/66i3SwTW10EDNbwOMsgH+tNpKVOEQojAli+tsLEbl87VURefj9fbA9Q1JW7CpQb8Ll3b0d+DQAlDWWnJ8gctkEhf3xJzcAorsuIjv390Tk9fyiiBytgxOTAnYqpqMgPT0LttLqK0hM+wJ18egOzBzcegAajrStwvz2p9dF5MI7MDDYRGAnAqU/5few/zn8/uKbryCfwUDCStm4iv3vvfsG+NSCx23yLJATZIeUpRY5U9PqgkqzDFAu9XB4OkWJjll+o+cjoE5w8PeDXRj2SJPtgxlbn38oIq9cA29SupYz92kBDcMOp5InwWmSfV9CxDkl0aK3ut4F5NKPIXqSIYCuBdQrmyBjtIEUtFgXZsJ+WoATnXVERfrwcmrBlbgPeY/5tikrwuWLsHs2As8a1NanM6juwvsxCuzUohbe/xKeZRnai2NX+PHebVYH/A6bOHH1ytuAOATdEsbjJEe0shy1Yyt6SdIfsx9YMsCwQ3BQSK5zpwDEIRnmeldgbO01JGJiSCKizMjtNz+AyaDjmINKB7GPcHjKbmvj5VQM2vRIQ8+wO3aCwN6QpXibU7/15AfboIscVQeGx4Ltph5O+umxnAuqSCeq4RQwbG42xAug9UDjAf0K0a9HnTI5m145//RgX+YU3epdX6gzBvTUmTcfSFh7mg/qE1XXc4rriPNKIeq9jgp7cVx/eTADTETBh8B2PmTXMX9OvluwNKrLp1rOPa3pBiAFMf/C4F153jTPteV41TmsHbNgKguerefthJy4nPWW/4cq4NJJrBLf+CLSgKt5vSKat3SgBsGA12f54eiozTIfqi3TSCgUyl0wLLb6c2e5VFPuX6L//qNUfz/qATal+VmUa82Shs6k+R+Don8AFcyt7Pq6YtsAAAAASUVORK5CYII="
 
+const SLOTS_PER_PAGE: int = 3
 var selected_save_slot: int = 1
+var current_save_page: int = 1
+var total_save_pages: int = 1
 var save_slots_data: Dictionary = {}
 var _save_feedback_tween: Tween = null
 var _pending_confirm_action: String = ""
 var default_thumb_texture: Texture2D = null
+var last_gameplay_thumbnail_tex: Texture2D = null
+var last_gameplay_thumbnail_b64: String = ""
+var _slot_thumbnail_cache: Dictionary = {}
 
 # Drag & Drop Party Management State
 var _drag_candidate_slot_idx: int = -1
@@ -353,6 +367,8 @@ var _drag_start_pos: Vector2 = Vector2.ZERO
 var _is_dragging: bool = false
 const DRAG_THRESHOLD: float = 6.0
 var _current_hovered_target_slot: int = -1
+var _drag_indicator_tween: Tween = null
+var drag_triangle_indicator_tex: ImageTexture = null
 
 const HERO_NAMES: Dictionary = {
 	0: "Arthur",
@@ -458,8 +474,8 @@ func _ready() -> void:
 		_connect_book_hover_sfx(btn_pause_menu, true)
 	for hud_shortcut in [
 		{ "btn": btn_hud_inventory, "tab": 0 },
+		{ "btn": btn_hud_quest, "tab": 1 },
 		{ "btn": btn_hud_info, "tab": 2 },
-		{ "btn": btn_hud_settings, "tab": 3 },
 	]:
 		var sc_btn := hud_shortcut["btn"] as TextureButton
 		if is_instance_valid(sc_btn):
@@ -481,7 +497,16 @@ func _ready() -> void:
 	_setup_party_card_clicks()
 
 
+func _safe_set_input_handled() -> void:
+	if is_inside_tree():
+		var vp := get_viewport()
+		if is_instance_valid(vp):
+			vp.set_input_as_handled()
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	if is_hud_input_blocked:
+		return
 	if is_start_menu_mode and not pause_overlay.visible:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -494,9 +519,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 		if key_code == KEY_ESCAPE:
 			if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
+				_safe_set_input_handled()
 				_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5)
 				_close_confirm_modal()
-				get_viewport().set_input_as_handled()
 				return
 			if pause_overlay.visible:
 				if _is_dragging:
@@ -504,77 +529,152 @@ func _unhandled_input(event: InputEvent) -> void:
 					_drag_candidate_slot_idx = -1
 					_is_dragging = false
 					_current_hovered_target_slot = -1
-					get_viewport().set_input_as_handled()
+					_safe_set_input_handled()
 				else:
 					toggle_pause_menu()
-					get_viewport().set_input_as_handled()
+					_safe_set_input_handled()
 				return
 
 		if (key_code == KEY_ENTER or key_code == KEY_KP_ENTER or key_code == KEY_SPACE or key_code == KEY_F) and pause_overlay.visible:
 			if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
-				_on_confirm_yes_pressed()
-				get_viewport().set_input_as_handled()
+				_safe_set_input_handled()
+				_execute_selected_confirm_modal_button()
 				return
 			elif current_tab_index == 3:
 				if active_settings_submenu == 2:
+					_safe_set_input_handled()
 					_on_save_load_enter_pressed()
-					get_viewport().set_input_as_handled()
 					return
 				elif active_settings_submenu == 3:
+					_safe_set_input_handled()
 					_on_btn_return_to_title_pressed()
-					get_viewport().set_input_as_handled()
 					return
 			elif current_tab_index == 0:
+				_safe_set_input_handled()
 				_play_tab_nav_btn_feedback(inv_btn_gunakan)
 				_on_btn_gunakan_pressed()
-				get_viewport().set_input_as_handled()
 				return
 			elif current_tab_index == 1:
+				_safe_set_input_handled()
 				_play_tab_nav_btn_feedback(journal_btn_navigasi)
 				_on_btn_navigasi_pressed()
-				get_viewport().set_input_as_handled()
+				return
+
+		if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
+			if key_code == KEY_LEFT or key_code == KEY_A or key_code == KEY_UP or key_code == KEY_W:
+				_safe_set_input_handled()
+				_navigate_confirm_modal_buttons(-1)
+				return
+			elif key_code == KEY_RIGHT or key_code == KEY_D or key_code == KEY_DOWN or key_code == KEY_S or key_code == KEY_TAB:
+				_safe_set_input_handled()
+				_navigate_confirm_modal_buttons(1)
+				return
+
+		if current_tab_index == 0 and pause_overlay.visible:
+			if _is_dragging:
+				return
+			if key_code == KEY_A or key_code == KEY_LEFT:
+				_play_tab_nav_btn_feedback(inv_btn_prev_cat)
+				_on_btn_prev_category_pressed()
+				_safe_set_input_handled()
+				return
+			elif key_code == KEY_D or key_code == KEY_RIGHT:
+				_play_tab_nav_btn_feedback(inv_btn_next_cat)
+				_on_btn_next_category_pressed()
+				_safe_set_input_handled()
+				return
+
+		if current_tab_index == 1 and pause_overlay.visible:
+			if key_code == KEY_UP or key_code == KEY_W:
+				_navigate_quest_relative(-1)
+				_safe_set_input_handled()
+				return
+			elif key_code == KEY_DOWN or key_code == KEY_S:
+				_navigate_quest_relative(1)
+				_safe_set_input_handled()
 				return
 
 		if current_tab_index == 3 and pause_overlay.visible:
-			if key_code == KEY_UP:
+			if active_settings_submenu == 2:
+				if key_code == KEY_A or key_code == KEY_LEFT:
+					_change_save_page(-1)
+					_safe_set_input_handled()
+					return
+				elif key_code == KEY_D or key_code == KEY_RIGHT:
+					_change_save_page(1)
+					_safe_set_input_handled()
+					return
+			if active_settings_submenu == 2:
+				if key_code == KEY_A or key_code == KEY_LEFT:
+					_change_save_page(-1)
+					_safe_set_input_handled()
+					return
+				elif key_code == KEY_D or key_code == KEY_RIGHT:
+					_change_save_page(1)
+					_safe_set_input_handled()
+					return
+			if key_code == KEY_UP or key_code == KEY_W:
 				_navigate_submenu_relative(-1)
-				get_viewport().set_input_as_handled()
+				_safe_set_input_handled()
 				return
-			elif key_code == KEY_DOWN:
+			elif key_code == KEY_DOWN or key_code == KEY_S:
 				_navigate_submenu_relative(1)
-				get_viewport().set_input_as_handled()
+				_safe_set_input_handled()
 				return
 
 		if not is_start_menu_mode and pause_overlay.visible:
 			if key_code == KEY_Q:
 				_play_tab_nav_btn_feedback(btn_tab_prev)
 				_navigate_tab_relative(-1)
-				get_viewport().set_input_as_handled()
+				_safe_set_input_handled()
 				return
 			elif key_code == KEY_E:
 				_play_tab_nav_btn_feedback(btn_tab_next)
 				_navigate_tab_relative(1)
-				get_viewport().set_input_as_handled()
+				_safe_set_input_handled()
 				return
 		if event.is_action_pressed("open_inventory") and not is_start_menu_mode:
 			if _toggle_or_switch_book_tab(0):
-				get_viewport().set_input_as_handled()
+				_safe_set_input_handled()
 				return
 		if event.is_action_pressed("open_info") and not is_start_menu_mode:
 			if _toggle_or_switch_book_tab(2):
-				get_viewport().set_input_as_handled()
+				_safe_set_input_handled()
 				return
 		if event.is_action_pressed("open_journal") and not is_start_menu_mode:
 			if _toggle_or_switch_book_tab(1):
-				get_viewport().set_input_as_handled()
+				_safe_set_input_handled()
 				return
 
 
 func _input(event: InputEvent) -> void:
+	if is_hud_input_blocked:
+		return
 	if not pause_overlay.visible:
 		return
 
 	if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
+		if event is InputEventKey and event.pressed and not event.echo:
+			var key_code: int = event.keycode
+			if key_code == 0:
+				key_code = event.physical_keycode
+			if key_code == KEY_ESCAPE:
+				_safe_set_input_handled()
+				_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5)
+				_close_confirm_modal()
+				return
+			elif key_code == KEY_LEFT or key_code == KEY_A or key_code == KEY_UP or key_code == KEY_W:
+				_safe_set_input_handled()
+				_navigate_confirm_modal_buttons(-1)
+				return
+			elif key_code == KEY_RIGHT or key_code == KEY_D or key_code == KEY_DOWN or key_code == KEY_S or key_code == KEY_TAB:
+				_safe_set_input_handled()
+				_navigate_confirm_modal_buttons(1)
+				return
+			elif key_code == KEY_ENTER or key_code == KEY_KP_ENTER or key_code == KEY_SPACE or key_code == KEY_F:
+				_safe_set_input_handled()
+				_execute_selected_confirm_modal_button()
+				return
 		return
 
 	if _rebind_action_id != "":
@@ -583,7 +683,7 @@ func _input(event: InputEvent) -> void:
 				if event.keycode == KEY_ESCAPE:
 					_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5)
 					_cancel_rebind()
-					get_viewport().set_input_as_handled()
+					_safe_set_input_handled()
 					return
 
 				var captured_key: int = event.keycode
@@ -592,12 +692,12 @@ func _input(event: InputEvent) -> void:
 
 				if captured_key != 0:
 					_apply_rebind(_rebind_action_id, captured_key)
-			get_viewport().set_input_as_handled()
+			_safe_set_input_handled()
 			return
 		elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 			_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5)
 			_cancel_rebind()
-			get_viewport().set_input_as_handled()
+			_safe_set_input_handled()
 			return
 
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -607,64 +707,97 @@ func _input(event: InputEvent) -> void:
 			if key_code == 0:
 				key_code = key_event.physical_keycode
 
-			if current_tab_index == 3:
-				if key_code == KEY_UP:
-					_navigate_submenu_relative(-1)
-					get_viewport().set_input_as_handled()
+			if current_tab_index == 1:
+				if key_code == KEY_UP or key_code == KEY_W:
+					_navigate_quest_relative(-1)
+					_safe_set_input_handled()
 					return
-				elif key_code == KEY_DOWN:
+				elif key_code == KEY_DOWN or key_code == KEY_S:
+					_navigate_quest_relative(1)
+					_safe_set_input_handled()
+					return
+
+			if current_tab_index == 3:
+				if active_settings_submenu == 2:
+					if key_code == KEY_A or key_code == KEY_LEFT:
+						_change_save_page(-1)
+						_safe_set_input_handled()
+						return
+					elif key_code == KEY_D or key_code == KEY_RIGHT:
+						_change_save_page(1)
+						_safe_set_input_handled()
+						return
+				if key_code == KEY_UP or key_code == KEY_W:
+					_navigate_submenu_relative(-1)
+					_safe_set_input_handled()
+					return
+				elif key_code == KEY_DOWN or key_code == KEY_S:
 					_navigate_submenu_relative(1)
-					get_viewport().set_input_as_handled()
+					_safe_set_input_handled()
 					return
 				elif (key_code == KEY_ENTER or key_code == KEY_KP_ENTER or key_code == KEY_SPACE) and active_settings_submenu == 2:
+					_safe_set_input_handled()
 					_on_save_load_enter_pressed()
-					get_viewport().set_input_as_handled()
 					return
 				elif (key_code == KEY_ENTER or key_code == KEY_KP_ENTER or key_code == KEY_SPACE) and active_settings_submenu == 3:
+					_safe_set_input_handled()
 					_on_btn_return_to_title_pressed()
-					get_viewport().set_input_as_handled()
 					return
 
 			if not is_start_menu_mode:
 				if key_code == KEY_Q:
 					_play_tab_nav_btn_feedback(btn_tab_prev)
 					_navigate_tab_relative(-1)
-					get_viewport().set_input_as_handled()
+					_safe_set_input_handled()
 					return
 				elif key_code == KEY_E:
 					_play_tab_nav_btn_feedback(btn_tab_next)
 					_navigate_tab_relative(1)
-					get_viewport().set_input_as_handled()
+					_safe_set_input_handled()
 					return
+
+				if current_tab_index == 0:
+					if _is_dragging:
+						return
+					if key_code == KEY_A or key_code == KEY_LEFT:
+						_play_tab_nav_btn_feedback(inv_btn_prev_cat)
+						_on_btn_prev_category_pressed()
+						_safe_set_input_handled()
+						return
+					elif key_code == KEY_D or key_code == KEY_RIGHT:
+						_play_tab_nav_btn_feedback(inv_btn_next_cat)
+						_on_btn_next_category_pressed()
+						_safe_set_input_handled()
+						return
 
 				if current_tab_index == 2:
 					if key_code == KEY_A or key_code == KEY_LEFT:
 						_play_tab_nav_btn_feedback(btn_prev_char)
 						_on_btn_prev_char_pressed()
-						get_viewport().set_input_as_handled()
+						_safe_set_input_handled()
 						return
 					elif key_code == KEY_D or key_code == KEY_RIGHT:
 						_play_tab_nav_btn_feedback(btn_next_char)
 						_on_btn_next_char_pressed()
-						get_viewport().set_input_as_handled()
+						_safe_set_input_handled()
 						return
 					elif key_code >= KEY_1 and key_code <= KEY_4:
 						var target_slot := key_code - KEY_1
 						if target_slot < party_members.size():
 							_on_party_slot_clicked(target_slot)
-							get_viewport().set_input_as_handled()
+							_safe_set_input_handled()
 							return
 
 			if key_code == KEY_F or key_code == KEY_ENTER or key_code == KEY_KP_ENTER or key_code == KEY_SPACE:
 				if current_tab_index == 0:
 					_play_tab_nav_btn_feedback(inv_btn_gunakan)
 					_on_btn_gunakan_pressed()
-					get_viewport().set_input_as_handled()
+					_safe_set_input_handled()
 					return
 				elif current_tab_index == 1:
 					_play_tab_nav_btn_feedback(journal_btn_navigasi)
 					_on_btn_navigasi_pressed()
-					get_viewport().set_input_as_handled()
+					_safe_set_input_handled()
 					return
 
 	if is_instance_valid(_active_v_scrollbar) and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
@@ -795,7 +928,7 @@ func _init_pause_menu_textures() -> void:
 
 	cat_btn_normal_tex = _create_atlas(sheet, Rect2(113, 292, 14, 9))
 	cat_btn_selected_tex = _create_atlas(sheet, Rect2(113, 305, 14, 9))
-	item_slot_tex = _create_atlas(sheet, Rect2(65, 289, 30, 29))
+	item_slot_tex = _create_atlas(sheet, Rect2(65, 289, 30, 30))
 	item_selected_tex = _create_atlas(sheet, Rect2(65, 385, 30, 30))
 
 	quest_btn_panel_tex = _create_atlas(sheet, Rect2(65, 449, 62, 14))
@@ -815,7 +948,7 @@ func _init_pause_menu_textures() -> void:
 		v_grab_img.resize(16, 14, Image.INTERPOLATE_NEAREST)
 		v_scroll_grabber_tex = ImageTexture.create_from_image(v_grab_img)
 
-	for sb in [inv_scrollbar, journal_scrollbar, save_load_scrollbar, controls_scrollbar]:
+	for sb in [inv_scrollbar, journal_scrollbar, controls_scrollbar]:
 		if is_instance_valid(sb):
 			var sb_track = sb.get_node_or_null("Track") as NinePatchRect
 			if sb_track and v_scroll_track_tex:
@@ -823,7 +956,6 @@ func _init_pause_menu_textures() -> void:
 			var sb_grabber = sb.get_node_or_null("Grabber") as TextureRect
 			if sb_grabber and v_scroll_grabber_tex:
 				sb_grabber.texture = v_scroll_grabber_tex
-	_apply_v_scrollbar_visual(save_load_scrollbar, 0.0)
 
 	# Audio Sliders Grabber & Submenu Textures
 	var h_grab_raw := Marshalls.base64_to_raw(H_GRABBER_B64)
@@ -892,7 +1024,7 @@ func _init_pause_menu_textures() -> void:
 		Color8(216, 172, 122, 255),
 		Color8(172, 114, 74, 255)
 	)
-	for hud_btn in [btn_hud_inventory, btn_hud_info, btn_hud_settings]:
+	for hud_btn in [btn_hud_inventory, btn_hud_info]:
 		if is_instance_valid(hud_btn):
 			hud_btn.ignore_texture_size = true
 			hud_btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED as TextureButton.StretchMode
@@ -903,13 +1035,42 @@ func _init_pause_menu_textures() -> void:
 	for icon_cfg in [
 		[btn_hud_inventory, backpack_icon_tex],
 		[tab_btn_inventory, backpack_icon_tex],
-		[btn_hud_settings, _build_gear_icon_texture(frame_outline)],
 	]:
 		var target_btn := icon_cfg[0] as Control
 		if is_instance_valid(target_btn):
 			var btn_icon := target_btn.get_node_or_null("Icon") as TextureRect
 			if btn_icon:
 				btn_icon.texture = icon_cfg[1]
+	if is_instance_valid(btn_hud_quest):
+		btn_hud_quest.ignore_texture_size = true
+		btn_hud_quest.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED as TextureButton.StretchMode
+		btn_hud_quest.texture_normal = _build_hud_quest_banner_texture(
+			frame_outline,
+			Color8(199, 137, 93, 255),
+			Color8(236, 202, 156, 255),
+			Color8(255, 250, 238, 255),
+			Color8(255, 244, 204, 255),
+			Color8(215, 165, 110, 255),
+			Color8(163, 76, 56, 255)
+		)
+		btn_hud_quest.texture_hover = _build_hud_quest_banner_texture(
+			frame_outline,
+			Color8(216, 155, 108, 255),
+			Color8(252, 226, 184, 255),
+			Color8(255, 255, 250, 255),
+			Color8(255, 250, 224, 255),
+			Color8(229, 182, 127, 255),
+			Color8(192, 92, 68, 255)
+		)
+		btn_hud_quest.texture_pressed = _build_hud_quest_banner_texture(
+			frame_outline,
+			Color8(172, 114, 74, 255),
+			Color8(199, 137, 93, 255),
+			Color8(244, 220, 176, 255),
+			Color8(236, 202, 156, 255),
+			Color8(196, 142, 90, 255),
+			Color8(140, 60, 44, 255)
+		)
 
 	_init_inventory_item_textures()
 	if is_instance_valid(inv_detail_icon):
@@ -1036,6 +1197,78 @@ func _build_backpack_icon_texture(ink_col: Color) -> ImageTexture:
 		".#########.",
 		"..#######.."]
 	return _build_pixel_texture(11, 11, pattern, {"#": ink_col})
+
+
+## Builds a 23x27 pixel-art banner ImageTexture with exclamation mark for the HUD quest button.
+func _build_hud_quest_banner_texture(
+	outline_col: Color,
+	pole_col: Color,
+	pole_hi_col: Color,
+	cloth_hi_col: Color,
+	cloth_fill_col: Color,
+	seam_col: Color,
+	exclamation_col: Color
+) -> ImageTexture:
+	var pattern: Array[String] = [
+		"...#################...",
+		".##ppppppppppppppppp##.",
+		"#PP#################PP#",
+		"#PP#HHHHHHHHHHHHHHH#PP#",
+		".##FLHHHHHHHHHHHHHLF##.",
+		"..#FLFFFFFFFFFFFFFLF#..",
+		"..#FLFFFF!!!!!FFFFLF#..",
+		"..#FLFFF!!!!!!!FFFLF#..",
+		"..#FLFFF!!!!!!!FFFLF#..",
+		"..#FLFFFF!!!!!FFFFLF#..",
+		"..#FLFFFFF!!!FFFFFLF#..",
+		"..#FLFFFFF!!!FFFFFLF#..",
+		"..#FLFFFFFF!FFFFFFLF#..",
+		"..#FLFFFFFF!FFFFFFLF#..",
+		"..#FLFFFFFFFFFFFFFLF#..",
+		"..#FLFFFFF!!!FFFFFLF#..",
+		"..#FLFFFF!!!!!FFFFLF#..",
+		"..#FLFFFF!!!!!FFFFLF#..",
+		"..#FLFFFFF!!!FFFFFLF#..",
+		"..#FLFFFFFFFFFFFFFLF#..",
+		"..#FLFFFFFFFFFFFFFLF#..",
+		"..#FLFFFFFF#FFFFFFLF#..",
+		"..#FLFFFFF#.#FFFFFLF#..",
+		"..#FLFFFF#...#FFFFLF#..",
+		"..#FLFFF#.....#FFFLF#..",
+		"..#FLFF#.......#FFLF#..",
+		"..###.............###..",
+	]
+	var palette := {
+		".": Color(0, 0, 0, 0),
+		"#": outline_col,
+		"P": pole_col,
+		"p": pole_hi_col,
+		"H": cloth_hi_col,
+		"F": cloth_fill_col,
+		"L": seam_col,
+		"!": exclamation_col,
+	}
+	return _build_pixel_texture(23, 27, pattern, palette)
+
+
+## Builds a 13x13 symmetrical pixel-art trash can ImageTexture for the save slot delete button.
+func _build_trash_icon_texture(color: Color) -> ImageTexture:
+	var pattern: Array[String] = [
+		".............",
+		".....###.....",
+		"..#########..",
+		".............",
+		"...#######...",
+		"...#.#.#.#...",
+		"...#.#.#.#...",
+		"...#.#.#.#...",
+		"...#.#.#.#...",
+		"...#######...",
+		".............",
+		".............",
+		".............",
+	]
+	return _build_pixel_texture(13, 13, pattern, {"#": color})
 
 
 const INVENTORY_ITEM_PALETTE: Dictionary = {
@@ -1601,7 +1834,7 @@ func enable_start_menu_mode() -> void:
 	_outside_pause_pressed = false
 	_outside_modal_pressed = false
 	hide_location_banner()
-	for hud_node in [btn_pause_menu, btn_hud_inventory, btn_hud_info, btn_hud_settings, quest_header, quest_container, location_banner, controls_prompt, party_container, skill_container]:
+	for hud_node in [btn_pause_menu, btn_hud_inventory, btn_hud_info, btn_hud_quest, quest_header, quest_container, location_banner, controls_prompt, party_container, skill_container]:
 		if is_instance_valid(hud_node):
 			hud_node.visible = false
 	current_tab_index = 3
@@ -1661,7 +1894,9 @@ func close_start_menu_settings() -> void:
 	start_menu_settings_closed.emit()
 
 
-func toggle_pause_menu(initial_tab: int = 2) -> void:
+func toggle_pause_menu(initial_tab: int = 3) -> void:
+	if is_hud_input_blocked:
+		return
 	if is_start_menu_mode:
 		if pause_overlay.visible:
 			close_start_menu_settings()
@@ -1673,6 +1908,8 @@ func toggle_pause_menu(initial_tab: int = 2) -> void:
 	_outside_modal_pressed = false
 	pause_menu_requested.emit()
 	var is_paused := not pause_overlay.visible
+	if is_paused:
+		_capture_gameplay_screenshot()
 	pause_overlay.visible = is_paused
 	get_tree().paused = is_paused
 	_play_ui_sfx(SFX_BOOK_OPEN if is_paused else SFX_BOOK_CLOSE, -2.0)
@@ -1725,6 +1962,8 @@ func _open_book_tab_from_hud(tab_idx: int) -> void:
 
 ## Handles book menu tab hotkeys: opens directly to target_tab, switches to it, or closes if already open on it.
 func _toggle_or_switch_book_tab(target_tab: int) -> bool:
+	if is_hud_input_blocked:
+		return false
 	if is_start_menu_mode:
 		return false
 	if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
@@ -1750,6 +1989,8 @@ func _set_quest_hud_modulate(col: Color) -> void:
 
 ## Opens the target book tab directly when clicking an interactive gameplay HUD widget.
 func _on_hud_shortcut_gui_input(event: InputEvent, source_widget: Control = null, tab_idx: int = 1) -> void:
+	if is_hud_input_blocked:
+		return
 	if not (event is InputEventMouseButton):
 		return
 	var mb := event as InputEventMouseButton
@@ -2004,6 +2245,53 @@ func _on_party_slot_gui_input(slot_idx: int, event: InputEvent) -> void:
 			_current_hovered_target_slot = -1
 
 
+func _get_drag_triangle_indicator_texture() -> ImageTexture:
+	if not drag_triangle_indicator_tex:
+		var pattern: Array[String] = [
+			"###############",
+			"#YYYYYYYYYYYYY#",
+			".#YYYYYYYYYYY#.",
+			"..#YYYYYYYYY#..",
+			"...#YYYYYYY#...",
+			"....#YYYYY#....",
+			".....#YYY#.....",
+			"......#Y#......",
+			".......#......."
+		]
+		var palette := {
+			"#": Color(0.11, 0.07, 0.08, 1.0),
+			"Y": Color(1.0, 0.88, 0.36, 1.0),
+			".": Color(0, 0, 0, 0)
+		}
+		drag_triangle_indicator_tex = _build_pixel_texture(15, 9, pattern, palette)
+	return drag_triangle_indicator_tex
+
+
+func _get_or_create_drag_indicator() -> TextureRect:
+	if is_instance_valid(drag_ghost_indicator):
+		if not drag_ghost_indicator.texture:
+			drag_ghost_indicator.texture = _get_drag_triangle_indicator_texture()
+		return drag_ghost_indicator
+	if not is_instance_valid(drag_ghost):
+		return null
+	var indicator = drag_ghost.get_node_or_null("Indicator") as TextureRect
+	if not indicator:
+		indicator = TextureRect.new()
+		indicator.name = "Indicator"
+		indicator.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST as CanvasItem.TextureFilter
+		indicator.texture = _get_drag_triangle_indicator_texture()
+		indicator.custom_minimum_size = Vector2(15, 9)
+		indicator.size = Vector2(15, 9)
+		indicator.position = Vector2((drag_ghost.size.x - 15.0) * 0.5, -14.0)
+		indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
+		drag_ghost.add_child(indicator)
+	else:
+		if not indicator.texture:
+			indicator.texture = _get_drag_triangle_indicator_texture()
+	drag_ghost_indicator = indicator
+	return indicator
+
+
 func _start_drag(slot_idx: int, global_pos: Vector2) -> void:
 	_dragging_slot_idx = slot_idx
 	if slot_idx < 0 or slot_idx >= party_members.size():
@@ -2019,6 +2307,16 @@ func _start_drag(slot_idx: int, global_pos: Vector2) -> void:
 			drag_ghost_portrait.texture = hero_portraits[hero_type]
 		drag_ghost.global_position = global_pos - Vector2(31.5, 31.5)
 		drag_ghost.visible = true
+
+		var indicator := _get_or_create_drag_indicator()
+		if is_instance_valid(indicator):
+			indicator.visible = true
+			indicator.position.y = -14.0
+			if _drag_indicator_tween and _drag_indicator_tween.is_valid():
+				_drag_indicator_tween.kill()
+			_drag_indicator_tween = create_tween().set_loops()
+			_drag_indicator_tween.tween_property(indicator, "position:y", -17.0, 0.35).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+			_drag_indicator_tween.tween_property(indicator, "position:y", -12.0, 0.35).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 	# Redupkan frame slot sumber
 	if slot_idx < pause_party_slots.size():
@@ -2096,8 +2394,15 @@ func _cancel_drag() -> void:
 
 
 func _reset_drag_visuals() -> void:
+	if _drag_indicator_tween and _drag_indicator_tween.is_valid():
+		_drag_indicator_tween.kill()
+		_drag_indicator_tween = null
 	if is_instance_valid(drag_ghost):
 		drag_ghost.visible = false
+		var indicator := _get_or_create_drag_indicator()
+		if is_instance_valid(indicator):
+			indicator.visible = false
+			indicator.position.y = -14.0
 	for slot_idx in range(pause_party_slots.size()):
 		var slot_node = pause_party_slots[slot_idx]
 		if is_instance_valid(slot_node):
@@ -3234,6 +3539,55 @@ func _select_quest(q_id: String) -> void:
 	quest_selected.emit(found_quest)
 
 
+func _navigate_quest_relative(direction: int) -> void:
+	if is_start_menu_mode:
+		return
+	if not is_instance_valid(pause_overlay) or not pause_overlay.visible:
+		return
+	if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
+		return
+	if _rebind_action_id != "":
+		return
+	if current_tab_index != 1:
+		return
+
+	var quest_nodes: Array[Control] = []
+	if is_instance_valid(main_quest_container):
+		for child in main_quest_container.get_children():
+			if child is Control and not child.is_queued_for_deletion() and child.has_meta("quest_id"):
+				quest_nodes.append(child as Control)
+	if is_instance_valid(world_quest_container):
+		for child in world_quest_container.get_children():
+			if child is Control and not child.is_queued_for_deletion() and child.has_meta("quest_id"):
+				quest_nodes.append(child as Control)
+
+	if quest_nodes.is_empty():
+		return
+
+	var current_idx: int = -1
+	for i in range(quest_nodes.size()):
+		if str(quest_nodes[i].get_meta("quest_id", "")) == selected_quest_id:
+			current_idx = i
+			break
+
+	var next_idx: int = 0
+	if current_idx == -1:
+		next_idx = 0 if direction > 0 else (quest_nodes.size() - 1)
+	else:
+		next_idx = (current_idx + direction) % quest_nodes.size()
+		if next_idx < 0:
+			next_idx += quest_nodes.size()
+
+	var target_node := quest_nodes[next_idx]
+	var target_qid: String = str(target_node.get_meta("quest_id", ""))
+	if target_qid != "":
+		_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5, 0.03)
+		_select_quest(target_qid)
+		if is_instance_valid(journal_scroll_container):
+			journal_scroll_container.ensure_control_visible(target_node)
+			call_deferred("_sync_journal_scrollbar")
+
+
 func _update_quest_list_selection_visuals(container: VBoxContainer) -> void:
 	if not is_instance_valid(container):
 		return
@@ -3449,29 +3803,71 @@ func _navigate_submenu_relative(direction: int) -> void:
 		return
 
 	hovered_settings_submenu = -1
-	const TOTAL_SUBMENUS: int = 4
-	var next_sub: int = (active_settings_submenu + direction) % TOTAL_SUBMENUS
+	var total_submenus: int = 4
+	if is_start_menu_mode:
+		if active_settings_submenu == 2:
+			return
+		total_submenus = 2
+
+	# Jangan wrap ke atas jika sudah di paling atas (Musik & Suara), agar tidak sengaja memicu popup Kembali
+	if active_settings_submenu == 0 and direction < 0:
+		return
+
+	var next_sub: int = (active_settings_submenu + direction) % total_submenus
 	if next_sub < 0:
-		next_sub += TOTAL_SUBMENUS
+		next_sub += total_submenus
 
 	_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5, 0.03)
 	if next_sub == 3:
 		active_settings_submenu = 3
 		_update_submenu_buttons_visual()
+		_on_btn_return_to_title_pressed()
 	else:
 		_switch_settings_submenu(next_sub)
 
 
 func _update_submenu_buttons_visual() -> void:
-	if is_instance_valid(settings_btn_title):
-		var back_lbl = settings_btn_title.get_node_or_null("Title") as Label
-		if back_lbl:
-			back_lbl.text = "Kembali" if is_start_menu_mode else "Kembali ke Judul"
+	if is_start_menu_mode:
+		# Saat diakses dari start menu:
+		# Jika sedang membuka Pengaturan (submenu 0 Musik & Suara atau 1 Kontrol),
+		# sembunyikan tombol Simpan & Muat serta tombol Kembali agar murni hanya berisi Pengaturan.
+		var is_load_mode := (active_settings_submenu == 2)
+		if is_instance_valid(settings_btn_audio):
+			settings_btn_audio.visible = not is_load_mode
+		if is_instance_valid(settings_btn_controls):
+			settings_btn_controls.visible = not is_load_mode
+		if is_instance_valid(settings_btn_save_load):
+			settings_btn_save_load.visible = is_load_mode
+			if is_load_mode:
+				var save_lbl = settings_btn_save_load.get_node_or_null("Title") as Label
+				if save_lbl:
+					save_lbl.text = "Muat Permainan"
+		if is_instance_valid(settings_btn_title):
+			settings_btn_title.visible = false
+	else:
+		if is_instance_valid(settings_btn_audio):
+			settings_btn_audio.visible = true
+		if is_instance_valid(settings_btn_controls):
+			settings_btn_controls.visible = true
+		if is_instance_valid(settings_btn_save_load):
+			settings_btn_save_load.visible = true
+			var save_lbl = settings_btn_save_load.get_node_or_null("Title") as Label
+			if save_lbl:
+				save_lbl.text = "Simpan & Muat"
+		if is_instance_valid(settings_btn_title):
+			settings_btn_title.visible = true
+			var back_lbl = settings_btn_title.get_node_or_null("Title") as Label
+			if back_lbl:
+				back_lbl.text = "Kembali ke Judul"
 
 	var btns: Array[NinePatchRect] = [settings_btn_audio, settings_btn_controls, settings_btn_save_load, settings_btn_title]
 	for i in range(btns.size()):
 		var b = btns[i]
-		if not is_instance_valid(b):
+		if not is_instance_valid(b) or not b.visible:
+			if is_instance_valid(b):
+				var arrow = b.get_node_or_null("ArrowIndicator") as TextureRect
+				if arrow:
+					arrow.visible = false
 			continue
 		var is_sel: bool = (i == active_settings_submenu)
 		var is_hov: bool = (i == hovered_settings_submenu)
@@ -3905,7 +4301,7 @@ func _sync_gameplay_hud_controls_prompts() -> void:
 		"skill_2": { "node": skill_container.get_node_or_null("SkillSlot2/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 24.0 },
 		"skill_3": { "node": skill_container.get_node_or_null("SkillSlot3/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 24.0 },
 		"skill_4": { "node": skill_container.get_node_or_null("SkillSlot4/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 24.0 },
-		"open_journal": { "node": quest_container.get_node_or_null("QuestIcon") if is_instance_valid(quest_container) else null, "fixed_square": false, "target_h": 26.0 },
+		"open_journal": { "node": null, "fixed_square": false, "target_h": 26.0 },
 		"open_inventory": { "node": btn_hud_inventory.get_node_or_null("KeyHint") if is_instance_valid(btn_hud_inventory) else null, "fixed_square": false, "target_h": 20.0 },
 		"open_info": { "node": btn_hud_info.get_node_or_null("KeyHint") if is_instance_valid(btn_hud_info) else null, "fixed_square": false, "target_h": 20.0 },
 	}
@@ -4001,6 +4397,68 @@ func _apply_rebind(action_name: String, new_key: int) -> void:
 # SAVE & LOAD SYSTEM (TASK 05C)
 # ==========================================
 
+func _capture_gameplay_screenshot() -> void:
+	var vp := get_viewport()
+	if not is_instance_valid(vp):
+		return
+	var vp_tex := vp.get_texture()
+	if not is_instance_valid(vp_tex):
+		return
+	var img := vp_tex.get_image()
+	if not is_instance_valid(img) or img.is_empty():
+		return
+
+	var img_w: float = float(img.get_width())
+	var img_h: float = float(img.get_height())
+	if img_w <= 0.0 or img_h <= 0.0:
+		return
+
+	var target_ratio: float = 44.0 / 28.0
+	var crop_w: float = img_w
+	var crop_h: float = img_h
+
+	if (img_w / img_h) > target_ratio:
+		crop_w = img_h * target_ratio
+	else:
+		crop_h = img_w / target_ratio
+
+	var crop_w_int: int = maxi(1, int(crop_w))
+	var crop_h_int: int = maxi(1, int(crop_h))
+	var crop_x: int = clampi(int(round((img_w - float(crop_w_int)) / 2.0)), 0, img.get_width() - crop_w_int)
+	var crop_y: int = clampi(int(round((img_h - float(crop_h_int)) / 2.0)), 0, img.get_height() - crop_h_int)
+	var crop_rect := Rect2i(crop_x, crop_y, crop_w_int, crop_h_int)
+	var cropped_img := img.get_region(crop_rect)
+
+	if cropped_img.get_format() != Image.FORMAT_RGBA8:
+		cropped_img.convert(Image.FORMAT_RGBA8)
+
+	cropped_img.resize(44, 28, Image.INTERPOLATE_BILINEAR)
+
+	var png_buffer := cropped_img.save_png_to_buffer()
+	if png_buffer.is_empty():
+		return
+
+	last_gameplay_thumbnail_tex = ImageTexture.create_from_image(cropped_img)
+	last_gameplay_thumbnail_b64 = Marshalls.raw_to_base64(png_buffer)
+
+
+func _get_slot_thumbnail_texture(slot_idx: int, data: Dictionary) -> Texture2D:
+	if _slot_thumbnail_cache.has(slot_idx) and is_instance_valid(_slot_thumbnail_cache[slot_idx]):
+		return _slot_thumbnail_cache[slot_idx]
+
+	var b64: String = str(data.get("thumbnail_b64", "")).strip_edges()
+	if not b64.is_empty():
+		var raw_bytes := Marshalls.base64_to_raw(b64)
+		if not raw_bytes.is_empty():
+			var img := Image.new()
+			if img.load_png_from_buffer(raw_bytes) == OK:
+				var tex := ImageTexture.create_from_image(img)
+				_slot_thumbnail_cache[slot_idx] = tex
+				return tex
+
+	return default_thumb_texture
+
+
 func _init_save_load_system() -> void:
 	# Inisialisasi texture thumbnail default
 	if default_thumb_texture == null:
@@ -4012,14 +4470,65 @@ func _init_save_load_system() -> void:
 	# Scan existing slot files (1..3)
 	_scan_all_save_slots()
 
-	# Hubungkan tombol klik pada setiap kartu slot
+	# Inisialisasi tekstur tombol hapus tempat sampah
+	var trash_tex_normal := _build_trash_icon_texture(Color8(140, 70, 70, 230))
+	var trash_tex_hover := _build_trash_icon_texture(Color8(230, 60, 60, 255))
+	var trash_tex_pressed := _build_trash_icon_texture(Color8(160, 30, 30, 255))
+
+	# Hubungkan tombol klik dan tombol hapus pada setiap kartu slot (berdasarkan row_idx 0..2)
 	for i in range(save_slot_rows.size()):
-		var slot_idx: int = i + 1
+		var row_idx: int = i
 		var row: Control = save_slot_rows[i]
 		if is_instance_valid(row):
 			var click_btn = row.get_node_or_null("SlotCard/ClickBtn") as TextureButton
-			if click_btn and not click_btn.pressed.is_connected(_select_save_slot):
-				click_btn.pressed.connect(_select_save_slot.bind(slot_idx))
+			if click_btn:
+				if click_btn.pressed.is_connected(_select_save_slot):
+					click_btn.pressed.disconnect(_select_save_slot)
+				if not click_btn.pressed.is_connected(_on_save_slot_row_clicked):
+					click_btn.pressed.connect(_on_save_slot_row_clicked.bind(row_idx))
+				_connect_book_hover_sfx(click_btn)
+
+			var del_btn = row.get_node_or_null("SlotCard/BtnDelete") as TextureButton
+			if del_btn:
+				del_btn.texture_normal = trash_tex_normal
+				del_btn.texture_hover = trash_tex_hover
+				del_btn.texture_pressed = trash_tex_pressed
+				del_btn.ignore_texture_size = true
+				del_btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED as TextureButton.StretchMode
+				if not del_btn.pressed.is_connected(_on_save_slot_row_delete_pressed):
+					del_btn.pressed.connect(_on_save_slot_row_delete_pressed.bind(row_idx))
+				_connect_book_hover_sfx(del_btn)
+
+	# Hubungkan interaksi tombol ganti halaman simpan & muat
+	if is_instance_valid(btn_save_prev_page):
+		if not btn_save_prev_page.gui_input.is_connected(_on_btn_save_prev_page_gui_input):
+			btn_save_prev_page.gui_input.connect(_on_btn_save_prev_page_gui_input)
+		if not btn_save_prev_page.mouse_entered.is_connected(_on_btn_save_prev_page_entered):
+			btn_save_prev_page.mouse_entered.connect(_on_btn_save_prev_page_entered)
+		if not btn_save_prev_page.mouse_exited.is_connected(_on_btn_save_prev_page_exited):
+			btn_save_prev_page.mouse_exited.connect(_on_btn_save_prev_page_exited)
+
+	if is_instance_valid(btn_save_next_page):
+		if not btn_save_next_page.gui_input.is_connected(_on_btn_save_next_page_gui_input):
+			btn_save_next_page.gui_input.connect(_on_btn_save_next_page_gui_input)
+		if not btn_save_next_page.mouse_entered.is_connected(_on_btn_save_next_page_entered):
+			btn_save_next_page.mouse_entered.connect(_on_btn_save_next_page_entered)
+		if not btn_save_next_page.mouse_exited.is_connected(_on_btn_save_next_page_exited):
+			btn_save_next_page.mouse_exited.connect(_on_btn_save_next_page_exited)
+
+	if is_instance_valid(save_page_label):
+		if not save_page_label.gui_input.is_connected(_on_save_page_label_gui_input):
+			save_page_label.gui_input.connect(_on_save_page_label_gui_input)
+
+	# Pastikan Baris Bawah Disembunyikan Sesuai Permintaan
+	if is_instance_valid(save_bottom_row):
+		save_bottom_row.visible = false
+	if is_instance_valid(btn_simpan_box):
+		btn_simpan_box.visible = false
+	if is_instance_valid(btn_muat_box):
+		btn_muat_box.visible = false
+	if is_instance_valid(enter_hint):
+		enter_hint.visible = false
 
 	# Hubungkan Tombol Aksi Simpan & Muat
 	if is_instance_valid(btn_simpan_click) and not btn_simpan_click.pressed.is_connected(_on_btn_simpan_pressed):
@@ -4034,14 +4543,20 @@ func _init_save_load_system() -> void:
 	if is_instance_valid(btn_confirm_yes) and not btn_confirm_yes.pressed.is_connected(_on_confirm_yes_pressed):
 		btn_confirm_yes.pressed.connect(_on_confirm_yes_pressed)
 		_connect_book_hover_sfx(btn_confirm_yes, false, true)
+	if is_instance_valid(btn_confirm_yes) and not btn_confirm_yes.mouse_entered.is_connected(_on_confirm_yes_hovered):
+		btn_confirm_yes.mouse_entered.connect(_on_confirm_yes_hovered)
 
 	if is_instance_valid(btn_confirm_timpa) and not btn_confirm_timpa.pressed.is_connected(_on_confirm_timpa_pressed):
 		btn_confirm_timpa.pressed.connect(_on_confirm_timpa_pressed)
 		_connect_book_hover_sfx(btn_confirm_timpa, false, true)
+	if is_instance_valid(btn_confirm_timpa) and not btn_confirm_timpa.mouse_entered.is_connected(_on_confirm_timpa_hovered):
+		btn_confirm_timpa.mouse_entered.connect(_on_confirm_timpa_hovered)
 
 	if is_instance_valid(btn_confirm_no) and not btn_confirm_no.pressed.is_connected(_on_confirm_no_pressed):
 		btn_confirm_no.pressed.connect(_on_confirm_no_pressed)
 		_connect_book_hover_sfx(btn_confirm_no, false, true)
+	if is_instance_valid(btn_confirm_no) and not btn_confirm_no.mouse_entered.is_connected(_on_confirm_no_hovered):
+		btn_confirm_no.mouse_entered.connect(_on_confirm_no_hovered)
 
 	if is_instance_valid(enter_hint) and not enter_hint.gui_input.is_connected(_on_enter_hint_gui_input):
 		enter_hint.gui_input.connect(_on_enter_hint_gui_input)
@@ -4051,7 +4566,23 @@ func _init_save_load_system() -> void:
 
 func _scan_all_save_slots() -> void:
 	save_slots_data.clear()
-	for slot_idx in range(1, 4):
+	_slot_thumbnail_cache.clear()
+	var dir := DirAccess.open("user://")
+	var found_slots: Array[int] = []
+	if dir:
+		dir.list_dir_begin()
+		var file_name := dir.get_next()
+		while file_name != "":
+			if not dir.current_is_dir() and file_name.begins_with("save_slot_") and file_name.ends_with(".json"):
+				var num_part := file_name.trim_prefix("save_slot_").trim_suffix(".json")
+				if num_part.is_valid_int():
+					var s_id := num_part.to_int()
+					if s_id > 0:
+						found_slots.append(s_id)
+			file_name = dir.get_next()
+		dir.list_dir_end()
+
+	for slot_idx in found_slots:
 		var path := "user://save_slot_%d.json" % slot_idx
 		if FileAccess.file_exists(path):
 			var f := FileAccess.open(path, FileAccess.READ)
@@ -4083,22 +4614,146 @@ func _scan_all_save_slots() -> void:
 						"save_time_str": "-",
 						"slot_id": slot_idx
 					}
-		else:
-			save_slots_data[slot_idx] = null
+
+	_recalculate_save_pages()
+
+
+func _recalculate_save_pages() -> void:
+	var highest_occupied_slot: int = 0
+	for s_id in save_slots_data.keys():
+		if save_slots_data[s_id] != null:
+			if int(s_id) > highest_occupied_slot:
+				highest_occupied_slot = int(s_id)
+
+	var base_pages: int = maxi(1, int(ceil(float(highest_occupied_slot) / float(SLOTS_PER_PAGE))))
+
+	# Periksa apakah semua slot pada rentang base_pages sudah terisi (tidak ada slot kosong)
+	var has_empty_slot: bool = false
+	for s_id in range(1, base_pages * SLOTS_PER_PAGE + 1):
+		if save_slots_data.get(s_id, null) == null:
+			has_empty_slot = true
+			break
+
+	# Jika semua slot penuh (tidak ada slot kosong sama sekali), otomatis tambah 1 halaman baru!
+	if not has_empty_slot:
+		total_save_pages = base_pages + 1
+	else:
+		total_save_pages = base_pages
+
+	current_save_page = clampi(current_save_page, 1, total_save_pages)
+	var max_selectable: int = total_save_pages * SLOTS_PER_PAGE
+	selected_save_slot = clampi(selected_save_slot, 1, max_selectable)
+
+
+func _change_save_page(direction: int) -> void:
+	var target_page := clampi(current_save_page + direction, 1, total_save_pages)
+	if target_page == current_save_page:
+		return
+	current_save_page = target_page
+	var row_in_page: int = (selected_save_slot - 1) % SLOTS_PER_PAGE
+	selected_save_slot = (current_save_page - 1) * SLOTS_PER_PAGE + row_in_page + 1
+	_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.0)
+	_refresh_save_load_ui()
+
+
+func _on_btn_save_prev_page_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		if current_save_page > 1:
+			_change_save_page(-1)
+
+
+func _on_btn_save_next_page_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		if current_save_page < total_save_pages:
+			_change_save_page(1)
+
+
+func _on_save_page_label_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		if total_save_pages > 1:
+			var dir := 1 if current_save_page < total_save_pages else -(total_save_pages - 1)
+			_change_save_page(dir)
+
+
+func _on_btn_save_prev_page_entered() -> void:
+	if is_instance_valid(btn_save_prev_page) and current_save_page > 1:
+		btn_save_prev_page.add_theme_color_override("font_color", Color(0.85, 0.45, 0.2, 1.0))
+
+
+func _on_btn_save_prev_page_exited() -> void:
+	if is_instance_valid(btn_save_prev_page):
+		btn_save_prev_page.add_theme_color_override("font_color", Color(0.4, 0.3, 0.3, 1.0))
+
+
+func _on_btn_save_next_page_entered() -> void:
+	if is_instance_valid(btn_save_next_page) and current_save_page < total_save_pages:
+		btn_save_next_page.add_theme_color_override("font_color", Color(0.85, 0.45, 0.2, 1.0))
+
+
+func _on_btn_save_next_page_exited() -> void:
+	if is_instance_valid(btn_save_next_page):
+		btn_save_next_page.add_theme_color_override("font_color", Color(0.4, 0.3, 0.3, 1.0))
+
+
+func _update_save_page_indicator() -> void:
+	if is_instance_valid(save_page_label):
+		save_page_label.text = "%d / %d" % [current_save_page, total_save_pages]
+
+	if is_instance_valid(btn_save_prev_page):
+		var can_prev := (current_save_page > 1)
+		btn_save_prev_page.modulate = Color(1.0, 1.0, 1.0, 1.0) if can_prev else Color(0.5, 0.45, 0.4, 0.35)
+		btn_save_prev_page.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if can_prev else Control.CURSOR_ARROW
+		btn_save_prev_page.add_theme_color_override("font_color", Color(0.4, 0.3, 0.3, 1.0))
+
+	if is_instance_valid(btn_save_next_page):
+		var can_next := (current_save_page < total_save_pages)
+		btn_save_next_page.modulate = Color(1.0, 1.0, 1.0, 1.0) if can_next else Color(0.5, 0.45, 0.4, 0.35)
+		btn_save_next_page.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if can_next else Control.CURSOR_ARROW
+		btn_save_next_page.add_theme_color_override("font_color", Color(0.4, 0.3, 0.3, 1.0))
+
+
+func _on_save_slot_row_clicked(row_idx: int) -> void:
+	var slot_idx: int = (current_save_page - 1) * SLOTS_PER_PAGE + row_idx + 1
+	_on_save_slot_clicked(slot_idx)
+
+
+func _on_save_slot_row_delete_pressed(row_idx: int) -> void:
+	var slot_idx: int = (current_save_page - 1) * SLOTS_PER_PAGE + row_idx + 1
+	_on_btn_delete_slot_pressed(slot_idx)
 
 
 func _select_save_slot(slot_idx: int) -> void:
-	selected_save_slot = clampi(slot_idx, 1, 3)
+	selected_save_slot = clampi(slot_idx, 1, total_save_pages * SLOTS_PER_PAGE)
 	_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.5, 0.03)
 	_refresh_save_load_ui()
 
 
+func _on_save_slot_clicked(slot_idx: int) -> void:
+	selected_save_slot = clampi(slot_idx, 1, total_save_pages * SLOTS_PER_PAGE)
+	_refresh_save_load_ui()
+
+	if is_start_menu_mode:
+		var cur_data = save_slots_data.get(selected_save_slot, null)
+		if cur_data != null and not cur_data.get("corrupted", false):
+			_open_confirm_modal("Muat data simpan ini?", "load")
+		else:
+			_play_ui_sfx(SFX_BOOK_TAB_SELECT, -4.0)
+			_show_save_feedback("Slot ini kosong atau rusak!")
+	else:
+		# Mode in-game: otomatis simpan atau timpa slot yang dipencet
+		save_game_requested.emit(selected_save_slot)
+
+
 func _refresh_save_load_ui() -> void:
 	for i in range(save_slot_rows.size()):
-		var slot_idx: int = i + 1
+		var slot_idx: int = (current_save_page - 1) * SLOTS_PER_PAGE + i + 1
 		var row: Control = save_slot_rows[i]
 		if not is_instance_valid(row):
 			continue
+
+		var slot_num_lbl = row.get_node_or_null("SlotNum") as Label
+		if slot_num_lbl:
+			slot_num_lbl.text = str(slot_idx)
 
 		var is_sel: bool = (slot_idx == selected_save_slot)
 		var card = row.get_node_or_null("SlotCard") as NinePatchRect
@@ -4132,33 +4787,28 @@ func _refresh_save_load_ui() -> void:
 				time_lbl.text = "Waktu Simpan: " + str(data.get("save_time_str", "-"))
 			if thumb:
 				thumb.visible = not is_corrupt
-				if default_thumb_texture:
-					thumb.texture = default_thumb_texture
+				thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+				thumb.texture = _get_slot_thumbnail_texture(slot_idx, data)
 		else:
 			if occ_view: occ_view.visible = false
 			if emp_view: emp_view.visible = true
 
-	# Update Tombol Aksi Bawah
-	var cur_data = save_slots_data.get(selected_save_slot, null)
-	var has_data: bool = (cur_data != null and cur_data is Dictionary)
-	var is_cur_corrupt: bool = has_data and cur_data.get("corrupted", false)
+		var del_btn = row.get_node_or_null("SlotCard/BtnDelete") as TextureButton
+		if del_btn:
+			del_btn.visible = (data != null and data is Dictionary)
 
-	# Tombol Simpan aktif saat mode in-game, disembunyikan saat start menu
-	if is_instance_valid(btn_simpan_click):
-		btn_simpan_click.disabled = is_start_menu_mode
+	# Update Tombol Aksi Bawah (Disembunyikan sepenuhnya sesuai permintaan user)
+	if is_instance_valid(save_bottom_row):
+		save_bottom_row.visible = false
 	if is_instance_valid(btn_simpan_box):
-		btn_simpan_box.visible = not is_start_menu_mode
-		btn_simpan_box.modulate = Color(1.0, 1.0, 1.0, 1.0)
-		btn_simpan_box.texture = submenu_btn_selected_tex
-
-	# Tombol Muat aktif jika slot terisi dan data valid
-	var can_load: bool = has_data and not is_cur_corrupt
-	if is_instance_valid(btn_muat_click):
-		btn_muat_click.disabled = not can_load
+		btn_simpan_box.visible = false
 	if is_instance_valid(btn_muat_box):
-		btn_muat_box.visible = true
-		btn_muat_box.modulate = Color(1.0, 1.0, 1.0, 1.0) if can_load else Color(0.65, 0.65, 0.65, 0.5)
-		btn_muat_box.texture = submenu_btn_selected_tex if (is_start_menu_mode and can_load) else submenu_btn_normal_tex
+		btn_muat_box.visible = false
+	if is_instance_valid(enter_hint):
+		enter_hint.visible = false
+
+	_update_save_page_indicator()
 
 
 func _format_playtime_str(seconds: float) -> String:
@@ -4173,6 +4823,7 @@ func _open_confirm_modal(message: String, action: String, show_timpa: bool = fal
 	_outside_modal_pressed = false
 	_outside_pause_pressed = false
 	_pending_confirm_action = action
+	confirm_modal_selected_idx = 0
 	if is_instance_valid(save_confirm_msg):
 		save_confirm_msg.text = message
 	if is_instance_valid(btn_confirm_yes_lbl):
@@ -4183,6 +4834,7 @@ func _open_confirm_modal(message: String, action: String, show_timpa: bool = fal
 		btn_confirm_timpa_box.visible = show_timpa
 	if is_instance_valid(save_confirm_modal):
 		save_confirm_modal.visible = true
+		_update_confirm_modal_buttons_visual()
 		_play_ui_sfx(SFX_BOOK_TAB_SELECT, -3.0)
 
 
@@ -4192,7 +4844,127 @@ func _close_confirm_modal() -> void:
 		save_confirm_modal.visible = false
 	if is_instance_valid(btn_confirm_timpa_box):
 		btn_confirm_timpa_box.visible = false
+	var btns := _get_confirm_modal_buttons()
+	for b in btns:
+		if is_instance_valid(b):
+			var arrow := b.get_node_or_null("ArrowIndicator") as TextureRect
+			if arrow:
+				arrow.visible = false
+			b.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	if _pending_confirm_action == "return_to_title" and active_settings_submenu == 3:
+		active_settings_submenu = 2
+		_update_submenu_buttons_visual()
 	_pending_confirm_action = ""
+
+
+func _on_confirm_yes_hovered() -> void:
+	var btns := _get_confirm_modal_buttons()
+	var idx := btns.find(btn_confirm_yes_box)
+	if idx != -1 and confirm_modal_selected_idx != idx:
+		confirm_modal_selected_idx = idx
+		_update_confirm_modal_buttons_visual()
+
+
+func _on_confirm_timpa_hovered() -> void:
+	var btns := _get_confirm_modal_buttons()
+	var idx := btns.find(btn_confirm_timpa_box)
+	if idx != -1 and confirm_modal_selected_idx != idx:
+		confirm_modal_selected_idx = idx
+		_update_confirm_modal_buttons_visual()
+
+
+func _on_confirm_no_hovered() -> void:
+	var btns := _get_confirm_modal_buttons()
+	var idx := btns.find(btn_confirm_no_box)
+	if idx != -1 and confirm_modal_selected_idx != idx:
+		confirm_modal_selected_idx = idx
+		_update_confirm_modal_buttons_visual()
+
+
+func _get_confirm_modal_buttons() -> Array[NinePatchRect]:
+	var list: Array[NinePatchRect] = []
+	if is_instance_valid(btn_confirm_yes_box) and btn_confirm_yes_box.visible:
+		list.append(btn_confirm_yes_box)
+	if is_instance_valid(btn_confirm_timpa_box) and btn_confirm_timpa_box.visible:
+		list.append(btn_confirm_timpa_box)
+	if is_instance_valid(btn_confirm_no_box) and btn_confirm_no_box.visible:
+		list.append(btn_confirm_no_box)
+	return list
+
+
+func _get_or_create_confirm_btn_arrow(btn_node: Control) -> TextureRect:
+	var arrow = btn_node.get_node_or_null("ArrowIndicator") as TextureRect
+	if not arrow:
+		arrow = TextureRect.new()
+		arrow.name = "ArrowIndicator"
+		arrow.texture = _get_arrow_indicator_texture()
+		arrow.texture_filter = Control.TEXTURE_FILTER_NEAREST as Control.TextureFilter
+		arrow.stretch_mode = TextureRect.STRETCH_KEEP
+		arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		arrow.position = Vector2(-18.0, 13.5)
+		arrow.size = Vector2(9.0, 11.0)
+		arrow.visible = false
+		btn_node.add_child(arrow)
+	return arrow
+
+
+func _update_confirm_modal_buttons_visual() -> void:
+	var btns := _get_confirm_modal_buttons()
+	if btns.is_empty():
+		return
+	if confirm_modal_selected_idx < 0:
+		confirm_modal_selected_idx = 0
+	elif confirm_modal_selected_idx >= btns.size():
+		confirm_modal_selected_idx = btns.size() - 1
+
+	for i in range(btns.size()):
+		var b := btns[i]
+		if not is_instance_valid(b):
+			continue
+		var is_sel := (i == confirm_modal_selected_idx)
+		if is_sel:
+			b.texture = submenu_btn_hover_tex if submenu_btn_hover_tex else submenu_btn_normal_tex
+			b.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		else:
+			b.texture = submenu_btn_normal_tex
+			b.modulate = Color(0.85, 0.82, 0.78, 1.0)
+
+		var lbl := b.get_node_or_null("Label") as Label
+		if lbl:
+			if is_sel:
+				lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+			else:
+				lbl.add_theme_color_override("font_color", Color(0.48, 0.38, 0.38, 1.0))
+
+		var arrow := _get_or_create_confirm_btn_arrow(b)
+		if arrow:
+			arrow.visible = is_sel
+
+
+func _navigate_confirm_modal_buttons(delta: int) -> void:
+	var btns := _get_confirm_modal_buttons()
+	if btns.size() <= 1:
+		return
+	var new_idx := (confirm_modal_selected_idx + delta) % btns.size()
+	if new_idx < 0:
+		new_idx += btns.size()
+	if new_idx != confirm_modal_selected_idx:
+		confirm_modal_selected_idx = new_idx
+		_play_ui_sfx(SFX_UI_HOVER, -4.0)
+		_update_confirm_modal_buttons_visual()
+
+
+func _execute_selected_confirm_modal_button() -> void:
+	var btns := _get_confirm_modal_buttons()
+	if btns.is_empty():
+		return
+	var sel_box := btns[clampi(confirm_modal_selected_idx, 0, btns.size() - 1)]
+	if sel_box == btn_confirm_yes_box:
+		_on_confirm_yes_pressed()
+	elif sel_box == btn_confirm_timpa_box:
+		_on_confirm_timpa_pressed()
+	elif sel_box == btn_confirm_no_box:
+		_on_confirm_no_pressed()
 
 
 func _is_point_inside_pause_book(global_pos: Vector2) -> bool:
@@ -4298,23 +5070,11 @@ func _on_btn_muat_pressed() -> void:
 
 func _on_save_load_enter_pressed() -> void:
 	if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
-		_on_confirm_yes_pressed()
+		_safe_set_input_handled()
+		_execute_selected_confirm_modal_button()
 		return
 
-	var cur_data = save_slots_data.get(selected_save_slot, null)
-	if is_start_menu_mode:
-		if cur_data != null and not cur_data.get("corrupted", false):
-			_open_confirm_modal("Muat data simpan ini?", "load")
-		else:
-			_show_save_feedback("Slot ini kosong atau rusak!")
-		return
-
-	if cur_data == null:
-		save_game_requested.emit(selected_save_slot)
-	elif cur_data.get("corrupted", false):
-		_open_confirm_modal("Data slot ini rusak.\nTimpa dengan data baru?", "overwrite")
-	else:
-		_open_confirm_modal("Slot %d sudah terisi.\nPilih Muat atau Timpa:" % selected_save_slot, "slot_action", true, "Muat", "Batal")
+	_on_save_slot_clicked(selected_save_slot)
 
 
 func _on_btn_return_to_title_pressed() -> void:
@@ -4343,6 +5103,29 @@ func _execute_return_to_title() -> void:
 		get_tree().change_scene_to_file("res://scene/ui/menus/start_menu.tscn")
 
 
+func _on_btn_delete_slot_pressed(slot_idx: int) -> void:
+	selected_save_slot = clampi(slot_idx, 1, total_save_pages * SLOTS_PER_PAGE)
+	_refresh_save_load_ui()
+	_open_confirm_modal("Hapus data simpan Slot %d?\nData yang dihapus tidak dapat dipulihkan." % slot_idx, "delete_slot")
+
+
+func _delete_save_slot_file(slot_id: int) -> void:
+	var dir := DirAccess.open("user://")
+	if dir:
+		var file_name := "save_slot_%d.json" % slot_id
+		if dir.file_exists(file_name):
+			dir.remove(file_name)
+		var tmp_name := "save_slot_%d.json.tmp" % slot_id
+		if dir.file_exists(tmp_name):
+			dir.remove(tmp_name)
+	save_slots_data.erase(slot_id)
+	_slot_thumbnail_cache.erase(slot_id)
+	_recalculate_save_pages()
+	_refresh_save_load_ui()
+	_play_ui_sfx(SFX_BOOK_TAB_SELECT, -2.0)
+	_show_save_feedback("Data Slot %d berhasil dihapus!" % slot_id)
+
+
 func _on_confirm_yes_pressed() -> void:
 	var action := _pending_confirm_action
 	_close_confirm_modal()
@@ -4351,6 +5134,8 @@ func _on_confirm_yes_pressed() -> void:
 		save_game_requested.emit(selected_save_slot)
 	elif action == "load" or action == "slot_action":
 		load_game_requested.emit(selected_save_slot)
+	elif action == "delete_slot":
+		_delete_save_slot_file(selected_save_slot)
 	elif action == "return_to_title":
 		_execute_return_to_title()
 
@@ -4385,6 +5170,11 @@ func _show_save_feedback(message: String) -> void:
 
 func on_save_completed(slot_id: int, saved_data: Dictionary) -> void:
 	save_slots_data[slot_id] = saved_data
+	if is_instance_valid(last_gameplay_thumbnail_tex):
+		_slot_thumbnail_cache[slot_id] = last_gameplay_thumbnail_tex
+	elif saved_data.has("thumbnail_b64"):
+		_slot_thumbnail_cache.erase(slot_id)
+	_recalculate_save_pages()
 	_refresh_save_load_ui()
 	_play_ui_sfx(SFX_BOOK_CONFIRM, -2.0)
 	_show_save_feedback("Progress berhasil disimpan di Slot %d!" % slot_id)
@@ -4395,6 +5185,11 @@ func on_load_completed(slot_id: int, _loaded_data: Dictionary) -> void:
 		_save_feedback_tween.kill()
 	if is_instance_valid(save_feedback_label):
 		save_feedback_label.visible = false
+	if _loaded_data.has("thumbnail_b64") and not str(_loaded_data.get("thumbnail_b64", "")).is_empty():
+		last_gameplay_thumbnail_b64 = str(_loaded_data.get("thumbnail_b64", ""))
+		var loaded_thumb := _get_slot_thumbnail_texture(slot_id, _loaded_data)
+		if is_instance_valid(loaded_thumb) and loaded_thumb != default_thumb_texture:
+			last_gameplay_thumbnail_tex = loaded_thumb
 	_scan_all_save_slots()
 	_refresh_save_load_ui()
 	_play_ui_sfx(SFX_BOOK_CONFIRM, -2.0)

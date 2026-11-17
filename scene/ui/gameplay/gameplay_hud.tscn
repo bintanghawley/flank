@@ -93,7 +93,7 @@ region = Rect2(146, 403, 62, 24)
 
 [sub_resource type="AtlasTexture" id="Atlas_party_frame"]
 atlas = ExtResource("15_ui_sheet")
-region = Rect2(65, 289, 30, 29)
+region = Rect2(65, 289, 30, 30)
 
 [sub_resource type="AtlasTexture" id="Atlas_port_magnus_slot"]
 atlas = ExtResource("8_port_magnus")
@@ -202,7 +202,7 @@ subpixel_positioning = 0
 
 [sub_resource type="AtlasTexture" id="Atlas_item_slot"]
 atlas = ExtResource("15_ui_sheet")
-region = Rect2(65, 289, 30, 29)
+region = Rect2(65, 289, 30, 30)
 
 [sub_resource type="AtlasTexture" id="Atlas_item_selected"]
 atlas = ExtResource("15_ui_sheet")
@@ -322,6 +322,7 @@ texture_normal = ExtResource("3_book")
 stretch_mode = 3
 
 [node name="QuestHeader" type="Label" parent="RootControl"]
+visible = false
 layout_mode = 0
 offset_left = 30.0
 offset_top = 224.0
@@ -342,25 +343,25 @@ text = "Misi"
 [node name="QuestContainer" type="HBoxContainer" parent="RootControl"]
 layout_mode = 0
 offset_left = 30.0
-offset_top = 250.0
+offset_top = 224.0
 offset_right = 320.0
-offset_bottom = 310.0
+offset_bottom = 274.0
 mouse_filter = 0
 mouse_default_cursor_shape = 2
 theme_override_constants/separation = 10
 
-[node name="QuestIcon" type="TextureRect" parent="RootControl/QuestContainer"]
+[node name="BtnHudQuest" type="TextureButton" parent="RootControl/QuestContainer"]
 texture_filter = 1
-custom_minimum_size = Vector2(26, 26)
+custom_minimum_size = Vector2(36, 42)
 layout_mode = 2
-size_flags_vertical = 0
-mouse_filter = 2
-texture = SubResource("Atlas_quest_icon")
-expand_mode = 1
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+ignore_texture_size = true
 stretch_mode = 5
 
 [node name="TextContainer" type="VBoxContainer" parent="RootControl/QuestContainer"]
 layout_mode = 2
+size_flags_vertical = 4
 mouse_filter = 2
 theme_override_constants/separation = 2
 
@@ -444,9 +445,9 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -164.0
+offset_left = -116.0
 offset_top = 36.0
-offset_right = -126.0
+offset_right = -78.0
 offset_bottom = 74.0
 grow_horizontal = 0
 mouse_filter = 0
@@ -492,9 +493,9 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -116.0
+offset_left = -68.0
 offset_top = 36.0
-offset_right = -78.0
+offset_right = -30.0
 offset_bottom = 74.0
 grow_horizontal = 0
 mouse_filter = 0
@@ -531,35 +532,6 @@ offset_bottom = 24.0
 grow_horizontal = 2
 mouse_filter = 2
 texture = SubResource("Atlas_btn_c")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="BtnHudSettings" type="TextureButton" parent="RootControl"]
-texture_filter = 1
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -68.0
-offset_top = 36.0
-offset_right = -30.0
-offset_bottom = 74.0
-grow_horizontal = 0
-mouse_filter = 0
-mouse_default_cursor_shape = 2
-texture_normal = SubResource("Atlas_save_card_selected")
-ignore_texture_size = true
-stretch_mode = 5
-
-[node name="Icon" type="TextureRect" parent="RootControl/BtnHudSettings"]
-texture_filter = 1
-layout_mode = 0
-offset_left = 8.0
-offset_top = 8.0
-offset_right = 30.0
-offset_bottom = 30.0
-mouse_filter = 2
-texture = SubResource("Atlas_tab_icon_settings")
 expand_mode = 1
 stretch_mode = 5
 
@@ -1171,6 +1143,18 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 texture = ExtResource("7_port_arthur")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Indicator" type="TextureRect" parent="RootControl/PauseOverlay/DragGhost"]
+visible = false
+texture_filter = 1
+layout_mode = 0
+offset_left = 24.0
+offset_top = -14.0
+offset_right = 39.0
+offset_bottom = -5.0
+mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
@@ -3964,7 +3948,7 @@ mouse_filter = 2
 layout_mode = 0
 offset_left = 4.0
 offset_top = 18.0
-offset_right = 248.0
+offset_right = 256.0
 offset_bottom = 302.0
 theme_override_constants/separation = 10
 
@@ -3986,7 +3970,7 @@ vertical_alignment = 2
 
 [node name="SlotCard" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1"]
 texture_filter = 1
-custom_minimum_size = Vector2(224, 88)
+custom_minimum_size = Vector2(232, 88)
 layout_mode = 2
 size_flags_horizontal = 3
 texture = SubResource("Atlas_save_card_selected")
@@ -4058,7 +4042,7 @@ stretch_mode = 5
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 text = "Waktu Simpan: 8 Nov 2026, 14.30"
 clip_text = true
 text_overrun_behavior = 3
@@ -4086,6 +4070,27 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
 
+[node name="BtnDelete" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard"]
+visible = false
+texture_filter = 1
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -28.0
+offset_top = -28.0
+offset_right = -6.0
+offset_bottom = -6.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+ignore_texture_size = true
+stretch_mode = 5
+
 [node name="SlotRow2" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer"]
 custom_minimum_size = Vector2(0, 88)
 layout_mode = 2
@@ -4104,7 +4109,7 @@ vertical_alignment = 2
 
 [node name="SlotCard" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2"]
 texture_filter = 1
-custom_minimum_size = Vector2(224, 88)
+custom_minimum_size = Vector2(232, 88)
 layout_mode = 2
 size_flags_horizontal = 3
 texture = SubResource("Atlas_submenu_btn_normal")
@@ -4177,7 +4182,7 @@ stretch_mode = 5
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 text = "Waktu Simpan: 8 Nov 2026, 14.30"
 clip_text = true
 text_overrun_behavior = 3
@@ -4204,6 +4209,27 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
 
+[node name="BtnDelete" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard"]
+visible = false
+texture_filter = 1
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -28.0
+offset_top = -28.0
+offset_right = -6.0
+offset_bottom = -6.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+ignore_texture_size = true
+stretch_mode = 5
+
 [node name="SlotRow3" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer"]
 custom_minimum_size = Vector2(0, 88)
 layout_mode = 2
@@ -4222,7 +4248,7 @@ vertical_alignment = 2
 
 [node name="SlotCard" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3"]
 texture_filter = 1
-custom_minimum_size = Vector2(224, 88)
+custom_minimum_size = Vector2(232, 88)
 layout_mode = 2
 size_flags_horizontal = 3
 texture = SubResource("Atlas_submenu_btn_normal")
@@ -4295,7 +4321,7 @@ stretch_mode = 5
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.22, 0.18, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 text = "Waktu Simpan: 8 Nov 2026, 14.30"
 clip_text = true
 text_overrun_behavior = 3
@@ -4322,59 +4348,92 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
 
-[node name="DecorativeScrollbar" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad"]
-layout_mode = 0
-offset_left = 252.0
-offset_top = 30.0
-offset_right = 272.0
-offset_bottom = 338.0
-mouse_filter = 2
-
-[node name="Track" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/DecorativeScrollbar"]
+[node name="BtnDelete" type="TextureButton" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard"]
+visible = false
 texture_filter = 1
+custom_minimum_size = Vector2(22, 22)
 layout_mode = 1
-anchors_preset = 13
-anchor_left = 0.5
-anchor_right = 0.5
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -4.0
-offset_right = 4.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-patch_margin_top = 6
-patch_margin_bottom = 6
-
-[node name="Grabber" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/DecorativeScrollbar"]
-texture_filter = 1
-custom_minimum_size = Vector2(16, 14)
-layout_mode = 0
-offset_left = 2.0
-offset_top = 4.0
-offset_right = 18.0
-offset_bottom = 18.0
-mouse_filter = 2
-stretch_mode = 3
+offset_left = -28.0
+offset_top = -28.0
+offset_right = -6.0
+offset_bottom = -6.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+ignore_texture_size = true
+stretch_mode = 5
 
 [node name="SaveFeedback" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad"]
 visible = false
 layout_mode = 0
-offset_left = 10.0
-offset_top = 318.0
-offset_right = 262.0
-offset_bottom = 342.0
+offset_left = 24.0
+offset_top = 310.0
+offset_right = 256.0
+offset_bottom = 332.0
 theme_override_colors/font_color = Color(0.2, 0.42, 0.16, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 12
 text = "Data berhasil disimpan di Slot 1!"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="BottomRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad"]
+[node name="PageIndicator" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad"]
 layout_mode = 0
-offset_left = 10.0
+offset_left = 24.0
+offset_top = 336.0
+offset_right = 256.0
+offset_bottom = 360.0
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="BtnPrevPage" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/PageIndicator"]
+custom_minimum_size = Vector2(16, 24)
+layout_mode = 2
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.4, 0.3, 0.3, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "<"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PageLabel" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/PageIndicator"]
+custom_minimum_size = Vector2(40, 24)
+layout_mode = 2
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.4, 0.3, 0.3, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "1 / 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BtnNextPage" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/PageIndicator"]
+custom_minimum_size = Vector2(16, 24)
+layout_mode = 2
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.4, 0.3, 0.3, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = ">"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BottomRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad"]
+visible = false
+layout_mode = 0
+offset_left = 14.0
 offset_top = 352.0
-offset_right = 262.0
+offset_right = 266.0
 offset_bottom = 386.0
 theme_override_constants/separation = 8
 alignment = 1
@@ -4562,17 +4621,17 @@ color = Color(0, 0, 0, 0.45)
 
 [node name="DialogBox" type="NinePatchRect" parent="RootControl/PauseOverlay/SaveConfirmModal"]
 texture_filter = 1
-custom_minimum_size = Vector2(260, 110)
+custom_minimum_size = Vector2(360, 160)
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -130.0
-offset_top = -55.0
-offset_right = 130.0
-offset_bottom = 55.0
+offset_left = -240.0
+offset_top = -110.0
+offset_right = 240.0
+offset_bottom = 110.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 0
@@ -4586,12 +4645,12 @@ patch_margin_bottom = 6
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_top = 10.0
-offset_bottom = 26.0
+offset_top = 18.0
+offset_bottom = 46.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 22
 text = "Konfirmasi"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -4602,13 +4661,15 @@ anchors_preset = 14
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_top = -18.0
-offset_bottom = 12.0
+offset_left = 24.0
+offset_top = -36.0
+offset_right = -24.0
+offset_bottom = 28.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.35, 0.25, 0.26, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 17
 text = "Timpa data simpan ini?"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -4620,16 +4681,16 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -34.0
-offset_bottom = -10.0
+offset_top = -68.0
+offset_bottom = -22.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_override_constants/separation = 12
+theme_override_constants/separation = 32
 alignment = 1
 
 [node name="BtnYes" type="NinePatchRect" parent="RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow"]
 texture_filter = 1
-custom_minimum_size = Vector2(60, 24)
+custom_minimum_size = Vector2(104, 38)
 layout_mode = 2
 texture = SubResource("Atlas_submenu_btn_normal")
 patch_margin_left = 5
@@ -4646,7 +4707,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 16
 text = "Ya"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -4663,7 +4724,7 @@ mouse_default_cursor_shape = 2
 [node name="BtnTimpa" type="NinePatchRect" parent="RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow"]
 visible = false
 texture_filter = 1
-custom_minimum_size = Vector2(60, 24)
+custom_minimum_size = Vector2(104, 38)
 layout_mode = 2
 texture = SubResource("Atlas_submenu_btn_normal")
 patch_margin_left = 5
@@ -4680,7 +4741,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 16
 text = "Timpa"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -4696,7 +4757,7 @@ mouse_default_cursor_shape = 2
 
 [node name="BtnNo" type="NinePatchRect" parent="RootControl/PauseOverlay/SaveConfirmModal/DialogBox/ButtonsRow"]
 texture_filter = 1
-custom_minimum_size = Vector2(60, 24)
+custom_minimum_size = Vector2(104, 38)
 layout_mode = 2
 texture = SubResource("Atlas_submenu_btn_normal")
 patch_margin_left = 5
@@ -4713,7 +4774,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 16
 text = "Tidak"
 horizontal_alignment = 1
 vertical_alignment = 1
