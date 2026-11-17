@@ -4531,7 +4531,7 @@ func _capture_gameplay_screenshot() -> void:
 	if img_w <= 0.0 or img_h <= 0.0:
 		return
 
-	var target_ratio: float = 44.0 / 28.0
+	var target_ratio: float = 66.0 / 42.0
 	var crop_w: float = img_w
 	var crop_h: float = img_h
 
@@ -4550,7 +4550,7 @@ func _capture_gameplay_screenshot() -> void:
 	if cropped_img.get_format() != Image.FORMAT_RGBA8:
 		cropped_img.convert(Image.FORMAT_RGBA8)
 
-	cropped_img.resize(44, 28, Image.INTERPOLATE_BILINEAR)
+	cropped_img.resize(66, 42, Image.INTERPOLATE_BILINEAR)
 
 	var png_buffer := cropped_img.save_png_to_buffer()
 	if png_buffer.is_empty():

@@ -810,9 +810,9 @@ expand_mode = 1
 [node name="Portrait" type="TextureRect" parent="RootControl/PartyContainer/CardHellene"]
 texture_filter = 1
 layout_mode = 0
-offset_left = -6.0
-offset_top = -10.0
-offset_right = 58.0
+offset_left = -10.0
+offset_top = -14.0
+offset_right = 70.0
 offset_bottom = 50.0
 texture = ExtResource("10_port_hellene")
 expand_mode = 1
@@ -4120,13 +4120,13 @@ mouse_filter = 2
 [node name="SlotsContainer" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad"]
 layout_mode = 0
 offset_left = 4.0
-offset_top = 18.0
+offset_top = 10.0
 offset_right = 256.0
-offset_bottom = 302.0
-theme_override_constants/separation = 10
+offset_bottom = 338.0
+theme_override_constants/separation = 8
 
 [node name="SlotRow1" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer"]
-custom_minimum_size = Vector2(0, 88)
+custom_minimum_size = Vector2(0, 104)
 layout_mode = 2
 theme_override_constants/separation = 6
 
@@ -4143,7 +4143,7 @@ vertical_alignment = 2
 
 [node name="SlotCard" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1"]
 texture_filter = 1
-custom_minimum_size = Vector2(232, 88)
+custom_minimum_size = Vector2(232, 104)
 layout_mode = 2
 size_flags_horizontal = 3
 texture = SubResource("Atlas_save_card_selected")
@@ -4160,13 +4160,13 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 6
-theme_override_constants/margin_top = 5
+theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
-theme_override_constants/margin_bottom = 5
+theme_override_constants/margin_bottom = 6
 
 [node name="OccupiedView" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin"]
 layout_mode = 2
-theme_override_constants/separation = 1
+theme_override_constants/separation = 4
 
 [node name="TopRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin/OccupiedView"]
 layout_mode = 2
@@ -4206,9 +4206,10 @@ text_overrun_behavior = 3
 
 [node name="Thumbnail" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin/OccupiedView/TopRow"]
 texture_filter = 1
-custom_minimum_size = Vector2(44, 28)
+custom_minimum_size = Vector2(66, 42)
 layout_mode = 2
 size_flags_vertical = 4
+expand_mode = 1
 stretch_mode = 5
 
 [node name="SaveTime" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow1/SlotCard/ContentMargin/OccupiedView"]
@@ -4265,7 +4266,7 @@ ignore_texture_size = true
 stretch_mode = 5
 
 [node name="SlotRow2" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer"]
-custom_minimum_size = Vector2(0, 88)
+custom_minimum_size = Vector2(0, 104)
 layout_mode = 2
 theme_override_constants/separation = 6
 
@@ -4282,7 +4283,7 @@ vertical_alignment = 2
 
 [node name="SlotCard" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2"]
 texture_filter = 1
-custom_minimum_size = Vector2(232, 88)
+custom_minimum_size = Vector2(232, 104)
 layout_mode = 2
 size_flags_horizontal = 3
 texture = SubResource("Atlas_submenu_btn_normal")
@@ -4299,14 +4300,14 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 6
-theme_override_constants/margin_top = 5
+theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
-theme_override_constants/margin_bottom = 5
+theme_override_constants/margin_bottom = 6
 
 [node name="OccupiedView" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin"]
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 1
+theme_override_constants/separation = 4
 
 [node name="TopRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin/OccupiedView"]
 layout_mode = 2
@@ -4346,9 +4347,10 @@ text_overrun_behavior = 3
 
 [node name="Thumbnail" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin/OccupiedView/TopRow"]
 texture_filter = 1
-custom_minimum_size = Vector2(44, 28)
+custom_minimum_size = Vector2(66, 42)
 layout_mode = 2
 size_flags_vertical = 4
+expand_mode = 1
 stretch_mode = 5
 
 [node name="SaveTime" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow2/SlotCard/ContentMargin/OccupiedView"]
@@ -4404,7 +4406,7 @@ ignore_texture_size = true
 stretch_mode = 5
 
 [node name="SlotRow3" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer"]
-custom_minimum_size = Vector2(0, 88)
+custom_minimum_size = Vector2(0, 104)
 layout_mode = 2
 theme_override_constants/separation = 6
 
@@ -4421,7 +4423,7 @@ vertical_alignment = 2
 
 [node name="SlotCard" type="NinePatchRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3"]
 texture_filter = 1
-custom_minimum_size = Vector2(232, 88)
+custom_minimum_size = Vector2(232, 104)
 layout_mode = 2
 size_flags_horizontal = 3
 texture = SubResource("Atlas_submenu_btn_normal")
@@ -4438,14 +4440,14 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 6
-theme_override_constants/margin_top = 5
+theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
-theme_override_constants/margin_bottom = 5
+theme_override_constants/margin_bottom = 6
 
 [node name="OccupiedView" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard/ContentMargin"]
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 1
+theme_override_constants/separation = 4
 
 [node name="TopRow" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard/ContentMargin/OccupiedView"]
 layout_mode = 2
@@ -4485,9 +4487,10 @@ text_overrun_behavior = 3
 
 [node name="Thumbnail" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard/ContentMargin/OccupiedView/TopRow"]
 texture_filter = 1
-custom_minimum_size = Vector2(44, 28)
+custom_minimum_size = Vector2(66, 42)
 layout_mode = 2
 size_flags_vertical = 4
+expand_mode = 1
 stretch_mode = 5
 
 [node name="SaveTime" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad/SlotsContainer/SlotRow3/SlotCard/ContentMargin/OccupiedView"]
@@ -4546,9 +4549,9 @@ stretch_mode = 5
 visible = false
 layout_mode = 0
 offset_left = 24.0
-offset_top = 310.0
+offset_top = 346.0
 offset_right = 256.0
-offset_bottom = 332.0
+offset_bottom = 368.0
 theme_override_colors/font_color = Color(0.2, 0.42, 0.16, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 12
@@ -4559,9 +4562,9 @@ vertical_alignment = 1
 [node name="PageIndicator" type="HBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageSettings/RightPage/SubmenuSaveLoad"]
 layout_mode = 0
 offset_left = 24.0
-offset_top = 336.0
+offset_top = 370.0
 offset_right = 256.0
-offset_bottom = 360.0
+offset_bottom = 394.0
 theme_override_constants/separation = 8
 alignment = 1
 
