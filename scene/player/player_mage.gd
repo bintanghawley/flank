@@ -21,6 +21,7 @@ var shield_tween: Tween = null
 # PARTY / LEADER / FOLLOWER
 # =========================
 var is_leader: bool = false
+var is_movement_locked: bool = false
 var leader_node: CharacterBody2D = null
 var queue_slot_index: int = 0
 var in_party_combat: bool = false
@@ -279,6 +280,14 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 
+	if is_movement_locked:
+		velocity = Vector2.ZERO
+		is_moving = false
+		if has_method("play_idle_animation"):
+			play_idle_animation()
+		move_and_slide()
+		return
+
 	# [PERBAIKAN BUG 5]: Reduksi knockback WAJIB dijalankan untuk SEMUA karakter
 	if knockback_velocity != Vector2.ZERO:
 		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, knockback_decay * delta)
@@ -347,6 +356,9 @@ func _physics_process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_leader or is_dead:
+		return
+
+	if is_movement_locked:
 		return
 
 	# Aktivasi Skill Aktif Meteor Strike (Tombol 'E' / ui_skill)

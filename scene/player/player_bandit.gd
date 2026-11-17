@@ -12,6 +12,7 @@ extends CharacterBody2D
 # PARTY / LEADER / FOLLOWER
 # =========================
 var is_leader: bool = false
+var is_movement_locked: bool = false
 var leader_node: CharacterBody2D = null
 var queue_slot_index: int = 1
 var in_party_combat: bool = false
@@ -259,6 +260,14 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 
+	if is_movement_locked:
+		velocity = Vector2.ZERO
+		is_moving = false
+		if has_method("play_idle_animation"):
+			play_idle_animation()
+		move_and_slide()
+		return
+
 	# Reduksi knockback
 	if knockback_velocity != Vector2.ZERO:
 		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, knockback_decay * delta)
@@ -373,6 +382,9 @@ func is_skill_action_pressed(event: InputEvent) -> bool:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_leader or is_dead:
+		return
+
+	if is_movement_locked:
 		return
 
 	# Tombol E: Aktivasi Skill Triple Slash (HANYA Leader dan dalam mode combat)

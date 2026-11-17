@@ -18,6 +18,7 @@ var shield_tween: Tween = null
 # PARTY / LEADER / FOLLOWER
 # =========================
 var is_leader: bool = true
+var is_movement_locked: bool = false
 var leader_node: CharacterBody2D = null
 var queue_slot_index: int = 0
 var in_party_combat: bool = false
@@ -286,6 +287,14 @@ func apply_camera_shake(intensity: float = -1.0) -> void:
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
+		return
+
+	if is_movement_locked:
+		velocity = Vector2.ZERO
+		is_moving = false
+		if has_method("play_idle_animation"):
+			play_idle_animation()
+		move_and_slide()
 		return
 
 	# [PERBAIKAN BUG 5]: Reduksi knockback WAJIB dijalankan untuk SEMUA karakter
@@ -572,6 +581,9 @@ func spawn_run_dust(move_dir: Vector2) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_leader or is_dead:
+		return
+
+	if is_movement_locked:
 		return
 
 	# Pemicu Aktivasi / Deaktivasi Skill Mode (Tombol E / ui_skill)

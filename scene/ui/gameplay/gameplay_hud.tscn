@@ -18,6 +18,10 @@
 [ext_resource type="Texture2D" uid="uid://b6j5wh2jatmow" path="res://assets/characters/bandit/walk/walk-s.png" id="17_bandit_walk"]
 [ext_resource type="Texture2D" uid="uid://bdyj61h46bqwa" path="res://assets/characters/archer/walk/walk-s.png" id="18_archer_walk"]
 [ext_resource type="Texture2D" uid="uid://cst6aqpo0oxeo" path="res://assets/characters/mage/walk/walk-s.png" id="19_mage_walk"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/dialogue/dialogue_box_bg.png" id="20_dialogue_box"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/dialogue/dialogue_name_bg.png" id="21_dialogue_name"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/dialogue/portrait_raven.png" id="22_portrait_raven"]
+[ext_resource type="Texture2D" uid="uid://hqkvky8gcjte" path="res://assets/ui/menus/common/ui_arrow_indicator.png" id="23_arrow_indicator"]
 
 [sub_resource type="AtlasTexture" id="Atlas_pause_header"]
 atlas = ExtResource("15_ui_sheet")
@@ -1122,6 +1126,175 @@ texture_filter = 1
 texture = SubResource("Atlas_btn_4")
 expand_mode = 1
 stretch_mode = 5
+
+[node name="DialogueContainer" type="Control" parent="RootControl"]
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -380.0
+offset_top = -165.0
+offset_right = 380.0
+offset_bottom = -25.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 0
+
+[node name="BgBox" type="NinePatchRect" parent="RootControl/DialogueContainer"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("20_dialogue_box")
+patch_margin_left = 8
+patch_margin_top = 8
+patch_margin_right = 8
+patch_margin_bottom = 8
+
+[node name="PortraitFrame" type="NinePatchRect" parent="RootControl/DialogueContainer"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 18.0
+offset_top = 22.0
+offset_right = 114.0
+offset_bottom = 118.0
+texture = SubResource("Atlas_party_frame")
+patch_margin_left = 5
+patch_margin_top = 5
+patch_margin_right = 5
+patch_margin_bottom = 5
+
+[node name="PortraitTexture" type="TextureRect" parent="RootControl/DialogueContainer/PortraitFrame"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("7_port_arthur")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameBanner" type="NinePatchRect" parent="RootControl/DialogueContainer"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 18.0
+offset_top = -14.0
+offset_right = 230.0
+offset_bottom = 18.0
+texture = ExtResource("21_dialogue_name")
+patch_margin_left = 6
+patch_margin_top = 6
+patch_margin_right = 6
+patch_margin_bottom = 6
+
+[node name="SpeakerLabel" type="Label" parent="RootControl/DialogueContainer/NameBanner"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.98, 0.88, 0.62, 1)
+theme_override_colors/font_shadow_color = Color(0.08, 0.05, 0.08, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "Pembicara"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ContentContainer" type="Control" parent="RootControl/DialogueContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 130.0
+offset_top = 22.0
+offset_right = -24.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DialogueLabel" type="Label" parent="RootControl/DialogueContainer/ContentContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.96, 0.94, 0.9, 1)
+theme_override_colors/font_shadow_color = Color(0.08, 0.05, 0.08, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+theme_override_constants/line_spacing = 3
+text = "Teks dialog..."
+autowrap_mode = 3
+
+[node name="AdvancePrompt" type="HBoxContainer" parent="RootControl/DialogueContainer"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -210.0
+offset_top = -28.0
+offset_right = -20.0
+offset_bottom = -10.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/separation = 6
+alignment = 2
+
+[node name="PromptKey" type="Label" parent="RootControl/DialogueContainer/AdvancePrompt"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.68, 0.62, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 11
+text = "[SPASI]"
+vertical_alignment = 1
+
+[node name="PromptText" type="Label" parent="RootControl/DialogueContainer/AdvancePrompt"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.88, 0.62, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 11
+text = "Lanjut"
+vertical_alignment = 1
+
+[node name="PromptArrow" type="TextureRect" parent="RootControl/DialogueContainer/AdvancePrompt"]
+texture_filter = 1
+custom_minimum_size = Vector2(9, 11)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("23_arrow_indicator")
+stretch_mode = 5
+
+[node name="ClickAdvanceBtn" type="TextureButton" parent="RootControl/DialogueContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+
 
 [node name="PauseOverlay" type="ColorRect" parent="RootControl"]
 process_mode = 3
