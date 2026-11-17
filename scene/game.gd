@@ -77,13 +77,13 @@ var combat_winddown_timer: float = 0.0
 const COMBAT_WINDDOWN_DELAY: float = 0.4
 
 # =========================================================
-# SISTEM ARENA HALAMAN ISTANA (GUARDIAN TALES STYLE)
+# SISTEM ARENA LAPANGAN HIJAU (GUARDIAN TALES STYLE)
 # =========================================================
 enum ArenaState { INACTIVE, COMBAT, CLEARED }
 var arena_state: ArenaState = ArenaState.INACTIVE
-var arena_bounds: Rect2 = Rect2(Vector2(3233.85, 601.54), Vector2(1772.31, 996.92))
-var arena_trigger_bounds: Rect2 = Rect2(Vector2(3420.0, 750.0), Vector2(1280.0, 680.0))
-var arena_center: Vector2 = Vector2(4120.0, 1100.0)
+var arena_bounds: Rect2 = Rect2(Vector2(5320.0, 2810.0), Vector2(1920.0, 1080.0))
+var arena_trigger_bounds: Rect2 = Rect2(Vector2(5500.0, 2700.0), Vector2(1500.0, 1200.0))
+var arena_center: Vector2 = Vector2(6280.0, 3350.0)
 var arena_enemies: Array[CharacterBody2D] = []
 var arena_barrier_body: StaticBody2D = null
 const CAMERA_ZOOM_EXPLORE: Vector2 = Vector2(0.8, 0.8)
