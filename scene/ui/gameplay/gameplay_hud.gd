@@ -13,6 +13,9 @@ signal save_game_requested(slot_id: int)
 signal load_game_requested(slot_id: int)
 signal return_to_title_requested
 signal start_menu_settings_closed
+signal dialogue_started(dialogue_id: String)
+signal dialogue_advanced(entry_index: int, total_entries: int)
+signal dialogue_finished(dialogue_id: String)
 
 @onready var root_control: Control = $RootControl
 
@@ -40,6 +43,17 @@ signal start_menu_settings_closed
 
 # Bottom-Right Skill Bar
 @onready var skill_container: HBoxContainer = $RootControl/SkillContainer
+
+# Bottom-Center Dialogue System
+@onready var dialogue_container: Control = $RootControl/DialogueContainer
+@onready var dialogue_speaker_label: Label = $RootControl/DialogueContainer/NameBanner/SpeakerLabel
+@onready var dialogue_portrait_frame: NinePatchRect = $RootControl/DialogueContainer/PortraitFrame
+@onready var dialogue_portrait: TextureRect = $RootControl/DialogueContainer/PortraitFrame/PortraitTexture
+@onready var dialogue_text: Label = $RootControl/DialogueContainer/ContentContainer/DialogueLabel
+@onready var dialogue_click_btn: TextureButton = $RootControl/DialogueContainer/ClickAdvanceBtn
+@onready var dialogue_prompt_arrow: TextureRect = $RootControl/DialogueContainer/AdvancePrompt/PromptArrow
+@onready var dialogue_prompt_key: Label = $RootControl/DialogueContainer/AdvancePrompt/PromptKey
+@onready var dialogue_prompt_text: Label = $RootControl/DialogueContainer/AdvancePrompt/PromptText
 
 # Pause Popup Overlay & Book Menu
 @onready var pause_overlay: ColorRect = $RootControl/PauseOverlay
@@ -201,6 +215,25 @@ const SFX_BOOK_PAGE_FLIP: AudioStream = preload("res://assets/audio/sfx/ui/book_
 const SFX_BOOK_TAB_SELECT: AudioStream = preload("res://assets/audio/sfx/ui/book_tab_select.wav")
 const SFX_BOOK_CONFIRM: AudioStream = preload("res://assets/audio/sfx/ui/book_confirm.wav")
 var _last_hover_sfx_msec: int = 0
+
+# Dialogue State & Portraits
+const PORTRAIT_RAVEN: Texture2D = preload("res://assets/ui/gameplay/dialogue/portrait_raven.png")
+const PORTRAIT_ARTHUR: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_arthur.png")
+const PORTRAIT_MAGNUS: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_magnus.png")
+const PORTRAIT_ANASTASYA: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_anastasya.png")
+const PORTRAIT_HELLENE: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_hellene.png")
+const SFX_UI_CLICK: AudioStream = preload("res://assets/audio/sfx/ui/ui_click.wav")
+
+var _is_dialogue_active: bool = false
+var _last_typed_char_count: int = 0
+var _dialogue_queue: Array[Dictionary] = []
+var _dialogue_index: int = 0
+var _dialogue_id: String = ""
+var _dialogue_callback: Callable = Callable()
+var _typewriter_tween: Tween = null
+var _arrow_tween: Tween = null
+var _is_typing: bool = false
+var _current_full_text: String = ""
 
 # Pause Menu State
 var current_tab_index: int = 2 # 0: Inventory, 1: Journal, 2: Informasi, 3: Settings, 4: Credits
@@ -480,8 +513,31 @@ func _ready() -> void:
 	_setup_skill_buttons()
 	_setup_party_card_clicks()
 
+	if is_instance_valid(dialogue_container):
+		dialogue_container.visible = false
+	if is_instance_valid(dialogue_click_btn):
+		if not dialogue_click_btn.pressed.is_connected(_on_dialogue_clicked):
+			dialogue_click_btn.pressed.connect(_on_dialogue_clicked)
+
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _is_dialogue_active:
+		if event is InputEventKey and event.pressed and not event.echo:
+			var key_event := event as InputEventKey
+			var kcode: int = key_event.keycode if key_event.keycode != 0 else key_event.physical_keycode
+			if kcode == KEY_SPACE or kcode == KEY_ENTER or kcode == KEY_KP_ENTER or kcode == KEY_F or kcode == KEY_E:
+				_advance_or_complete_dialogue()
+				get_viewport().set_input_as_handled()
+				return
+		elif event is InputEventMouseButton and event.pressed:
+			var mb := event as InputEventMouseButton
+			if mb.button_index == MOUSE_BUTTON_LEFT:
+				_advance_or_complete_dialogue()
+				get_viewport().set_input_as_handled()
+				return
+		get_viewport().set_input_as_handled()
+		return
+
 	if is_start_menu_mode and not pause_overlay.visible:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -4399,3 +4455,229 @@ func on_load_completed(slot_id: int, _loaded_data: Dictionary) -> void:
 	_refresh_save_load_ui()
 	_play_ui_sfx(SFX_BOOK_CONFIRM, -2.0)
 	_show_save_feedback("Progress berhasil dimuat dari Slot %d!" % slot_id)
+
+
+# =========================================================
+# DIALOGUE SYSTEM (SISTEM DIALOG & NARASI CERITA)
+# =========================================================
+
+func _play_dialog_sfx(stream: AudioStream, volume_db: float = 0.0, pitch_jitter: float = 0.0) -> void:
+	if not stream or not is_inside_tree():
+		return
+	var player := AudioStreamPlayer.new()
+	player.process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
+	if AudioServer.get_bus_index("Dialog") != -1:
+		player.bus = "Dialog"
+	elif AudioServer.get_bus_index("SFX") != -1:
+		player.bus = "SFX"
+	player.stream = stream
+	player.volume_db = volume_db
+	if pitch_jitter > 0.0:
+		player.pitch_scale = randf_range(1.0 - pitch_jitter, 1.0 + pitch_jitter)
+	add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
+
+
+func show_dialogue(dialogue_id: String, entries: Array[Dictionary], on_complete: Callable = Callable()) -> void:
+	if entries.is_empty():
+		if on_complete.is_valid():
+			on_complete.call()
+		return
+
+	_dialogue_id = dialogue_id
+	_dialogue_queue = entries
+	_dialogue_index = 0
+	_dialogue_callback = on_complete
+	_is_dialogue_active = true
+
+	# Sembunyikan elemen gameplay HUD agar fokus ke narasi
+	_set_gameplay_hud_visible_for_dialogue(false)
+
+	if is_instance_valid(dialogue_container):
+		dialogue_container.modulate.a = 0.0
+		dialogue_container.visible = true
+		var fade_in := create_tween()
+		fade_in.tween_property(dialogue_container, "modulate:a", 1.0, 0.18)
+
+	_start_arrow_animation()
+	_display_current_dialogue_entry()
+	emit_signal("dialogue_started", _dialogue_id)
+
+
+func _set_gameplay_hud_visible_for_dialogue(show_hud: bool) -> void:
+	if is_instance_valid(party_container):
+		party_container.visible = show_hud
+	if is_instance_valid(skill_container):
+		skill_container.visible = show_hud
+	if is_instance_valid(controls_prompt):
+		controls_prompt.visible = show_hud
+	if is_instance_valid(btn_hud_inventory):
+		btn_hud_inventory.visible = show_hud
+	if is_instance_valid(btn_hud_info):
+		btn_hud_info.visible = show_hud
+	if is_instance_valid(btn_hud_settings):
+		btn_hud_settings.visible = show_hud
+	if is_instance_valid(btn_pause_menu):
+		btn_pause_menu.visible = show_hud
+	if is_instance_valid(quest_header):
+		quest_header.visible = show_hud
+	if is_instance_valid(quest_container):
+		quest_container.visible = show_hud
+
+
+func _display_current_dialogue_entry() -> void:
+	if _dialogue_index < 0 or _dialogue_index >= _dialogue_queue.size():
+		return
+
+	var entry: Dictionary = _dialogue_queue[_dialogue_index]
+	var speaker: String = entry.get("speaker", "")
+	var text_content: String = entry.get("text", "")
+	var portrait_key: String = entry.get("portrait", "")
+
+	if is_instance_valid(dialogue_speaker_label):
+		dialogue_speaker_label.text = speaker
+
+	_current_full_text = text_content
+	_last_typed_char_count = 0
+	if is_instance_valid(dialogue_text):
+		dialogue_text.text = text_content
+		dialogue_text.visible_characters = 0
+
+	_is_typing = true
+
+	# Resolusi portret pembicara
+	var port_tex: Texture2D = null
+	if entry.has("portrait_texture") and entry["portrait_texture"] is Texture2D:
+		port_tex = entry["portrait_texture"]
+	else:
+		port_tex = resolve_dialogue_portrait(portrait_key if not portrait_key.is_empty() else speaker)
+
+	if is_instance_valid(dialogue_portrait):
+		dialogue_portrait.texture = port_tex
+	if is_instance_valid(dialogue_portrait_frame):
+		dialogue_portrait_frame.visible = (port_tex != null)
+
+	# Animasi typewriter dengan suara blip per karakter
+	if _typewriter_tween and _typewriter_tween.is_valid():
+		_typewriter_tween.kill()
+
+	var char_count: int = text_content.length()
+	var duration: float = clampf(float(char_count) * 0.024, 0.4, 2.4)
+	_typewriter_tween = create_tween()
+	_typewriter_tween.tween_method(_on_typewriter_step, 0, char_count, duration)
+	_typewriter_tween.finished.connect(func():
+		if is_instance_valid(dialogue_text):
+			dialogue_text.visible_characters = -1
+		_is_typing = false
+	)
+
+
+func _on_typewriter_step(curr_chars: int) -> void:
+	if not is_instance_valid(dialogue_text):
+		return
+	dialogue_text.visible_characters = curr_chars
+	if curr_chars > _last_typed_char_count + 1:
+		_last_typed_char_count = curr_chars
+		if curr_chars <= _current_full_text.length():
+			var c: String = _current_full_text[curr_chars - 1]
+			if c != " " and c != "\n" and c != "\t":
+				_play_dialog_sfx(SFX_UI_CLICK, -15.0, 0.08)
+
+
+func resolve_dialogue_portrait(key: String) -> Texture2D:
+	var lower := key.to_lower().strip_edges()
+	if "gagak" in lower or "raven" in lower:
+		return PORTRAIT_RAVEN
+	elif "arthur" in lower or "knight" in lower or "pangeran" in lower:
+		return PORTRAIT_ARTHUR
+	elif "magnus" in lower or "mage" in lower or "wizard" in lower or "penasehat" in lower:
+		return PORTRAIT_MAGNUS
+	elif "anastasya" in lower or "archer" in lower:
+		return PORTRAIT_ANASTASYA
+	elif "hellene" in lower or "bandit" in lower or "assassin" in lower:
+		return PORTRAIT_HELLENE
+	return null
+
+
+func _on_dialogue_clicked() -> void:
+	if not _is_dialogue_active:
+		return
+	_advance_or_complete_dialogue()
+
+
+func _advance_or_complete_dialogue() -> void:
+	if not _is_dialogue_active:
+		return
+	if _is_typing:
+		_finish_typewriter_instantly()
+	else:
+		_advance_dialogue()
+
+
+func _finish_typewriter_instantly() -> void:
+	if _typewriter_tween and _typewriter_tween.is_valid():
+		_typewriter_tween.kill()
+		_typewriter_tween = null
+	if is_instance_valid(dialogue_text):
+		dialogue_text.visible_characters = -1
+	_is_typing = false
+
+
+func _advance_dialogue() -> void:
+	_play_dialog_sfx(SFX_BOOK_TAB_SELECT, -3.5)
+	_dialogue_index += 1
+	if _dialogue_index < _dialogue_queue.size():
+		_display_current_dialogue_entry()
+		emit_signal("dialogue_advanced", _dialogue_index, _dialogue_queue.size())
+	else:
+		close_dialogue()
+
+
+func close_dialogue() -> void:
+	if not _is_dialogue_active:
+		return
+	_is_dialogue_active = false
+	_play_dialog_sfx(SFX_BOOK_PAGE_FLIP, -3.0)
+
+	if _typewriter_tween and _typewriter_tween.is_valid():
+		_typewriter_tween.kill()
+		_typewriter_tween = null
+	if _arrow_tween and _arrow_tween.is_valid():
+		_arrow_tween.kill()
+		_arrow_tween = null
+
+	var fade_out := create_tween()
+	fade_out.tween_property(dialogue_container, "modulate:a", 0.0, 0.15)
+	fade_out.tween_callback(func():
+		if is_instance_valid(dialogue_container):
+			dialogue_container.visible = false
+			dialogue_container.modulate.a = 1.0
+		_set_gameplay_hud_visible_for_dialogue(true)
+	)
+
+	var cb := _dialogue_callback
+	var finished_id := _dialogue_id
+	_dialogue_queue.clear()
+	_dialogue_index = 0
+	_dialogue_id = ""
+	_dialogue_callback = Callable()
+
+	emit_signal("dialogue_finished", finished_id)
+	if cb.is_valid():
+		cb.call()
+
+
+func is_dialogue_active() -> bool:
+	return _is_dialogue_active
+
+
+func _start_arrow_animation() -> void:
+	if not is_instance_valid(dialogue_prompt_arrow):
+		return
+	if _arrow_tween and _arrow_tween.is_valid():
+		_arrow_tween.kill()
+	dialogue_prompt_arrow.position.y = 0.0
+	_arrow_tween = create_tween().set_loops()
+	_arrow_tween.tween_property(dialogue_prompt_arrow, "position:y", 3.0, 0.45).set_trans(Tween.TRANS_SINE)
+	_arrow_tween.tween_property(dialogue_prompt_arrow, "position:y", 0.0, 0.45).set_trans(Tween.TRANS_SINE)

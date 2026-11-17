@@ -18,6 +18,53 @@ const DEFAULT_START_LOCATION: String = "Istana Kerajaan"
 var current_location_name: String = DEFAULT_START_LOCATION
 var visited_locations: Array[String] = []
 var total_playtime: float = 0.0
+var is_prologue_completed: bool = false
+
+# =========================================================
+# NASKAH DIALOG CERITA PROLOG
+# =========================================================
+const PROLOGUE_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Hutan di depan istana ini cukup luas dan kaya akan batuan mineral. Lokasi yang sangat strategis untuk membangun rumah tambang kerajaan."
+	},
+	{
+		"speaker": "Burung Gagak",
+		"portrait": "raven",
+		"text": "*KAAK!* Pangeran Arthur! Berhenti! Hamba membawa pesan sihir mendesak langsung dari Penasehat Istana, Tuan Magnus!"
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Burung gagak sihir Magnus? Ada apa gerangan? Mengapa terburu-buru sampai harus mengirim pengintai udara?"
+	},
+	{
+		"speaker": "Burung Gagak",
+		"portrait": "raven",
+		"text": "Langit istana dipenuhi pertanda kutukan buruk! Ada pangeran kerajaan tetangga yang membongkar makam pusaka kuno secara semena-mena."
+	},
+	{
+		"speaker": "Burung Gagak",
+		"portrait": "raven",
+		"text": "Arwah leluhur murka! Dalam rentang tujuh hari ke depan, gerombolan iblis akan bangkit dari bumi dan langit untuk meluluhlantakkan peradaban."
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Tujuh hari... bangsa iblis?! Ini bukan ancaman biasa. Kita tidak boleh membuang waktu sedetik pun di hutan ini!"
+	},
+	{
+		"speaker": "Burung Gagak",
+		"portrait": "raven",
+		"text": "Benar, Yang Mulia! Tuan Magnus dan para petinggi kerajaan menunggu Anda di aula kastil untuk segera menggelar rapat darurat!"
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Baik! Pengawal, bersiaga! Kita kembali ke kastil sekarang juga!"
+	}
+]
 
 # State Tempur Party ala Guardian Tales
 enum PartyCombatState { EXPLORING, COMBAT }
@@ -153,6 +200,10 @@ func _ready() -> void:
 			gameplay_hud.load_game_requested.connect(_on_hud_load_game_requested)
 		if gameplay_hud.has_signal("return_to_title_requested"):
 			gameplay_hud.return_to_title_requested.connect(_on_hud_return_to_title_requested)
+		if gameplay_hud.has_signal("dialogue_started"):
+			gameplay_hud.dialogue_started.connect(_on_hud_dialogue_started)
+		if gameplay_hud.has_signal("dialogue_finished"):
+			gameplay_hud.dialogue_finished.connect(_on_hud_dialogue_finished)
 
 		# Sembunyikan elemen HUD pertarungan (Party & Skill) saat eksplorasi di luar arena
 		if gameplay_hud.has_method("set_combat_hud_visible"):
@@ -177,6 +228,8 @@ func _ready() -> void:
 		var slot_to_load := pending_load_slot_id
 		pending_load_slot_id = -1
 		call_deferred("load_game_from_slot", slot_to_load)
+	else:
+		_trigger_prologue_cutscene.call_deferred()
 
 
 func setup_party_enemy_collision_exceptions() -> void:
@@ -720,21 +773,21 @@ func _init_starter_quests() -> void:
 		{
 			"id": "main_01",
 			"category": "main",
-			"title": "Penyelidikan Istana",
-			"location": "Istana Kerajaan",
-			"objective": "Temui penjaga gerbang istana.",
-			"description": "Raja memanggil pasukan kesatria untuk menyelidiki gangguan misterius di perbatasan timur kerajaan.",
-			"status": "active",
+			"title": "Peringatan Dari Langit",
+			"location": "Hutan Depan Istana",
+			"objective": "Dengarkan ramalan buruk dari burung gagak pengintai.",
+			"description": "Burung gagak sihir utusan Magnus menyampaikan kabar gawat mengenai ancaman kutukan 7 hari bangsa iblis.",
+			"status": "completed" if is_prologue_completed else "active",
 			"target_position": Vector2(3000, 1000)
 		},
 		{
 			"id": "main_02",
 			"category": "main",
-			"title": "Patroli Perbatasan",
-			"location": "Gerbang Selatan",
-			"objective": "Periksa pos penjagaan gerbang selatan.",
-			"description": "Laporan pengintai menyebutkan adanya pergerakan mencurigakan di luar tembok kota.",
-			"status": "active",
+			"title": "Kembali ke Kastil",
+			"location": "Istana Kerajaan",
+			"objective": "Hadiri rapat darurat bersama petinggi istana dan Tuan Magnus.",
+			"description": "Pangeran Arthur bersama pasukannya harus segera kembali ke istana untuk menyusun rencana menghadapi 7 bangsa iblis.",
+			"status": "active" if is_prologue_completed else "inactive",
 			"target_position": Vector2(3500, 2500)
 		},
 		{
@@ -1594,6 +1647,52 @@ func _on_hud_return_to_title_requested() -> void:
 	get_tree().change_scene_to_file("res://scene/ui/menus/start_menu.tscn")
 
 
+func _on_hud_dialogue_started(_dialogue_id: String) -> void:
+	set_party_movement_locked(true)
+
+
+func _on_hud_dialogue_finished(_dialogue_id: String) -> void:
+	set_party_movement_locked(false)
+
+
+func _trigger_prologue_cutscene() -> void:
+	if is_prologue_completed:
+		return
+	await get_tree().create_timer(0.6).timeout
+	if gameplay_hud and gameplay_hud.has_method("show_dialogue"):
+		gameplay_hud.show_dialogue("prologue_intro", PROLOGUE_DIALOGUE, _on_prologue_dialogue_completed)
+
+
+func _on_prologue_dialogue_completed() -> void:
+	is_prologue_completed = true
+	# Selesaikan quest main_01 dan aktifkan main_02
+	for q in quest_list:
+		if q.get("id") == "main_01":
+			q["status"] = "completed"
+		elif q.get("id") == "main_02":
+			q["status"] = "active"
+	tracked_quest_id = "main_02"
+	if gameplay_hud:
+		if gameplay_hud.has_method("set_quests"):
+			gameplay_hud.set_quests(quest_list, tracked_quest_id)
+		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
+		if not tracked_q.is_empty() and gameplay_hud.has_method("update_hud_quest_display"):
+			gameplay_hud.update_hud_quest_display(tracked_q)
+		if gameplay_hud.has_method("show_location_banner"):
+			gameplay_hud.show_location_banner("Hutan Depan Istana")
+
+
+func set_party_movement_locked(locked: bool) -> void:
+	for member in party_members:
+		if is_instance_valid(member):
+			member.set("is_movement_locked", locked)
+			if locked:
+				if "velocity" in member:
+					member.velocity = Vector2.ZERO
+				if member.has_method("play_idle_animation"):
+					member.play_idle_animation()
+
+
 func save_game_to_slot(slot_id: int) -> bool:
 	var path_tmp := "user://save_slot_%d.json.tmp" % slot_id
 	var _path_final := "user://save_slot_%d.json" % slot_id
@@ -1649,6 +1748,7 @@ func load_game_from_slot(slot_id: int) -> bool:
 
 	# Restore Playtime
 	total_playtime = float(data.get("playtime", 0.0))
+	is_prologue_completed = bool(data.get("is_prologue_completed", true))
 
 	# Restore Party Order, Positions, Health
 	var restored_party: Array[CharacterBody2D] = []
@@ -1809,6 +1909,7 @@ func _collect_save_data(slot_id: int) -> Dictionary:
 	return {
 		"slot_id": slot_id,
 		"chapter": "Chapter 1.1",
+		"is_prologue_completed": is_prologue_completed,
 		"arena_state": int(arena_state),
 		"location": current_location,
 		"current_location_name": current_location_name,
