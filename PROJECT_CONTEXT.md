@@ -234,10 +234,10 @@ flank/
 ## 4. DAFTAR KARAKTER & SKEMA KONTROL GAMEPLAY
 
 ### Komposisi Party (Indeks 0–3):
-- **Slot 1 (Indeks 0):** `Knight_1` (Arthur — Leader default saat game dimulai, petarung melee & shield)
-- **Slot 2 (Indeks 1):** `Bandit_1` (Hellene — Rogue lincah, tebasan melee double swing / double damage & skill Triple Slash)
-- **Slot 3 (Indeks 2):** `Archer_1` (Anastasya — Ranged sniper, tembakan panah lurus & skill Charged Line Snipe)
-- **Slot 4 (Indeks 3):** `Mage_1` (Magnus — Ranged caster, tembakan bola sihir & skill Meteor Strike)
+- **Slot 1 (Indeks 0):** `Knight_1` (Forzato Arthur / Arthur — Leader default saat game dimulai, petarung melee & shield)
+- **Slot 2 (Indeks 1):** `Bandit_1` (Carina Hellene / Hellene — Rogue lincah, tebasan melee double swing / double damage & skill Triple Slash)
+- **Slot 3 (Indeks 2):** `Archer_1` (Astuta Anastasya / Anastasya — Ranged sniper, tembakan panah lurus & skill Charged Line Snipe)
+- **Slot 4 (Indeks 3):** `Mage_1` (Pensatore Magnus / Magnus — Ranged caster, tembakan bola sihir & skill Meteor Strike)
 
 ### Skema Input (Terverifikasi dalam Pengujian Manual):
 - `W`, `A`, `S`, `D` / Panah: Gerak manual Leader.

@@ -473,23 +473,23 @@ const HERO_LORE: Dictionary = {
 	},
 	1: {
 		"display_name": "Hellene",
-		"full_name": "-",
-		"title": "Rogue / Bandit",
+		"full_name": "Carina Hellene",
+		"title": "Bandit",
 		"race": "Manusia",
 		"birthday": "-",
 		"skill_desc": "Dash & Triple Slash\nKombo tebasan 3x\nCD 5.0 detik"
 	},
 	2: {
 		"display_name": "Anastasya",
-		"full_name": "-",
+		"full_name": "Astuta Anastasya",
 		"title": "Pemanah Kerajaan",
-		"race": "Manusia",
+		"race": "Elf",
 		"birthday": "-",
 		"skill_desc": "Charged Line Snipe\nTembakan garis linear\nCD 5.0 detik"
 	},
 	3: {
 		"display_name": "Magnus",
-		"full_name": "-",
+		"full_name": "Pensatore Magnus",
 		"title": "Penyihir Kerajaan",
 		"race": "Manusia",
 		"birthday": "-",
