@@ -97,6 +97,14 @@ var is_party_fading_out: bool = false
 var _party_fade_tweens: Array[Tween] = []
 var is_transitioning: bool = false
 
+# =========================================================
+# ARENA LATIHAN SEMENTARA (TRAINING DUMMY GROUND)
+# =========================================================
+const TRAINING_ARENA_BOUNDS: Rect2 = Rect2(Vector2(2360.0, 1740.0), Vector2(520.0, 640.0))
+const TRAINING_DUMMY_SPAWN_POS: Vector2 = Vector2(2680.0, 2050.0)
+var is_in_training_arena: bool = false
+var training_dummy_enemy: CharacterBody2D = null
+
 # =========================
 # AUDIO SFX (TACTICAL PARTY)
 # =========================
@@ -221,6 +229,7 @@ func _ready() -> void:
 	setup_camera_and_boundaries.call_deferred()
 	_init_arena_barrier.call_deferred()
 	_init_arena_enemies.call_deferred()
+	_init_training_dummy.call_deferred()
 
 	# 6. Jalankan efek pembukaan Circular Mask (Iris Open) saat masuk arena game
 	play_iris_opening_transition()
@@ -252,23 +261,23 @@ func _unhandled_input(event: InputEvent) -> void:
 	# Tombol pintasan pergantian karakter, skill, dan perintah party berbasis action mapping
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.is_action_pressed("switch_character"):
-			if arena_state == ArenaState.COMBAT and not is_party_fading_out:
+			if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
 				switch_to_next_character()
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("skill_1"):
-			if arena_state == ArenaState.COMBAT and not is_party_fading_out:
+			if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
 				trigger_hero_skill_by_slot(0)
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("skill_2"):
-			if arena_state == ArenaState.COMBAT and not is_party_fading_out:
+			if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
 				trigger_hero_skill_by_slot(1)
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("skill_3"):
-			if arena_state == ArenaState.COMBAT and not is_party_fading_out:
+			if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
 				trigger_hero_skill_by_slot(2)
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("skill_4"):
-			if arena_state == ArenaState.COMBAT and not is_party_fading_out:
+			if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
 				trigger_hero_skill_by_slot(3)
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_ESCAPE:
@@ -288,7 +297,7 @@ func is_character_alive(character: CharacterBody2D) -> bool:
 
 
 func switch_to_next_character(force: bool = false) -> void:
-	if not force and arena_state != ArenaState.COMBAT:
+	if not force and arena_state != ArenaState.COMBAT and not is_in_training_arena:
 		return
 	if party_members.is_empty():
 		return
@@ -306,7 +315,7 @@ func switch_to_next_character(force: bool = false) -> void:
 
 
 func switch_to_character(idx: int, force: bool = false) -> void:
-	if not force and arena_state != ArenaState.COMBAT:
+	if not force and arena_state != ArenaState.COMBAT and not is_in_training_arena:
 		return
 	if idx < 0 or idx >= party_members.size() or idx == active_leader_index:
 		return
@@ -329,7 +338,7 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 
 	# Fallback eksplorasi: jika prev_leader tidak valid atau sama dengan target,
 	# cari karakter lain yang saat ini masih aktif berada di dalam SceneTree
-	if _is_party_initialized and arena_state != ArenaState.COMBAT:
+	if _is_party_initialized and arena_state != ArenaState.COMBAT and not is_in_training_arena:
 		var target_candidate := party_members[idx]
 		if not prev_leader or prev_leader == target_candidate or not prev_leader.is_inside_tree():
 			for member in party_members:
@@ -345,7 +354,7 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 	leader.modulate.a = 1.0
 
 	# Jika berganti karakter saat eksplorasi 1 karakter, posisikan karakter baru tepat di posisi karakter sebelumnya
-	if arena_state != ArenaState.COMBAT:
+	if arena_state != ArenaState.COMBAT and not is_in_training_arena:
 		if prev_leader and is_instance_valid(prev_leader) and prev_leader != leader:
 			var prev_pos: Vector2 = prev_leader.global_position
 			var prev_last_dir: Vector2 = prev_leader.last_direction if "last_direction" in prev_leader else Vector2.DOWN
@@ -384,7 +393,7 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 		var follower := party_members[follower_idx]
 		if is_instance_valid(follower):
 			follower.set_as_leader(false, leader, slot_order)
-			if arena_state != ArenaState.COMBAT and follower.is_inside_tree():
+			if arena_state != ArenaState.COMBAT and not is_in_training_arena and follower.is_inside_tree():
 				remove_child(follower)
 		slot_order += 1
 
@@ -421,7 +430,7 @@ func _set_character_collision_active(char_node: CharacterBody2D, active: bool) -
 
 
 func update_party_visibility() -> void:
-	var in_arena_combat: bool = (arena_state == ArenaState.COMBAT)
+	var in_arena_combat: bool = (arena_state == ArenaState.COMBAT or is_in_training_arena)
 	for i in range(party_members.size()):
 		var member = party_members[i]
 		if not is_instance_valid(member):
@@ -468,7 +477,7 @@ func update_party_visibility() -> void:
 
 
 func trigger_hero_skill_by_slot(slot_idx: int) -> void:
-	if arena_state != ArenaState.COMBAT:
+	if arena_state != ArenaState.COMBAT and not is_in_training_arena:
 		return
 	if slot_idx < 0 or slot_idx >= party_members.size():
 		return
@@ -484,7 +493,7 @@ func trigger_hero_skill_by_slot(slot_idx: int) -> void:
 
 
 func execute_hero_skill(hero: CharacterBody2D) -> void:
-	if arena_state != ArenaState.COMBAT:
+	if arena_state != ArenaState.COMBAT and not is_in_training_arena:
 		return
 	if not is_instance_valid(hero) or not is_character_alive(hero):
 		return
@@ -520,6 +529,15 @@ func _on_hud_leader_switch_requested(hero_idx: int) -> void:
 
 
 func _on_hud_pause_menu_requested() -> void:
+	if is_camera_locked_to_arena and arena_state == ArenaState.COMBAT:
+		if is_instance_valid(camera):
+			camera.global_position = arena_center
+			if camera.has_method("reset_smoothing"):
+				camera.reset_smoothing()
+			if camera.has_method("force_update_scroll"):
+				camera.force_update_scroll()
+		return
+
 	var leader := get_active_leader()
 	if is_instance_valid(leader) and is_instance_valid(camera):
 		camera.global_position = leader.global_position
@@ -875,6 +893,7 @@ func _process(delta: float) -> void:
 	handle_camera_shake(delta)
 	update_camera_target(delta)
 	update_party_skill_cooldowns(delta)
+	check_training_arena()
 	if arena_state == ArenaState.INACTIVE:
 		check_arena_trigger()
 	elif arena_state == ArenaState.COMBAT:
@@ -936,13 +955,20 @@ func get_camera_world_rect() -> Rect2:
 
 
 func handle_viewport_aggro_detection(delta: float) -> void:
-	if arena_state != ArenaState.COMBAT:
+	if arena_state != ArenaState.COMBAT and not is_in_training_arena:
 		return
 
 	aggro_check_timer -= delta
 	if aggro_check_timer > 0.0:
 		return
 	aggro_check_timer = AGGRO_CHECK_INTERVAL
+
+	if is_in_training_arena:
+		if is_instance_valid(training_dummy_enemy) and not ("is_dead" in training_dummy_enemy and training_dummy_enemy.is_dead):
+			active_combat_targets = [training_dummy_enemy]
+		else:
+			active_combat_targets = []
+		return
 
 	var alive_arena_enemies: Array[Node2D] = []
 	for enemy in arena_enemies:
@@ -985,11 +1011,19 @@ func update_camera_target(delta: float = 0.0) -> void:
 				camera.force_update_scroll()
 
 func apply_camera_shake(intensity: float = 8.0) -> void:
+	if is_in_training_arena:
+		return
 	shake_intensity = max(shake_intensity, intensity)
 
 
 func handle_camera_shake(delta: float) -> void:
 	if not camera:
+		return
+
+	if is_in_training_arena:
+		shake_intensity = 0.0
+		if camera.offset != Vector2.ZERO:
+			camera.offset = Vector2.ZERO
 		return
 
 	if shake_intensity > 0.0:
@@ -1144,6 +1178,71 @@ func _init_arena_enemies() -> void:
 					e.can_respawn = false
 
 
+func _init_training_dummy() -> void:
+	var enemy_scene: PackedScene = preload("res://scene/enemy/enemy_knight.tscn")
+	var dummy := enemy_scene.instantiate() as CharacterBody2D
+	dummy.name = "TrainingDummy"
+	dummy.y_sort_enabled = true
+	dummy.position = TRAINING_DUMMY_SPAWN_POS
+	dummy.global_position = TRAINING_DUMMY_SPAWN_POS
+	if "is_training_dummy" in dummy:
+		dummy.is_training_dummy = true
+	add_child(dummy)
+	training_dummy_enemy = dummy
+	setup_party_enemy_collision_exceptions.call_deferred()
+
+
+func check_training_arena() -> void:
+	if arena_state != ArenaState.INACTIVE:
+		return
+
+	var leader := get_active_leader()
+	if not leader or not is_instance_valid(leader):
+		return
+
+	var is_inside := TRAINING_ARENA_BOUNDS.has_point(leader.global_position)
+	if is_inside and not is_in_training_arena:
+		enter_training_arena()
+	elif not is_inside and is_in_training_arena:
+		exit_training_arena()
+
+
+func enter_training_arena() -> void:
+	if is_in_training_arena or arena_state != ArenaState.INACTIVE:
+		return
+	is_in_training_arena = true
+	shake_intensity = 0.0
+	if camera and is_instance_valid(camera):
+		camera.offset = Vector2.ZERO
+	current_combat_state = PartyCombatState.COMBAT
+
+	_deploy_party_for_combat()
+	update_party_visibility()
+	notify_party_combat_state(true)
+
+	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
+		gameplay_hud.set_combat_hud_visible(true, true)
+
+
+func exit_training_arena() -> void:
+	if not is_in_training_arena:
+		return
+	is_in_training_arena = false
+	current_combat_state = PartyCombatState.EXPLORING
+
+	for member in party_members:
+		if is_instance_valid(member):
+			member.modulate.a = 1.0
+			if member.has_method("reset_combat_skills"):
+				member.reset_combat_skills()
+	notify_party_combat_state(false)
+	update_party_visibility()
+	breadcrumbs.clear()
+
+	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
+		gameplay_hud.set_combat_hud_visible(false, false)
+
+
 func check_arena_trigger() -> void:
 	if arena_state != ArenaState.INACTIVE:
 		return
@@ -1250,7 +1349,8 @@ func _deploy_party_for_combat() -> void:
 		return
 
 	# Tentukan arah hadap formasi ke pusat arena pertempuran
-	var forward_dir: Vector2 = (arena_center - leader.global_position).normalized()
+	var target_center: Vector2 = TRAINING_DUMMY_SPAWN_POS if is_in_training_arena else arena_center
+	var forward_dir: Vector2 = (target_center - leader.global_position).normalized()
 	if forward_dir.length_squared() < 0.01:
 		forward_dir = Vector2.RIGHT
 	var lateral_dir: Vector2 = Vector2(-forward_dir.y, forward_dir.x)
@@ -1260,10 +1360,12 @@ func _deploy_party_for_combat() -> void:
 	var deploy_members: Array[CharacterBody2D] = []
 	var deploy_positions: Array[Vector2] = []
 
-	var min_x := arena_bounds.position.x + 45.0
-	var max_x := arena_bounds.end.x - 45.0
-	var min_y := arena_bounds.position.y + 45.0
-	var max_y := arena_bounds.end.y - 45.0
+	var active_bounds: Rect2 = TRAINING_ARENA_BOUNDS if is_in_training_arena else arena_bounds
+	var padding: float = 20.0 if is_in_training_arena else 45.0
+	var min_x := active_bounds.position.x + padding
+	var max_x := active_bounds.end.x - padding
+	var min_y := active_bounds.position.y + padding
+	var max_y := active_bounds.end.y - padding
 
 	for i in range(party_members.size()):
 		if i == active_leader_index:

@@ -980,7 +980,9 @@ func setup(members: Array[CharacterBody2D], current_leader_idx: int, initial_inv
 		set_quests(initial_quests)
 	if current_leader_idx >= 0 and current_leader_idx < party_members.size():
 		active_leader_node = party_members[current_leader_idx]
-	current_viewed_party_slot = 0
+		current_viewed_party_slot = current_leader_idx
+	else:
+		current_viewed_party_slot = 0
 
 	update_party_hud()
 	update_leader_indicator()
@@ -2638,14 +2640,14 @@ func _format_clean_number(val: Variant) -> String:
 		var f: float = float(val)
 		if is_equal_approx(f, roundf(f)):
 			return str(int(roundf(f)))
-		var s := str(snappedf(f, 0.01))
-		if s.ends_with(".0"):
-			return s.substr(0, s.length() - 2)
-		return s
-	var s := str(val).strip_edges()
-	if s.ends_with(".0"):
-		return s.substr(0, s.length() - 2)
-	return s
+		var snapped_str := str(snappedf(f, 0.01))
+		if snapped_str.ends_with(".0"):
+			return snapped_str.substr(0, snapped_str.length() - 2)
+		return snapped_str
+	var text_val := str(val).strip_edges()
+	if text_val.ends_with(".0"):
+		return text_val.substr(0, text_val.length() - 2)
+	return text_val
 
 
 func _update_character_info_ui() -> void:
@@ -2778,9 +2780,8 @@ func _update_pause_party_display() -> void:
 				portrait.texture = hero_portraits[hero_type]
 
 			if leader_lbl:
-				# Slot 0 selalu menjadi Leader; pertahankan ruang layout di semua slot agar sejajar
 				leader_lbl.visible = true
-				leader_lbl.modulate.a = 1.0 if (slot_idx == 0) else 0.0
+				leader_lbl.modulate.a = 1.0 if (slot_idx == active_leader_index) else 0.0
 
 			if hp_bar:
 				var max_hp = hero.get("max_health") if "max_health" in hero else 10
@@ -2813,7 +2814,7 @@ func _update_pause_party_hp_bars() -> void:
 			var leader_lbl := slot_node.get_node_or_null("Leader") as Label
 			if leader_lbl:
 				leader_lbl.visible = true
-				leader_lbl.modulate.a = 1.0 if (slot_idx == 0) else 0.0
+				leader_lbl.modulate.a = 1.0 if (slot_idx == active_leader_index) else 0.0
 
 
 # =========================================================

@@ -15,6 +15,7 @@ enum EnemyType { ARCHER, KNIGHT }
 @export var can_respawn: bool = true
 @export var wait_for_arena: bool = false
 @export var in_arena_combat: bool = false
+@export var is_training_dummy: bool = false
 @export var melee_attack_range: float = 80.0
 @export var melee_damage: int = 1
 
@@ -109,6 +110,12 @@ var damage_tween: Tween = null
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("enemy")
+	if is_training_dummy:
+		max_health = 100
+		can_respawn = false
+		contact_damage = 0
+		melee_damage = 0
+		projectile_damage = 0
 	current_health = max_health
 	spawn_position = global_position
 	wander_target = spawn_position
@@ -140,7 +147,7 @@ func _setup_player_collision_exceptions() -> void:
 
 
 func alert_to_combat(target: CharacterBody2D = null) -> void:
-	if is_dead:
+	if is_dead or is_training_dummy:
 		return
 	wait_for_arena = false
 	in_arena_combat = true
@@ -246,6 +253,22 @@ func setup_health_bar() -> void:
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
+		return
+
+	if is_training_dummy:
+		if knockback_velocity != Vector2.ZERO:
+			knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, knockback_decay * 1.5 * delta)
+			velocity = knockback_velocity
+			move_and_slide_with_separation()
+			if knockback_velocity.length() < 8.0:
+				knockback_velocity = Vector2.ZERO
+		else:
+			velocity = Vector2.ZERO
+
+		if global_position.distance_to(spawn_position) > 100.0:
+			global_position = global_position.move_toward(spawn_position, 60.0 * delta)
+
+		play_idle_animation()
 		return
 
 	if alert_sfx_cooldown_timer > 0.0:
@@ -968,6 +991,40 @@ func take_damage(amount: int, attacker: CharacterBody2D = null) -> void:
 	if is_dead:
 		return
 
+	if is_training_dummy:
+		current_health = max(1, current_health - amount)
+		play_sfx(SFX_HURT, -2.0)
+
+		if health_bar:
+			health_bar.value = current_health
+
+		if damage_bar:
+			if damage_tween and damage_tween.is_valid():
+				damage_tween.kill()
+			damage_tween = create_tween()
+			damage_tween.tween_interval(0.35)
+			damage_tween.tween_property(damage_bar, "value", float(current_health), 0.4)\
+				.set_trans(Tween.TRANS_QUAD)\
+				.set_ease(Tween.EASE_OUT)
+
+		if animated_sprite:
+			animated_sprite.modulate = Color(3.0, 3.0, 3.0)
+			var flash_tween := create_tween()
+			flash_tween.tween_property(animated_sprite, "modulate", Color.WHITE, 0.1)
+
+		if attacker != null and "Bandit" in attacker.name:
+			knockback_velocity = Vector2.ZERO
+			velocity = Vector2.ZERO
+
+		# Pulihkan darah kembali secara halus jika menipis agar tidak pernah mati
+		if current_health <= 20:
+			current_health = max_health
+			var reset_tween := create_tween()
+			reset_tween.tween_interval(0.8)
+			reset_tween.tween_property(health_bar, "value", float(max_health), 0.3)
+			reset_tween.parallel().tween_property(damage_bar, "value", float(max_health), 0.3)
+		return
+
 	wait_for_arena = false
 	current_health -= amount
 	play_sfx(SFX_HURT, -2.0)
@@ -1222,7 +1279,7 @@ func update_touching_players_and_get_target(exited_body: Node2D = null) -> Chara
 
 
 func _on_hitbox_body_entered(body: Node2D) -> void:
-	if is_dead or body == null:
+	if is_dead or is_training_dummy or body == null:
 		return
 	if body is CharacterBody2D and body.is_in_group("player") and not ("is_dead" in body and body.is_dead):
 		if body not in touching_players:

@@ -17,7 +17,7 @@ var leader_node: CharacterBody2D = null
 var queue_slot_index: int = 0
 var in_party_combat: bool = false
 var ai_attack_timer: float = 0.0
-const COMBAT_ATTACK_RANGE: float = 85.0 # Jangkauan serang melee petarung Knight
+const COMBAT_ATTACK_RANGE: float = 90.0 # Jangkauan serang melee petarung Knight
 var facing_debounce_timer: float = 0.0
 
 # =========================
@@ -49,7 +49,7 @@ var _footstep_toggle: bool = false
 const VISUAL_CENTER_OFFSET: Vector2 = Vector2(0.0, 7.5) # Pusat visual torso Knight di ruang global (skala 5x, setara y=1.5 lokal)
 const SLASH_CENTER_OFFSET: Vector2 = VISUAL_CENTER_OFFSET
 
-@export var attack_range: float = 125.0     # Jarak jangkauan tebasan pedang
+@export var attack_range: float = 145.0     # Jarak jangkauan tebasan pedang
 @export var attack_damage: int = 2          # Damage tebasan melee Knight (lebih bertenaga dari proyektil)
 @export var attack_cooldown: float = 1.2    # Jeda tebasan serangan dasar
 var attack_stuck_timer: float = 0.0
@@ -482,18 +482,38 @@ func shoot_towards(target_pos: Vector2) -> void:
 
 
 func execute_slash_damage(attack_dir: Vector2) -> void:
-	var slash_range: float = 125.0      # Jangkauan visual tebasan (pixel-art 5x)
-	var slash_arc_deg: float = 170.0   # Sudut sapuan tebasan (170 derajat ke depan)
-	var close_contact_radius: float = 65.0 # Area kontak dekat sekeliling tubuh Knight (musuh menempel)
+	var facing := get_4_direction_str(last_direction)
+	var slash_range: float = 145.0      # Jangkauan visual tebasan pedang Knight (pixel-art 5x)
+	var slash_arc_deg: float = 175.0   # Sudut sapuan tebasan ke depan
+	var close_contact_radius: float = 75.0 # Area kontak dekat sekeliling tubuh Knight (musuh menempel)
 	var center_offset: Vector2 = SLASH_CENTER_OFFSET
 	
-	# Jangkauan tebasan ke arah bawah (South) diperpanjang dan dipusatkan lebih ke bawah
-	# agar selaras dan proporsional dengan sapuan visual bilah pedang yang mengayun jauh ke bawah
-	if attack_dir.y > 0.3:
-		slash_range = 160.0
-		close_contact_radius = 85.0
-		slash_arc_deg = 180.0
-		center_offset = Vector2(0.0, 32.0)
+	# Selaraskan titik pusat dan jangkauan sapuan pedang dengan animasi visual (atk_e, atk_w, atk_s, atk_n)
+	match facing:
+		"s":
+			# Animasi atk_s: bilah pedang dan sapuan busur putih mengayun ke bawah
+			slash_range = 155.0
+			close_contact_radius = 80.0
+			slash_arc_deg = 180.0
+			center_offset = Vector2(0.0, 20.0)
+		"n":
+			# Animasi atk_n: ayunan pedang melengkung di atas kepala Knight
+			slash_range = 145.0
+			close_contact_radius = 70.0
+			slash_arc_deg = 175.0
+			center_offset = Vector2(0.0, -6.0)
+		"e":
+			# Animasi atk_e: bilah pedang dan busur putih tebasan mengayun ke kanan (East)
+			slash_range = 145.0
+			close_contact_radius = 75.0
+			slash_arc_deg = 175.0
+			center_offset = Vector2(10.0, 8.0)
+		"w":
+			# Animasi atk_w: bilah pedang dan busur putih tebasan mengayun ke kiri (West)
+			slash_range = 145.0
+			close_contact_radius = 75.0
+			slash_arc_deg = 175.0
+			center_offset = Vector2(-10.0, 8.0)
 	
 	var knight_center := global_position + center_offset
 	var enemies := get_tree().get_nodes_in_group("enemy")
@@ -513,8 +533,12 @@ func execute_slash_damage(attack_dir: Vector2) -> void:
 			is_hit = true
 		# 2. Musuh berada dalam jangkauan tebasan dan sudut busur arah hadap
 		elif dist <= slash_range:
-			var angle_diff: float = absf(attack_dir.angle_to(to_enemy))
-			if angle_diff <= deg_to_rad(slash_arc_deg * 0.5):
+			var ref_dir: Vector2 = attack_dir if attack_dir.length_squared() > 0.01 else last_direction
+			var angle_diff: float = absf(ref_dir.angle_to(to_enemy))
+			var facing_dir: Vector2 = last_direction
+			var angle_diff_facing: float = absf(facing_dir.angle_to(to_enemy))
+			var min_angle: float = minf(angle_diff, angle_diff_facing)
+			if min_angle <= deg_to_rad(slash_arc_deg * 0.5):
 				# Pastikan tidak terhalang dinding/pagar tebal
 				if has_line_of_sight_to(e):
 					is_hit = true
@@ -563,7 +587,13 @@ func activate_shield() -> void:
 	print(name, " merapalkan skill Shield Guard! Perisai akan muncul setelah animasi selesai.")
 
 
-const SHIELD_CENTER_OFFSET: Vector2 = Vector2(0.0, 1.5)
+const SHIELD_CENTER_OFFSET: Vector2 = Vector2(0.0, 1.0)
+const SHIELD_DIRECTIONAL_OFFSETS: Dictionary = {
+	"n": Vector2(0.0, 1.0),
+	"s": Vector2(0.0, 1.0),
+	"e": Vector2(0.5, 1.0),
+	"w": Vector2(0.5, 1.0)
+}
 
 func _deploy_shield() -> void:
 	if is_dead:
@@ -623,13 +653,27 @@ func deactivate_shield() -> void:
 		shield_sprite.visible = false
 
 
+func get_shield_center_offset() -> Vector2:
+	var d_str: String = ""
+	if animated_sprite and animated_sprite.animation != "":
+		var anim_name: String = animated_sprite.animation
+		for suffix in ["_n", "_s", "_e", "_w"]:
+			if anim_name.ends_with(suffix):
+				d_str = suffix.substr(1)
+				break
+	if d_str == "":
+		d_str = get_4_direction_str(last_direction)
+	return SHIELD_DIRECTIONAL_OFFSETS.get(d_str, SHIELD_CENTER_OFFSET)
+
+
 func update_shield_visual() -> void:
 	if not shield_sprite:
 		return
-	# Pelindung perisai tegak dan tepat berada di tengah tubuh karakter Knight
+	# Pelindung perisai tegak dan presisi di tengah tubuh karakter Knight sesuai arah pandang
 	shield_sprite.rotation = 0.0
 	var float_y: float = sin(Time.get_ticks_msec() * 0.007) * 0.8
-	shield_sprite.position = SHIELD_CENTER_OFFSET + Vector2(0.0, float_y)
+	var center_offset: Vector2 = get_shield_center_offset()
+	shield_sprite.position = center_offset + Vector2(0.0, float_y)
 	var pulse: float = 0.85 + sin(Time.get_ticks_msec() * 0.009) * 0.03
 	shield_sprite.scale = Vector2(pulse, pulse)
 

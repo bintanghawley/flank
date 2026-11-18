@@ -127,6 +127,13 @@ var invulnerability_timer: float = 0.0
 # =========================
 # SHIELD GUARD (DARI KNIGHT)
 # =========================
+const SHIELD_CENTER_OFFSET: Vector2 = Vector2(0.5, 4.0)
+const SHIELD_DIRECTIONAL_OFFSETS: Dictionary = {
+	"n": Vector2(0.5, 4.0),
+	"s": Vector2(0.5, 4.0),
+	"e": Vector2(0.5, 4.0),
+	"w": Vector2(0.5, 4.0)
+}
 var is_shield_active: bool = false
 var shield_timer: float = 0.0
 var shield_tween: Tween = null
@@ -1313,9 +1320,29 @@ func deactivate_shield() -> void:
 			shield_sprite.visible = false
 
 
+func get_shield_center_offset() -> Vector2:
+	var d_str: String = ""
+	if animated_sprite and animated_sprite.animation != "":
+		var anim_name: String = animated_sprite.animation
+		for suffix in ["_n", "_s", "_e", "_w"]:
+			if anim_name.ends_with(suffix):
+				d_str = suffix.substr(1)
+				break
+	if d_str == "":
+		d_str = get_direction_string(last_direction)
+	return SHIELD_DIRECTIONAL_OFFSETS.get(d_str, SHIELD_CENTER_OFFSET)
+
+
 func update_shield_visual() -> void:
-	if shield_sprite and shield_sprite.visible:
-		shield_sprite.position = Vector2(0.0, 1.5)
+	if not shield_sprite:
+		return
+	# Pelindung perisai tegak dan presisi di tengah tubuh karakter Bandit sesuai arah pandang
+	shield_sprite.rotation = 0.0
+	var float_y: float = sin(Time.get_ticks_msec() * 0.007) * 0.8
+	var center_offset: Vector2 = get_shield_center_offset()
+	shield_sprite.position = center_offset + Vector2(0.0, float_y)
+	var pulse: float = 0.85 + sin(Time.get_ticks_msec() * 0.009) * 0.03
+	shield_sprite.scale = Vector2(pulse, pulse)
 
 
 # =========================================================

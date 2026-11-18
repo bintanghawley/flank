@@ -1013,10 +1013,10 @@ shape = SubResource("RectangleShape2D_bandit")
 
 [node name="ShieldSprite" type="Sprite2D" parent="." unique_id=1849182992]
 visible = false
-z_index = 7
+z_index = 6
 texture_filter = 1
 texture = ExtResource("ext_shield")
-position = Vector2(0, 1.5)
+position = Vector2(0.5, 4)
 scale = Vector2(0.85, 0.85)
 
 [node name="Hurtbox" type="Area2D" parent="." groups=["hurtbox"]]

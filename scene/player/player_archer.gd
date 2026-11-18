@@ -6,10 +6,26 @@ extends CharacterBody2D
 # =========================
 # PARTY SHIELD GUARD (DARI KNIGHT)
 # =========================
-const SHIELD_CENTER_OFFSET: Vector2 = Vector2(0.0, 4.0)
-const VISUAL_CENTER_OFFSET: Vector2 = Vector2(2.5, 26.0)
-# Titik tengah proyektil basic attack panah diselaraskan pas dengan busur di tangan Archer (Y diturunkan dari 26.0 menjadi 35.0)
-const BASIC_ATTACK_ARROW_OFFSET: Vector2 = Vector2(2.5, 35.0)
+const SHIELD_CENTER_OFFSET: Vector2 = Vector2(0.0, -0.5)
+const SHIELD_DIRECTIONAL_OFFSETS: Dictionary = {
+	"n": Vector2(0.0, -0.5),
+	"s": Vector2(0.0, -0.5),
+	"e": Vector2(0.0, -0.5),
+	"w": Vector2(0.0, -0.5)
+}
+const BOW_DIRECTIONAL_OFFSETS: Dictionary = {
+	"e": Vector2(30.0, 12.0),
+	"w": Vector2(-40.0, 12.0),
+	"s": Vector2(0.0, 32.0),
+	"n": Vector2(0.0, -22.0),
+	"ne": Vector2(26.0, -6.0),
+	"nw": Vector2(-34.0, -6.0),
+	"se": Vector2(24.0, 24.0),
+	"sw": Vector2(-32.0, 24.0)
+}
+const VISUAL_CENTER_OFFSET: Vector2 = Vector2(0.0, 6.0)
+# Titik tengah proyektil panah diselaraskan pas dengan posisi anak panah pada busur Archer
+const BASIC_ATTACK_ARROW_OFFSET: Vector2 = Vector2(0.0, 6.0)
 var is_shield_active: bool = false
 var shield_timer: float = 0.0
 var shield_tween: Tween = null
@@ -1110,14 +1126,33 @@ func play_attack_animation() -> void:
 # COMBAT & SHOOT LOGIC (MANUAL KLIK KIRI)
 # =========================================================
 
-func get_arrow_spawn_position() -> Vector2:
-	# Titik visual busur panah archer di ruang dunia (diselaraskan pas dengan senjata busur di tangan)
-	var bow_pos := global_position + BASIC_ATTACK_ARROW_OFFSET
+func get_bow_offset(dir: Vector2 = Vector2.ZERO) -> Vector2:
+	var use_dir := dir if dir != Vector2.ZERO else (attack_direction if attack_direction != Vector2.ZERO else last_direction)
+	var d_8 := get_8_direction(use_dir)
+	var d_str := "s"
+	if d_8 == Vector2.RIGHT:
+		d_str = "e"
+	elif d_8 == Vector2.LEFT:
+		d_str = "w"
+	elif d_8 == Vector2.UP:
+		d_str = "n"
+	elif d_8 == Vector2.DOWN:
+		d_str = "s"
+	elif d_8.x > 0 and d_8.y < 0:
+		d_str = "ne"
+	elif d_8.x < 0 and d_8.y < 0:
+		d_str = "nw"
+	elif d_8.x > 0 and d_8.y > 0:
+		d_str = "se"
+	elif d_8.x < 0 and d_8.y > 0:
+		d_str = "sw"
+	return BOW_DIRECTIONAL_OFFSETS.get(d_str, BASIC_ATTACK_ARROW_OFFSET)
 
-	# Posisi kemunculan panah tepat di depan busur keluar dari tubuh archer
+
+func get_arrow_spawn_position() -> Vector2:
+	# Titik visual busur panah archer di ruang dunia (diselaraskan pas tepat di anak panah yang nempel di busur)
 	var dir := attack_direction if attack_direction != Vector2.ZERO else last_direction
-	var forward_dist := 28.0 if last_direction == Vector2.UP else 20.0
-	return bow_pos + dir * forward_dist
+	return global_position + get_bow_offset(dir)
 
 
 
@@ -1906,13 +1941,27 @@ func deactivate_shield() -> void:
 			shield_sprite.visible = false
 
 
+func get_shield_center_offset() -> Vector2:
+	var d_str: String = ""
+	if animated_sprite and animated_sprite.animation != "":
+		var anim_name: String = animated_sprite.animation
+		for suffix in ["_n", "_s", "_e", "_w"]:
+			if anim_name.ends_with(suffix):
+				d_str = suffix.substr(1)
+				break
+	if d_str == "":
+		d_str = get_4_direction_str(last_direction)
+	return SHIELD_DIRECTIONAL_OFFSETS.get(d_str, SHIELD_CENTER_OFFSET)
+
+
 func update_shield_visual() -> void:
 	if not shield_sprite:
 		return
-	# Pelindung perisai tegak dan tepat berada di tengah tubuh karakter Archer (SHIELD_CENTER_OFFSET)
+	# Pelindung perisai tegak dan presisi di tengah tubuh karakter Archer sesuai arah pandang
 	shield_sprite.rotation = 0.0
 	var float_y: float = sin(Time.get_ticks_msec() * 0.007) * 0.8
-	shield_sprite.position = SHIELD_CENTER_OFFSET + Vector2(0.0, float_y)
+	var center_offset: Vector2 = get_shield_center_offset()
+	shield_sprite.position = center_offset + Vector2(0.0, float_y)
 	var pulse: float = 0.85 + sin(Time.get_ticks_msec() * 0.009) * 0.03
 	shield_sprite.scale = Vector2(pulse, pulse)
 
