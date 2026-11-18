@@ -16,6 +16,7 @@ signal start_menu_settings_closed
 signal dialogue_started(dialogue_id: String)
 signal dialogue_advanced(entry_index: int, total_entries: int)
 signal dialogue_finished(dialogue_id: String)
+signal interaction_pressed(action_type: String)
 
 @onready var root_control: Control = $RootControl
 
@@ -54,6 +55,19 @@ signal dialogue_finished(dialogue_id: String)
 @onready var dialogue_prompt_arrow: TextureRect = $RootControl/DialogueContainer/AdvancePrompt/PromptArrow
 @onready var dialogue_prompt_key: Label = $RootControl/DialogueContainer/AdvancePrompt/PromptKey
 @onready var dialogue_prompt_text: Label = $RootControl/DialogueContainer/AdvancePrompt/PromptText
+
+# Interaction Prompt & Objective Navigation
+var _interact_prompt_panel: PanelContainer = null
+var _interact_prompt_label: Label = null
+var _interact_key_label: Label = null
+var _interact_action_type: String = ""
+
+var _nav_tracker_panel: PanelContainer = null
+var _nav_tracker_arrow: Label = null
+var _nav_tracker_label: Label = null
+var _nav_target_pos: Vector2 = Vector2.ZERO
+var _nav_target_name: String = ""
+var _is_nav_active: bool = false
 
 # Pause Popup Overlay & Book Menu
 @onready var pause_overlay: ColorRect = $RootControl/PauseOverlay
@@ -510,6 +524,8 @@ func _ready() -> void:
 		location_banner.modulate.a = 0.0
 
 	set_combat_hud_visible(false, false)
+	_setup_interact_prompt_ui()
+	_setup_quest_navigation_ui()
 
 	# Connect Pause Menu Buttons
 	if btn_pause_menu:
@@ -5935,3 +5951,210 @@ func _start_arrow_animation() -> void:
 	_arrow_tween = create_tween().set_loops()
 	_arrow_tween.tween_property(dialogue_prompt_arrow, "position:y", 3.0, 0.45).set_trans(Tween.TRANS_SINE)
 	_arrow_tween.tween_property(dialogue_prompt_arrow, "position:y", 0.0, 0.45).set_trans(Tween.TRANS_SINE)
+
+
+# =========================================================
+# INTERACTION PROMPT & OBJECTIVE NAVIGATION
+# =========================================================
+
+func _setup_interact_prompt_ui() -> void:
+	if not is_instance_valid(root_control):
+		return
+
+	_interact_prompt_panel = PanelContainer.new()
+	_interact_prompt_panel.name = "InteractPromptPanel"
+	_interact_prompt_panel.anchor_left = 0.5
+	_interact_prompt_panel.anchor_right = 0.5
+	_interact_prompt_panel.anchor_top = 0.82
+	_interact_prompt_panel.anchor_bottom = 0.82
+	_interact_prompt_panel.offset_left = -130
+	_interact_prompt_panel.offset_right = 130
+	_interact_prompt_panel.offset_top = -22
+	_interact_prompt_panel.offset_bottom = 22
+	_interact_prompt_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_interact_prompt_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_interact_prompt_panel.mouse_filter = Control.MOUSE_FILTER_PASS
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.12, 0.90)
+	style.border_color = Color(0.9, 0.78, 0.35, 1.0)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	_interact_prompt_panel.add_theme_stylebox_override("panel", style)
+
+	var hbox := HBoxContainer.new()
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	hbox.add_theme_constant_override("separation", 8)
+	_interact_prompt_panel.add_child(hbox)
+
+	var key_panel := PanelContainer.new()
+	var key_style := StyleBoxFlat.new()
+	key_style.bg_color = Color(0.22, 0.20, 0.28, 1.0)
+	key_style.border_color = Color(1.0, 0.85, 0.35, 1.0)
+	key_style.set_border_width_all(1)
+	key_style.set_corner_radius_all(3)
+	key_style.content_margin_left = 6
+	key_style.content_margin_right = 6
+	key_style.content_margin_top = 2
+	key_style.content_margin_bottom = 2
+	key_panel.add_theme_stylebox_override("panel", key_style)
+	hbox.add_child(key_panel)
+
+	var font: Font = preload("res://assets/ui/fonts/beholden-bold.ttf")
+
+	_interact_key_label = Label.new()
+	_interact_key_label.text = "[E]"
+	_interact_key_label.add_theme_font_override("font", font)
+	_interact_key_label.add_theme_font_size_override("font_size", 13)
+	_interact_key_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4, 1.0))
+	key_panel.add_child(_interact_key_label)
+
+	_interact_prompt_label = Label.new()
+	_interact_prompt_label.text = "Masuk ke Aula Kastil"
+	_interact_prompt_label.add_theme_font_override("font", font)
+	_interact_prompt_label.add_theme_font_size_override("font_size", 14)
+	_interact_prompt_label.add_theme_color_override("font_color", Color(0.96, 0.96, 0.94, 1.0))
+	hbox.add_child(_interact_prompt_label)
+
+	var btn := Button.new()
+	btn.flat = true
+	btn.anchors_preset = Control.PRESET_FULL_RECT
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	btn.pressed.connect(func():
+		emit_signal("interaction_pressed", _interact_action_type)
+	)
+	_interact_prompt_panel.add_child(btn)
+
+	_interact_prompt_panel.visible = false
+	_interact_prompt_panel.modulate.a = 0.0
+	root_control.add_child(_interact_prompt_panel)
+
+
+func show_interact_prompt(prompt_text: String = "Masuk ke Aula Kastil", key_str: String = "E", action_type: String = "") -> void:
+	if not is_instance_valid(_interact_prompt_panel):
+		return
+	_interact_action_type = action_type if action_type != "" else prompt_text
+	if is_instance_valid(_interact_prompt_label):
+		_interact_prompt_label.text = prompt_text
+	if is_instance_valid(_interact_key_label):
+		_interact_key_label.text = "[%s]" % key_str
+
+	if not _interact_prompt_panel.visible or _interact_prompt_panel.modulate.a < 0.9:
+		_interact_prompt_panel.visible = true
+		var t := create_tween()
+		t.tween_property(_interact_prompt_panel, "modulate:a", 1.0, 0.15)
+
+
+func hide_interact_prompt() -> void:
+	if not is_instance_valid(_interact_prompt_panel) or not _interact_prompt_panel.visible:
+		return
+	var t := create_tween()
+	t.tween_property(_interact_prompt_panel, "modulate:a", 0.0, 0.12)
+	t.tween_callback(func():
+		if is_instance_valid(_interact_prompt_panel):
+			_interact_prompt_panel.visible = false
+	)
+
+
+func _setup_quest_navigation_ui() -> void:
+	if not is_instance_valid(root_control):
+		return
+
+	_nav_tracker_panel = PanelContainer.new()
+	_nav_tracker_panel.name = "QuestNavTrackerPanel"
+	_nav_tracker_panel.anchor_left = 0.0
+	_nav_tracker_panel.anchor_top = 0.0
+	_nav_tracker_panel.offset_left = 24
+	_nav_tracker_panel.offset_top = 112
+	_nav_tracker_panel.mouse_filter = Control.MOUSE_FILTER_PASS
+
+	var nav_style := StyleBoxFlat.new()
+	nav_style.bg_color = Color(0.08, 0.09, 0.14, 0.85)
+	nav_style.border_color = Color(0.9, 0.78, 0.35, 0.9)
+	nav_style.set_border_width_all(1)
+	nav_style.set_corner_radius_all(4)
+	nav_style.content_margin_left = 8
+	nav_style.content_margin_right = 10
+	nav_style.content_margin_top = 4
+	nav_style.content_margin_bottom = 4
+	_nav_tracker_panel.add_theme_stylebox_override("panel", nav_style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
+	_nav_tracker_panel.add_child(hbox)
+
+	var font: Font = preload("res://assets/ui/fonts/beholden-bold.ttf")
+
+	_nav_tracker_arrow = Label.new()
+	_nav_tracker_arrow.text = "▲"
+	_nav_tracker_arrow.add_theme_font_override("font", font)
+	_nav_tracker_arrow.add_theme_font_size_override("font_size", 12)
+	_nav_tracker_arrow.add_theme_color_override("font_color", Color(1.0, 0.85, 0.25, 1.0))
+	hbox.add_child(_nav_tracker_arrow)
+
+	_nav_tracker_label = Label.new()
+	_nav_tracker_label.text = "Menuju Kastil"
+	_nav_tracker_label.add_theme_font_override("font", font)
+	_nav_tracker_label.add_theme_font_size_override("font_size", 12)
+	_nav_tracker_label.add_theme_color_override("font_color", Color(0.95, 0.93, 0.85, 1.0))
+	hbox.add_child(_nav_tracker_label)
+
+	_nav_tracker_panel.visible = false
+	root_control.add_child(_nav_tracker_panel)
+
+
+func set_quest_navigation(target_pos: Vector2, target_name: String) -> void:
+	_nav_target_pos = target_pos
+	_nav_target_name = target_name
+	_is_nav_active = true
+	if is_instance_valid(_nav_tracker_panel):
+		_nav_tracker_panel.visible = true
+
+
+func hide_quest_navigation() -> void:
+	_is_nav_active = false
+	if is_instance_valid(_nav_tracker_panel):
+		_nav_tracker_panel.visible = false
+
+
+func update_quest_navigation(leader_pos: Vector2) -> void:
+	if not _is_nav_active or not is_instance_valid(_nav_tracker_panel):
+		return
+	var diff := _nav_target_pos - leader_pos
+	var dist := diff.length()
+	var dist_m := int(dist / 20.0)
+
+	var arrow_char := "▲"
+	var angle := diff.angle()
+	var deg := rad_to_deg(angle)
+	if deg >= -22.5 and deg < 22.5:
+		arrow_char = "▶"
+	elif deg >= 22.5 and deg < 67.5:
+		arrow_char = "▼"
+	elif deg >= 67.5 and deg < 112.5:
+		arrow_char = "▼"
+	elif deg >= 112.5 and deg < 157.5:
+		arrow_char = "◀"
+	elif deg >= 157.5 or deg < -157.5:
+		arrow_char = "◀"
+	elif deg >= -157.5 and deg < -112.5:
+		arrow_char = "▲"
+	elif deg >= -112.5 and deg < -67.5:
+		arrow_char = "▲"
+	elif deg >= -67.5 and deg < -22.5:
+		arrow_char = "▲"
+
+	if is_instance_valid(_nav_tracker_arrow):
+		_nav_tracker_arrow.text = arrow_char
+
+	if is_instance_valid(_nav_tracker_label):
+		if dist <= 100.0:
+			_nav_tracker_label.text = "%s (Tiba)" % _nav_target_name
+			_nav_tracker_label.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4, 1.0))
+		else:
+			_nav_tracker_label.text = "%s (%d m)" % [_nav_target_name, dist_m]
+			_nav_tracker_label.add_theme_color_override("font_color", Color(0.95, 0.93, 0.85, 1.0))

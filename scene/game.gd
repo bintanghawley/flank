@@ -22,6 +22,19 @@ var total_playtime: float = 0.0
 var is_prologue_completed: bool = false
 
 # =========================================================
+# LOKASI KASTIL & AULA RAPAT ISTANA
+# =========================================================
+const CASTLE_ENTRANCE_POS: Vector2 = Vector2(2533.0, 1035.0)
+const CASTLE_HALL_SPAWN_POS: Vector2 = Vector2(2533.0, -1180.0)
+const CASTLE_HALL_EXIT_POS: Vector2 = Vector2(2533.0, -1060.0)
+const CASTLE_OUTSIDE_SPAWN_POS: Vector2 = Vector2(2533.0, 1090.0)
+var is_inside_castle_hall: bool = false
+var _marker_bob_time: float = 0.0
+var world_map_min: Vector2 = Vector2.ZERO
+var world_map_max: Vector2 = Vector2.ZERO
+var _nav_compass: Node2D = null
+
+# =========================================================
 # NASKAH DIALOG CERITA PROLOG
 # =========================================================
 const PROLOGUE_DIALOGUE: Array[Dictionary] = [
@@ -214,6 +227,8 @@ func _ready() -> void:
 			gameplay_hud.dialogue_started.connect(_on_hud_dialogue_started)
 		if gameplay_hud.has_signal("dialogue_finished"):
 			gameplay_hud.dialogue_finished.connect(_on_hud_dialogue_finished)
+		if gameplay_hud.has_signal("interaction_pressed"):
+			gameplay_hud.interaction_pressed.connect(_on_hud_interaction_pressed)
 
 		# Sembunyikan elemen HUD pertarungan (Party & Skill) saat eksplorasi di luar arena
 		if gameplay_hud.has_method("set_combat_hud_visible"):
@@ -224,12 +239,20 @@ func _ready() -> void:
 		if not tracked_q.is_empty():
 			gameplay_hud.update_hud_quest_display(tracked_q)
 
+		if tracked_quest_id == "main_02" and not is_inside_castle_hall:
+			if gameplay_hud.has_method("set_quest_navigation"):
+				gameplay_hud.set_quest_navigation(CASTLE_ENTRANCE_POS, "Aula Kastil")
+			var marker = get_node_or_null("CastleObjectiveMarker")
+			if marker:
+				marker.visible = true
+
 	# 5. Inisialisasi kamera dan batasan map
 	update_arena_bounds_from_camera()
 	setup_camera_and_boundaries.call_deferred()
 	_init_arena_barrier.call_deferred()
 	_init_arena_enemies.call_deferred()
 	_init_training_dummy.call_deferred()
+	_init_nav_compass.call_deferred()
 
 	# 6. Jalankan efek pembukaan Circular Mask (Iris Open) saat masuk arena game
 	play_iris_opening_transition()
@@ -286,6 +309,18 @@ func _unhandled_input(event: InputEvent) -> void:
 				gameplay_hud.toggle_pause_menu()
 				if get_viewport():
 					get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_E or event.physical_keycode == KEY_E:
+			if not is_transitioning:
+				var leader = get_active_leader()
+				if leader:
+					if not is_inside_castle_hall:
+						if leader.global_position.distance_to(CASTLE_ENTRANCE_POS) <= 120.0:
+							enter_castle_hall()
+							get_viewport().set_input_as_handled()
+					else:
+						if leader.global_position.distance_to(CASTLE_HALL_EXIT_POS) <= 100.0:
+							exit_castle_hall()
+							get_viewport().set_input_as_handled()
 
 
 func is_character_alive(character: CharacterBody2D) -> bool:
@@ -808,12 +843,12 @@ func _init_starter_quests() -> void:
 		{
 			"id": "main_02",
 			"category": "main",
-			"title": "Kembali ke Kastil",
-			"location": "Istana Kerajaan",
-			"objective": "Hadiri rapat darurat bersama petinggi istana dan Tuan Magnus.",
-			"description": "Pangeran Arthur bersama pasukannya harus segera kembali ke istana untuk menyusun rencana menghadapi 7 bangsa iblis.",
+			"title": "Chapter 1.1: Rapat Darurat Istana",
+			"location": "Aula Kastil",
+			"objective": "Menuju aula rapat kastil untuk menemui Tuan Magnus dan petinggi kerajaan.",
+			"description": "Pangeran Arthur bersama pasukannya harus segera masuk ke aula kastil untuk menghadiri rapat darurat strategi menghadapi 7 jenis iblis.",
 			"status": "active" if is_prologue_completed else "inactive",
-			"target_position": Vector2(3500, 2500)
+			"target_position": CASTLE_ENTRANCE_POS
 		},
 		{
 			"id": "main_03",
@@ -905,6 +940,7 @@ func _process(delta: float) -> void:
 	check_active_leader_status()
 	_update_active_leader_indicator(delta)
 	update_party_visibility()
+	check_castle_interactions(delta)
 
 
 func update_party_skill_cooldowns(delta: float) -> void:
@@ -1067,6 +1103,8 @@ func setup_camera_and_boundaries() -> void:
 	else:
 		return
 
+	world_map_min = map_min
+	world_map_max = map_max
 	camera.limit_left = int(map_min.x)
 	camera.limit_top = int(map_min.y)
 	camera.limit_right = int(map_max.x)
@@ -1869,6 +1907,12 @@ func _on_prologue_dialogue_completed() -> void:
 		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
 		if not tracked_q.is_empty() and gameplay_hud.has_method("update_hud_quest_display"):
 			gameplay_hud.update_hud_quest_display(tracked_q)
+		if gameplay_hud.has_method("set_quest_navigation"):
+			gameplay_hud.set_quest_navigation(CASTLE_ENTRANCE_POS, "Aula Kastil")
+
+	var marker = get_node_or_null("CastleObjectiveMarker")
+	if marker:
+		marker.visible = true
 
 
 func _setup_open_world_mode() -> void:
@@ -1886,6 +1930,12 @@ func _setup_open_world_mode() -> void:
 		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
 		if not tracked_q.is_empty() and gameplay_hud.has_method("update_hud_quest_display"):
 			gameplay_hud.update_hud_quest_display(tracked_q)
+		if gameplay_hud.has_method("set_quest_navigation"):
+			gameplay_hud.set_quest_navigation(CASTLE_ENTRANCE_POS, "Aula Kastil")
+
+	var marker = get_node_or_null("CastleObjectiveMarker")
+	if marker:
+		marker.visible = true
 
 
 func set_party_movement_locked(locked: bool) -> void:
@@ -2278,3 +2328,283 @@ func _update_active_leader_indicator(delta: float) -> void:
 	var base_offset: Vector2 = _get_leader_indicator_offset(leader)
 	_active_leader_indicator.global_position = leader.global_position + Vector2(base_offset.x, base_offset.y + bob_offset)
 	_active_leader_indicator.visible = true
+
+
+# =========================================================
+# CASTLE ENTRANCE, INTERACTION & HALL TRANSITIONS
+# =========================================================
+
+func check_castle_interactions(delta: float) -> void:
+	if is_transitioning:
+		return
+	var leader := get_active_leader()
+	if leader == null or not is_instance_valid(leader):
+		return
+
+	# Update objective marker bobbing di luar gerbang
+	var marker := get_node_or_null("CastleObjectiveMarker")
+	if is_instance_valid(marker) and marker.visible:
+		_marker_bob_time = fmod(_marker_bob_time + delta * 3.5, TAU)
+		marker.position.y = 940.0 + sin(_marker_bob_time) * 6.0
+
+	# Update quest navigation di HUD jika sedang aktif
+	if tracked_quest_id == "main_02" and not is_inside_castle_hall:
+		if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("update_quest_navigation"):
+			gameplay_hud.update_quest_navigation(leader.global_position)
+
+	# Update visual arrow kompas navigasi yang mengorbit dan mengikuti karakter
+	update_nav_compass(delta)
+
+	# Cek kedekatan interaksi pintu masuk / keluar
+	if not is_inside_castle_hall:
+		var dist := leader.global_position.distance_to(CASTLE_ENTRANCE_POS)
+		if dist <= 110.0:
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
+				gameplay_hud.show_interact_prompt("Masuk ke Aula Kastil", "E", "enter_castle")
+		else:
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+				gameplay_hud.hide_interact_prompt()
+	else:
+		var dist := leader.global_position.distance_to(CASTLE_HALL_EXIT_POS)
+		if dist <= 75.0:
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
+				gameplay_hud.show_interact_prompt("Keluar ke Gerbang Kastil", "E", "exit_castle")
+		else:
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+				gameplay_hud.hide_interact_prompt()
+
+
+func update_camera_limits_for_hall(inside: bool) -> void:
+	if not is_instance_valid(camera):
+		return
+	if inside:
+		# Ruang Rapat Aula Kastil (Center Vector2(2533, -1500), ukuran 960x960)
+		camera.limit_left = 2533 - 520
+		camera.limit_right = 2533 + 520
+		camera.limit_top = -1500 - 520
+		camera.limit_bottom = -1500 + 520
+	else:
+		# Kembalikan ke batasan world outdoor
+		camera.limit_left = int(world_map_min.x)
+		camera.limit_top = int(world_map_min.y)
+		camera.limit_right = int(world_map_max.x)
+		camera.limit_bottom = int(world_map_max.y)
+	if camera.has_method("reset_smoothing"):
+		camera.reset_smoothing()
+	if camera.has_method("force_update_scroll"):
+		camera.force_update_scroll()
+
+
+func _on_hud_interaction_pressed(action_type: String) -> void:
+	if action_type == "enter_castle" or action_type == "Masuk ke Aula Kastil":
+		enter_castle_hall()
+	elif action_type == "exit_castle" or action_type == "Keluar ke Gerbang Kastil":
+		exit_castle_hall()
+
+
+func enter_castle_hall() -> void:
+	if is_transitioning:
+		return
+	is_inside_castle_hall = true
+	if is_instance_valid(gameplay_hud):
+		if gameplay_hud.has_method("hide_interact_prompt"):
+			gameplay_hud.hide_interact_prompt()
+		if gameplay_hud.has_method("hide_quest_navigation"):
+			gameplay_hud.hide_quest_navigation()
+
+	var marker := get_node_or_null("CastleObjectiveMarker")
+	if is_instance_valid(marker):
+		marker.visible = false
+
+	transition_to_location(CASTLE_HALL_SPAWN_POS, "Aula Rapat Istana")
+
+
+func exit_castle_hall() -> void:
+	if is_transitioning:
+		return
+	is_inside_castle_hall = false
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt()
+
+	if tracked_quest_id == "main_02":
+		if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("set_quest_navigation"):
+			gameplay_hud.set_quest_navigation(CASTLE_ENTRANCE_POS, "Aula Kastil")
+		var marker := get_node_or_null("CastleObjectiveMarker")
+		if is_instance_valid(marker):
+			marker.visible = true
+
+	transition_to_location(CASTLE_OUTSIDE_SPAWN_POS, "Halaman Depan Kastil")
+
+
+func transition_to_location(target_pos: Vector2, new_location_name: String = "") -> void:
+	is_transitioning = true
+	if is_instance_valid(gameplay_hud):
+		gameplay_hud.is_hud_input_blocked = true
+	for p in party_members:
+		if is_instance_valid(p):
+			p.set_physics_process(false)
+			p.set_process_unhandled_input(false)
+			p.velocity = Vector2.ZERO
+			if p.has_method("play_idle_animation"):
+				p.play_idle_animation()
+
+	# Layer 120 di atas seluruh elemen gameplay dan HUD untuk efek pudar hitam pekat
+	var fade_canvas := CanvasLayer.new()
+	fade_canvas.layer = 120
+	var fade_rect := ColorRect.new()
+	fade_rect.color = Color(0.0, 0.0, 0.0, 0.0)
+	fade_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	fade_rect.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	fade_rect.grow_vertical = Control.GROW_DIRECTION_BOTH
+	fade_rect.mouse_filter = Control.MOUSE_FILTER_STOP
+	fade_canvas.add_child(fade_rect)
+	add_child(fade_canvas)
+
+	var sfx_door: AudioStream = load("res://assets/audio/sfx/ui/transition_iris_open.wav")
+	if sfx_door:
+		var sfx_player := AudioStreamPlayer.new()
+		sfx_player.stream = sfx_door
+		sfx_player.volume_db = -3.0
+		add_child(sfx_player)
+		sfx_player.finished.connect(sfx_player.queue_free)
+		sfx_player.play()
+
+	# 1. Efek pudar masuk ke hitam (Fade in to black)
+	var tween_in := create_tween()
+	tween_in.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween_in.tween_property(fade_rect, "color:a", 1.0, 0.40).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await tween_in.finished
+
+	# Jeda bernapas halus saat layar hitam pekat
+	await get_tree().create_timer(0.08).timeout
+
+	# 2. Pindahkan seluruh anggota party & sinkronkan batas kamera
+	for i in range(party_members.size()):
+		var member = party_members[i]
+		if is_instance_valid(member):
+			var offset := Vector2.ZERO
+			match i:
+				0: offset = Vector2(0, 0)
+				1: offset = Vector2(-40, 36)
+				2: offset = Vector2(40, 36)
+				3: offset = Vector2(0, 70)
+			member.global_position = target_pos + offset
+			member.velocity = Vector2.ZERO
+
+	update_camera_limits_for_hall(is_inside_castle_hall)
+
+	if is_instance_valid(camera):
+		camera.global_position = target_pos
+		camera.reset_smoothing()
+		if camera.has_method("force_update_scroll"):
+			camera.force_update_scroll()
+
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	if new_location_name != "":
+		enter_location(new_location_name)
+
+	# 3. Efek pudar keluar dari hitam membuka ruangan baru (Fade out from black)
+	var tween_out := create_tween()
+	tween_out.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween_out.tween_property(fade_rect, "color:a", 0.0, 0.40).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	await tween_out.finished
+
+	fade_canvas.queue_free()
+	is_transitioning = false
+	if is_instance_valid(gameplay_hud):
+		gameplay_hud.is_hud_input_blocked = false
+	for i in range(party_members.size()):
+		var p = party_members[i]
+		if is_instance_valid(p):
+			p.set_physics_process(true)
+			var should_input: bool = (i == active_leader_index)
+			p.set_process_unhandled_input(should_input)
+
+
+# =========================================================
+# DYNAMIC NAVIGATION COMPASS ARROW (WORLD POINTER)
+# =========================================================
+
+class NavCompassNode extends Node2D:
+	var arrow_rotation: float = 0.0
+
+	func _draw() -> void:
+		# Lingkaran luar transparan dengan aksen emas lembut
+		draw_circle(Vector2.ZERO, 19.0, Color(0.08, 0.09, 0.14, 0.60))
+		draw_arc(Vector2.ZERO, 19.0, 0.0, TAU, 32, Color(0.96, 0.82, 0.25, 0.65), 1.5)
+
+		# Vektor arah rotasi panah
+		var x_dir := Vector2.from_angle(arrow_rotation)
+		var y_dir := Vector2(-x_dir.y, x_dir.x)
+
+		# Bentuk segitiga panah kuning proporsional (sesuai referensi user)
+		var tip := x_dir * 12.0
+		var b_top := -x_dir * 8.0 - y_dir * 8.0
+		var b_bot := -x_dir * 8.0 + y_dir * 8.0
+
+		# Bayangan halus di bawah panah segitiga
+		var s_offset := Vector2(1.5, 2.0)
+		var shadow_poly := PackedVector2Array([tip + s_offset, b_top + s_offset, b_bot + s_offset])
+		draw_colored_polygon(shadow_poly, Color(0.0, 0.0, 0.0, 0.40))
+
+		# Outline gelap kontras agar segitiga kuning terbaca jelas di segala medan
+		var border_poly := PackedVector2Array([tip + x_dir * 1.5, b_top - x_dir * 1.0 - y_dir * 1.5, b_bot - x_dir * 1.0 + y_dir * 1.5])
+		draw_colored_polygon(border_poly, Color(0.12, 0.12, 0.15, 0.95))
+
+		# Isi warna kuning emas murni (sesuai persis dengan gambar referensi user: RGB 246, 210, 63)
+		var arrow_poly := PackedVector2Array([tip, b_top, b_bot])
+		draw_colored_polygon(arrow_poly, Color(0.96, 0.82, 0.25, 1.0))
+
+
+func _init_nav_compass() -> void:
+	if _nav_compass != null and is_instance_valid(_nav_compass):
+		return
+	_nav_compass = NavCompassNode.new()
+	_nav_compass.name = "NavigationCompass"
+	_nav_compass.z_index = 25 # Di atas map dan karakter
+	_nav_compass.visible = false
+	_nav_compass.modulate.a = 0.0
+	add_child(_nav_compass)
+
+
+func update_nav_compass(delta: float) -> void:
+	if not is_instance_valid(_nav_compass):
+		return
+
+	var is_active := (tracked_quest_id == "main_02" and not is_inside_castle_hall and not is_transitioning)
+	var leader := get_active_leader()
+	if not is_active or leader == null or not is_instance_valid(leader):
+		if _nav_compass.visible:
+			_nav_compass.modulate.a = lerpf(_nav_compass.modulate.a, 0.0, delta * 8.0)
+			if _nav_compass.modulate.a <= 0.02:
+				_nav_compass.visible = false
+		return
+
+	var to_target: Vector2 = CASTLE_ENTRANCE_POS - leader.global_position
+	var dist: float = to_target.length()
+
+	# Jika sudah sampai di gerbang kastil (<= 110 px), pudar keluar
+	if dist <= 110.0:
+		_nav_compass.modulate.a = lerpf(_nav_compass.modulate.a, 0.0, delta * 6.0)
+		if _nav_compass.modulate.a <= 0.02:
+			_nav_compass.visible = false
+		return
+
+	_nav_compass.visible = true
+	_nav_compass.modulate.a = lerpf(_nav_compass.modulate.a, 1.0, delta * 6.0)
+
+	var target_dir: Vector2 = to_target.normalized()
+	var target_angle: float = target_dir.angle()
+
+	# Posisi mengikuti karakter dan mengorbit sejauh 65 px di depan karakter ke arah tujuan
+	var desired_pos: Vector2 = leader.global_position + target_dir * 65.0
+	if _nav_compass.global_position == Vector2.ZERO or _nav_compass.modulate.a < 0.1:
+		_nav_compass.global_position = desired_pos
+		_nav_compass.arrow_rotation = target_angle
+	else:
+		_nav_compass.global_position = _nav_compass.global_position.lerp(desired_pos, clampf(delta * 10.0, 0.0, 1.0))
+		_nav_compass.arrow_rotation = lerp_angle(_nav_compass.arrow_rotation, target_angle, clampf(delta * 12.0, 0.0, 1.0))
+
+	_nav_compass.queue_redraw()
