@@ -51,6 +51,7 @@ var _ground_offset: float = 0.0
 
 var _is_starting: bool = false
 var _is_settings_open: bool = false
+var _is_credits_open: bool = false
 var _is_mode_select_open: bool = false
 var _settings_overlay_hud: CanvasLayer = null
 var _last_opened_menu_btn: Button = null
@@ -118,7 +119,7 @@ func _ready() -> void:
 			btn.add_theme_font_size_override("font_size", BASE_FONT_SIZE)
 			btn.mouse_entered.connect(_on_button_hovered.bind(btn))
 			btn.focus_entered.connect(_on_button_hovered.bind(btn))
-			if btn != btn_start and btn != btn_continue and btn != btn_settings and btn != btn_exit and btn != btn_story and btn != btn_open_world and btn != btn_back:
+			if btn != btn_start and btn != btn_continue and btn != btn_settings and btn != btn_credits and btn != btn_exit and btn != btn_story and btn != btn_open_world and btn != btn_back:
 				btn.pressed.connect(_on_regular_button_clicked)
 			_set_button_state(btn, false, true)
 
@@ -128,6 +129,7 @@ func _ready() -> void:
 	btn_start.pressed.connect(_on_start_pressed)
 	btn_continue.pressed.connect(_on_continue_pressed)
 	btn_settings.pressed.connect(_on_settings_pressed)
+	btn_credits.pressed.connect(_on_credits_pressed)
 	btn_exit.pressed.connect(_on_exit_pressed)
 
 	if btn_story:
@@ -419,7 +421,7 @@ func _on_mode_back_pressed() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _is_starting or _is_settings_open:
+	if _is_starting or _is_settings_open or _is_credits_open:
 		return
 	if _is_mode_select_open and event.is_action_pressed("ui_cancel"):
 		_close_mode_selection()
@@ -551,6 +553,7 @@ func _on_continue_pressed() -> void:
 
 func _on_settings_closed() -> void:
 	_is_settings_open = false
+	_is_credits_open = false
 	for btn_name in BUTTON_TEXTS:
 		var btn: Button = get_node_or_null("MenuContainer/" + btn_name)
 		if btn:
@@ -569,6 +572,33 @@ func _on_load_game_requested(slot_id: int) -> void:
 	if is_instance_valid(_settings_overlay_hud) and _settings_overlay_hud.has_method("close_start_menu_settings"):
 		_settings_overlay_hud.call("close_start_menu_settings")
 	_launch_game("story")
+
+func _on_credits_pressed() -> void:
+	if _is_starting or _is_settings_open or _is_mode_select_open or _is_credits_open:
+		return
+	_is_credits_open = true
+	_last_opened_menu_btn = btn_credits
+	_play_sfx(SFX_CLICK, -2.0)
+	if _sword_indicator:
+		_sword_indicator.visible = false
+
+	for btn_name in BUTTON_TEXTS:
+		var btn: Button = get_node_or_null("MenuContainer/" + btn_name)
+		if btn:
+			btn.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
+			btn.focus_mode = Control.FOCUS_NONE as Control.FocusMode
+	get_viewport().gui_release_focus()
+
+	if is_instance_valid(_settings_overlay_hud) and _settings_overlay_hud.has_method("open_as_start_menu_credits"):
+		_settings_overlay_hud.call("open_as_start_menu_credits")
+
+
+func _close_credits() -> void:
+	if is_instance_valid(_settings_overlay_hud) and _settings_overlay_hud.has_method("close_start_menu_settings"):
+		_settings_overlay_hud.call("close_start_menu_settings")
+	else:
+		_on_settings_closed()
+
 
 func _on_exit_pressed() -> void:
 	if _is_starting or _is_settings_open or _is_mode_select_open:
