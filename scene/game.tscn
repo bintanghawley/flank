@@ -82,6 +82,31 @@ position = Vector2(2400, 1035)
 y_sort_enabled = true
 position = Vector2(2666, 1035)
 
+[node name="Guard_Patrol_01" parent="." unique_id=1290897882 instance=ExtResource("9_npc_guard")]
+y_sort_enabled = true
+position = Vector2(860, 2200)
+patrol_points = [Vector2(860, 2200), Vector2(860, 1450), Vector2(860, 2200), Vector2(2000, 2200), Vector2(860, 2200), Vector2(860, 2650)]
+
+[node name="Guard_Patrol_02" parent="." unique_id=1290897883 instance=ExtResource("9_npc_guard")]
+y_sort_enabled = true
+position = Vector2(860, 2850)
+patrol_points = [Vector2(860, 2850), Vector2(1880, 2850), Vector2(1880, 3400), Vector2(860, 3400)]
+
+[node name="Guard_Patrol_03" parent="." unique_id=1290897884 instance=ExtResource("9_npc_guard")]
+y_sort_enabled = true
+position = Vector2(2620, 1180)
+patrol_points = [Vector2(2620, 1180), Vector2(2620, 3290)]
+
+[node name="Guard_Patrol_04" parent="." unique_id=1290897885 instance=ExtResource("9_npc_guard")]
+y_sort_enabled = true
+position = Vector2(4400, 2250)
+patrol_points = [Vector2(4400, 2250), Vector2(3320, 2250), Vector2(3320, 3550), Vector2(4150, 3550), Vector2(3320, 3550), Vector2(3320, 2250)]
+
+[node name="Guard_Patrol_05" parent="." unique_id=1290897886 instance=ExtResource("9_npc_guard")]
+y_sort_enabled = true
+position = Vector2(5200, 1980)
+patrol_points = [Vector2(5200, 1980), Vector2(6350, 1980), Vector2(6350, 1480), Vector2(6350, 1980)]
+
 [node name="GameplayHud" parent="." unique_id=161884810 instance=ExtResource("8_hud")]
 
 [node name="TransitionLayer" type="CanvasLayer" parent="." unique_id=98127341]
