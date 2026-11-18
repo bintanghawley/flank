@@ -22,10 +22,10 @@ signal dialogue_finished(dialogue_id: String)
 # Top-Left
 @onready var btn_pause_menu: TextureButton = $RootControl/BtnPauseMenu
 @onready var quest_header: Label = $RootControl/QuestHeader
-@onready var quest_container: HBoxContainer = $RootControl/QuestContainer
-@onready var btn_hud_quest: TextureButton = $RootControl/QuestContainer/BtnHudQuest
-@onready var quest_title: Label = $RootControl/QuestContainer/TextContainer/QuestTitle
-@onready var quest_objective: Label = $RootControl/QuestContainer/TextContainer/QuestObjective
+@onready var quest_container: Control = $RootControl/QuestContainer
+@onready var btn_hud_quest: TextureButton = $RootControl/QuestContainer/HBox/BtnHudQuest if has_node("RootControl/QuestContainer/HBox/BtnHudQuest") else ($RootControl/QuestContainer/BtnHudQuest if has_node("RootControl/QuestContainer/BtnHudQuest") else null)
+@onready var quest_title: Label = $RootControl/QuestContainer/HBox/TextContainer/QuestTitle if has_node("RootControl/QuestContainer/HBox/TextContainer/QuestTitle") else ($RootControl/QuestContainer/TextContainer/QuestTitle if has_node("RootControl/QuestContainer/TextContainer/QuestTitle") else null)
+@onready var quest_objective: Label = $RootControl/QuestContainer/HBox/TextContainer/QuestObjective if has_node("RootControl/QuestContainer/HBox/TextContainer/QuestObjective") else ($RootControl/QuestContainer/TextContainer/QuestObjective if has_node("RootControl/QuestContainer/TextContainer/QuestObjective") else null)
 
 # Top-Center Location
 @onready var location_banner: TextureRect = $RootControl/LocationBanner
@@ -458,7 +458,7 @@ const TAB_TITLES: Dictionary = {
 	1: "JURNAL",
 	2: "INFORMASI",
 	3: "PENGATURAN",
-	4: "CREDIT"
+	4: "KREDIT"
 }
 
 # Character lore & bio data
@@ -2020,6 +2020,22 @@ func open_as_start_menu_save_load() -> void:
 	_switch_settings_submenu(2)
 
 
+func open_as_start_menu_credits() -> void:
+	if not is_start_menu_mode:
+		enable_start_menu_mode()
+	var was_open := is_instance_valid(pause_overlay) and pause_overlay.visible
+	_outside_pause_pressed = false
+	_outside_modal_pressed = false
+	current_tab_index = 4
+	pause_overlay.visible = true
+	if not was_open:
+		_play_ui_sfx(SFX_BOOK_OPEN, -2.0)
+	_update_tab_navigation()
+	var credits_scroll: ScrollContainer = page_credits.get_node_or_null("RightPage/ScrollContainer")
+	if is_instance_valid(credits_scroll):
+		credits_scroll.scroll_vertical = 0
+
+
 func close_start_menu_settings() -> void:
 	var was_open := is_instance_valid(pause_overlay) and pause_overlay.visible
 	_outside_pause_pressed = false
@@ -2317,8 +2333,10 @@ func _navigate_tab_relative(direction: int) -> void:
 
 func _update_tab_navigation() -> void:
 	if pause_header_title:
-		if is_start_menu_mode and active_settings_submenu == 2:
+		if is_start_menu_mode and active_settings_submenu == 2 and current_tab_index == 3:
 			pause_header_title.text = "MEMUAT PERMAINAN"
+		elif is_start_menu_mode and current_tab_index == 4:
+			pause_header_title.text = "KREDIT"
 		else:
 			pause_header_title.text = TAB_TITLES.get(current_tab_index, "INFORMASI")
 
@@ -2336,7 +2354,7 @@ func _update_tab_navigation() -> void:
 	for i in range(tab_btns.size()):
 		var tab_node = tab_btns[i]
 		if is_instance_valid(tab_node):
-			tab_node.visible = (not is_start_menu_mode) or (i == 3)
+			tab_node.visible = (not is_start_menu_mode) or (i == 3 and current_tab_index == 3)
 			var is_active := (i == current_tab_index)
 			if tab_node is NinePatchRect:
 				tab_node.texture = tab_active_texture if is_active else tab_inactive_texture
@@ -2376,6 +2394,10 @@ func _update_tab_navigation() -> void:
 		_sync_all_audio_sliders()
 		call_deferred("_sync_all_audio_sliders")
 		_switch_settings_submenu(active_settings_submenu)
+	elif current_tab_index == 4:
+		var credits_scroll: ScrollContainer = page_credits.get_node_or_null("RightPage/ScrollContainer")
+		if is_instance_valid(credits_scroll):
+			credits_scroll.scroll_vertical = 0
 	else:
 		_reset_submenu_hover_state()
 
