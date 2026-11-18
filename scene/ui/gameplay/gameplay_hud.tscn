@@ -5171,10 +5171,7 @@ theme_override_font_sizes/font_size = 14
 theme_override_constants/line_spacing = 4
 text = "FLANK diciptakan dengan
 penuh dedikasi oleh tim
-Penjelajah Antariksa.
-
-(Gulir halaman kanan
-untuk susunan tim pengembang)"
+Penjelajah Antariksa."
 horizontal_alignment = 1
 autowrap_mode = 2
 
@@ -5185,9 +5182,9 @@ anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -320.0
-offset_top = 34.0
+offset_top = 22.0
 offset_right = -32.0
-offset_bottom = -20.0
+offset_bottom = -38.0
 grow_horizontal = 0
 grow_vertical = 2
 mouse_filter = 1
@@ -5198,9 +5195,9 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 14.0
-offset_top = 18.0
+offset_top = 10.0
 offset_right = -14.0
-offset_bottom = -18.0
+offset_bottom = -16.0
 grow_horizontal = 2
 grow_vertical = 2
 horizontal_scroll_mode = 0
@@ -5208,7 +5205,7 @@ horizontal_scroll_mode = 0
 [node name="CreditsVBox" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 4
+theme_override_constants/separation = 3
 alignment = 1
 
 [node name="H_Lead" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
@@ -5228,7 +5225,7 @@ text = "M Ghofar Jalesa W"
 horizontal_alignment = 1
 
 [node name="Sp1" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
-custom_minimum_size = Vector2(0, 10)
+custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 
 [node name="H_Prog" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
@@ -5251,7 +5248,7 @@ Evan Satria M"
 horizontal_alignment = 1
 
 [node name="Sp2" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
-custom_minimum_size = Vector2(0, 10)
+custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 
 [node name="H_Art" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
@@ -5276,7 +5273,7 @@ Firman Dwi Nugraha"
 horizontal_alignment = 1
 
 [node name="Sp3" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
-custom_minimum_size = Vector2(0, 10)
+custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 
 [node name="H_Level" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
