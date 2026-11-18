@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://cj7yrpsuc400b"
-path="res://.godot/imported/Beholden-Bold.ttf-57b9512f5499ccb2461c70a5ad887674.fontdata"
+uid="uid://elttrgb25xpi"
+path="res://.godot/imported/beholden-bold.ttf-bad50edaccaf79eb0a95d56050b063c8.fontdata"
 
 [deps]
 
 source_file="res://assets/ui/fonts/beholden-bold.ttf"
-dest_files=["res://.godot/imported/Beholden-Bold.ttf-57b9512f5499ccb2461c70a5ad887674.fontdata"]
+dest_files=["res://.godot/imported/beholden-bold.ttf-bad50edaccaf79eb0a95d56050b063c8.fontdata"]
 
 [params]
 
