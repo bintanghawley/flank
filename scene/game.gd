@@ -1378,7 +1378,7 @@ func _start_party_combat_fade_out() -> void:
 	_party_fade_tweens.clear()
 
 	var fade_duration: float = 0.35
-	var has_companion_to_fade: bool = false
+	var _has_companion_to_fade: bool = false
 
 	for i in range(party_members.size()):
 		if i == active_leader_index:
@@ -1400,7 +1400,7 @@ func _start_party_combat_fade_out() -> void:
 		member.set_process(false)
 		_set_character_collision_active(member, false)
 
-		has_companion_to_fade = true
+		_has_companion_to_fade = true
 		var tw := create_tween()
 		tw.tween_property(member, "modulate:a", 0.0, fade_duration)\
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)

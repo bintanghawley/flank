@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://dou7gsh2yjwn7" path="res://assets/characters/bandit/walk/walk-w.png" id="ext_bandit_walk"]
 [ext_resource type="Texture2D" uid="uid://cgurjjnmvt5ur" path="res://assets/ui/menus/start_menu/bg_start_grass.png" id="ext_bg_grass"]
 [ext_resource type="Texture2D" uid="uid://cp58aae0xdagq" path="res://assets/ui/menus/start_menu/bg_start_sky.png" id="ext_bg_sky"]
-[ext_resource type="FontFile" uid="uid://cj7yrpsuc400b" path="res://assets/ui/fonts/beholden-bold.ttf" id="ext_font"]
+[ext_resource type="FontFile" uid="uid://elttrgb25xpi" path="res://assets/ui/fonts/beholden-bold.ttf" id="ext_font"]
 [ext_resource type="Texture2D" uid="uid://b58tofbfo88ww" path="res://assets/ui/menus/start_menu/start-menu.png" id="ext_knight_skill"]
 [ext_resource type="Texture2D" uid="uid://cqpevylg4p1t6" path="res://assets/characters/knight/walk/walk-w.png" id="ext_knight_walk"]
 [ext_resource type="Texture2D" uid="uid://bctg8sbt5ujvu" path="res://assets/ui/menus/start_menu/logo_flank.png" id="ext_logo"]

@@ -2629,6 +2629,25 @@ func _on_btn_next_char_pressed() -> void:
 	_update_pause_party_display()
 
 
+func _format_clean_number(val: Variant) -> String:
+	if val == null:
+		return "0"
+	if typeof(val) == TYPE_INT:
+		return str(val)
+	if typeof(val) == TYPE_FLOAT:
+		var f: float = float(val)
+		if is_equal_approx(f, roundf(f)):
+			return str(int(roundf(f)))
+		var s := str(snappedf(f, 0.01))
+		if s.ends_with(".0"):
+			return s.substr(0, s.length() - 2)
+		return s
+	var s := str(val).strip_edges()
+	if s.ends_with(".0"):
+		return s.substr(0, s.length() - 2)
+	return s
+
+
 func _update_character_info_ui() -> void:
 	if party_members.is_empty():
 		return
@@ -2668,11 +2687,11 @@ func _update_character_info_ui() -> void:
 		data["birthday"] = str(hero.get("birthday"))
 
 	if "max_health" in hero:
-		hp_str = str(hero.get("max_health"))
+		hp_str = _format_clean_number(hero.get("max_health"))
 	if "attack_damage" in hero:
-		atk_str = str(hero.get("attack_damage"))
+		atk_str = _format_clean_number(hero.get("attack_damage"))
 	elif "damage" in hero:
-		atk_str = str(hero.get("damage"))
+		atk_str = _format_clean_number(hero.get("damage"))
 
 	# Update Biodata Page (Left)
 	_current_bio_hero_type = hero_type
@@ -3338,10 +3357,11 @@ func _create_inventory_slot_node(slot_idx: int) -> Control:
 		slot.add_child(icon)
 
 		# Quantity badge (if > 1)
-		var qty: int = item.get("quantity", 1)
-		if qty > 1:
+		var qty_val = item.get("quantity", 1)
+		var qty_num: int = int(round(float(qty_val)))
+		if qty_num > 1:
 			var count_lbl := Label.new()
-			count_lbl.text = str(qty)
+			count_lbl.text = _format_clean_number(qty_val)
 			count_lbl.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT as Control.LayoutPreset)
 			count_lbl.offset_left = -30
 			count_lbl.offset_top = -18
@@ -3444,7 +3464,7 @@ func _update_inventory_detail_panel() -> void:
 		if inv_detail_name:
 			inv_detail_name.text = item.get("name", "Nama Barang")
 		if inv_detail_count_label:
-			inv_detail_count_label.text = str(int(item.get("quantity", 1)))
+			inv_detail_count_label.text = _format_clean_number(item.get("quantity", 1))
 		if inv_detail_count_container:
 			inv_detail_count_container.visible = true
 		if inv_detail_desc:
@@ -3581,7 +3601,7 @@ func _on_btn_gunakan_pressed() -> void:
 	_play_ui_sfx(SFX_BOOK_CONFIRM, -2.5)
 	item_used.emit(item)
 
-	var qty: int = item.get("quantity", 1) - 1
+	var qty: int = int(round(float(item.get("quantity", 1)))) - 1
 	item["quantity"] = qty
 
 	if qty <= 0:
@@ -3778,7 +3798,7 @@ func _use_item_on_party_member(slot_idx: int) -> void:
 	payload["target_index"] = slot_idx
 	item_used.emit(payload)
 
-	var qty: int = item.get("quantity", 1) - 1
+	var qty: int = int(round(float(item.get("quantity", 1)))) - 1
 	item["quantity"] = qty
 	if qty <= 0:
 		inventory_items.erase(item)
