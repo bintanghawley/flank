@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b5k8vyg6w3xqm"]
 
 [ext_resource type="Script" path="res://scene/ui/gameplay/gameplay_hud.gd" id="1_hud_script"]
-[ext_resource type="FontFile" uid="uid://elttrgb25xpi" path="res://assets/ui/fonts/beholden-bold.ttf" id="2_font"]
+[ext_resource type="FontFile" uid="uid://c74m8bvtvqkpw" path="res://assets/ui/fonts/beholden-bold.ttf" id="2_font"]
 [ext_resource type="Texture2D" uid="uid://bfa32ug12h1aw" path="res://assets/ui/menus/pause_menu/btn_pause_menu.png" id="3_book"]
 [ext_resource type="Texture2D" uid="uid://cdt67qa3yox00" path="res://assets/ui/gameplay/location/location_banner.png" id="4_banner"]
 [ext_resource type="Texture2D" uid="uid://dmvf7owi6ynl1" path="res://assets/ui/icons/actions/action_buttons.png" id="5_action_buttons"]
