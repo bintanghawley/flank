@@ -5,12 +5,7 @@ enum State {
 	PATROL_WAIT
 }
 
-@export var patrol_points: Array[Vector2] = [
-	Vector2(2320, 2780),
-	Vector2(2460, 2780),
-	Vector2(2480, 2980),
-	Vector2(2320, 2980)
-]
+@export var patrol_points: Array[Vector2] = []
 @export var move_speed: float = 65.0
 @export var wait_time_at_point: float = 1.5
 @export var reach_threshold: float = 8.0
@@ -64,7 +59,6 @@ func _physics_process(delta: float) -> void:
 				velocity = dir * move_speed
 				move_and_slide()
 
-				# Update arah hadap dan putar animasi IDLE saat berjalan (sesuai instruksi user)
 				_update_facing_and_idle_anim(dir)
 
 		State.PATROL_WAIT:

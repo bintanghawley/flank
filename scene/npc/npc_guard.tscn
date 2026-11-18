@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://df7k2nguard1t"]
 
 [ext_resource type="Script" path="res://scene/npc/npc_guard.gd" id="1_guard_script"]
-[ext_resource type="Texture2D" path="res://assets/characters/knight/idle/idle-n.png" id="ext_idle_n"]
-[ext_resource type="Texture2D" path="res://assets/characters/knight/idle/idle-s.png" id="ext_idle_s"]
-[ext_resource type="Texture2D" path="res://assets/characters/knight/idle/idle-e.png" id="ext_idle_e"]
-[ext_resource type="Texture2D" path="res://assets/characters/knight/idle/idle-w.png" id="ext_idle_w"]
+[ext_resource type="Texture2D" uid="uid://dg11xqr7hmca8" path="res://assets/characters/npc/guard/idle-n.png" id="ext_idle_n"]
+[ext_resource type="Texture2D" uid="uid://dthdox4cmk6qb" path="res://assets/characters/npc/guard/idle-s.png" id="ext_idle_s"]
+[ext_resource type="Texture2D" uid="uid://cv8lqv0eu7qy5" path="res://assets/characters/npc/guard/idle-e.png" id="ext_idle_e"]
+[ext_resource type="Texture2D" uid="uid://35vjp8mxe4mi" path="res://assets/characters/npc/guard/idle-w.png" id="ext_idle_w"]
 
 [sub_resource type="AtlasTexture" id="Atlas_idle_n_0"]
 atlas = ExtResource("ext_idle_n")
@@ -87,7 +87,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"idle_n",
-"speed": 8.0
+"speed": 6.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -104,7 +104,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"idle_s",
-"speed": 8.0
+"speed": 6.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -121,7 +121,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"idle_e",
-"speed": 8.0
+"speed": 6.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -138,7 +138,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"idle_w",
-"speed": 8.0
+"speed": 6.0
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_guard"]

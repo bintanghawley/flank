@@ -44,6 +44,7 @@ position_smoothing_enabled = true
 position_smoothing_speed = 7.0
 
 [node name="map_region1" parent="." unique_id=1420594985 instance=ExtResource("3_map")]
+position = Vector2(0, 0)
 
 [node name="Knight_1" parent="." unique_id=1280897880 instance=ExtResource("5_knight")]
 y_sort_enabled = true
@@ -73,8 +74,13 @@ can_respawn = false
 position = Vector2(6280, 3230)
 can_respawn = false
 
-[node name="Npc_Guard_1" parent="." unique_id=1290897880 instance=ExtResource("9_npc_guard")]
-position = Vector2(2320, 2780)
+[node name="Npc_Guard_Left" parent="." unique_id=1290897880 instance=ExtResource("9_npc_guard")]
+y_sort_enabled = true
+position = Vector2(2400, 1035)
+
+[node name="Npc_Guard_Right" parent="." unique_id=1290897881 instance=ExtResource("9_npc_guard")]
+y_sort_enabled = true
+position = Vector2(2666, 1035)
 
 [node name="GameplayHud" parent="." unique_id=161884810 instance=ExtResource("8_hud")]
 
