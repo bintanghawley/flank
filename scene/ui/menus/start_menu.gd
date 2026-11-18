@@ -420,6 +420,13 @@ func _on_mode_back_pressed() -> void:
 	_close_mode_selection()
 
 
+func _input(event: InputEvent) -> void:
+	# Nonaktifkan navigasi fokus menggunakan tombol Tab di Start Menu
+	if (event is InputEventKey and event.keycode == KEY_TAB) or event.is_action("ui_focus_next") or event.is_action("ui_focus_prev"):
+		get_viewport().set_input_as_handled()
+		return
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if _is_starting or _is_settings_open or _is_credits_open:
 		return
