@@ -56,8 +56,8 @@ const VISUAL_CENTER_OFFSET: Vector2 = Vector2(0.0, 7.5) # Pusat visual torso Kni
 const SLASH_CENTER_OFFSET: Vector2 = VISUAL_CENTER_OFFSET
 
 @export var attack_range: float = 145.0     # Jarak jangkauan tebasan pedang
-@export var attack_damage: int = 2          # Damage tebasan melee Knight (lebih bertenaga dari proyektil)
-@export var attack_cooldown: float = 1.2    # Jeda tebasan serangan dasar
+@export var attack_damage: int = 40         # Damage Basic Attack Knight (40 damage)
+@export var attack_cooldown: float = 1.0    # Attack Speed 1.0 serangan/dtk (1.0 detik jeda)
 var attack_stuck_timer: float = 0.0
 var attack_timer: float = 0.0
 var is_attacking: bool = false
@@ -74,10 +74,12 @@ const SLASH_ACTIVE_DURATION: float = 0.20 # Window aktif sapuan tebasan pedang s
 # =========================
 # SPECIAL SKILL: SHIELD BLOCK (TOMBOL E)
 # =========================
-@export var skill_cooldown_max: float = 6.0   # Cooldown tombol E (6 detik)
-@export var shield_duration: float = 3.5      # Durasi aktifnya perisai (3.5 detik)
+@export var skill_cooldown_max: float = 12.0  # Cooldown tombol E (12 detik)
+@export var shield_duration: float = 5.0      # Durasi aktifnya perisai (5 detik)
+@export var shield_points_max: int = 300      # Efek Skill: +300 Shield Point
 var skill_cooldown_timer: float = 0.0
 var shield_timer: float = 0.0
+var shield_points: int = 0
 var is_shield_active: bool = false
 var is_skill_animating: bool = false
 var skill_stuck_timer: float = 0.0
@@ -92,9 +94,9 @@ const DUST_INTERVAL: float = 0.13
 # =========================
 # HEALTH & KNOCKBACK
 # =========================
-@export var max_health: int = 12              # Knight memiliki pertahanan & HP lebih tangguh
+@export var max_health: int = 1200            # HP Maksimal Knight: 1.200 (Tank/Support)
 @export var respawn_time: float = 3.0
-var current_health: int = 12
+var current_health: int = 1200
 var is_dead: bool = false
 var spawn_position: Vector2
 
@@ -349,7 +351,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	# Tombol E: Aktivasi Skill Shield - hanya aktif saat mode tempur (ada musuh)
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E:
+	var is_skill_key := false
+	if event.is_action_pressed("ui_skill") or event.is_action_pressed("use_skill"):
+		is_skill_key = true
+	elif event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_E or event.physical_keycode == KEY_E:
+			is_skill_key = true
+
+	if is_skill_key:
 		if is_in_combat_mode() and skill_cooldown_timer <= 0.0 and not is_attacking:
 			activate_shield()
 			get_viewport().set_input_as_handled()
@@ -731,21 +740,22 @@ func _deploy_shield() -> void:
 	if is_dead:
 		return
 	if not is_inside_tree():
-		grant_shield(shield_duration)
+		grant_shield(shield_duration, shield_points_max)
 		return
-	# Aktifkan pelindung perisai ke seluruh anggota party (Knight, Mage, Archer)
+	# Aktifkan pelindung perisai ke seluruh anggota party (Knight, Mage, Archer, Bandit)
 	var party := get_tree().get_nodes_in_group("player")
 	for member in party:
 		if is_instance_valid(member) and not ("is_dead" in member and member.is_dead):
 			if member.has_method("grant_shield"):
-				member.grant_shield(shield_duration)
+				member.grant_shield(shield_duration, shield_points_max)
 
 
-func grant_shield(duration: float) -> void:
+func grant_shield(duration: float, points: int = 300) -> void:
 	if is_dead:
 		return
 	is_shield_active = true
 	shield_timer = duration
+	shield_points = points
 
 	if shield_sprite and is_inside_tree():
 		shield_sprite.visible = true
@@ -761,7 +771,7 @@ func grant_shield(duration: float) -> void:
 	elif shield_sprite:
 		shield_sprite.visible = false
 
-	print(name, " pelindung perisai aktif! Kebal terhadap serangan musuh selama ", duration, " detik.")
+	print(name, " pelindung perisai aktif! +", points, " Shield Point selama ", duration, " detik.")
 
 
 func deactivate_shield() -> void:
@@ -769,6 +779,7 @@ func deactivate_shield() -> void:
 		return
 	is_shield_active = false
 	shield_timer = 0.0
+	shield_points = 0
 
 	if shield_sprite and shield_sprite.visible and is_inside_tree():
 		play_sfx(SFX_KNIGHT_SHIELD_FADE, -3.0)
@@ -1021,15 +1032,26 @@ func take_damage(amount: int, _source_position = null) -> void:
 		return
 	invulnerability_timer = invulnerability_duration
 
-	# Shield Guard: menahan seluruh damage serangan musuh
+	# Shield Guard: menahan damage dengan Shield Points (+300)
 	if is_shield_active:
 		modulate = Color(1.8, 1.8, 2.4)
 		var shield_flash_tween = create_tween()
 		shield_flash_tween.tween_property(self, "modulate", Color.WHITE, 0.2)
 		apply_camera_shake(3.0)
 		play_sfx(SFX_KNIGHT_SHIELD_BLOCK, 0.0)
-		print(name, " memblok serangan dengan perisai! 0 damage diterima.")
-		return
+		if shield_points > 0:
+			if amount <= shield_points:
+				shield_points -= amount
+				print(name, " menahan serangan dengan perisai! Sisa Shield: ", shield_points)
+				return
+			else:
+				var absorbed: int = shield_points
+				shield_points = 0
+				amount -= absorbed
+				deactivate_shield()
+				print(name, " perisai pecah! Menerima sisa damage: ", amount)
+		else:
+			return
 
 	current_health -= amount
 	play_sfx(SFX_HURT, -4.0)

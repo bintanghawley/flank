@@ -5,7 +5,7 @@ const SFX_ARROW_HIT = preload("res://assets/audio/sfx/characters/archer/archer_a
 const SFX_ARROW_HIT_WALL = preload("res://assets/audio/sfx/characters/archer/archer_arrow_hit_wall.wav")
 
 @export var speed: float = 580.0 # Kecepatan dasar panah (dipercepat menjadi 580.0 px/s)
-@export var damage: int = 1
+@export var damage: int = 95     # Damage Basic Attack Archer (95 damage)
 @export var shooter_group: String = "player" # "player" atau "enemy"
 var shooter_node: CharacterBody2D = null
 @export var max_trail_points: int = 16       # Panjang garis trail lurus

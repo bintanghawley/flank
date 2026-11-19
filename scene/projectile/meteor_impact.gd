@@ -3,7 +3,7 @@ extends AnimatedSprite2D
 const SFX_METEOR_IMPACT = preload("res://assets/audio/sfx/characters/mage/mage_meteor_impact.wav")
 
 const AOE_RADIUS: float = 210.0
-const DAMAGE: int = 4
+const DAMAGE: int = 220       # Efek / Damage Skill Mage: 220 Area Damage
 const KNOCKBACK_FORCE: float = 450.0
 
 var caster: CharacterBody2D = null

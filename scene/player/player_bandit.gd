@@ -57,8 +57,8 @@ var _footstep_toggle: bool = false
 const VISUAL_CENTER_OFFSET: Vector2 = Vector2(0.0, 7.5)
 
 @export var attack_range: float = 115.0     # Jarak jangkauan tebasan dasar
-@export var attack_damage: int = 2          # Damage tebasan dasar per ayunan
-@export var attack_cooldown: float = 0.85   # Jeda tebasan serangan dasar (lincah & cepat)
+@export var attack_damage: int = 35         # Damage Basic Attack Bandit (35 damage per ayunan)
+@export var attack_cooldown: float = 0.45   # Attack Speed 2.2 serangan/dtk (~0.45s jeda tebasan)
 var attack_stuck_timer: float = 0.0
 var attack_timer: float = 0.0
 var is_attacking: bool = false
@@ -75,12 +75,12 @@ const ATTACK_TOTAL_DURATION: float = 0.58 # Total durasi siklus tebasan dasar (8
 var is_damage_flash_active: bool = false
 
 # =========================
-# SPECIAL SKILL: DASH, KNOCKUP & TRIPLE SLASH (TOMBOL E)
+# SPECIAL SKILL: DASH, KNOCKUP & TRIPLE SLASH (TOMBOL E - 210 DAMAGE + KNOCK-UP, CD 8 DETIK)
 # =========================
 enum SkillPhase { INACTIVE, DASHING, KNOCKUP_SLASH }
 var skill_phase: SkillPhase = SkillPhase.INACTIVE
 
-@export var skill_cooldown_max: float = 5.0   # Cooldown skill Triple Slash (5 detik)
+@export var skill_cooldown_max: float = 8.0   # Cooldown skill Triple Slash (8 detik)
 var skill_cooldown_timer: float = 0.0
 var is_skill_active: bool = false
 var skill_timer: float = 0.0
@@ -102,11 +102,12 @@ const DUST_INTERVAL: float = 0.13
 # =========================
 # HEALTH & KNOCKBACK
 # =========================
-@export var max_health: int = 10             # Bandit berdarah lincah (10 HP)
+@export var max_health: int = 680            # HP Maksimal Bandit: 680 (Assassin Burst)
 @export var respawn_time: float = 3.0
-var current_health: int = 10
+var current_health: int = 680
 var is_dead: bool = false
 var spawn_position: Vector2
+var shield_points: int = 0
 
 @export var knockback_strength: float = 380.0 # Dorongan wajar saat terkena damage
 var knockback_velocity: Vector2 = Vector2.ZERO
@@ -747,34 +748,34 @@ func process_triple_slash_skill(delta: float) -> void:
 	elif skill_phase == SkillPhase.KNOCKUP_SLASH:
 		velocity = Vector2.ZERO
 
-		# Pastikan musuh target tetap terkunci di tanah jika masih valid
+		# Pastikan musuh target tetap terkunci di tanah jika masih valid (Tanpa knock-up)
 		if is_instance_valid(skill_target_enemy) and not ("is_dead" in skill_target_enemy and skill_target_enemy.is_dead):
 			if "velocity" in skill_target_enemy:
 				skill_target_enemy.velocity = Vector2.ZERO
 			if "knockback_velocity" in skill_target_enemy:
 				skill_target_enemy.knockback_velocity = Vector2.ZERO
 
-		# 5x Hit beruntun selaras dengan animasi triple_slash (12 frames pada 16 FPS, total ~0.68s):
-		# Slash 1: ~0.08s
-		# Slash 2: ~0.19s
-		# Slash 3: ~0.30s
-		# Slash 4: ~0.42s
-		# Slash 5: ~0.54s (Finisher)
+		# 5x Hit beruntun selaras dengan animasi triple_slash (Total 210 Damage: 35 + 35 + 40 + 40 + 60):
+		# Slash 1: ~0.08s (35 dmg)
+		# Slash 2: ~0.19s (35 dmg)
+		# Slash 3: ~0.30s (40 dmg)
+		# Slash 4: ~0.42s (40 dmg)
+		# Slash 5: ~0.54s (60 dmg - Finisher)
 		if skill_slash_step == 0 and skill_timer >= 0.08:
 			skill_slash_step = 1
-			execute_triple_slash_step(1, 1, 140.0, 3.0)
+			execute_triple_slash_step(1, 35, 140.0, 3.0)
 		elif skill_slash_step == 1 and skill_timer >= 0.19:
 			skill_slash_step = 2
-			execute_triple_slash_step(2, 1, 140.0, 3.5)
+			execute_triple_slash_step(2, 35, 140.0, 3.5)
 		elif skill_slash_step == 2 and skill_timer >= 0.30:
 			skill_slash_step = 3
-			execute_triple_slash_step(3, 2, 145.0, 4.0)
+			execute_triple_slash_step(3, 40, 145.0, 4.0)
 		elif skill_slash_step == 3 and skill_timer >= 0.42:
 			skill_slash_step = 4
-			execute_triple_slash_step(4, 2, 145.0, 4.5)
+			execute_triple_slash_step(4, 40, 145.0, 4.5)
 		elif skill_slash_step == 4 and skill_timer >= 0.54:
 			skill_slash_step = 5
-			execute_triple_slash_step(5, 3, 155.0, 7.0)
+			execute_triple_slash_step(5, 60, 155.0, 7.0)
 
 		# Selesai setelah siklus animasi tuntas (~0.68s)
 		if skill_timer >= 0.68 or skill_stuck_timer >= 1.0:
@@ -783,7 +784,7 @@ func process_triple_slash_skill(delta: float) -> void:
 			skill_timer = 0.0
 			skill_slash_step = 0
 			skill_stuck_timer = 0.0
-			skill_cooldown_timer = skill_cooldown_max # Cooldown 5.0s dimulai setelah eksekusi selesai
+			skill_cooldown_timer = skill_cooldown_max # Cooldown 8.0s dimulai setelah eksekusi selesai
 			if not is_dead and not is_moving:
 				play_idle_animation()
 			print(name, " menyelesaikan Flurry Slash 5-Hit. Cooldown: ", skill_cooldown_max, " detik.")
@@ -1231,7 +1232,7 @@ func take_damage(amount: int, source_position = null) -> void:
 	if knockback_dir == Vector2.ZERO:
 		knockback_dir = Vector2.UP
 
-	# 1. SHIELD GUARD (DARI KNIGHT): Menahan 100% damage serangan musuh
+	# 1. SHIELD GUARD (DARI KNIGHT): Menahan damage dengan Shield Points (+300)
 	if is_shield_active:
 		modulate = Color(1.8, 1.8, 2.4)
 		var shield_flash_tween = create_tween()
@@ -1241,8 +1242,19 @@ func take_damage(amount: int, source_position = null) -> void:
 		# Jika sedang memiliki super armor atau sedang melancarkan serangan, dilarang knockback dan dilarang membatalkan aksi!
 		if not in_super_armor and not is_attacking:
 			apply_knockback(knockback_dir * 80.0)
-		print(name, " memblok serangan dengan perisai! 0 damage diterima. Aksi berlanjut.")
-		return
+		if shield_points > 0:
+			if amount <= shield_points:
+				shield_points -= amount
+				print(name, " menahan serangan dengan perisai! Sisa Shield: ", shield_points, ". Aksi berlanjut.")
+				return
+			else:
+				var absorbed: int = shield_points
+				shield_points = 0
+				amount -= absorbed
+				deactivate_shield()
+				print(name, " perisai pecah! Menerima sisa damage: ", amount)
+		else:
+			return
 
 	# 2. DAMAGE NORMAL
 	current_health = max(0, current_health - amount)
@@ -1420,11 +1432,12 @@ func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 # SHIELD GUARD INTEGRATION (DARI KNIGHT)
 # =========================================================
 
-func grant_shield(duration: float) -> void:
+func grant_shield(duration: float, points: int = 300) -> void:
 	if is_dead:
 		return
 	is_shield_active = true
 	shield_timer = duration
+	shield_points = points
 
 	if shield_sprite:
 		shield_sprite.visible = true
@@ -1443,6 +1456,7 @@ func deactivate_shield() -> void:
 		return
 	is_shield_active = false
 	shield_timer = 0.0
+	shield_points = 0
 
 	if shield_sprite and shield_sprite.visible:
 		if shield_tween and shield_tween.is_valid():

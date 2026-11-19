@@ -9,7 +9,7 @@ const SFX_BOLT_HIT = preload("res://assets/audio/sfx/characters/mage/mage_bolt_h
 const SFX_BOLT_HIT_WALL = preload("res://assets/audio/sfx/characters/mage/mage_bolt_hit_wall.wav")
 
 @export var speed: float = 500.0 # Kecepatan dasar magic bolt (disesuaikan dikurangi sedikit menjadi 500.0 px/s)
-@export var damage: int = 1 # Rebalanced: seimbang dengan panah Archer
+@export var damage: int = 65   # Damage Basic Attack Mage (65 damage)
 @export var shooter_group: String = "player"
 var shooter_node: CharacterBody2D = null
 

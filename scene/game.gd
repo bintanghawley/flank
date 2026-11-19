@@ -307,17 +307,27 @@ func _ready() -> void:
 		if gameplay_hud.has_method("set_combat_hud_visible"):
 			gameplay_hud.set_combat_hud_visible(false, false)
 
-		# Sinkronisasi quest aktif pertama ke overlay HUD
-		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
-		if not tracked_q.is_empty():
-			gameplay_hud.update_hud_quest_display(tracked_q)
-
-		if tracked_quest_id == "main_02" and not is_inside_castle_hall:
-			if gameplay_hud.has_method("set_quest_navigation"):
-				gameplay_hud.set_quest_navigation(CASTLE_ENTRANCE_POS, "Aula Kastil")
+		if selected_game_mode == "open_world":
+			if gameplay_hud.has_method("set_open_world_mode"):
+				gameplay_hud.set_open_world_mode(true)
+			if gameplay_hud.has_method("hide_quest_navigation"):
+				gameplay_hud.hide_quest_navigation()
+			tracked_quest_id = ""
 			var marker = get_node_or_null("CastleObjectiveMarker")
 			if marker:
-				marker.visible = true
+				marker.visible = false
+		else:
+			# Sinkronisasi quest aktif pertama ke overlay HUD
+			var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
+			if not tracked_q.is_empty():
+				gameplay_hud.update_hud_quest_display(tracked_q)
+
+			if tracked_quest_id == "main_02" and not is_inside_castle_hall:
+				if gameplay_hud.has_method("set_quest_navigation"):
+					gameplay_hud.set_quest_navigation(CASTLE_ENTRANCE_POS, "Aula Kastil")
+				var marker = get_node_or_null("CastleObjectiveMarker")
+				if marker:
+					marker.visible = true
 
 	# 5. Inisialisasi kamera dan batasan map
 	update_arena_bounds_from_camera()
@@ -384,7 +394,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				gameplay_hud.toggle_pause_menu()
 				if get_viewport():
 					get_viewport().set_input_as_handled()
-		elif event.keycode == KEY_E or event.physical_keycode == KEY_E:
+		elif event.keycode == KEY_E or event.physical_keycode == KEY_E or event.is_action_pressed("interact"):
 			if not is_transitioning:
 				var leader = get_active_leader()
 				if leader:
@@ -1031,12 +1041,16 @@ func _get_quest_by_id(q_id: String) -> Dictionary:
 
 
 func _on_hud_quest_tracked(quest: Dictionary) -> void:
+	if selected_game_mode == "open_world":
+		return
 	tracked_quest_id = quest.get("id", "")
 	if gameplay_hud:
 		gameplay_hud.update_hud_quest_display(quest)
 
 
 func _on_hud_quest_navigation_requested(quest: Dictionary) -> void:
+	if selected_game_mode == "open_world":
+		return
 	tracked_quest_id = quest.get("id", "")
 	if gameplay_hud:
 		gameplay_hud.update_hud_quest_display(quest)
@@ -2284,25 +2298,18 @@ func _create_meeting_npc(
 
 func _setup_open_world_mode() -> void:
 	is_prologue_completed = true
-	# Selesaikan quest main_01 dan aktifkan main_02 agar pemain langsung bebas bereksplorasi
-	for q in quest_list:
-		if q.get("id") == "main_01":
-			q["status"] = "completed"
-		elif q.get("id") == "main_02":
-			q["status"] = "active"
-	tracked_quest_id = "main_02"
+	tracked_quest_id = ""
 	if gameplay_hud:
-		if gameplay_hud.has_method("set_quests"):
-			gameplay_hud.set_quests(quest_list, tracked_quest_id)
-		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
-		if not tracked_q.is_empty() and gameplay_hud.has_method("update_hud_quest_display"):
-			gameplay_hud.update_hud_quest_display(tracked_q)
-		if gameplay_hud.has_method("set_quest_navigation"):
-			gameplay_hud.set_quest_navigation(CASTLE_ENTRANCE_POS, "Aula Kastil")
+		if gameplay_hud.has_method("set_open_world_mode"):
+			gameplay_hud.set_open_world_mode(true)
+		if gameplay_hud.has_method("hide_quest_navigation"):
+			gameplay_hud.hide_quest_navigation()
 
 	var marker = get_node_or_null("CastleObjectiveMarker")
 	if marker:
-		marker.visible = true
+		marker.visible = false
+	if is_instance_valid(_nav_compass):
+		_nav_compass.visible = false
 
 
 func set_party_movement_locked(locked: bool) -> void:
@@ -2466,10 +2473,20 @@ func load_game_from_slot(slot_id: int) -> bool:
 		if gameplay_hud.has_method("hide_location_banner"):
 			gameplay_hud.hide_location_banner()
 		gameplay_hud.setup(party_members, active_leader_index, inventory_items, quest_list)
-		gameplay_hud.set_quests(quest_list, tracked_quest_id)
-		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
-		if not tracked_q.is_empty():
-			gameplay_hud.update_hud_quest_display(tracked_q)
+		if selected_game_mode == "open_world":
+			if gameplay_hud.has_method("set_open_world_mode"):
+				gameplay_hud.set_open_world_mode(true)
+			if gameplay_hud.has_method("hide_quest_navigation"):
+				gameplay_hud.hide_quest_navigation()
+			tracked_quest_id = ""
+			var marker = get_node_or_null("CastleObjectiveMarker")
+			if marker:
+				marker.visible = false
+		else:
+			gameplay_hud.set_quests(quest_list, tracked_quest_id)
+			var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
+			if not tracked_q.is_empty():
+				gameplay_hud.update_hud_quest_display(tracked_q)
 		gameplay_hud.pause_overlay.visible = false
 		gameplay_hud.on_load_completed(slot_id, data)
 
@@ -2712,12 +2729,15 @@ func check_castle_interactions(delta: float) -> void:
 
 	# Update objective marker bobbing di luar gerbang
 	var marker := get_node_or_null("CastleObjectiveMarker")
-	if is_instance_valid(marker) and marker.visible:
+	if selected_game_mode == "open_world":
+		if is_instance_valid(marker) and marker.visible:
+			marker.visible = false
+	elif is_instance_valid(marker) and marker.visible:
 		_marker_bob_time = fmod(_marker_bob_time + delta * 3.5, TAU)
 		marker.position.y = 940.0 + sin(_marker_bob_time) * 6.0
 
 	# Update quest navigation di HUD jika sedang aktif
-	if tracked_quest_id == "main_02" and not is_inside_castle_hall:
+	if selected_game_mode != "open_world" and tracked_quest_id == "main_02" and not is_inside_castle_hall:
 		if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("update_quest_navigation"):
 			gameplay_hud.update_quest_navigation(leader.global_position)
 
@@ -2805,7 +2825,7 @@ func exit_castle_hall() -> void:
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 		gameplay_hud.hide_interact_prompt()
 
-	if tracked_quest_id == "main_02":
+	if selected_game_mode != "open_world" and tracked_quest_id == "main_02":
 		if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("set_quest_navigation"):
 			gameplay_hud.set_quest_navigation(CASTLE_ENTRANCE_POS, "Aula Kastil")
 		var marker := get_node_or_null("CastleObjectiveMarker")
@@ -2952,7 +2972,7 @@ func update_nav_compass(delta: float) -> void:
 	if not is_instance_valid(_nav_compass):
 		return
 
-	var is_active := (tracked_quest_id == "main_02" and not is_inside_castle_hall and not is_transitioning)
+	var is_active := (selected_game_mode != "open_world" and tracked_quest_id == "main_02" and not is_inside_castle_hall and not is_transitioning)
 	var leader := get_active_leader()
 	if not is_active or leader == null or not is_instance_valid(leader):
 		if _nav_compass.visible:

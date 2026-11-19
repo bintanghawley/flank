@@ -2,7 +2,7 @@ extends Area2D
 
 const SFX_SKILL_IMPACT = preload("res://assets/audio/sfx/characters/archer/archer_skill_impact.wav")
 
-@export var damage: int = 3
+@export var damage: int = 280   # Efek / Damage Skill Archer: 280 Piercing Damage
 @export var shooter_group: String = "player"
 
 var hit_targets: Array[Node] = []
