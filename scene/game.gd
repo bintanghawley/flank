@@ -2217,15 +2217,16 @@ func _setup_meeting_participants() -> void:
 
 	# 4. Magnus / Wizard (SideChairLeft - Samping Kiri)
 	# Disortir di Y = 15 (di depan SideChair Y = -7.5)
-	# offset.y = -10.6 menggeser visual 53px ke atas agar pas di alas kursi
+	# offset.y = -7.0 menggeser visual agar duduk pas di atas alas kursi
 	if tex_mage_e:
-		var magnus := _create_meeting_npc(tex_mage_e, 96, 64, 4, Vector2(-345, 15), "idle_e", Color.WHITE, Vector2(-0.5, -10.6))
+		var magnus := _create_meeting_npc(tex_mage_e, 96, 64, 4, Vector2(-345, 15), "idle_e", Color.WHITE, Vector2(-0.5, -7.0))
 		magnus.name = "Participant_Magnus"
 		hall.add_child(magnus)
 
 	# 5. Anastasya / Archer (SideChairRight - Samping Kanan)
+	# offset.y = -7.0 menggeser visual agar duduk pas di atas alas kursi
 	if tex_archer_w:
-		var anastasya := _create_meeting_npc(tex_archer_w, 32, 32, 4, Vector2(340, 15), "idle_w", Color.WHITE, Vector2(-1, -10.6))
+		var anastasya := _create_meeting_npc(tex_archer_w, 32, 32, 4, Vector2(340, 15), "idle_w", Color.WHITE, Vector2(-1, -7.0))
 		anastasya.name = "Participant_Anastasya"
 		hall.add_child(anastasya)
 
