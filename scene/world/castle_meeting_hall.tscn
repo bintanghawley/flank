@@ -1,0 +1,335 @@
+[gd_scene format=3 uid="uid://df7lam2e3p4q1"]
+
+[ext_resource type="Texture2D" uid="uid://mgwegdxmo271" path="res://assets/environment/indoor/hall_castle_ground.png" id="1_ground"]
+[ext_resource type="Texture2D" uid="uid://dqui5fv1vbd1c" path="res://assets/environment/indoor/hall_castle_furniture.png" id="2_furniture"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hall_wall_top"]
+size = Vector2(960, 246)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hall_wall_side"]
+size = Vector2(80, 94)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8hmx5"]
+size = Vector2(72, 85)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_atsxw"]
+size = Vector2(72, 40.25)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_q6jnr"]
+size = Vector2(26.75, 37)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_stkvb"]
+size = Vector2(66, 93)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hall_wall_bottom"]
+size = Vector2(80, 1013)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_dp1it"]
+size = Vector2(1061, 67.9375)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tpkmi"]
+size = Vector2(106, 963.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hall_table"]
+size = Vector2(603, 96)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hall_pillar"]
+size = Vector2(60.25, 40)
+
+[node name="CastleMeetingHall" type="Node2D" unique_id=506979862]
+y_sort_enabled = true
+
+[node name="DarkBackdrop" type="ColorRect" parent="." unique_id=119643335]
+z_index = -10
+offset_left = -1300.0
+offset_top = -1000.0
+offset_right = 1300.0
+offset_bottom = 950.0
+mouse_filter = 2
+color = Color(0.03, 0.03, 0.05, 1)
+
+[node name="HallGround" type="Sprite2D" parent="." unique_id=1088651145]
+z_index = -2
+texture_filter = 1
+scale = Vector2(5, 5)
+texture = ExtResource("1_ground")
+
+[node name="WallTopFurniture" type="Sprite2D" parent="." unique_id=2126615596]
+z_index = -1
+texture_filter = 1
+position = Vector2(0, -360)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+region_enabled = true
+region_rect = Rect2(0, 0, 192, 48)
+
+[node name="PillarUpperLeft" type="Sprite2D" parent="." unique_id=2126615605]
+z_index = 4
+texture_filter = 1
+position = Vector2(-445, -150)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+offset = Vector2(0, -21.5)
+region_enabled = true
+region_rect = Rect2(2, 24, 10, 41)
+
+[node name="PillarUpperLeftBase" type="Sprite2D" parent="." unique_id=2126615610]
+z_index = 4
+texture_filter = 1
+position = Vector2(-445, -150)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+offset = Vector2(0, 2)
+region_enabled = true
+region_rect = Rect2(0, 65, 14, 6)
+
+[node name="PillarUpperRight" type="Sprite2D" parent="." unique_id=2126615606]
+z_index = 4
+texture_filter = 1
+position = Vector2(445, -150)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+offset = Vector2(0, -21.5)
+region_enabled = true
+region_rect = Rect2(180, 24, 10, 41)
+
+[node name="PillarUpperRightBase" type="Sprite2D" parent="." unique_id=2126615611]
+z_index = 4
+texture_filter = 1
+position = Vector2(445, -150)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+offset = Vector2(0, 2)
+region_enabled = true
+region_rect = Rect2(178, 65, 14, 6)
+
+[node name="ChairTopLeft" type="Sprite2D" parent="." unique_id=2126615607]
+z_index = 4
+texture_filter = 1
+position = Vector2(-220, -45)
+scale = Vector2(5, 5)
+texture = ExtResource("1_ground")
+offset = Vector2(0, -8)
+region_enabled = true
+region_rect = Rect2(46, 71, 12, 16)
+
+[node name="ChairTopMid" type="Sprite2D" parent="." unique_id=2126615608]
+z_index = 4
+texture_filter = 1
+position = Vector2(0, -45)
+scale = Vector2(5, 5)
+texture = ExtResource("1_ground")
+offset = Vector2(0, -8)
+region_enabled = true
+region_rect = Rect2(90, 71, 12, 16)
+
+[node name="ChairTopRight" type="Sprite2D" parent="." unique_id=2126615609]
+z_index = 4
+texture_filter = 1
+position = Vector2(230, -45)
+scale = Vector2(5, 5)
+texture = ExtResource("1_ground")
+offset = Vector2(0, -8)
+region_enabled = true
+region_rect = Rect2(136, 71, 12, 16)
+
+[node name="MeetingTableFurniture" type="Sprite2D" parent="." unique_id=2126615597]
+z_index = 4
+texture_filter = 1
+position = Vector2(-2.5, 7.5)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+offset = Vector2(0, 1)
+region_enabled = true
+region_rect = Rect2(36, 85, 119, 27)
+
+[node name="TableBottomFurniture" type="Sprite2D" parent="." unique_id=2126615604]
+z_index = 4
+texture_filter = 1
+position = Vector2(-2.5, 77.5)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+offset = Vector2(0, 6)
+region_enabled = true
+region_rect = Rect2(36, 112, 119, 11)
+
+[node name="BottomChair1" type="Sprite2D" parent="." unique_id=2126615612]
+z_index = 5
+y_sort_origin = 40.0
+texture_filter = 1
+position = Vector2(-220, 90)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+region_enabled = true
+region_rect = Rect2(45, 105, 14, 18)
+
+[node name="BottomChair2" type="Sprite2D" parent="." unique_id=2126615613]
+z_index = 5
+y_sort_origin = 40.0
+texture_filter = 1
+position = Vector2(0, 90)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+region_enabled = true
+region_rect = Rect2(89, 105, 14, 18)
+
+[node name="BottomChair3" type="Sprite2D" parent="." unique_id=2126615614]
+z_index = 5
+y_sort_origin = 40.0
+texture_filter = 1
+position = Vector2(230, 90)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+region_enabled = true
+region_rect = Rect2(135, 105, 14, 18)
+
+[node name="ChairLeftFurniture" type="Sprite2D" parent="." unique_id=2126615598]
+z_index = 4
+texture_filter = 1
+position = Vector2(-347.5, 27.5)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+offset = Vector2(0, -7)
+region_enabled = true
+region_rect = Rect2(20, 79, 13, 31)
+
+[node name="ChairRightFurniture" type="Sprite2D" parent="." unique_id=2126615599]
+z_index = 4
+texture_filter = 1
+position = Vector2(342.5, 27.5)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+offset = Vector2(0, -7)
+region_enabled = true
+region_rect = Rect2(158, 79, 13, 31)
+
+[node name="PillarBannerLeft" type="Sprite2D" parent="." unique_id=2126615600]
+z_index = 4
+texture_filter = 1
+position = Vector2(-442.5, 180)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+offset = Vector2(0, -20)
+region_enabled = true
+region_rect = Rect2(0, 88, 15, 48)
+
+[node name="PillarBannerRight" type="Sprite2D" parent="." unique_id=2126615601]
+z_index = 4
+texture_filter = 1
+position = Vector2(442.5, 180)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+offset = Vector2(0, -20)
+region_enabled = true
+region_rect = Rect2(177, 88, 15, 48)
+
+[node name="EntrancePillarLeft" type="Sprite2D" parent="." unique_id=2126615602]
+z_index = 4
+texture_filter = 1
+position = Vector2(-205, 460)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+offset = Vector2(0, -20)
+region_enabled = true
+region_rect = Rect2(48, 144, 14, 48)
+
+[node name="EntrancePillarRight" type="Sprite2D" parent="." unique_id=2126615603]
+z_index = 4
+texture_filter = 1
+position = Vector2(205, 460)
+scale = Vector2(5, 5)
+texture = ExtResource("2_furniture")
+offset = Vector2(0, -20)
+region_enabled = true
+region_rect = Rect2(130, 144, 14, 48)
+
+[node name="HallCollisions" type="StaticBody2D" parent="." unique_id=2143023743]
+
+[node name="WallTop" type="CollisionShape2D" parent="HallCollisions" unique_id=509175209]
+position = Vector2(0, -357)
+shape = SubResource("RectangleShape2D_hall_wall_top")
+
+[node name="WallLeft" type="CollisionShape2D" parent="HallCollisions" unique_id=902375326]
+position = Vector2(-282, 278)
+shape = SubResource("RectangleShape2D_hall_wall_side")
+disabled = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HallCollisions" unique_id=1271010209]
+position = Vector2(-220, 65)
+shape = SubResource("RectangleShape2D_8hmx5")
+
+[node name="CollisionShape2D7" type="CollisionShape2D" parent="HallCollisions" unique_id=1030681487]
+position = Vector2(0, 65)
+shape = SubResource("RectangleShape2D_8hmx5")
+
+[node name="CollisionShape2D8" type="CollisionShape2D" parent="HallCollisions" unique_id=1981239728]
+position = Vector2(230, 65)
+shape = SubResource("RectangleShape2D_8hmx5")
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="HallCollisions" unique_id=1107938125]
+position = Vector2(-205, 460)
+shape = SubResource("RectangleShape2D_atsxw")
+
+[node name="CollisionShape2D9" type="CollisionShape2D" parent="HallCollisions" unique_id=1486686855]
+position = Vector2(205, 461)
+shape = SubResource("RectangleShape2D_atsxw")
+
+[node name="CollisionShape2D10" type="CollisionShape2D" parent="HallCollisions" unique_id=1478426549]
+position = Vector2(448, 181)
+shape = SubResource("RectangleShape2D_atsxw")
+
+[node name="CollisionShape2D11" type="CollisionShape2D" parent="HallCollisions" unique_id=1467892172]
+position = Vector2(444, -141)
+shape = SubResource("RectangleShape2D_atsxw")
+
+[node name="CollisionShape2D12" type="CollisionShape2D" parent="HallCollisions" unique_id=64483065]
+position = Vector2(-443, -141)
+shape = SubResource("RectangleShape2D_atsxw")
+
+[node name="CollisionShape2D13" type="CollisionShape2D" parent="HallCollisions" unique_id=409174462]
+position = Vector2(-445, 181.75)
+shape = SubResource("RectangleShape2D_atsxw")
+
+[node name="CollisionShape2D4" type="CollisionShape2D" parent="HallCollisions" unique_id=281389698]
+position = Vector2(-277, 62)
+shape = SubResource("RectangleShape2D_q6jnr")
+
+[node name="CollisionShape2D6" type="CollisionShape2D" parent="HallCollisions" unique_id=741598923]
+position = Vector2(272, 62)
+shape = SubResource("RectangleShape2D_q6jnr")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="HallCollisions" unique_id=335784684]
+position = Vector2(342, 26.5)
+shape = SubResource("RectangleShape2D_stkvb")
+
+[node name="CollisionShape2D5" type="CollisionShape2D" parent="HallCollisions" unique_id=516623832]
+position = Vector2(-347, 26)
+shape = SubResource("RectangleShape2D_stkvb")
+
+[node name="WallBottomRight" type="CollisionShape2D" parent="HallCollisions" unique_id=1307592158]
+position = Vector2(-516, 25.5)
+shape = SubResource("RectangleShape2D_hall_wall_bottom")
+
+[node name="CollisionShape2D14" type="CollisionShape2D" parent="HallCollisions" unique_id=1055379419]
+position = Vector2(50.5, 503.96875)
+shape = SubResource("RectangleShape2D_dp1it")
+
+[node name="CollisionShape2D15" type="CollisionShape2D" parent="HallCollisions" unique_id=1172854675]
+position = Vector2(532, 4.75)
+shape = SubResource("RectangleShape2D_tpkmi")
+
+[node name="MeetingTable" type="CollisionShape2D" parent="HallCollisions" unique_id=1256415033]
+position = Vector2(-2.5, 9)
+shape = SubResource("RectangleShape2D_hall_table")
+
+[node name="PillarBottomR" type="CollisionShape2D" parent="HallCollisions" unique_id=1922698871]
+position = Vector2(0, -45)
+shape = SubResource("RectangleShape2D_hall_pillar")
+
+[node name="PillarBottomR3" type="CollisionShape2D" parent="HallCollisions" unique_id=864078551]
+position = Vector2(-220, -44)
+shape = SubResource("RectangleShape2D_hall_pillar")
+
+[node name="PillarBottomR2" type="CollisionShape2D" parent="HallCollisions" unique_id=1735543272]
+position = Vector2(230, -46)
+shape = SubResource("RectangleShape2D_hall_pillar")
