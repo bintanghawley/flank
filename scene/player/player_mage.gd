@@ -1718,11 +1718,10 @@ func spawn_skill_indicator() -> void:
 		active_range_indicator.queue_free()
 		active_range_indicator = null
 
-	# Buat lingkaran batas radius casting di sekeliling Magnus (disembunyikan saat di arena karena jangkauan bebas seluruh arena)
+	# Buat lingkaran batas radius casting di sekeliling Magnus
 	active_range_indicator = MeteorRangeIndicator.new()
-	var in_arena := is_in_arena()
-	active_range_indicator.radius = 2500.0 if in_arena else METEOR_MAX_CAST_RADIUS
-	active_range_indicator.visible = not in_arena
+	active_range_indicator.radius = METEOR_MAX_CAST_RADIUS
+	active_range_indicator.visible = true
 	active_range_indicator.global_position = global_position
 	if get_parent():
 		get_parent().add_child(active_range_indicator)
@@ -1736,7 +1735,7 @@ func spawn_skill_indicator() -> void:
 
 	var mouse_world := get_global_mouse_position()
 	var to_mouse := mouse_world - global_position
-	if not in_arena and to_mouse.length() > METEOR_MAX_CAST_RADIUS:
+	if to_mouse.length() > METEOR_MAX_CAST_RADIUS:
 		mouse_world = global_position + to_mouse.normalized() * METEOR_MAX_CAST_RADIUS
 
 	var target_pos := Vector2(
@@ -1758,14 +1757,13 @@ func process_skill_aiming() -> void:
 	if active_range_indicator and is_instance_valid(active_range_indicator):
 		active_range_indicator.global_position = global_position
 
-	var in_arena := is_in_arena()
 	var cam_rect := get_camera_world_rect()
 	if cam_rect.size == Vector2.ZERO:
 		cam_rect = Rect2(global_position - Vector2(640, 360), Vector2(1280, 720))
 
 	var mouse_world := get_global_mouse_position()
 	var to_mouse := mouse_world - global_position
-	if not in_arena and to_mouse.length() > METEOR_MAX_CAST_RADIUS:
+	if to_mouse.length() > METEOR_MAX_CAST_RADIUS:
 		mouse_world = global_position + to_mouse.normalized() * METEOR_MAX_CAST_RADIUS
 
 	var target_pos := Vector2(
