@@ -248,6 +248,8 @@ var _last_hover_sfx_msec: int = 0
 # Dialogue State & Portraits
 const RAVEN_SHEET: Texture2D = preload("res://assets/characters/animal/raven/raven.png")
 var portrait_raven: Texture2D = null
+var portrait_king: Texture2D = null
+var portrait_queen: Texture2D = null
 const PORTRAIT_ARTHUR: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_arthur.png")
 const PORTRAIT_MAGNUS: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_magnus.png")
 const PORTRAIT_ANASTASYA: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_anastasya.png")
@@ -5893,6 +5895,20 @@ func resolve_dialogue_portrait(key: String) -> Texture2D:
 		return PORTRAIT_ANASTASYA
 	elif "hellene" in lower or "bandit" in lower or "assassin" in lower:
 		return PORTRAIT_HELLENE
+	elif "raja" in lower or "king" in lower:
+		if portrait_king == null:
+			var tex: Texture2D = load("res://assets/characters/npc/king/idle-s.png")
+			if tex:
+				portrait_king = _create_atlas(tex, Rect2(36, 16, 24, 24))
+		return portrait_king
+	elif "ratu" in lower or "queen" in lower:
+		if portrait_queen == null:
+			var tex: Texture2D = load("res://assets/characters/npc/queen/idle-s.png")
+			if tex:
+				portrait_queen = _create_atlas(tex, Rect2(36, 16, 24, 24))
+		return portrait_queen
+	elif "peramal" in lower or "oracle" in lower or "seer" in lower:
+		return PORTRAIT_MAGNUS
 	return null
 
 

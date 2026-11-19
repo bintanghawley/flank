@@ -37,19 +37,31 @@ shader_parameter/radius = 0.0
 shader_parameter/softness = 0.015
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hall_wall_top"]
-size = Vector2(960, 260)
+size = Vector2(960, 240)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hall_wall_side"]
 size = Vector2(80, 960)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hall_wall_bottom"]
-size = Vector2(350, 80)
+size = Vector2(350, 60)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hall_table"]
-size = Vector2(650, 100)
+size = Vector2(585, 95)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hall_chair_bottom"]
+size = Vector2(70, 85)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hall_chair_side"]
+size = Vector2(40, 110)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hall_pillar"]
-size = Vector2(60, 140)
+size = Vector2(60, 60)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hall_pillar_side"]
+size = Vector2(55, 50)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hall_pillar_top"]
+size = Vector2(65, 110)
 
 [node name="Game" type="Node2D" unique_id=1512194323]
 y_sort_enabled = true
@@ -164,43 +176,234 @@ texture_filter = 1
 scale = Vector2(5, 5)
 texture = ExtResource("10_hall_ground")
 
-[node name="HallFurniture" type="Sprite2D" parent="CastleMeetingHall"]
+[node name="TopWall" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 4
+y_sort_origin = 120.0
 texture_filter = 1
+position = Vector2(0, -360)
 scale = Vector2(5, 5)
 texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(15, 0, 162, 48)
+
+[node name="TopPillarLeft" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 4
+y_sort_origin = 172.5
+texture_filter = 1
+position = Vector2(-442.5, -302.5)
+scale = Vector2(5, 5)
+texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(0, 0, 15, 71)
+
+[node name="TopPillarRight" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 4
+y_sort_origin = 172.5
+texture_filter = 1
+position = Vector2(442.5, -302.5)
+scale = Vector2(5, 5)
+texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(177, 0, 15, 71)
+
+[node name="TopChair1" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 4
+y_sort_origin = 37.5
+texture_filter = 1
+position = Vector2(-220, -92.5)
+scale = Vector2(5, 5)
+texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(46, 69, 12, 17)
+
+[node name="TopChair2" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 4
+y_sort_origin = 37.5
+texture_filter = 1
+position = Vector2(0, -92.5)
+scale = Vector2(5, 5)
+texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(90, 69, 12, 17)
+
+[node name="TopChair3" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 4
+y_sort_origin = 37.5
+texture_filter = 1
+position = Vector2(230, -92.5)
+scale = Vector2(5, 5)
+texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(136, 69, 12, 17)
+
+[node name="SidePillarLeft" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 4
+y_sort_origin = 100
+texture_filter = 1
+position = Vector2(-442.5, 80)
+scale = Vector2(5, 5)
+texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(0, 88, 15, 48)
+
+[node name="SidePillarRight" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 4
+y_sort_origin = 100
+texture_filter = 1
+position = Vector2(442.5, 80)
+scale = Vector2(5, 5)
+texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(177, 88, 15, 48)
+
+[node name="TableSurface" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 4
+y_sort_origin = 27.5
+texture_filter = 1
+position = Vector2(-2.5, 12.5)
+scale = Vector2(5, 5)
+texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(33, 85, 125, 27)
+
+[node name="SideChairLeft" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 4
+y_sort_origin = 60.0
+texture_filter = 1
+position = Vector2(-347.5, -7.5)
+scale = Vector2(5, 5)
+texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(20, 79, 13, 31)
+
+[node name="SideChairRight" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 4
+y_sort_origin = 60.0
+texture_filter = 1
+position = Vector2(342.5, -7.5)
+scale = Vector2(5, 5)
+texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(158, 79, 13, 31)
+
+[node name="BottomChair1" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 5
+y_sort_origin = 40.0
+texture_filter = 1
+position = Vector2(-220, 90)
+scale = Vector2(5, 5)
+texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(45, 105, 14, 18)
+
+[node name="BottomChair2" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 5
+y_sort_origin = 40.0
+texture_filter = 1
+position = Vector2(0, 90)
+scale = Vector2(5, 5)
+texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(89, 105, 14, 18)
+
+[node name="BottomChair3" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 5
+y_sort_origin = 40.0
+texture_filter = 1
+position = Vector2(230, 90)
+scale = Vector2(5, 5)
+texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(135, 105, 14, 18)
+
+[node name="BottomPillarLeft" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 4
+y_sort_origin = 50.0
+texture_filter = 1
+position = Vector2(-205, 360)
+scale = Vector2(5, 5)
+texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(48, 144, 14, 48)
+
+[node name="BottomPillarRight" type="Sprite2D" parent="CastleMeetingHall"]
+z_index = 4
+y_sort_origin = 50.0
+texture_filter = 1
+position = Vector2(205, 360)
+scale = Vector2(5, 5)
+texture = ExtResource("11_hall_furniture")
+region_enabled = true
+region_rect = Rect2(130, 144, 14, 48)
 
 [node name="HallCollisions" type="StaticBody2D" parent="CastleMeetingHall"]
 
 [node name="WallTop" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
-position = Vector2(0, -350)
+position = Vector2(0, -360)
 shape = SubResource("RectangleShape2D_hall_wall_top")
 
+[node name="PillarTopL" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
+position = Vector2(-442.5, -185)
+shape = SubResource("RectangleShape2D_hall_pillar_top")
+
+[node name="PillarTopR" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
+position = Vector2(442.5, -185)
+shape = SubResource("RectangleShape2D_hall_pillar_top")
+
 [node name="WallLeft" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
-position = Vector2(-440, 0)
+position = Vector2(-520, 0)
 shape = SubResource("RectangleShape2D_hall_wall_side")
 
 [node name="WallRight" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
-position = Vector2(440, 0)
+position = Vector2(520, 0)
 shape = SubResource("RectangleShape2D_hall_wall_side")
 
 [node name="WallBottomLeft" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
-position = Vector2(-305, 440)
+position = Vector2(-305, 450)
 shape = SubResource("RectangleShape2D_hall_wall_bottom")
 
 [node name="WallBottomRight" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
-position = Vector2(305, 440)
+position = Vector2(305, 450)
 shape = SubResource("RectangleShape2D_hall_wall_bottom")
 
 [node name="MeetingTable" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
-position = Vector2(5, 40)
+position = Vector2(-2.5, -7.5)
 shape = SubResource("RectangleShape2D_hall_table")
 
+[node name="ChairBottom1" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
+position = Vector2(-220, 82.5)
+shape = SubResource("RectangleShape2D_hall_chair_bottom")
+
+[node name="ChairBottom2" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
+position = Vector2(0, 82.5)
+shape = SubResource("RectangleShape2D_hall_chair_bottom")
+
+[node name="ChairBottom3" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
+position = Vector2(230, 82.5)
+shape = SubResource("RectangleShape2D_hall_chair_bottom")
+
+[node name="ChairSideLeft" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
+position = Vector2(-335, -5)
+shape = SubResource("RectangleShape2D_hall_chair_side")
+
+[node name="ChairSideRight" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
+position = Vector2(335, -5)
+shape = SubResource("RectangleShape2D_hall_chair_side")
+
+[node name="PillarSideL" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
+position = Vector2(-442.5, 170)
+shape = SubResource("RectangleShape2D_hall_pillar_side")
+
+[node name="PillarSideR" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
+position = Vector2(442.5, 170)
+shape = SubResource("RectangleShape2D_hall_pillar_side")
+
 [node name="PillarBottomL" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
-position = Vector2(-205, 340)
+position = Vector2(-205, 445)
 shape = SubResource("RectangleShape2D_hall_pillar")
 
 [node name="PillarBottomR" type="CollisionShape2D" parent="CastleMeetingHall/HallCollisions"]
-position = Vector2(205, 340)
+position = Vector2(205, 445)
 shape = SubResource("RectangleShape2D_hall_pillar")
 
 [node name="TransitionLayer" type="CanvasLayer" parent="." unique_id=98127341]

@@ -28,7 +28,11 @@ const CASTLE_ENTRANCE_POS: Vector2 = Vector2(2533.0, 1035.0)
 const CASTLE_HALL_SPAWN_POS: Vector2 = Vector2(2533.0, -1180.0)
 const CASTLE_HALL_EXIT_POS: Vector2 = Vector2(2533.0, -1060.0)
 const CASTLE_OUTSIDE_SPAWN_POS: Vector2 = Vector2(2533.0, 1090.0)
+const CASTLE_MEETING_SEAT_GLOBAL_POS: Vector2 = Vector2(2533.0, -1375.0)
+const CASTLE_MEETING_SIT_POS: Vector2 = Vector2(2533.0, -1465.0)
+const CASTLE_MEETING_TABLE_CENTER: Vector2 = Vector2(2533.0, -1490.0)
 var is_inside_castle_hall: bool = false
+var is_meeting_in_progress: bool = false
 var _marker_bob_time: float = 0.0
 var world_map_min: Vector2 = Vector2.ZERO
 var world_map_max: Vector2 = Vector2.ZERO
@@ -79,6 +83,75 @@ const PROLOGUE_DIALOGUE: Array[Dictionary] = [
 		"text": "Baik! Pengawal, bersiaga! Kita kembali ke kastil sekarang juga!"
 	}
 ]
+
+# =========================================================
+# NASKAH DIALOG AULA RAPAT KASTIL (CHAPTER 1.1 / CH1-SC05)
+# =========================================================
+const CASTLE_MEETING_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Raja",
+		"portrait": "raja",
+		"text": "Arthur, putraku... Magnus dan para peramal istana baru saja menyampaikan firasat buruk yang mengguncang ketenangan kerajaan kita."
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Ayahanda Raja, Ibunda Ratu... Magnus sudah sempat memberitahuku di hutan tadi. Mungkin para peramal bisa menjelaskan secara rinci, apa yang sebenarnya terjadi?"
+	},
+	{
+		"speaker": "NPC Peramal 1",
+		"portrait": "peramal_1",
+		"text": "Tujuh hari ke depan, akan terjadi Seven Deadly Days. Hari kebangkitan tujuh bangsa iblis secara berurutan melalui tujuh tempat berbeda; mulai dari sela lempeng bumi, pegunungan, bebukitan, hingga langit-langit perut bumi."
+	},
+	{
+		"speaker": "NPC Peramal 1",
+		"portrait": "peramal_1",
+		"text": "Kami belum mengetahui rupa dan wujud pasti dari iblis-iblis yang akan bangkit itu..."
+	},
+	{
+		"speaker": "NPC Peramal 2",
+		"portrait": "peramal_2",
+		"text": "Hanya saja, kami mengetahui tujuh bangsa ini dari catatan leluhur kuno:\n- Superbia (Pride) - Iblis Kesombongan\n- Avarizia (Greed) - Iblis Keserakahan\n- Lussuria (Lust) - Iblis Hawa Nafsu"
+	},
+	{
+		"speaker": "NPC Peramal 2",
+		"portrait": "peramal_2",
+		"text": "Dan empat bangsa berikutnya:\n- Invidia (Envy) - Iblis Rasa Iri\n- Gola (Gluttony) - Iblis Kerakusan\n- Ira (Wrath) - Iblis Kemarahan\n- Accidia (Sloth) - Iblis Kemalasan"
+	},
+	{
+		"speaker": "Anastasya (Pemanah)",
+		"portrait": "anastasya",
+		"text": "Tujuh bangsa iblis sekaligus... Pertahanan perbatasan kerajaan tidak akan sanggup menahan gempuran mereka jika kita hanya diam menunggu di dalam istana."
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Benar. Beberapa dari mereka bersatu, dan beberapa lainnya saling melahap satu sama lain. Jika kita tidak bertindak cepat, bumi ini akan menjadi sarang mereka berkembang biak!"
+	},
+	{
+		"speaker": "Ratu",
+		"portrait": "ratu",
+		"text": "Dewa langit lindungi kita... Apakah ada cara untuk menghentikan kebangkitan mereka sebelum terlambat?"
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Aku sudah menyimpulkan apa yang harus kita lakukan. Besok pagi, kita akan memulai pelatihan ketat di camp latihan untuk mempersiapkan seluruh kesatria!"
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Sekarang semuanya beristirahat, kumpulkan tenaga kalian dan tunggu perintah dariku untuk esok pagi."
+	},
+	{
+		"speaker": "Raja",
+		"portrait": "raja",
+		"text": "Keputusan yang tepat, Arthur. Kerahkan seluruh kemampuanmu. Keselamatan kerajaan ini ada di tanganmu dan kawan-kawanmu."
+	}
+]
+
+var is_castle_meeting_completed: bool = false
+
 
 # State Tempur Party ala Guardian Tales
 enum PartyCombatState { EXPLORING, COMBAT }
@@ -253,6 +326,7 @@ func _ready() -> void:
 	_init_arena_enemies.call_deferred()
 	_init_training_dummy.call_deferred()
 	_init_nav_compass.call_deferred()
+	_setup_meeting_participants.call_deferred()
 
 	# 6. Jalankan efek pembukaan Circular Mask (Iris Open) saat masuk arena game
 	play_iris_opening_transition()
@@ -322,6 +396,10 @@ func _unhandled_input(event: InputEvent) -> void:
 						if leader.global_position.distance_to(CASTLE_HALL_EXIT_POS) <= 100.0:
 							exit_castle_hall()
 							get_viewport().set_input_as_handled()
+						elif not is_castle_meeting_completed and not is_meeting_in_progress:
+							if leader.global_position.distance_to(CASTLE_MEETING_SEAT_GLOBAL_POS) <= 90.0:
+								start_castle_meeting_cutscene()
+								get_viewport().set_input_as_handled()
 
 
 func is_character_alive(character: CharacterBody2D) -> bool:
@@ -1034,7 +1112,10 @@ func update_camera_target(delta: float = 0.0) -> void:
 	else:
 		camera.zoom = target_camera_zoom
 
-	if is_camera_locked_to_arena and arena_state == ArenaState.COMBAT:
+	if is_meeting_in_progress:
+		var cam_target: Vector2 = CASTLE_MEETING_TABLE_CENTER
+		camera.global_position = camera.global_position.lerp(cam_target, clampf(delta * 5.0, 0.0, 1.0)) if delta > 0.0 else cam_target
+	elif is_camera_locked_to_arena and arena_state == ArenaState.COMBAT:
 		# Kunci posisi kamera langsung ke tengah arena
 		camera.global_position = arena_center
 	else:
@@ -1944,6 +2025,206 @@ func _on_prologue_dialogue_completed() -> void:
 		marker.visible = true
 
 
+func trigger_castle_meeting_dialogue(on_completed: Callable = Callable()) -> void:
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_dialogue"):
+		gameplay_hud.show_dialogue("castle_meeting", CASTLE_MEETING_DIALOGUE, func():
+			if on_completed.is_valid():
+				on_completed.call()
+		)
+
+
+func start_castle_meeting_cutscene() -> void:
+	if is_meeting_in_progress or is_castle_meeting_completed or is_transitioning:
+		return
+	is_meeting_in_progress = true
+
+	# Sembunyikan prompt interaksi HUD
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt()
+
+	# Kunci kontrol player
+	set_party_movement_locked(true)
+
+	var leader := get_active_leader()
+	if not is_instance_valid(leader):
+		is_meeting_in_progress = false
+		set_party_movement_locked(false)
+		return
+
+	# Nonaktifkan collision leader sementara agar Arthur bisa menempati kursi tanpa terdorong collision
+	_set_character_collision_active(leader, false)
+	leader.z_index = 4
+
+	# Arthur bergerak menempati kursi rapat (BottomChair2)
+	var move_tween := create_tween()
+	move_tween.tween_property(leader, "global_position", CASTLE_MEETING_SIT_POS, 0.40).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	await move_tween.finished
+
+	# Pastikan animasi Arthur menghadap ke meja rapat (Utara)
+	if leader.has_node("AnimatedSprite2D"):
+		var anim_spr = leader.get_node("AnimatedSprite2D") as AnimatedSprite2D
+		if anim_spr:
+			anim_spr.play("idle_n")
+	if "last_direction" in leader:
+		leader.last_direction = Vector2.UP
+
+	# Jeda bernapas singkat sebelum dialog dimulai
+	await get_tree().create_timer(0.3).timeout
+
+	# Jalankan dialog rapat istana
+	trigger_castle_meeting_dialogue(func():
+		_on_castle_meeting_finished()
+	)
+
+
+func _on_castle_meeting_finished() -> void:
+	# Arthur berdiri dan melangkah mundur sedikit dari kursi ke area bebas jalan
+	var leader := get_active_leader()
+	if is_instance_valid(leader):
+		var stand_tween := create_tween()
+		stand_tween.tween_property(leader, "global_position", CASTLE_MEETING_SEAT_GLOBAL_POS, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		await stand_tween.finished
+
+		leader.z_index = 4
+		if leader.has_node("AnimatedSprite2D"):
+			var anim_spr = leader.get_node("AnimatedSprite2D") as AnimatedSprite2D
+			if anim_spr:
+				anim_spr.play("idle_s")
+		if "last_direction" in leader:
+			leader.last_direction = Vector2.DOWN
+
+		_set_character_collision_active(leader, true)
+
+	is_meeting_in_progress = false
+	is_castle_meeting_completed = true
+
+	# Buka kunci kontrol player
+	set_party_movement_locked(false)
+
+	# Selesaikan quest main_02 dan aktifkan main_03 (Persiapan Pasukan)
+	for q in quest_list:
+		if q.get("id") == "main_02":
+			q["status"] = "completed"
+		elif q.get("id") == "main_03":
+			q["status"] = "active"
+	tracked_quest_id = "main_03"
+	if is_instance_valid(gameplay_hud):
+		if gameplay_hud.has_method("set_quests"):
+			gameplay_hud.set_quests(quest_list, tracked_quest_id)
+		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
+		if not tracked_q.is_empty() and gameplay_hud.has_method("update_hud_quest_display"):
+			gameplay_hud.update_hud_quest_display(tracked_q)
+
+	# Simpan autosave progress
+	save_game_to_slot(1)
+
+
+func _setup_meeting_participants() -> void:
+	var hall := get_node_or_null("CastleMeetingHall") as Node2D
+	if not hall:
+		return
+
+	# Jangan duplikasi jika sudah diinstansiasi
+	if hall.has_node("Participant_King"):
+		return
+
+	# Tekstur sprite karakter
+	var tex_king: Texture2D = load("res://assets/characters/npc/king/idle-s.png")
+	var tex_queen: Texture2D = load("res://assets/characters/npc/queen/idle-s.png")
+	var tex_mage_s: Texture2D = load("res://assets/characters/mage/idle/idle-s.png")
+	var tex_mage_e: Texture2D = load("res://assets/characters/mage/idle/idle-e.png")
+	var tex_mage_n: Texture2D = load("res://assets/characters/mage/idle/idle-n.png")
+	var tex_archer_w: Texture2D = load("res://assets/characters/archer/idle/idle-w.png")
+
+	# 1. Raja (TopChair2 - Atas Tengah)
+	# Disortir di Y = -50 (di depan TopChair Y = -92.5 dan di belakang Meja Y = 12.5)
+	# offset.y = -3.6 menggeser visual 18px ke atas agar pas di bantalan kursi
+	if tex_king:
+		var king := _create_meeting_npc(tex_king, 96, 64, 4, Vector2(0, -50), "idle_s", Color.WHITE, Vector2(0, -3.6))
+		king.name = "Participant_King"
+		hall.add_child(king)
+
+	# 2. Ratu (TopChair1 - Atas Kiri)
+	if tex_queen:
+		var queen := _create_meeting_npc(tex_queen, 96, 64, 4, Vector2(-220, -50), "idle_s", Color.WHITE, Vector2(0, -3.6))
+		queen.name = "Participant_Queen"
+		hall.add_child(queen)
+
+	# 3. Peramal 1 (TopChair3 - Atas Kanan)
+	if tex_mage_s:
+		var seer1 := _create_meeting_npc(tex_mage_s, 96, 64, 4, Vector2(230, -50), "idle_s", Color(0.88, 0.78, 1.05), Vector2(-0.5, -3.6))
+		seer1.name = "Participant_Peramal1"
+		hall.add_child(seer1)
+
+	# 4. Magnus / Wizard (SideChairLeft - Samping Kiri)
+	# Disortir di Y = 15 (di depan SideChair Y = -7.5)
+	# offset.y = -10.6 menggeser visual 53px ke atas agar pas di alas kursi
+	if tex_mage_e:
+		var magnus := _create_meeting_npc(tex_mage_e, 96, 64, 4, Vector2(-345, 15), "idle_e", Color.WHITE, Vector2(-0.5, -10.6))
+		magnus.name = "Participant_Magnus"
+		hall.add_child(magnus)
+
+	# 5. Anastasya / Archer (SideChairRight - Samping Kanan)
+	if tex_archer_w:
+		var anastasya := _create_meeting_npc(tex_archer_w, 32, 32, 4, Vector2(340, 15), "idle_w", Color.WHITE, Vector2(-1, -10.6))
+		anastasya.name = "Participant_Anastasya"
+		hall.add_child(anastasya)
+
+	# Pastikan kursi baris bawah berada di z_index = 5 agar bagian atas dan sandaran kursi menutupi kepala/badan karakter di baliknya
+	for chair_name in ["BottomChair1", "BottomChair2", "BottomChair3"]:
+		var chair = hall.get_node_or_null(chair_name) as CanvasItem
+		if is_instance_valid(chair):
+			chair.z_index = 5
+
+	# 6. Peramal 2 (BottomChair1 - Bawah Kiri)
+	# Karakter di z_index = 4 di balik BottomChair1 (z_index = 5) sehingga kepala tertutupi bingkai atas kursi
+	if tex_mage_n:
+		var seer2 := _create_meeting_npc(tex_mage_n, 96, 64, 4, Vector2(-220, 35), "idle_n", Color(0.78, 0.95, 1.1), Vector2(-0.5, 0.0))
+		seer2.name = "Participant_Peramal2"
+		hall.add_child(seer2)
+
+	# 7. Peramal 3 (BottomChair3 - Bawah Kanan)
+	if tex_mage_n:
+		var seer3 := _create_meeting_npc(tex_mage_n, 96, 64, 4, Vector2(230, 35), "idle_n", Color(1.05, 0.88, 0.78), Vector2(-0.5, 0.0))
+		seer3.name = "Participant_Peramal3"
+		hall.add_child(seer3)
+
+
+func _create_meeting_npc(
+	tex: Texture2D,
+	frame_w: int,
+	frame_h: int,
+	frame_count: int,
+	pos: Vector2,
+	anim_name: String,
+	mod_color: Color = Color.WHITE,
+	spr_offset: Vector2 = Vector2.ZERO
+) -> AnimatedSprite2D:
+	var anim_spr := AnimatedSprite2D.new()
+	anim_spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	anim_spr.scale = Vector2(5.0, 5.0)
+	anim_spr.position = pos
+	anim_spr.modulate = mod_color
+	anim_spr.offset = spr_offset
+	anim_spr.z_index = 4
+
+	var frames := SpriteFrames.new()
+	frames.add_animation(anim_name)
+	frames.set_animation_loop(anim_name, true)
+	frames.set_animation_speed(anim_name, 6.0)
+
+	for i in range(frame_count):
+		var atlas := AtlasTexture.new()
+		atlas.atlas = tex
+		atlas.region = Rect2(i * frame_w, 0, frame_w, frame_h)
+		frames.add_frame(anim_name, atlas)
+
+	anim_spr.sprite_frames = frames
+	anim_spr.play(anim_name)
+	return anim_spr
+
+
+
 func _setup_open_world_mode() -> void:
 	is_prologue_completed = true
 	# Selesaikan quest main_01 dan aktifkan main_02 agar pemain langsung bebas bereksplorasi
@@ -2042,6 +2323,7 @@ func load_game_from_slot(slot_id: int) -> bool:
 	# Restore Playtime
 	total_playtime = float(data.get("playtime", 0.0))
 	is_prologue_completed = bool(data.get("is_prologue_completed", true))
+	is_castle_meeting_completed = bool(data.get("is_castle_meeting_completed", false))
 
 	# Restore Party Order, Positions, Health
 	var restored_party: Array[CharacterBody2D] = []
@@ -2215,6 +2497,7 @@ func _collect_save_data(slot_id: int) -> Dictionary:
 		"chapter": "Mode Jelajah" if is_explore else "Chapter 1.1",
 		"game_mode": raw_mode,
 		"is_prologue_completed": is_prologue_completed,
+		"is_castle_meeting_completed": is_castle_meeting_completed,
 		"arena_state": int(arena_state),
 		"location": current_location,
 		"current_location_name": current_location_name,
@@ -2398,6 +2681,14 @@ func check_castle_interactions(delta: float) -> void:
 		if dist <= 75.0:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
 				gameplay_hud.show_interact_prompt("Keluar ke Gerbang Kastil", "E", "exit_castle")
+		elif not is_castle_meeting_completed and not is_meeting_in_progress:
+			var dist_seat := leader.global_position.distance_to(CASTLE_MEETING_SEAT_GLOBAL_POS)
+			if dist_seat <= 90.0:
+				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
+					gameplay_hud.show_interact_prompt("Ikut Rapat", "E", "join_meeting")
+			else:
+				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+					gameplay_hud.hide_interact_prompt()
 		else:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 				gameplay_hud.hide_interact_prompt()
@@ -2429,6 +2720,8 @@ func _on_hud_interaction_pressed(action_type: String) -> void:
 		enter_castle_hall()
 	elif action_type == "exit_castle" or action_type == "Keluar ke Gerbang Kastil":
 		exit_castle_hall()
+	elif action_type == "join_meeting" or action_type == "Ikut Rapat":
+		start_castle_meeting_cutscene()
 
 
 func enter_castle_hall() -> void:
