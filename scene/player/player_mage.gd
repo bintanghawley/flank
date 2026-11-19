@@ -49,6 +49,8 @@ const FEET_OFFSET_Y: float = 36.0
 
 var target_position: Vector2
 var is_moving := false
+var has_pending_click_move: bool = false
+var click_move_stuck_timer: float = 0.0
 var hold_indicator_timer: float = 0.0
 var last_indicator_pos: Vector2 = Vector2.ZERO
 
@@ -61,6 +63,7 @@ var last_movement_direction := Vector2.DOWN
 # =========================
 const MAGIC_BOLT_SCENE = preload("res://scene/projectile/magic_bolt.tscn")
 const DUST_SCENE = preload("res://scene/effect/run_dust.tscn")
+const GHOST_SCENE = preload("res://scene/effect/death_ghost.tscn")
 const SFX_FOOTSTEP = preload("res://assets/audio/sfx/characters/universal/footstep_run.wav")
 const SFX_HURT = preload("res://assets/audio/sfx/characters/universal/hero_hurt.wav")
 const SFX_DEATH = preload("res://assets/audio/sfx/characters/universal/hero_death.wav")
@@ -190,15 +193,24 @@ func _exit_tree() -> void:
 
 
 func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: int = 0) -> void:
+	if is_dead:
+		is_leader = false
+		leader_node = new_leader
+		queue_slot_index = slot_idx
+		return
+
 	is_leader = active
 	leader_node = new_leader
 	queue_slot_index = slot_idx
-	target_position = global_position
-	is_moving = false
-	is_attacking = false
-	velocity = Vector2.ZERO
-	if not active and CursorManager.has_method("hide_ground_move_indicator"):
-		CursorManager.hide_ground_move_indicator()
+	if not active:
+		if not has_pending_click_move:
+			target_position = global_position
+			is_moving = false
+			velocity = Vector2.ZERO
+			if CursorManager.has_method("hide_ground_move_indicator"):
+				CursorManager.hide_ground_move_indicator()
+	else:
+		has_pending_click_move = false
 
 	attack_stuck_timer = 0.0
 
@@ -282,6 +294,36 @@ func is_in_combat_mode() -> bool:
 			if game_node.arena_state == game_node.ArenaState.COMBAT:
 				return true
 	return false
+
+
+func is_in_arena() -> bool:
+	var game_node = get_tree().current_scene if is_inside_tree() else null
+	if not game_node:
+		return false
+	if "arena_state" in game_node and "ArenaState" in game_node:
+		if game_node.arena_state == game_node.ArenaState.COMBAT:
+			return true
+	if "is_in_training_arena" in game_node and game_node.is_in_training_arena:
+		return true
+	if "arena_bounds" in game_node and game_node.arena_bounds.size != Vector2.ZERO:
+		if game_node.arena_bounds.grow(40.0).has_point(global_position):
+			return true
+	if "TRAINING_ARENA_BOUNDS" in game_node and game_node.TRAINING_ARENA_BOUNDS.size != Vector2.ZERO:
+		if game_node.TRAINING_ARENA_BOUNDS.grow(40.0).has_point(global_position):
+			return true
+	return false
+
+
+func get_active_arena_bounds() -> Rect2:
+	var game_node = get_tree().current_scene if is_inside_tree() else null
+	if not game_node:
+		return Rect2()
+	if "is_in_training_arena" in game_node and game_node.is_in_training_arena:
+		if "TRAINING_ARENA_BOUNDS" in game_node:
+			return game_node.TRAINING_ARENA_BOUNDS
+	if "arena_bounds" in game_node:
+		return game_node.arena_bounds
+	return Rect2()
 
 
 # =========================================================
@@ -429,6 +471,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			if not is_aiming_skill and not is_skill_releasing and not is_attacking:
 				target_position = get_global_mouse_position()
 				is_moving = true
+				has_pending_click_move = true
+				click_move_stuck_timer = 0.0
 				hold_indicator_timer = 0.22
 				last_indicator_pos = target_position
 				if CursorManager.has_method("spawn_ground_move_indicator"):
@@ -471,6 +515,8 @@ func process_leader_movement(delta: float) -> void:
 			var mouse_pos := get_global_mouse_position()
 			target_position = mouse_pos
 			is_moving = true
+			has_pending_click_move = true
+			click_move_stuck_timer = 0.0
 			if hold_indicator_timer <= 0.0 and mouse_pos.distance_to(last_indicator_pos) > 28.0:
 				hold_indicator_timer = 0.22
 				last_indicator_pos = mouse_pos
@@ -493,6 +539,8 @@ func process_leader_movement(delta: float) -> void:
 				update_direction_animation(direction)
 		else:
 			is_moving = false
+			has_pending_click_move = false
+			click_move_stuck_timer = 0.0
 			target_position = current_feet_pos
 			if CursorManager.has_method("hide_ground_move_indicator"):
 				CursorManager.hide_ground_move_indicator()
@@ -519,10 +567,70 @@ func process_leader_movement(delta: float) -> void:
 			move_and_slide_with_separation()
 		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and get_real_velocity().length() < 10.0:
 			is_moving = false
+			has_pending_click_move = false
+			click_move_stuck_timer = 0.0
 			if CursorManager.has_method("hide_ground_move_indicator"):
 				CursorManager.hide_ground_move_indicator()
 			if animated_sprite.animation.begins_with("walk_"):
 				play_idle_animation()
+
+
+func process_pending_click_move(delta: float) -> bool:
+	if not has_pending_click_move:
+		return false
+
+	if is_dead or is_movement_locked:
+		has_pending_click_move = false
+		return false
+
+	if is_attacking or is_aiming_skill or is_skill_releasing:
+		return false
+
+	var current_feet_pos := global_position + Vector2(0.0, FEET_OFFSET_Y)
+	var dist := current_feet_pos.distance_to(target_position)
+
+	if dist <= 8.0:
+		has_pending_click_move = false
+		is_moving = false
+		click_move_stuck_timer = 0.0
+		velocity = knockback_velocity
+		move_and_slide_with_separation()
+		play_idle_animation()
+		return false
+
+	is_moving = true
+	var move_dir := current_feet_pos.direction_to(target_position)
+	last_movement_direction = move_dir
+	var current_speed: float = SPRINT_SPEED
+	var clamped_speed: float = minf(current_speed, dist / maxf(delta, 0.001))
+	velocity = (move_dir * clamped_speed) + knockback_velocity
+	move_and_slide_with_separation()
+	update_direction_animation(move_dir)
+
+	if get_slide_collision_count() > 0:
+		if velocity.length() < current_speed * 0.4:
+			var col := get_slide_collision(0)
+			var n := col.get_normal()
+			var tangent := Vector2(-n.y, n.x)
+			if move_dir.dot(tangent) < 0.0:
+				tangent = -tangent
+			velocity = tangent * (current_speed * 0.8) + knockback_velocity
+			move_and_slide_with_separation()
+
+		if get_real_velocity().length() < 10.0:
+			click_move_stuck_timer += delta
+			if click_move_stuck_timer >= 0.4:
+				has_pending_click_move = false
+				is_moving = false
+				click_move_stuck_timer = 0.0
+				play_idle_animation()
+				return false
+		else:
+			click_move_stuck_timer = 0.0
+	else:
+		click_move_stuck_timer = 0.0
+
+	return true
 
 
 # =========================================================
@@ -530,6 +638,9 @@ func process_leader_movement(delta: float) -> void:
 # =========================================================
 
 func process_follower_logic(delta: float) -> void:
+	if process_pending_click_move(delta):
+		return
+
 	if not leader_node or not is_instance_valid(leader_node) or ("is_dead" in leader_node and leader_node.is_dead):
 		velocity = knockback_velocity
 		move_and_slide_with_separation()
@@ -668,15 +779,23 @@ func process_follower_combat(delta: float) -> void:
 		move_and_slide_with_separation()
 		return
 		
-	# 1. Cari musuh hidup terdekat di dalam layar kamera
+	# 1. Cari musuh hidup terdekat di dalam arena atau layar kamera
 	var cam_rect := get_camera_world_rect()
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	var target_enemy: Node2D = null
 	var min_dist: float = INF
 	
+	var in_arena := is_in_arena()
+	var arena_rect := get_active_arena_bounds()
+
 	for e in enemies:
 		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
-			if cam_rect.has_point(e.global_position):
+			var is_candidate := false
+			if in_arena and arena_rect.size != Vector2.ZERO:
+				is_candidate = arena_rect.grow(40.0).has_point(e.global_position)
+			if not is_candidate:
+				is_candidate = cam_rect.has_point(e.global_position)
+			if is_candidate:
 				var d: float = global_position.distance_to(e.global_position)
 				if d < min_dist:
 					min_dist = d
@@ -691,15 +810,15 @@ func process_follower_combat(delta: float) -> void:
 			play_idle_animation()
 		return
 		
-	# 2. Uji koridor tembak dan jarak tempur ideal Mage (Ranged Spellcaster Jarak Jauh)
+	# 2. Uji koridor tembak dan jarak tempur ideal Mage (Di arena: jangkauan tak terbatas)
 	var has_los := has_clear_projectile_los_to(target_enemy, 12.0)
 	var dist_to_enemy := global_position.distance_to(target_enemy.global_position)
-	const RANGED_ATTACK_DIST: float = 440.0    # Jarak serang jarak jauh Mage (Long Range)
+	var max_attack_dist: float = INF if in_arena else 440.0
 
 	# 3. KONDISI TEMBAK (STAND & CAST JAUH): Jika koridor tembak bebas
 	if has_los:
 		is_flanking = false
-		if dist_to_enemy > RANGED_ATTACK_DIST:
+		if dist_to_enemy > max_attack_dist:
 			# Musuh masih terlalu jauh: mendekat ke jarak tembak dengan bias sayap kanan agar tidak berdempetan dengan Archer
 			var to_enemy := target_enemy.global_position - global_position
 			var right_wing := Vector2(to_enemy.y, -to_enemy.x).normalized() * 0.35
@@ -711,7 +830,7 @@ func process_follower_combat(delta: float) -> void:
 			apply_smoothed_facing(approach_dir, delta)
 			return
 		else:
-			# Berada dalam jarak tembak optimal (<= 380 px): berdiri di tempat, bidik dan tembak (tanpa mundur/menghindar)
+			# Berada dalam jarak tembak (bebas jarak sejauh apapun di arena): berdiri di tempat, bidik dan tembak
 			velocity = knockback_velocity
 			is_moving = false
 			move_and_slide_with_separation()
@@ -937,6 +1056,8 @@ func shoot_towards(target_pos: Vector2) -> void:
 		return
 
 	is_moving = false
+	has_pending_click_move = false
+	click_move_stuck_timer = 0.0
 	velocity = knockback_velocity
 
 	# Simpan target posisi klik kursor
@@ -1296,6 +1417,8 @@ func die() -> void:
 	is_dead = true
 	play_sfx(SFX_DEATH, -2.0)
 	is_moving = false
+	has_pending_click_move = false
+	click_move_stuck_timer = 0.0
 	if is_leader and CursorManager.has_method("hide_ground_move_indicator"):
 		CursorManager.hide_ground_move_indicator()
 	is_attacking = false
@@ -1311,30 +1434,54 @@ func die() -> void:
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO
 	invulnerability_timer = 0.0
+	play_idle_animation()
 	print("Mage Gugur! Menunggu respawn...")
 
-	# Auto-switch jika Leader aktif gugur
-	if is_leader:
-		var game_node = get_tree().current_scene
-		if not game_node or not game_node.has_method("switch_to_next_character"):
-			if get_parent() and get_parent().has_method("switch_to_next_character"):
-				game_node = get_parent()
-		if game_node and game_node.has_method("switch_to_next_character"):
-			game_node.switch_to_next_character()
-
+	# 1. Matikan tabrakan dan keluarkan sementara dari grup player
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
 	if has_node("Hurtbox/CollisionShape2D"):
 		$Hurtbox/CollisionShape2D.set_deferred("disabled", true)
 	remove_from_group("player")
 
-	var death_tween = create_tween()
-	death_tween.tween_property(self, "modulate", Color(0.8, 0.2, 0.2, 0.0), 0.5)
-	await death_tween.finished
+	# 2. Munculkan arwah terbang seketika di posisi tubuh hero gugur
+	spawn_death_ghost()
+
+	# 3. Efek visual kekalahan: karakter memudar (fade-out)
+	var death_tween := create_tween()
+	if death_tween:
+		death_tween.tween_property(self, "modulate", Color(0.9, 0.25, 0.25, 0.0), 0.5)
+
+	# 4. Auto-switch jika Leader aktif gugur
+	var was_leader := is_leader
+	if was_leader:
+		var game_node = get_tree().current_scene if is_inside_tree() else null
+		if not game_node or not game_node.has_method("switch_to_next_character"):
+			if get_parent() and get_parent().has_method("switch_to_next_character"):
+				game_node = get_parent()
+		if game_node and game_node.has_method("switch_to_next_character"):
+			game_node.switch_to_next_character(true)
+
+	if death_tween:
+		await death_tween.finished
 
 	visible = false
-	await get_tree().create_timer(respawn_time).timeout
-	respawn()
+
+
+func spawn_death_ghost() -> void:
+	var tree := get_tree()
+	var spawn_parent: Node = null
+	if tree and tree.current_scene:
+		spawn_parent = tree.current_scene
+	elif get_parent():
+		spawn_parent = get_parent()
+
+	if not spawn_parent:
+		return
+
+	var ghost = GHOST_SCENE.instantiate()
+	ghost.global_position = global_position + Vector2(0.0, -15.0)
+	spawn_parent.add_child(ghost)
 
 
 func respawn() -> void:
@@ -1516,6 +1663,8 @@ func start_skill_aiming() -> void:
 
 	is_aiming_skill = true
 	is_moving = false
+	has_pending_click_move = false
+	click_move_stuck_timer = 0.0
 	velocity = knockback_velocity
 
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
@@ -1542,9 +1691,11 @@ func spawn_skill_indicator() -> void:
 		active_range_indicator.queue_free()
 		active_range_indicator = null
 
-	# Buat lingkaran batas radius casting di sekeliling Magnus
+	# Buat lingkaran batas radius casting di sekeliling Magnus (disembunyikan saat di arena karena jangkauan bebas seluruh arena)
 	active_range_indicator = MeteorRangeIndicator.new()
-	active_range_indicator.radius = METEOR_MAX_CAST_RADIUS
+	var in_arena := is_in_arena()
+	active_range_indicator.radius = 2500.0 if in_arena else METEOR_MAX_CAST_RADIUS
+	active_range_indicator.visible = not in_arena
 	active_range_indicator.global_position = global_position
 	if get_parent():
 		get_parent().add_child(active_range_indicator)
@@ -1558,7 +1709,7 @@ func spawn_skill_indicator() -> void:
 
 	var mouse_world := get_global_mouse_position()
 	var to_mouse := mouse_world - global_position
-	if to_mouse.length() > METEOR_MAX_CAST_RADIUS:
+	if not in_arena and to_mouse.length() > METEOR_MAX_CAST_RADIUS:
 		mouse_world = global_position + to_mouse.normalized() * METEOR_MAX_CAST_RADIUS
 
 	var target_pos := Vector2(
@@ -1580,13 +1731,14 @@ func process_skill_aiming() -> void:
 	if active_range_indicator and is_instance_valid(active_range_indicator):
 		active_range_indicator.global_position = global_position
 
+	var in_arena := is_in_arena()
 	var cam_rect := get_camera_world_rect()
 	if cam_rect.size == Vector2.ZERO:
 		cam_rect = Rect2(global_position - Vector2(640, 360), Vector2(1280, 720))
 
 	var mouse_world := get_global_mouse_position()
 	var to_mouse := mouse_world - global_position
-	if to_mouse.length() > METEOR_MAX_CAST_RADIUS:
+	if not in_arena and to_mouse.length() > METEOR_MAX_CAST_RADIUS:
 		mouse_world = global_position + to_mouse.normalized() * METEOR_MAX_CAST_RADIUS
 
 	var target_pos := Vector2(

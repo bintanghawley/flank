@@ -28,6 +28,8 @@ const FEET_OFFSET_Y: float = 36.0
 
 var target_position: Vector2
 var is_moving := false
+var has_pending_click_move: bool = false
+var click_move_stuck_timer: float = 0.0
 var hold_indicator_timer: float = 0.0
 var last_indicator_pos: Vector2 = Vector2.ZERO
 
@@ -38,6 +40,7 @@ var last_movement_direction := Vector2.DOWN
 # COMBAT & MELEE SETTINGS
 # =========================
 const DUST_SCENE = preload("res://scene/effect/run_dust.tscn")
+const GHOST_SCENE = preload("res://scene/effect/death_ghost.tscn")
 const SFX_FOOTSTEP = preload("res://assets/audio/sfx/characters/universal/footstep_run.wav")
 const SFX_HURT = preload("res://assets/audio/sfx/characters/universal/hero_hurt.wav")
 const SFX_DEATH = preload("res://assets/audio/sfx/characters/universal/hero_death.wav")
@@ -84,8 +87,8 @@ var skill_timer: float = 0.0
 var skill_slash_step: int = 0
 var skill_dash_dir: Vector2 = Vector2.DOWN
 var skill_dash_time: float = 0.0
-const SKILL_DASH_SPEED: float = 750.0
-const MAX_DASH_DURATION: float = 0.32
+const SKILL_DASH_SPEED: float = 850.0
+const MAX_DASH_DURATION: float = 0.55
 var skill_target_enemy: Node2D = null
 var skill_hit_enemies_step: Array[Node2D] = []
 var skill_stuck_timer: float = 0.0
@@ -153,11 +156,24 @@ func _setup_enemy_collision_exceptions() -> void:
 
 
 func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: int = 1) -> void:
+	if is_dead:
+		is_leader = false
+		leader_node = new_leader
+		queue_slot_index = slot_idx
+		return
+
 	is_leader = active
 	leader_node = new_leader
 	queue_slot_index = slot_idx
-	if not active and CursorManager.has_method("hide_ground_move_indicator"):
-		CursorManager.hide_ground_move_indicator()
+	if not active:
+		if not has_pending_click_move:
+			target_position = global_position
+			is_moving = false
+			velocity = Vector2.ZERO
+			if CursorManager.has_method("hide_ground_move_indicator"):
+				CursorManager.hide_ground_move_indicator()
+	else:
+		has_pending_click_move = false
 
 	if is_leader:
 		var game_node = get_tree().current_scene if is_inside_tree() else null
@@ -173,7 +189,7 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 		if is_skill_active:
 			cancel_skill()
 		ai_attack_timer = randf_range(0.3, 0.7)
-		if not is_attacking and not is_skill_active:
+		if not is_attacking and not is_skill_active and not has_pending_click_move:
 			play_idle_animation()
 
 
@@ -331,7 +347,9 @@ func _physics_process(delta: float) -> void:
 	if is_leader:
 		process_leader_movement(delta)
 	else:
-		if in_party_combat:
+		if process_pending_click_move(delta):
+			pass
+		elif in_party_combat:
 			process_follower_combat(delta)
 		else:
 			process_follower_exploring(delta)
@@ -368,6 +386,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		if not is_attacking and not is_skill_active:
 			target_position = get_global_mouse_position()
 			is_moving = true
+			has_pending_click_move = true
+			click_move_stuck_timer = 0.0
 			hold_indicator_timer = 0.22
 			last_indicator_pos = target_position
 			if CursorManager.has_method("spawn_ground_move_indicator"):
@@ -408,6 +428,8 @@ func process_leader_movement(delta: float) -> void:
 			var mouse_pos := get_global_mouse_position()
 			target_position = mouse_pos
 			is_moving = true
+			has_pending_click_move = true
+			click_move_stuck_timer = 0.0
 			if hold_indicator_timer <= 0.0 and mouse_pos.distance_to(last_indicator_pos) > 28.0:
 				hold_indicator_timer = 0.22
 				last_indicator_pos = mouse_pos
@@ -430,6 +452,8 @@ func process_leader_movement(delta: float) -> void:
 				update_direction_animation(move_dir)
 		else:
 			is_moving = false
+			has_pending_click_move = false
+			click_move_stuck_timer = 0.0
 			target_position = current_feet_pos
 			if CursorManager.has_method("hide_ground_move_indicator"):
 				CursorManager.hide_ground_move_indicator()
@@ -456,15 +480,116 @@ func process_leader_movement(delta: float) -> void:
 			move_and_slide()
 		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and get_real_velocity().length() < 10.0:
 			is_moving = false
+			has_pending_click_move = false
+			click_move_stuck_timer = 0.0
 			if CursorManager.has_method("hide_ground_move_indicator"):
 				CursorManager.hide_ground_move_indicator()
 			if animated_sprite.animation.begins_with("walk_"):
 				play_idle_animation()
 
 
+func process_pending_click_move(delta: float) -> bool:
+	if not has_pending_click_move:
+		return false
+
+	if is_dead or is_movement_locked:
+		has_pending_click_move = false
+		return false
+
+	if is_attacking or is_skill_active:
+		return false
+
+	var current_feet_pos := global_position + Vector2(0.0, FEET_OFFSET_Y)
+	var dist := current_feet_pos.distance_to(target_position)
+
+	if dist <= 8.0:
+		has_pending_click_move = false
+		is_moving = false
+		click_move_stuck_timer = 0.0
+		velocity = knockback_velocity
+		move_and_slide_with_separation()
+		play_idle_animation()
+		return false
+
+	is_moving = true
+	var move_dir := current_feet_pos.direction_to(target_position)
+	last_movement_direction = move_dir
+	var current_speed: float = SPRINT_SPEED
+	var clamped_speed: float = minf(current_speed, dist / maxf(delta, 0.001))
+	velocity = (move_dir * clamped_speed) + knockback_velocity
+	move_and_slide_with_separation()
+	update_direction_animation(move_dir)
+
+	if get_slide_collision_count() > 0:
+		if velocity.length() < current_speed * 0.4:
+			var col := get_slide_collision(0)
+			var n := col.get_normal()
+			var tangent := Vector2(-n.y, n.x)
+			if move_dir.dot(tangent) < 0.0:
+				tangent = -tangent
+			velocity = tangent * (current_speed * 0.8) + knockback_velocity
+			move_and_slide()
+
+		if get_real_velocity().length() < 10.0:
+			click_move_stuck_timer += delta
+			if click_move_stuck_timer >= 0.4:
+				has_pending_click_move = false
+				is_moving = false
+				click_move_stuck_timer = 0.0
+				play_idle_animation()
+				return false
+		else:
+			click_move_stuck_timer = 0.0
+	else:
+		click_move_stuck_timer = 0.0
+
+	return true
+
+
 # =========================================================
-# SPECIAL SKILL: DASH, KNOCKUP & TRIPLE SLASH (TOMBOL E)
+# SPECIAL SKILL: AUTO-DASH & FLURRY SLASH (TOMBOL E)
 # =========================================================
+
+func find_skill_target_enemy(mouse_pos: Vector2) -> Node2D:
+	var enemies := get_tree().get_nodes_in_group("enemy")
+	var cam_rect := get_camera_world_rect()
+	var candidate_enemies: Array[Node2D] = []
+
+	for e in enemies:
+		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
+			var enemy_node := e as Node2D
+			if enemy_node:
+				var dist_self := global_position.distance_to(enemy_node.global_position)
+				# Musuh di layar kamera atau dalam radius tempur hingga 700px
+				if cam_rect.has_point(enemy_node.global_position) or dist_self <= 700.0:
+					candidate_enemies.append(enemy_node)
+
+	if candidate_enemies.is_empty():
+		return null
+
+	# 1. Jika ada musuh yang berada dekat kursor mouse (<= 200px), prioritaskan musuh tersebut
+	var closest_to_mouse: Node2D = null
+	var min_mouse_dist: float = 200.0
+	for e in candidate_enemies:
+		var d_mouse := mouse_pos.distance_to(e.global_position)
+		if d_mouse < min_mouse_dist:
+			min_mouse_dist = d_mouse
+			closest_to_mouse = e
+
+	if closest_to_mouse:
+		return closest_to_mouse
+
+	# 2. Jika tidak ada musuh dekat kursor, kunci otomatis musuh terdekat dari Bandit
+	var closest_to_self: Node2D = null
+	var min_self_dist: float = INF
+	for e in candidate_enemies:
+		var d_self := global_position.distance_to(e.global_position)
+		if d_self < min_self_dist:
+			min_self_dist = d_self
+			closest_to_self = e
+
+	return closest_to_self
+
 
 func activate_triple_slash(target_pos: Vector2 = Vector2.ZERO) -> void:
 	# Skill E HANYA boleh digunakan saat Bandit menjadi karakter aktif (Leader) dan berada dalam mode combat
@@ -473,17 +598,25 @@ func activate_triple_slash(target_pos: Vector2 = Vector2.ZERO) -> void:
 
 	is_skill_active = true
 	is_moving = false
+	has_pending_click_move = false
+	click_move_stuck_timer = 0.0
 	is_attacking = false
 	skill_phase = SkillPhase.DASHING
 	skill_timer = 0.0
 	skill_dash_time = 0.0
 	skill_slash_step = 0
 	skill_stuck_timer = 0.0
-	skill_target_enemy = null
 	skill_hit_enemies_step.clear()
 
 	var mouse_pos := get_global_mouse_position() if target_pos == Vector2.ZERO else target_pos
-	var dir := global_position.direction_to(mouse_pos).normalized()
+	skill_target_enemy = find_skill_target_enemy(mouse_pos)
+
+	var dir: Vector2
+	if is_instance_valid(skill_target_enemy):
+		dir = (skill_target_enemy.global_position - global_position).normalized()
+	else:
+		dir = global_position.direction_to(mouse_pos).normalized()
+
 	if dir == Vector2.ZERO:
 		dir = last_direction
 
@@ -500,25 +633,37 @@ func activate_triple_slash(target_pos: Vector2 = Vector2.ZERO) -> void:
 	spawn_run_dust(skill_dash_dir)
 	apply_camera_shake(3.0)
 	play_sfx(SFX_BANDIT_SKILL_DASH, -1.0)
-	print(name, " memulai DASH TRIPLE SLASH dengan animasi skill_", dir_str, "!")
+	if skill_target_enemy:
+		print(name, " AUTO-DASH menuju musuh ", skill_target_enemy.name, " dengan animasi skill_", dir_str, "!")
+	else:
+		print(name, " DASH skill_", dir_str, " (tidak ada musuh terdeteksi).")
 
 
 func process_triple_slash_skill(delta: float) -> void:
 	skill_timer += delta
 	skill_stuck_timer += delta
 
-	# FASE 1: DASH CEPAT MENCARI TARGET MUSUH PERTAMA
+	# FASE 1: DASH OTOMATIS MENUJU TARGET MUSUH
 	if skill_phase == SkillPhase.DASHING:
 		skill_dash_time += delta
 
-		# Pastikan animasi skill tetap aktif dan tidak tertimpa
+		# Homing/kunci arah ke musuh target jika masih hidup
+		if is_instance_valid(skill_target_enemy) and not ("is_dead" in skill_target_enemy and skill_target_enemy.is_dead):
+			var to_target: Vector2 = skill_target_enemy.global_position - global_position
+			if to_target.length() > 25.0:
+				skill_dash_dir = to_target.normalized()
+				attack_direction = skill_dash_dir
+				last_direction = get_cardinal_direction(skill_dash_dir)
+
+		# Pastikan animasi skill tetap aktif dan menghadap arah yang benar
 		var dir_str := get_direction_string(last_direction)
-		if animated_sprite and not animated_sprite.animation.begins_with("skill_"):
+		var expected_anim := "skill_" + dir_str
+		if animated_sprite and (not animated_sprite.animation.begins_with("skill_") or animated_sprite.animation != expected_anim):
 			animated_sprite.flip_h = false
-			animated_sprite.play("skill_" + dir_str)
+			animated_sprite.play(expected_anim)
 
 		velocity = skill_dash_dir * SKILL_DASH_SPEED
-		move_and_slide_with_separation()
+		move_and_slide()
 
 		# Deteksi benturan dinding/struktur solid selama dash untuk mencegah jittering di depan dinding
 		if get_slide_collision_count() > 0:
@@ -533,47 +678,55 @@ func process_triple_slash_skill(delta: float) -> void:
 						apply_camera_shake(2.0)
 						break
 
-		# Deteksi apakah ada musuh yang tertabrak di jalur dash
-		var hit_enemy := check_dash_collision_enemy()
+		# Cek apakah sudah mencapai musuh target atau menabrak musuh di jalur dash
+		var hit_enemy: Node2D = null
+		if is_instance_valid(skill_target_enemy) and not ("is_dead" in skill_target_enemy and skill_target_enemy.is_dead):
+			if global_position.distance_to(skill_target_enemy.global_position) <= 75.0:
+				hit_enemy = skill_target_enemy
+
+		if not hit_enemy:
+			hit_enemy = check_dash_collision_enemy()
+
 		if hit_enemy:
-			# Dash berhenti tepat pada musuh pertama yang tertabrak!
+			# Dash berhenti seketika di hadapan musuh!
 			velocity = Vector2.ZERO
 			skill_target_enemy = hit_enemy
 			skill_phase = SkillPhase.KNOCKUP_SLASH
 			skill_timer = 0.0
 			skill_slash_step = 0
 
-			# Hadap ke arah musuh yang tertabrak
+			# Hadap ke arah musuh yang diserang
 			var to_enemy: Vector2 = hit_enemy.global_position - global_position
 			if to_enemy != Vector2.ZERO:
 				skill_dash_dir = to_enemy.normalized()
 				attack_direction = skill_dash_dir
 				last_direction = get_cardinal_direction(skill_dash_dir)
 
-			# 1. Musuh yang tertabrak terkena efek KNOCKUP (terangkat ke udara dan stun singkat)
-			apply_knockup_to_enemy(hit_enemy, 0.70, 40.0)
+			# TAHAN MUSUH DI TEMPAT (STUN / STAGGER) TANPA MENGANGKATNYA KE UDARA (NO KNOCKUP)!
+			if "velocity" in hit_enemy:
+				hit_enemy.velocity = Vector2.ZERO
+			if "knockback_velocity" in hit_enemy:
+				hit_enemy.knockback_velocity = Vector2.ZERO
+			if "stun_timer" in hit_enemy:
+				hit_enemy.stun_timer = maxf(hit_enemy.stun_timer, 0.75)
 
-			# 2. HENTIKAN DAN BERSIHKAN VISUAL DASH SEKETIKA:
-			# Karakter beralih secara bersih 100% ke animasi kombo Triple Slash pada AnimatedSprite2D tunggal
+			# Karakter beralih secara bersih ke animasi kombo tebasan beruntun
 			if animated_sprite:
 				animated_sprite.stop()
 				animated_sprite.flip_h = (last_direction == Vector2.LEFT)
 				animated_sprite.play("triple_slash")
 
-			apply_camera_shake(5.0)
-			play_sfx(SFX_BANDIT_KNOCKUP, 0.0)
-			print(name, " menabrak ", hit_enemy.name, " -> KNOCKUP & Memulai TRIPLE SLASH!")
+			apply_camera_shake(4.0)
+			play_sfx(SFX_BANDIT_TRIPLE_SLASH_HIT, -1.0)
+			print(name, " mencapai ", hit_enemy.name, " -> Memulai FLURRY SLASH (tanpa knockup)!")
 			return
 
-		# Jika batas durasi dash tercapai tanpa menabrak musuh (Miss Dash)
+		# Jika batas durasi dash tercapai tanpa mencapai musuh (Miss Dash)
 		if skill_dash_time >= MAX_DASH_DURATION:
 			velocity = Vector2.ZERO
-			# Biarkan frame visual animasi skill tuntas secara mulus sebelum kembali ke idle/run
 			var is_anim_finished: bool = true
 			if animated_sprite and animated_sprite.animation.begins_with("skill_"):
-				# skill_* memiliki 4 frame (0-3) pada speed 10 (durasi 0.40s).
-				# Jika belum mencapai frame terakhir dan masih dalam window toleransi (hingga 0.42s), biarkan tuntas.
-				if animated_sprite.is_playing() and animated_sprite.frame < 3 and skill_dash_time < 0.42:
+				if animated_sprite.is_playing() and animated_sprite.frame < 3 and skill_dash_time < (MAX_DASH_DURATION + 0.1):
 					is_anim_finished = false
 
 			if is_anim_finished:
@@ -590,26 +743,41 @@ func process_triple_slash_skill(delta: float) -> void:
 				print(name, " dash miss tuntas dengan animasi selesai. Cooldown aktif.")
 				return
 
-	# FASE 2: KNOCKUP & EKSEKUSI TRIPLE SLASH (3X HIT BERUNTUN)
+	# FASE 2: EKSEKUSI FLURRY SLASH (5X HIT BERUNTUN TANPA KNOCKUP)
 	elif skill_phase == SkillPhase.KNOCKUP_SLASH:
 		velocity = Vector2.ZERO
 
-		# 3x Hit beruntun selaras dengan animasi triple_slash (12 frames pada 16 FPS, total ~0.65s):
-		# Slash 1: ~0.10s
-		# Slash 2: ~0.26s
-		# Slash 3: ~0.42s
-		if skill_slash_step == 0 and skill_timer >= 0.10:
-			skill_slash_step = 1
-			execute_triple_slash_step(1, 2, 135.0, 4.0)
-		elif skill_slash_step == 1 and skill_timer >= 0.26:
-			skill_slash_step = 2
-			execute_triple_slash_step(2, 2, 140.0, 4.5)
-		elif skill_slash_step == 2 and skill_timer >= 0.42:
-			skill_slash_step = 3
-			execute_triple_slash_step(3, 2, 150.0, 7.5)
+		# Pastikan musuh target tetap terkunci di tanah jika masih valid
+		if is_instance_valid(skill_target_enemy) and not ("is_dead" in skill_target_enemy and skill_target_enemy.is_dead):
+			if "velocity" in skill_target_enemy:
+				skill_target_enemy.velocity = Vector2.ZERO
+			if "knockback_velocity" in skill_target_enemy:
+				skill_target_enemy.knockback_velocity = Vector2.ZERO
 
-		# Selesai setelah siklus animasi tuntas (~0.65s)
-		if skill_timer >= 0.65 or skill_stuck_timer >= 1.0:
+		# 5x Hit beruntun selaras dengan animasi triple_slash (12 frames pada 16 FPS, total ~0.68s):
+		# Slash 1: ~0.08s
+		# Slash 2: ~0.19s
+		# Slash 3: ~0.30s
+		# Slash 4: ~0.42s
+		# Slash 5: ~0.54s (Finisher)
+		if skill_slash_step == 0 and skill_timer >= 0.08:
+			skill_slash_step = 1
+			execute_triple_slash_step(1, 1, 140.0, 3.0)
+		elif skill_slash_step == 1 and skill_timer >= 0.19:
+			skill_slash_step = 2
+			execute_triple_slash_step(2, 1, 140.0, 3.5)
+		elif skill_slash_step == 2 and skill_timer >= 0.30:
+			skill_slash_step = 3
+			execute_triple_slash_step(3, 2, 145.0, 4.0)
+		elif skill_slash_step == 3 and skill_timer >= 0.42:
+			skill_slash_step = 4
+			execute_triple_slash_step(4, 2, 145.0, 4.5)
+		elif skill_slash_step == 4 and skill_timer >= 0.54:
+			skill_slash_step = 5
+			execute_triple_slash_step(5, 3, 155.0, 7.0)
+
+		# Selesai setelah siklus animasi tuntas (~0.68s)
+		if skill_timer >= 0.68 or skill_stuck_timer >= 1.0:
 			is_skill_active = false
 			skill_phase = SkillPhase.INACTIVE
 			skill_timer = 0.0
@@ -618,13 +786,13 @@ func process_triple_slash_skill(delta: float) -> void:
 			skill_cooldown_timer = skill_cooldown_max # Cooldown 5.0s dimulai setelah eksekusi selesai
 			if not is_dead and not is_moving:
 				play_idle_animation()
-			print(name, " menyelesaikan Triple Slash. Cooldown: ", skill_cooldown_max, " detik.")
+			print(name, " menyelesaikan Flurry Slash 5-Hit. Cooldown: ", skill_cooldown_max, " detik.")
 
 
 func check_dash_collision_enemy() -> Node2D:
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	var closest_e: Node2D = null
-	var min_d: float = 60.0
+	var min_d: float = 75.0
 
 	for e in enemies:
 		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
@@ -634,7 +802,7 @@ func check_dash_collision_enemy() -> Node2D:
 			var d: float = global_position.distance_to(enemy_node.global_position)
 			if d <= min_d:
 				var to_e: Vector2 = (enemy_node.global_position - global_position).normalized()
-				if skill_dash_dir.dot(to_e) > 0.1 or d <= 38.0:
+				if skill_dash_dir.dot(to_e) > 0.0 or d <= 45.0:
 					min_d = d
 					closest_e = enemy_node
 	return closest_e
@@ -676,25 +844,32 @@ func execute_triple_slash_step(step: int, damage: int, range_dist: float, shake_
 
 		if dist <= range_dist:
 			var angle_diff: float = absf(skill_dash_dir.angle_to(to_enemy))
-			if angle_diff <= deg_to_rad(110.0) or dist <= 65.0 or e == skill_target_enemy:
+			if angle_diff <= deg_to_rad(120.0) or dist <= 70.0 or e == skill_target_enemy:
 				if has_line_of_sight_to(e) or e == skill_target_enemy:
 					skill_hit_enemies_step.append(e)
 					if e.has_method("take_damage"):
 						e.take_damage(damage, self)
+					# Kunci musuh agar tetap di tanah dan tertegun (stunned) tanpa terpental / terangkat
+					if "velocity" in e:
+						e.velocity = Vector2.ZERO
+					if "knockback_velocity" in e:
+						e.knockback_velocity = Vector2.ZERO
+					if "stun_timer" in e:
+						e.stun_timer = maxf(e.stun_timer, 0.35)
 
-	# Reset dan SFX saat memberikan damage
+	# Sound effects
 	if not skill_hit_enemies_step.is_empty():
-		if step == 3:
+		if step == 5:
 			play_sfx(SFX_BANDIT_TRIPLE_SLASH_FINISH, 0.0)
 		else:
 			play_sfx(SFX_BANDIT_TRIPLE_SLASH_HIT, -2.0)
 	else:
-		if step == 3:
+		if step == 5:
 			play_sfx(SFX_BANDIT_SLASH_2, -2.0)
 		else:
 			play_sfx(SFX_BANDIT_SLASH_1, -3.0)
 
-	print(name, " [Triple Slash ", step, "/3] mengenai ", skill_hit_enemies_step.size(), " musuh (Damage: ", damage, ")")
+	print(name, " [Flurry Slash ", step, "/5] mengenai ", skill_hit_enemies_step.size(), " musuh (Damage: ", damage, ")")
 
 
 # =========================================================
@@ -710,6 +885,8 @@ func shoot_towards(target_pos: Vector2) -> void:
 		return
 
 	is_moving = false
+	has_pending_click_move = false
+	click_move_stuck_timer = 0.0
 	velocity = knockback_velocity
 
 	var bandit_center := global_position + VISUAL_CENTER_OFFSET
@@ -1110,6 +1287,8 @@ func die() -> void:
 	play_sfx(SFX_DEATH, -2.0)
 	velocity = Vector2.ZERO
 	is_moving = false
+	has_pending_click_move = false
+	click_move_stuck_timer = 0.0
 	if is_leader and CursorManager.has_method("hide_ground_move_indicator"):
 		CursorManager.hide_ground_move_indicator()
 	is_attacking = false
@@ -1121,28 +1300,54 @@ func die() -> void:
 	deactivate_shield()
 	ai_attack_timer = 0.0
 	knockback_velocity = Vector2.ZERO
+	play_idle_animation()
 	print("Bandit Gugur! Menunggu respawn...")
 
-	if is_leader:
-		var game_node = get_tree().current_scene
-		if not game_node or not game_node.has_method("switch_to_next_character"):
-			if get_parent() and get_parent().has_method("switch_to_next_character"):
-				game_node = get_parent()
-		if game_node and game_node.has_method("switch_to_next_character"):
-			game_node.switch_to_next_character()
-
+	# 1. Matikan tabrakan dan keluarkan sementara dari grup player
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
 	if has_node("Hurtbox/CollisionShape2D"):
 		$Hurtbox/CollisionShape2D.set_deferred("disabled", true)
 	remove_from_group("player")
 
-	var death_tween = create_tween()
-	death_tween.tween_property(self, "modulate", Color(0.8, 0.2, 0.2, 0.0), 0.5)
-	await death_tween.finished
+	# 2. Munculkan arwah terbang seketika di posisi tubuh hero gugur
+	spawn_death_ghost()
 
-	await get_tree().create_timer(respawn_time).timeout
-	respawn()
+	# 3. Mainkan animasi tubuh hero memudar kemerahan
+	var death_tween := create_tween()
+	if death_tween:
+		death_tween.tween_property(self, "modulate", Color(0.9, 0.25, 0.25, 0.0), 0.5)
+
+	# 4. Auto-switch jika Leader aktif gugur
+	var was_leader := is_leader
+	if was_leader:
+		var game_node = get_tree().current_scene if is_inside_tree() else null
+		if not game_node or not game_node.has_method("switch_to_next_character"):
+			if get_parent() and get_parent().has_method("switch_to_next_character"):
+				game_node = get_parent()
+		if game_node and game_node.has_method("switch_to_next_character"):
+			game_node.switch_to_next_character(true)
+
+	if death_tween:
+		await death_tween.finished
+
+	visible = false
+
+
+func spawn_death_ghost() -> void:
+	var tree := get_tree()
+	var spawn_parent: Node = null
+	if tree and tree.current_scene:
+		spawn_parent = tree.current_scene
+	elif get_parent():
+		spawn_parent = get_parent()
+
+	if not spawn_parent:
+		return
+
+	var ghost = GHOST_SCENE.instantiate()
+	ghost.global_position = global_position + Vector2(0.0, -15.0)
+	spawn_parent.add_child(ghost)
 
 
 func respawn() -> void:

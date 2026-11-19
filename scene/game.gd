@@ -407,6 +407,8 @@ func is_character_alive(character: CharacterBody2D) -> bool:
 		return false
 	if "is_dead" in character and character.is_dead:
 		return false
+	if "current_health" in character and character.current_health <= 0:
+		return false
 	return true
 
 
@@ -426,6 +428,8 @@ func switch_to_next_character(force: bool = false) -> void:
 			return
 
 	print("Tidak ada anggota party lain yang masih hidup untuk dipilih.")
+	if _active_leader_indicator and is_instance_valid(_active_leader_indicator):
+		_active_leader_indicator.visible = false
 
 
 func switch_to_character(idx: int, force: bool = false) -> void:
@@ -440,6 +444,48 @@ func switch_to_character(idx: int, force: bool = false) -> void:
 		return
 
 	set_active_leader(idx)
+
+
+func rearrange_dead_members_to_back() -> void:
+	if party_members.is_empty():
+		return
+
+	var alive_members: Array[CharacterBody2D] = []
+	var dead_members: Array[CharacterBody2D] = []
+
+	for member in party_members:
+		if is_instance_valid(member):
+			if is_character_alive(member):
+				alive_members.append(member)
+			else:
+				dead_members.append(member)
+
+	# Jika tidak ada yang gugur, atau seluruh anggota gugur, tidak ada reorganisasi
+	if dead_members.is_empty() or alive_members.is_empty():
+		return
+
+	var old_active_leader: CharacterBody2D = get_active_leader()
+
+	# Bentuk formasi roster baru: hero yang hidup maju ke depan, hero gugur mundur ke paling belakang
+	var new_party: Array[CharacterBody2D] = []
+	new_party.append_array(alive_members)
+	new_party.append_array(dead_members)
+
+	party_members = new_party
+
+	# Sinkronkan ke HUD (kartu gameplay dan pause menu)
+	if gameplay_hud:
+		if gameplay_hud.has_method("update_party_order"):
+			gameplay_hud.update_party_order(party_members, 0)
+		else:
+			gameplay_hud.party_members = party_members
+			gameplay_hud.active_leader_index = 0
+			gameplay_hud.update_party_hud()
+			gameplay_hud.update_leader_indicator()
+
+	# Karakter hidup terdepan (Slot 0) otomatis maju menjadi Leader baru
+	set_active_leader(0, old_active_leader)
+	print("Party Roster Reordered: Hero gugur mundur ke belakang, Leader baru: [1] ", party_members[0].name)
 
 
 func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -> void:
@@ -474,7 +520,7 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 			var prev_last_dir: Vector2 = prev_leader.last_direction if "last_direction" in prev_leader else Vector2.DOWN
 			var prev_mov_dir: Vector2 = prev_leader.last_movement_direction if "last_movement_direction" in prev_leader else Vector2.DOWN
 
-			if prev_leader.is_inside_tree():
+			if prev_leader.is_inside_tree() and not ("is_dead" in prev_leader and prev_leader.is_dead):
 				remove_child(prev_leader)
 			if not leader.is_inside_tree():
 				add_child(leader)
@@ -507,7 +553,7 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 		var follower := party_members[follower_idx]
 		if is_instance_valid(follower):
 			follower.set_as_leader(false, leader, slot_order)
-			if arena_state != ArenaState.COMBAT and not is_in_training_arena and follower.is_inside_tree():
+			if arena_state != ArenaState.COMBAT and not is_in_training_arena and follower.is_inside_tree() and not ("is_dead" in follower and follower.is_dead):
 				remove_child(follower)
 		slot_order += 1
 
@@ -576,6 +622,18 @@ func update_party_visibility() -> void:
 				member.set_process_unhandled_input(should_input)
 			if not is_party_fading_out or i == active_leader_index:
 				_set_character_collision_active(member, true)
+		elif is_dead_char and member.is_inside_tree():
+			# Karakter yang gugur tetap berada di tree agar efek memudar dan timer respawn berjalan lancar.
+			# Nonaktifkan physics, processing, input, dan collision tanpa me-remove node dari tree.
+			if member.is_physics_processing():
+				member.set_physics_process(false)
+			if member.is_processing():
+				member.set_process(false)
+			if member.is_processing_unhandled_input():
+				member.set_process_unhandled_input(false)
+			if member.velocity != Vector2.ZERO:
+				member.velocity = Vector2.ZERO
+			_set_character_collision_active(member, false)
 		else:
 			if member.is_inside_tree():
 				remove_child(member)
@@ -901,6 +959,9 @@ func _on_hud_item_used(item_data: Dictionary) -> void:
 		if target_idx >= 0 and target_idx < party_members.size():
 			var target_hero = party_members[target_idx]
 			if is_instance_valid(target_hero) and "current_health" in target_hero and "max_health" in target_hero:
+				if "is_dead" in target_hero and target_hero.is_dead:
+					print("Karakter sedang gugur, tidak dapat dipulihkan dengan makanan/ramuan biasa.")
+					return
 				var old_hp: int = target_hero.current_health
 				target_hero.current_health = mini(target_hero.max_health, target_hero.current_health + heal_val)
 				var healed: int = target_hero.current_health - old_hp
@@ -1053,7 +1114,10 @@ func _physics_process(_delta: float) -> void:
 func check_active_leader_status() -> void:
 	var leader := get_active_leader()
 	if is_instance_valid(leader) and not is_character_alive(leader):
-		switch_to_next_character()
+		if arena_state != ArenaState.COMBAT and not is_in_training_arena:
+			rearrange_dead_members_to_back()
+		else:
+			switch_to_next_character(true)
 
 
 # =========================================================
@@ -1350,12 +1414,17 @@ func exit_training_arena() -> void:
 	is_in_training_arena = false
 	current_combat_state = PartyCombatState.EXPLORING
 
+	rearrange_dead_members_to_back()
 	if active_leader_index != 0 and party_members.size() > 0:
 		set_active_leader(0)
 
 	for member in party_members:
 		if is_instance_valid(member):
-			member.modulate.a = 1.0
+			if not ("is_dead" in member and member.is_dead):
+				member.modulate.a = 1.0
+			else:
+				member.modulate.a = 0.0
+				member.visible = false
 			if member.has_method("reset_combat_skills"):
 				member.reset_combat_skills()
 	notify_party_combat_state(false)
@@ -1602,26 +1671,10 @@ func _start_party_combat_fade_out() -> void:
 			tw.kill()
 	_party_fade_tweens.clear()
 
-	# 1. Pastikan hero di Slot 0 (Leader utama paling kiri) dipulihkan jika sempat gugur
-	if party_members.size() > 0:
-		var slot0_hero := party_members[0]
-		if is_instance_valid(slot0_hero):
-			if "is_dead" in slot0_hero and slot0_hero.is_dead:
-				slot0_hero.is_dead = false
-				if "current_health" in slot0_hero and "max_health" in slot0_hero:
-					slot0_hero.current_health = slot0_hero.max_health
-				slot0_hero.visible = true
-				slot0_hero.modulate = Color.WHITE
-				if slot0_hero.has_method("play_idle_animation"):
-					slot0_hero.play_idle_animation()
-				_set_character_collision_active(slot0_hero, true)
-				var prev_active := get_active_leader()
-				if prev_active and is_instance_valid(prev_active) and prev_active != slot0_hero:
-					slot0_hero.global_position = prev_active.global_position
-
-			# Kembalikan status Leader aktif ke Slot 0 (paling kiri)
-			if active_leader_index != 0:
-				set_active_leader(0)
+	# 1. Reorganisasi party roster saat pertarungan selesai:
+	# Hero yang gugur TIDAK dipulihkan dan dipindahkan ke posisi paling belakang.
+	# Karakter hidup berikutnya (misal Hellene / Karakter 2) otomatis maju menjadi Leader utama di Slot 0.
+	rearrange_dead_members_to_back()
 
 	# 2. Kembalikan kamera secara natural ke Leader utama (zoom explore dan smoothing glide)
 	is_camera_locked_to_arena = false
@@ -1642,7 +1695,7 @@ func _start_party_combat_fade_out() -> void:
 			member.velocity = Vector2.ZERO
 		if "is_moving" in member:
 			member.is_moving = false
-		if member.has_method("play_idle_animation"):
+		if member.has_method("play_idle_animation") and not ("is_dead" in member and member.is_dead):
 			member.play_idle_animation()
 
 		# Matikan physics dan collision agar rekan party tetap diam di tempat selama proses fade
@@ -1677,7 +1730,7 @@ func end_arena_battle() -> void:
 	target_camera_zoom = CAMERA_ZOOM_EXPLORE
 	is_camera_locked_to_arena = false
 
-	# 3. Bersihkan seluruh tween fade dan kembalikan alpha seluruh member menjadi 1.0
+	# 3. Bersihkan seluruh tween fade dan kembalikan alpha seluruh member menjadi 1.0 (kecuali yang gugur)
 	for tw in _party_fade_tweens:
 		if is_instance_valid(tw) and tw.is_valid():
 			tw.kill()
@@ -1685,7 +1738,11 @@ func end_arena_battle() -> void:
 
 	for member in party_members:
 		if is_instance_valid(member):
-			member.modulate.a = 1.0
+			if not ("is_dead" in member and member.is_dead):
+				member.modulate.a = 1.0
+			else:
+				member.modulate.a = 0.0
+				member.visible = false
 
 	# 4. Kembalikan party ke mode 1 karakter dan pastikan seluruh skill & cooldown ter-reset
 	for member in party_members:

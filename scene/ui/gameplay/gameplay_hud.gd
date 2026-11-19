@@ -2817,8 +2817,13 @@ func _update_pause_party_display() -> void:
 			var hp_bar := slot_node.get_node_or_null("HpBar") as TextureProgressBar
 			var key_hint := slot_node.get_node_or_null("KeyHint") as TextureRect
 
+			var is_dead_char: bool = hero.get("is_dead") if "is_dead" in hero else false
+			if "current_health" in hero and hero.current_health <= 0:
+				is_dead_char = true
+
 			if portrait and hero_portraits.has(hero_type):
 				portrait.texture = hero_portraits[hero_type]
+				portrait.modulate = Color(0.4, 0.4, 0.4, 0.7) if is_dead_char else Color.WHITE
 
 			if leader_lbl:
 				leader_lbl.visible = true
@@ -2831,6 +2836,8 @@ func _update_pause_party_display() -> void:
 			if hp_bar:
 				var max_hp = hero.get("max_health") if "max_health" in hero else 10
 				var cur_hp = hero.get("current_health") if "current_health" in hero else max_hp
+				if is_dead_char:
+					cur_hp = 0
 				hp_bar.max_value = max_hp
 				hp_bar.value = cur_hp
 
@@ -2851,9 +2858,15 @@ func _update_pause_party_hp_bars() -> void:
 
 		if slot_idx < party_members.size() and is_instance_valid(party_members[slot_idx]):
 			var hero = party_members[slot_idx]
+			var is_dead_char: bool = hero.get("is_dead") if "is_dead" in hero else false
+			if "current_health" in hero and hero.current_health <= 0:
+				is_dead_char = true
+
 			var hp_bar := slot_node.get_node_or_null("HpBar") as TextureProgressBar
 			if hp_bar:
 				var cur_hp = hero.get("current_health") if "current_health" in hero else 0
+				if is_dead_char:
+					cur_hp = 0
 				hp_bar.value = cur_hp
 
 			var leader_lbl := slot_node.get_node_or_null("Leader") as Label
@@ -3086,6 +3099,18 @@ func set_combat_hud_visible(active: bool, animated: bool = true) -> void:
 	)
 
 
+func update_party_order(new_party: Array[CharacterBody2D], new_leader_idx: int = 0) -> void:
+	party_members = new_party
+	active_leader_index = clampi(new_leader_idx, 0, max(0, party_members.size() - 1))
+	if active_leader_index < party_members.size():
+		active_leader_node = party_members[active_leader_index]
+	current_viewed_party_slot = active_leader_index
+	update_party_hud()
+	update_leader_indicator()
+	_update_pause_party_display()
+	_update_character_info_ui()
+
+
 func update_party_hud() -> void:
 	# Urutkan posisi kartu di PartyContainer sesuai urutan party_members
 	for i in range(party_members.size()):
@@ -3183,6 +3208,8 @@ func _update_skill_cooldowns() -> void:
 
 func update_leader_indicator() -> void:
 	var active_type := get_hero_type_for_node(active_leader_node)
+	if is_instance_valid(active_leader_node) and "is_dead" in active_leader_node and active_leader_node.is_dead:
+		active_type = -1
 	for h_type in hero_card_map.keys():
 		var card = hero_card_map[h_type]
 		if not is_instance_valid(card):

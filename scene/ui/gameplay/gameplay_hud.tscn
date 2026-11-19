@@ -668,25 +668,25 @@ stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="RootControl/PartyContainer/CardArthur"]
 layout_mode = 0
-offset_left = 40.0
-offset_top = 15.0
-offset_right = 112.0
-offset_bottom = 33.0
+offset_left = 34.0
+offset_top = 14.0
+offset_right = 105.0
+offset_bottom = 32.0
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = SubResource("SystemFont_serif")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 text = "Arthur"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="KeyHint" type="TextureRect" parent="RootControl/PartyContainer/CardArthur"]
 texture_filter = 1
-custom_minimum_size = Vector2(16, 16)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 0
-offset_left = 114.0
-offset_top = 11.0
+offset_left = 106.0
+offset_top = 6.0
 offset_right = 130.0
-offset_bottom = 27.0
+offset_bottom = 30.0
 texture = SubResource("Atlas_btn_1")
 expand_mode = 1
 stretch_mode = 5
@@ -746,25 +746,25 @@ stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="RootControl/PartyContainer/CardMagnus"]
 layout_mode = 0
-offset_left = 40.0
-offset_top = 15.0
-offset_right = 112.0
-offset_bottom = 33.0
+offset_left = 34.0
+offset_top = 14.0
+offset_right = 105.0
+offset_bottom = 32.0
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = SubResource("SystemFont_serif")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 text = "Magnus"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="KeyHint" type="TextureRect" parent="RootControl/PartyContainer/CardMagnus"]
 texture_filter = 1
-custom_minimum_size = Vector2(16, 16)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 0
-offset_left = 114.0
-offset_top = 11.0
+offset_left = 106.0
+offset_top = 6.0
 offset_right = 130.0
-offset_bottom = 27.0
+offset_bottom = 30.0
 texture = SubResource("Atlas_btn_4")
 expand_mode = 1
 stretch_mode = 5
@@ -825,25 +825,25 @@ stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="RootControl/PartyContainer/CardAnastasya"]
 layout_mode = 0
-offset_left = 40.0
-offset_top = 15.0
-offset_right = 112.0
-offset_bottom = 33.0
+offset_left = 34.0
+offset_top = 14.0
+offset_right = 105.0
+offset_bottom = 32.0
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = SubResource("SystemFont_serif")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 text = "Anastasya"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="KeyHint" type="TextureRect" parent="RootControl/PartyContainer/CardAnastasya"]
 texture_filter = 1
-custom_minimum_size = Vector2(16, 16)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 0
-offset_left = 114.0
-offset_top = 11.0
+offset_left = 106.0
+offset_top = 6.0
 offset_right = 130.0
-offset_bottom = 27.0
+offset_bottom = 30.0
 texture = SubResource("Atlas_btn_3")
 expand_mode = 1
 stretch_mode = 5
@@ -904,25 +904,25 @@ stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="RootControl/PartyContainer/CardHellene"]
 layout_mode = 0
-offset_left = 40.0
-offset_top = 15.0
-offset_right = 112.0
-offset_bottom = 33.0
+offset_left = 34.0
+offset_top = 14.0
+offset_right = 105.0
+offset_bottom = 32.0
 theme_override_colors/font_color = Color(0.24, 0.15, 0.16, 1)
 theme_override_fonts/font = SubResource("SystemFont_serif")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 text = "Hellene"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="KeyHint" type="TextureRect" parent="RootControl/PartyContainer/CardHellene"]
 texture_filter = 1
-custom_minimum_size = Vector2(16, 16)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 0
-offset_left = 114.0
-offset_top = 11.0
+offset_left = 106.0
+offset_top = 6.0
 offset_right = 130.0
-offset_bottom = 27.0
+offset_bottom = 30.0
 texture = SubResource("Atlas_btn_2")
 expand_mode = 1
 stretch_mode = 5
@@ -2104,7 +2104,7 @@ texture_progress = ExtResource("12_hp_filled")
 
 [node name="KeyHint" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot0"]
 texture_filter = 1
-custom_minimum_size = Vector2(20, 20)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_horizontal = 4
 texture = SubResource("Atlas_btn_1")
@@ -2167,7 +2167,7 @@ texture_progress = ExtResource("12_hp_filled")
 
 [node name="KeyHint" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot1"]
 texture_filter = 1
-custom_minimum_size = Vector2(20, 20)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_horizontal = 4
 texture = SubResource("Atlas_btn_2")
@@ -2230,7 +2230,7 @@ texture_progress = ExtResource("12_hp_filled")
 
 [node name="KeyHint" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot2"]
 texture_filter = 1
-custom_minimum_size = Vector2(20, 20)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_horizontal = 4
 texture = SubResource("Atlas_btn_3")
@@ -2293,7 +2293,7 @@ texture_progress = ExtResource("12_hp_filled")
 
 [node name="KeyHint" type="TextureRect" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInformasi/RightPage/PartySlots/Slot3"]
 texture_filter = 1
-custom_minimum_size = Vector2(20, 20)
+custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_horizontal = 4
 texture = SubResource("Atlas_btn_4")

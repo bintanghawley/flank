@@ -42,8 +42,8 @@ func _ready() -> void:
 		trail_line.clear_points()
 		trail_line.add_point(global_position - direction * 14.0)
 
-	# Hapus otomatis jika meluncur terlalu lama
-	await get_tree().create_timer(3.0).timeout
+	# Hapus otomatis jika tidak mengenai apa-apa dalam 6 detik agar proyektil mampu menjangkau sudut terjauh arena
+	await get_tree().create_timer(6.0).timeout
 	if is_instance_valid(self) and not is_destroyed:
 		destroy(false)
 
@@ -67,12 +67,32 @@ func _physics_process(delta: float) -> void:
 		destroy(false)
 
 
+func is_inside_arena_bounds(pos: Vector2) -> bool:
+	var tree := get_tree()
+	if not tree:
+		return false
+	var game_node = tree.current_scene
+	if not game_node:
+		return false
+	if "arena_bounds" in game_node and game_node.arena_bounds.size != Vector2.ZERO:
+		if game_node.arena_bounds.grow(50.0).has_point(pos):
+			return true
+	if "TRAINING_ARENA_BOUNDS" in game_node and game_node.TRAINING_ARENA_BOUNDS.size != Vector2.ZERO:
+		if game_node.TRAINING_ARENA_BOUNDS.grow(50.0).has_point(pos):
+			return true
+	return false
+
+
 func is_outside_camera_or_limits() -> bool:
 	var vp := get_viewport()
 	if not vp:
 		return false
 
 	var tip_pos: Vector2 = global_position + direction * 20.0
+
+	# Jika proyektil berada di dalam arena permainan, biarkan meluncur bebas menjangkau target sejauh apapun
+	if is_inside_arena_bounds(tip_pos):
+		return false
 
 	var cam := vp.get_camera_2d()
 	if cam:
