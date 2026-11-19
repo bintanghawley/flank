@@ -28,8 +28,8 @@ const CASTLE_ENTRANCE_POS: Vector2 = Vector2(2533.0, 1035.0)
 const CASTLE_HALL_SPAWN_POS: Vector2 = Vector2(2533.0, -1180.0)
 const CASTLE_HALL_EXIT_POS: Vector2 = Vector2(2533.0, -1060.0)
 const CASTLE_OUTSIDE_SPAWN_POS: Vector2 = Vector2(2533.0, 1090.0)
-const CASTLE_MEETING_SEAT_GLOBAL_POS: Vector2 = Vector2(2533.0, -1375.0)
-const CASTLE_MEETING_SIT_POS: Vector2 = Vector2(2533.0, -1465.0)
+const CASTLE_MEETING_SEAT_GLOBAL_POS: Vector2 = Vector2(2457.0, -1375.0)
+const CASTLE_MEETING_SIT_POS: Vector2 = Vector2(2457.0, -1385.0)
 const CASTLE_MEETING_TABLE_CENTER: Vector2 = Vector2(2533.0, -1490.0)
 var is_inside_castle_hall: bool = false
 var is_meeting_in_progress: bool = false
@@ -373,7 +373,7 @@ func _unhandled_input(event: InputEvent) -> void:
 							exit_castle_hall()
 							get_viewport().set_input_as_handled()
 						elif not is_castle_meeting_completed and not is_meeting_in_progress:
-							if leader.global_position.distance_to(CASTLE_MEETING_SEAT_GLOBAL_POS) <= 90.0:
+							if leader.global_position.distance_to(CASTLE_MEETING_SEAT_GLOBAL_POS) <= 100.0:
 								start_castle_meeting_cutscene()
 								get_viewport().set_input_as_handled()
 
@@ -2027,11 +2027,11 @@ func start_castle_meeting_cutscene() -> void:
 		set_party_movement_locked(false)
 		return
 
-	# Nonaktifkan collision leader sementara agar Arthur bisa menempati kursi tanpa terdorong collision
+	# Nonaktifkan collision leader sementara agar Arthur bisa menempati posisi rapat dengan mulus
 	_set_character_collision_active(leader, false)
-	leader.z_index = 4
+	leader.z_index = 6
 
-	# Arthur bergerak menempati kursi rapat (BottomChair2)
+	# Arthur bergerak menempati posisi rapat di depan meja
 	var move_tween := create_tween()
 	move_tween.tween_property(leader, "global_position", CASTLE_MEETING_SIT_POS, 0.40).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	await move_tween.finished
@@ -2054,11 +2054,11 @@ func start_castle_meeting_cutscene() -> void:
 
 
 func _on_castle_meeting_finished() -> void:
-	# Arthur berdiri dan melangkah mundur sedikit dari kursi ke area bebas jalan
+	# Arthur melangkah mundur sedikit dari meja ke area bebas setelah rapat selesai
 	var leader := get_active_leader()
 	if is_instance_valid(leader):
 		var stand_tween := create_tween()
-		stand_tween.tween_property(leader, "global_position", CASTLE_MEETING_SEAT_GLOBAL_POS, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		stand_tween.tween_property(leader, "global_position", CASTLE_MEETING_SEAT_GLOBAL_POS, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		await stand_tween.finished
 
 		leader.z_index = 4
@@ -2126,10 +2126,11 @@ func _setup_meeting_participants() -> void:
 		queen.name = "Participant_Queen"
 		hall.add_child(queen)
 
-	# 3. Peramal 1 (TopChair3 - Atas Kanan)
+	# 3. Peramal 1 (Di sebelah kanan pilar besar kiri)
 	if tex_mage_s:
-		var seer1 := _create_meeting_npc(tex_mage_s, 96, 64, 4, Vector2(230, -50), "idle_s", Color(0.88, 0.78, 1.05), Vector2(-0.5, -3.6))
+		var seer1 := _create_meeting_npc(tex_mage_s, 96, 64, 4, Vector2(-360.0, -180.0), "idle_s", Color(0.88, 0.78, 1.05), Vector2(-0.5, 0.0))
 		seer1.name = "Participant_Peramal1"
+		seer1.z_index = 5
 		hall.add_child(seer1)
 
 	# 4. Magnus / Wizard (SideChairLeft - Samping Kiri)
@@ -2158,12 +2159,11 @@ func _setup_meeting_participants() -> void:
 		if is_instance_valid(chair):
 			chair.z_index = 5
 
-	# 6. Peramal 2 (BottomChair1 - Bawah Kiri)
-	# Karakter di z_index = 4 di balik kursi (z_index = 5) sehingga badan dan kepala tertutupi bingkai atas kursi
-	if tex_mage_n:
-		var seer2 := _create_meeting_npc(tex_mage_n, 96, 64, 4, Vector2(-220, 48), "idle_n", Color(0.78, 0.95, 1.1), Vector2(-0.5, 0.0))
+	# 6. Peramal 2 (Di sebelah kiri pilar besar kanan)
+	if tex_mage_s:
+		var seer2 := _create_meeting_npc(tex_mage_s, 96, 64, 4, Vector2(360.0, -180.0), "idle_s", Color(0.78, 0.95, 1.1), Vector2(-0.5, 0.0))
 		seer2.name = "Participant_Peramal2"
-		seer2.z_index = 4
+		seer2.z_index = 5
 		hall.add_child(seer2)
 
 
@@ -2660,7 +2660,7 @@ func check_castle_interactions(delta: float) -> void:
 				gameplay_hud.show_interact_prompt("Keluar ke Gerbang Kastil", "E", "exit_castle")
 		elif not is_castle_meeting_completed and not is_meeting_in_progress:
 			var dist_seat := leader.global_position.distance_to(CASTLE_MEETING_SEAT_GLOBAL_POS)
-			if dist_seat <= 90.0:
+			if dist_seat <= 100.0:
 				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
 					gameplay_hud.show_interact_prompt("Ikut Rapat", "E", "join_meeting")
 			else:
