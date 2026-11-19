@@ -2170,11 +2170,11 @@ func _setup_meeting_participants() -> void:
 		anastasya.name = "Participant_Anastasya"
 		hall.add_child(anastasya)
 
-	# Pastikan kursi baris bawah berada di z_index = 5 agar bagian atas dan sandaran kursi menutupi kepala/badan karakter di baliknya
+	# Pastikan kursi baris bawah berada di z_index = 4 agar y-sort bekerja natural dengan karakter di baliknya
 	for chair_name in ["BottomChair1", "BottomChair2", "BottomChair3"]:
 		var chair = hall.get_node_or_null(chair_name) as CanvasItem
 		if is_instance_valid(chair):
-			chair.z_index = 5
+			chair.z_index = 4
 
 	# 6. Peramal 2 (BottomChair1 - Bawah Kiri)
 	# Karakter di z_index = 4 di balik BottomChair1 (z_index = 5) sehingga kepala tertutupi bingkai atas kursi
