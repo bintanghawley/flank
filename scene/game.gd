@@ -39,48 +39,49 @@ var world_map_max: Vector2 = Vector2.ZERO
 var _nav_compass: Node2D = null
 
 # =========================================================
-# NASKAH DIALOG CERITA PROLOG
+# NASKAH DIALOG CERITA PROLOG (CH0-SC02)
+# Sesuai Storyboard FLK-002
 # =========================================================
 const PROLOGUE_DIALOGUE: Array[Dictionary] = [
 	{
 		"speaker": "Arthur (Pangeran)",
 		"portrait": "arthur",
-		"text": "Hutan di depan istana ini cukup luas dan kaya akan batuan mineral. Lokasi yang sangat strategis untuk membangun rumah tambang kerajaan."
+		"text": "Hmm.. aku pikir hari ini cukup sampai sini aja, tempat ini menarik untuk menjadi pusat pertambangan kita. Menurutmu bagaimana?"
 	},
 	{
-		"speaker": "Burung Gagak",
-		"portrait": "raven",
-		"text": "*KAAK!* Pangeran Arthur! Berhenti! Hamba membawa pesan sihir mendesak langsung dari Penasehat Istana, Tuan Magnus!"
-	},
-	{
-		"speaker": "Arthur (Pangeran)",
-		"portrait": "arthur",
-		"text": "Burung gagak sihir Magnus? Ada apa gerangan? Mengapa terburu-buru sampai harus mengirim pengintai udara?"
-	},
-	{
-		"speaker": "Burung Gagak",
-		"portrait": "raven",
-		"text": "Langit istana dipenuhi pertanda kutukan buruk! Ada pangeran kerajaan tetangga yang membongkar makam pusaka kuno secara semena-mena."
-	},
-	{
-		"speaker": "Burung Gagak",
-		"portrait": "raven",
-		"text": "Arwah leluhur murka! Dalam rentang tujuh hari ke depan, gerombolan iblis akan bangkit dari bumi dan langit untuk meluluhlantakkan peradaban."
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Perintahmu kan kewajiban bagi kita. Sebagai kawan lamamu, aku sudah cukup yakin dengan segala yang kau pilih."
 	},
 	{
 		"speaker": "Arthur (Pangeran)",
 		"portrait": "arthur",
-		"text": "Tujuh hari... bangsa iblis?! Ini bukan ancaman biasa. Kita tidak boleh membuang waktu sedetik pun di hutan ini!"
+		"text": "Hahaha, semenjak aku diutus memimpin kerajaan ini, aku benci dengan bahasa mereka yang terlalu sopan, padahal dulunya kita duduk di bangku yang sama."
 	},
 	{
 		"speaker": "Burung Gagak",
 		"portrait": "raven",
-		"text": "Benar, Yang Mulia! Tuan Magnus dan para petinggi kerajaan menunggu Anda di aula kastil untuk segera menggelar rapat darurat!"
+		"text": "krok - krokk KROKK! KROK!!"
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Yang benar saja?"
 	},
 	{
 		"speaker": "Arthur (Pangeran)",
 		"portrait": "arthur",
-		"text": "Baik! Pengawal, bersiaga! Kita kembali ke kastil sekarang juga!"
+		"text": "Apa yang burung itu katakan? ia membentak seperti sedang ada banyak masalah dikeluarganya."
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Tidak! INI LEBIH DARI ITU. Dunia kita terancam, Para penyihir itu mendapat ramalan kiamat."
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Ayo segera kembali ke kerajaan dan melakukan rapat dengan para petinggi lainya."
 	}
 ]
 
@@ -891,7 +892,7 @@ func _init_starter_quests() -> void:
 			"title": "Peringatan Dari Langit",
 			"location": "Hutan Depan Istana",
 			"objective": "Dengarkan ramalan buruk dari burung gagak pengintai.",
-			"description": "Burung gagak sihir utusan Magnus menyampaikan kabar gawat mengenai ancaman kutukan 7 hari bangsa iblis.",
+			"description": "Burung gagak sihir menyampaikan kabar gawat ramalan kiamat kebangkitan bangsa iblis kepada Arthur dan Magnus.",
 			"status": "completed" if is_prologue_completed else "active",
 			"target_position": Vector2(3000, 1000)
 		},
@@ -900,20 +901,80 @@ func _init_starter_quests() -> void:
 			"category": "main",
 			"title": "Chapter 1.1: Rapat Darurat Istana",
 			"location": "Aula Kastil",
-			"objective": "Menuju aula rapat kastil untuk menemui Tuan Magnus dan petinggi kerajaan.",
+			"objective": "Menuju aula rapat kastil untuk menemui petinggi kerajaan.",
 			"description": "Pangeran Arthur bersama pasukannya harus segera masuk ke aula kastil untuk menghadiri rapat darurat strategi menghadapi 7 jenis iblis.",
-			"status": "active" if is_prologue_completed else "inactive",
+			"status": "completed" if is_castle_meeting_completed else ("active" if is_prologue_completed else "inactive"),
 			"target_position": CASTLE_ENTRANCE_POS
 		},
 		{
 			"id": "main_03",
 			"category": "main",
-			"title": "Persiapan Pasukan",
-			"location": "Barak Militer",
-			"objective": "Kumpulkan perlengkapan senjata dan ramuan.",
-			"description": "Pastikan seluruh anggota pasukan dilengkapi perlengkapan tempur yang memadai sebelum ekspedisi.",
-			"status": "active",
+			"title": "Chapter 1.2: Ujian Sang Pelatih",
+			"location": "Camp Latihan Istana",
+			"objective": "Buktikan ketangguhan beradu pedang melawan Pelatih Alaric.",
+			"description": "Terbangun dari tidur yang resah, Arthur harus segera menuju camp pelatihan untuk beradu pedang dan membuktikan kesiapannya bertempur pada Pelatih Alaric.",
+			"status": "active" if is_castle_meeting_completed else "inactive",
 			"target_position": Vector2(2500, 1500)
+		},
+		{
+			"id": "main_04",
+			"category": "main",
+			"title": "Chapter 1.2: Pusaka Makam Ksatria",
+			"location": "Pemakaman Kerajaan",
+			"objective": "Gali makam ksatria Lancelot dan ambil pedang legendaris.",
+			"description": "Pelatih Alaric mengakui ketangguhan Arthur dan menyuruhnya menggali makam Lancelot di area pemakaman untuk mengambil pedang pusaka yang pernah ditempa penempa legendaris.",
+			"status": "inactive",
+			"target_position": Vector2(3800, 1200)
+		},
+		{
+			"id": "main_05",
+			"category": "main",
+			"title": "Chapter 1.2: Penempaan Pedang & Panggilan Magnus",
+			"location": "Tempat Forge Istana",
+			"objective": "Tempa kembali pedang pusaka dan dengarkan permintaan bantuan Magnus.",
+			"description": "Arthur memperbaiki pedang pusaka di ruang tempa. Magnus kemudian menghampiri dan meminta bantuan mencari artefak kuno rahasia milik keluarganya di dalam perpustakaan.",
+			"status": "inactive",
+			"target_position": Vector2(2100, 1600)
+		},
+		{
+			"id": "main_06",
+			"category": "main",
+			"title": "Chapter 1.2: Rahasia Perpustakaan Kuno",
+			"location": "Perpustakaan Bawah Tanah",
+			"objective": "Pecahkan teka-teki buku dan kalahkan penjaga Archon - The Mindfulness.",
+			"description": "Arthur dan Magnus memasuki ruang rahasia perpustakaan melalui teka-teki susunan kata di rak buku, lalu menghadapi ujian pertempuran melawan entitas penjaga Archon.",
+			"status": "inactive",
+			"target_position": Vector2(1900, 800)
+		},
+		{
+			"id": "main_07",
+			"category": "main",
+			"title": "Chapter 1.3: Kekuatan Sihir Meteor",
+			"location": "Halaman Luar Istana",
+			"objective": "Serap ilmu sihir Buku Emas dan uji coba skill meteor di area terbuka.",
+			"description": "Setelah Archon dikalahkan, Buku Emas bersinar dan mentransmisikan sihir penghancur meteor ke dalam diri Magnus. Mereka bergegas ke luar istana untuk menguji kekuatan baru ini.",
+			"status": "inactive",
+			"target_position": Vector2(2800, 1800)
+		},
+		{
+			"id": "main_08",
+			"category": "main",
+			"title": "Chapter 1.3: Serbuan Gerbang Utama",
+			"location": "Gerbang Utama Kastil",
+			"objective": "Pertahankan istana dan tumpas gerombolan kroco iblis di gerbang utama.",
+			"description": "Gerbang utama istana dijebol oleh serbuan iblis! Pangeran Arthur, Magnus, dan segenap prajurit istana bertarung menahan dan membasmi kroco-kroco iblis.",
+			"status": "inactive",
+			"target_position": CASTLE_ENTRANCE_POS
+		},
+		{
+			"id": "main_09",
+			"category": "main",
+			"title": "Chapter 1.3: Raksasa Envy & Sekutu Assassin",
+			"location": "Luar Gerbang Istana",
+			"objective": "Tumbangkan Boss Raksasa Envy dan jalin aliansi bersama sang Assassin misterius.",
+			"description": "Boss Raksasa Envy memangsa pasukannya dan membesar. Seorang assassin misterius berkulit iblis datang membantu menerkam titik lemah sang boss. Bersama-sama, mereka menyelamatkan kerajaan dan membentuk aliansi penyelamatan dunia.",
+			"status": "inactive",
+			"target_position": Vector2(2533, 1300)
 		},
 		{
 			"id": "world_01",
@@ -949,12 +1010,16 @@ func _on_hud_quest_tracked(quest: Dictionary) -> void:
 	tracked_quest_id = quest.get("id", "")
 	if gameplay_hud:
 		gameplay_hud.update_hud_quest_display(quest)
+		if quest.has("target_position") and gameplay_hud.has_method("set_quest_navigation"):
+			gameplay_hud.set_quest_navigation(quest["target_position"], quest.get("location", ""))
 
 
 func _on_hud_quest_navigation_requested(quest: Dictionary) -> void:
 	tracked_quest_id = quest.get("id", "")
 	if gameplay_hud:
 		gameplay_hud.update_hud_quest_display(quest)
+		if quest.has("target_position") and gameplay_hud.has_method("set_quest_navigation"):
+			gameplay_hud.set_quest_navigation(quest["target_position"], quest.get("location", ""))
 
 
 func enter_location(location_name: String) -> void:
@@ -2654,9 +2719,11 @@ func check_castle_interactions(delta: float) -> void:
 		marker.position.y = 940.0 + sin(_marker_bob_time) * 6.0
 
 	# Update quest navigation di HUD jika sedang aktif
-	if tracked_quest_id == "main_02" and not is_inside_castle_hall:
-		if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("update_quest_navigation"):
-			gameplay_hud.update_quest_navigation(leader.global_position)
+	if not is_inside_castle_hall:
+		var cur_q := _get_quest_by_id(tracked_quest_id)
+		if not cur_q.is_empty() and cur_q.get("status", "") == "active":
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("update_quest_navigation"):
+				gameplay_hud.update_quest_navigation(leader.global_position)
 
 	# Update visual arrow kompas navigasi yang mengorbit dan mengikuti karakter
 	update_nav_compass(delta)
@@ -2884,8 +2951,10 @@ func update_nav_compass(delta: float) -> void:
 	if not is_instance_valid(_nav_compass):
 		return
 
-	var is_active := (tracked_quest_id == "main_02" and not is_inside_castle_hall and not is_transitioning)
 	var leader := get_active_leader()
+	var cur_q := _get_quest_by_id(tracked_quest_id)
+	var has_target: bool = not cur_q.is_empty() and cur_q.has("target_position") and cur_q.get("status", "") == "active"
+	var is_active: bool = has_target and not is_inside_castle_hall and not is_transitioning
 	if not is_active or leader == null or not is_instance_valid(leader):
 		if _nav_compass.visible:
 			_nav_compass.modulate.a = lerpf(_nav_compass.modulate.a, 0.0, delta * 8.0)
@@ -2893,14 +2962,16 @@ func update_nav_compass(delta: float) -> void:
 				_nav_compass.visible = false
 		return
 
-	var to_target: Vector2 = CASTLE_ENTRANCE_POS - leader.global_position
+	var target_pos: Vector2 = cur_q["target_position"]
+	var to_target: Vector2 = target_pos - leader.global_position
 	var dist: float = to_target.length()
 
-	# Jika sudah sampai di gerbang kastil (<= 110 px), pudar keluar
+	# Jika sudah dekat dengan tujuan (<= 110 px), pudar keluar
 	if dist <= 110.0:
-		_nav_compass.modulate.a = lerpf(_nav_compass.modulate.a, 0.0, delta * 6.0)
-		if _nav_compass.modulate.a <= 0.02:
-			_nav_compass.visible = false
+		if _nav_compass.visible:
+			_nav_compass.modulate.a = lerpf(_nav_compass.modulate.a, 0.0, delta * 6.0)
+			if _nav_compass.modulate.a <= 0.02:
+				_nav_compass.visible = false
 		return
 
 	_nav_compass.visible = true
