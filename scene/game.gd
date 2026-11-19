@@ -2602,7 +2602,6 @@ func _setup_meeting_participants() -> void:
 	var tex_queen: Texture2D = load("res://assets/characters/npc/queen/idle-s.png")
 	var tex_mage_s: Texture2D = load("res://assets/characters/mage/idle/idle-s.png")
 	var tex_mage_e: Texture2D = load("res://assets/characters/mage/idle/idle-e.png")
-	var tex_mage_n: Texture2D = load("res://assets/characters/mage/idle/idle-n.png")
 	var tex_archer_w: Texture2D = load("res://assets/characters/archer/idle/idle-w.png")
 
 	# 1. Raja (TopChair2 - Atas Tengah)
