@@ -142,7 +142,7 @@ func _setup_enemy_collision_exceptions() -> void:
 
 
 func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: int = 0) -> void:
-	if is_dead:
+	if is_dead or current_health <= 0:
 		is_leader = false
 		leader_node = new_leader
 		queue_slot_index = slot_idx
@@ -230,6 +230,13 @@ func is_in_combat_mode() -> bool:
 				return true
 		if "arena_state" in game_node and "ArenaState" in game_node:
 			if game_node.arena_state == game_node.ArenaState.COMBAT:
+				return true
+		if "is_in_training_arena" in game_node and game_node.is_in_training_arena:
+			return true
+	var enemies := get_tree().get_nodes_in_group("enemy")
+	for e in enemies:
+		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
+			if global_position.distance_to(e.global_position) <= 650.0:
 				return true
 	return false
 
@@ -352,7 +359,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	# Tombol E: Aktivasi Skill Shield - hanya aktif saat mode tempur (ada musuh)
 	var is_skill_key := false
-	if event.is_action_pressed("ui_skill") or event.is_action_pressed("use_skill"):
+	if InputMap.has_action("use_skill") and event.is_action_pressed("use_skill"):
+		is_skill_key = true
+	elif InputMap.has_action("ui_skill") and event.is_action_pressed("ui_skill"):
 		is_skill_key = true
 	elif event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_E or event.physical_keycode == KEY_E:
@@ -1112,14 +1121,16 @@ func die() -> void:
 	if death_tween:
 		death_tween.tween_property(self, "modulate", Color(0.9, 0.25, 0.25, 0.0), 0.5)
 
-	# 4. Auto-switch jika Leader aktif gugur
+	# 4. Auto-switch jika Leader aktif gugur: segera reorganisasi roster dan naikkan karakter hidup berikutnya
 	var was_leader := is_leader
 	if was_leader:
 		var game_node = get_tree().current_scene if is_inside_tree() else null
-		if not game_node or not game_node.has_method("switch_to_next_character"):
-			if get_parent() and get_parent().has_method("switch_to_next_character"):
+		if not game_node or not game_node.has_method("rearrange_dead_members_to_back"):
+			if get_parent() and get_parent().has_method("rearrange_dead_members_to_back"):
 				game_node = get_parent()
-		if game_node and game_node.has_method("switch_to_next_character"):
+		if game_node and game_node.has_method("rearrange_dead_members_to_back"):
+			game_node.rearrange_dead_members_to_back()
+		elif game_node and game_node.has_method("switch_to_next_character"):
 			game_node.switch_to_next_character(true)
 
 	if death_tween:

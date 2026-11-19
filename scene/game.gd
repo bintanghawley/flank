@@ -652,23 +652,23 @@ func _unhandled_input(event: InputEvent) -> void:
 	# Tombol pintasan pergantian karakter di arena combat (1, 2, 3, 4)
 	if event is InputEventKey and event.pressed and not event.echo:
 		if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
-			if event.keycode == KEY_1 or event.physical_keycode == KEY_1 or event.is_action_pressed("skill_1"):
+			if event.keycode == KEY_1 or event.physical_keycode == KEY_1 or (InputMap.has_action("skill_1") and event.is_action_pressed("skill_1")):
 				switch_to_character(0)
 				get_viewport().set_input_as_handled()
 				return
-			elif event.keycode == KEY_2 or event.physical_keycode == KEY_2 or event.is_action_pressed("skill_2"):
+			elif event.keycode == KEY_2 or event.physical_keycode == KEY_2 or (InputMap.has_action("skill_2") and event.is_action_pressed("skill_2")):
 				switch_to_character(1)
 				get_viewport().set_input_as_handled()
 				return
-			elif event.keycode == KEY_3 or event.physical_keycode == KEY_3 or event.is_action_pressed("skill_3"):
+			elif event.keycode == KEY_3 or event.physical_keycode == KEY_3 or (InputMap.has_action("skill_3") and event.is_action_pressed("skill_3")):
 				switch_to_character(2)
 				get_viewport().set_input_as_handled()
 				return
-			elif event.keycode == KEY_4 or event.physical_keycode == KEY_4 or event.is_action_pressed("skill_4"):
+			elif event.keycode == KEY_4 or event.physical_keycode == KEY_4 or (InputMap.has_action("skill_4") and event.is_action_pressed("skill_4")):
 				switch_to_character(3)
 				get_viewport().set_input_as_handled()
 				return
-			elif event.keycode == KEY_Q or event.physical_keycode == KEY_Q or event.is_action_pressed("switch_character"):
+			elif event.keycode == KEY_Q or event.physical_keycode == KEY_Q:
 				# Pergantian karakter di arena combat kini menggunakan tombol 1, 2, 3, 4 bukan Q
 				get_viewport().set_input_as_handled()
 				return
@@ -678,7 +678,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				gameplay_hud.toggle_pause_menu()
 				if get_viewport():
 					get_viewport().set_input_as_handled()
-		elif event.keycode == KEY_E or event.physical_keycode == KEY_E or event.is_action_pressed("interact"):
+		elif event.keycode == KEY_E or event.physical_keycode == KEY_E or (InputMap.has_action("interact") and event.is_action_pressed("interact")):
 			if not is_transitioning:
 				var leader = get_active_leader()
 				if leader:
@@ -890,7 +890,7 @@ func update_party_visibility() -> void:
 		if not is_instance_valid(member):
 			continue
 
-		var is_dead_char: bool = ("is_dead" in member and member.is_dead)
+		var is_dead_char: bool = ("is_dead" in member and member.is_dead) or ("current_health" in member and member.current_health <= 0)
 		var is_active: bool = false
 		if not is_dead_char:
 			if i == active_leader_index:
@@ -919,6 +919,8 @@ func update_party_visibility() -> void:
 		elif is_dead_char and member.is_inside_tree():
 			# Karakter yang gugur tetap berada di tree agar efek memudar dan timer respawn berjalan lancar.
 			# Nonaktifkan physics, processing, input, dan collision tanpa me-remove node dari tree.
+			member.visible = false
+			member.modulate.a = 0.0
 			if member.is_physics_processing():
 				member.set_physics_process(false)
 			if member.is_processing():
@@ -943,8 +945,16 @@ func update_party_visibility() -> void:
 
 
 func trigger_hero_skill_by_slot(slot_idx: int) -> void:
-	if arena_state != ArenaState.COMBAT and not is_in_training_arena:
-		return
+	if arena_state != ArenaState.COMBAT and not is_in_training_arena and current_combat_state != PartyCombatState.COMBAT:
+		var has_nearby_enemy: bool = false
+		var leader := get_active_leader()
+		if is_instance_valid(leader):
+			for e in get_tree().get_nodes_in_group("enemy"):
+				if is_instance_valid(e) and not ("is_dead" in e and e.is_dead) and leader.global_position.distance_to(e.global_position) <= 650.0:
+					has_nearby_enemy = true
+					break
+		if not has_nearby_enemy:
+			return
 	if slot_idx < 0 or slot_idx >= party_members.size():
 		return
 	# Saat mode eksplorasi 1 karakter, tombol 1-4 tidak digunakan untuk memilih / beralih karakter
@@ -959,8 +969,14 @@ func trigger_hero_skill_by_slot(slot_idx: int) -> void:
 
 
 func execute_hero_skill(hero: CharacterBody2D) -> void:
-	if arena_state != ArenaState.COMBAT and not is_in_training_arena:
-		return
+	if arena_state != ArenaState.COMBAT and not is_in_training_arena and current_combat_state != PartyCombatState.COMBAT:
+		var has_nearby_enemy: bool = false
+		for e in get_tree().get_nodes_in_group("enemy"):
+			if is_instance_valid(e) and not ("is_dead" in e and e.is_dead) and hero.global_position.distance_to(e.global_position) <= 650.0:
+				has_nearby_enemy = true
+				break
+		if not has_nearby_enemy:
+			return
 	if not is_instance_valid(hero) or not is_character_alive(hero):
 		return
 
@@ -1476,10 +1492,7 @@ func _physics_process(_delta: float) -> void:
 func check_active_leader_status() -> void:
 	var leader := get_active_leader()
 	if is_instance_valid(leader) and not is_character_alive(leader):
-		if arena_state != ArenaState.COMBAT and not is_in_training_arena:
-			rearrange_dead_members_to_back()
-		else:
-			switch_to_next_character(true)
+		rearrange_dead_members_to_back()
 
 
 # =========================================================
@@ -1777,7 +1790,7 @@ func exit_training_arena() -> void:
 	current_combat_state = PartyCombatState.EXPLORING
 
 	rearrange_dead_members_to_back()
-	if active_leader_index != 0 and party_members.size() > 0:
+	if active_leader_index != 0 and party_members.size() > 0 and is_character_alive(party_members[0]):
 		set_active_leader(0)
 
 	for member in party_members:
@@ -2037,6 +2050,8 @@ func _start_party_combat_fade_out() -> void:
 	# Hero yang gugur TIDAK dipulihkan dan dipindahkan ke posisi paling belakang.
 	# Karakter hidup berikutnya (misal Hellene / Karakter 2) otomatis maju menjadi Leader utama di Slot 0.
 	rearrange_dead_members_to_back()
+	if active_leader_index != 0 and party_members.size() > 0 and is_character_alive(party_members[0]):
+		set_active_leader(0)
 
 	# 2. Kembalikan kamera secara natural ke Leader utama (zoom explore dan smoothing glide)
 	is_camera_locked_to_arena = false
@@ -2107,6 +2122,8 @@ func end_arena_battle() -> void:
 				member.visible = false
 
 	# 4. Kembalikan party ke mode 1 karakter dan pastikan seluruh skill & cooldown ter-reset
+	if active_leader_index != 0 and party_members.size() > 0 and is_character_alive(party_members[0]):
+		set_active_leader(0)
 	for member in party_members:
 		if is_instance_valid(member) and member.has_method("reset_combat_skills"):
 			member.reset_combat_skills()

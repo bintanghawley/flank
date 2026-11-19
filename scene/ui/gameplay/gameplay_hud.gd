@@ -494,7 +494,7 @@ const HERO_LORE: Dictionary = {
 		"title": "Bandit",
 		"race": "Manusia",
 		"birthday": "27 Mei",
-		"skill_desc": "210 Damage + Knock-up\nDash & Triple Slash\nCD 8 detik"
+		"skill_desc": "210 Damage (5x Tebasan)\nDash & Flurry Slash\nCD 8 detik"
 	},
 	2: {
 		"display_name": "Anastasya",
@@ -2850,7 +2850,7 @@ func _update_pause_party_display() -> void:
 
 			if leader_lbl:
 				leader_lbl.visible = true
-				leader_lbl.modulate.a = 1.0 if (slot_idx == active_leader_index) else 0.0
+				leader_lbl.modulate.a = 1.0 if (slot_idx == active_leader_index and not is_dead_char) else 0.0
 
 			if key_hint:
 				key_hint.texture = _get_control_keycap_tex(KEY_1 + slot_idx)
@@ -2895,7 +2895,7 @@ func _update_pause_party_hp_bars() -> void:
 			var leader_lbl := slot_node.get_node_or_null("Leader") as Label
 			if leader_lbl:
 				leader_lbl.visible = true
-				leader_lbl.modulate.a = 1.0 if (slot_idx == active_leader_index) else 0.0
+				leader_lbl.modulate.a = 1.0 if (slot_idx == active_leader_index and not is_dead_char) else 0.0
 
 
 # =========================================================
@@ -3234,8 +3234,9 @@ func _update_skill_cooldowns() -> void:
 
 func update_leader_indicator() -> void:
 	var active_type := get_hero_type_for_node(active_leader_node)
-	if is_instance_valid(active_leader_node) and "is_dead" in active_leader_node and active_leader_node.is_dead:
-		active_type = -1
+	if is_instance_valid(active_leader_node):
+		if ("is_dead" in active_leader_node and active_leader_node.is_dead) or ("current_health" in active_leader_node and active_leader_node.current_health <= 0):
+			active_type = -1
 	for h_type in hero_card_map.keys():
 		var card = hero_card_map[h_type]
 		if not is_instance_valid(card):
@@ -3820,12 +3821,17 @@ func _update_inventory_target_slots() -> void:
 			var hp_bar := slot_node.get_node_or_null("HpBar") as TextureProgressBar
 			var hp_label := slot_node.get_node_or_null("HpLabel") as Label
 
+			var is_dead_char: bool = hero.get("is_dead") if "is_dead" in hero else false
+			if "current_health" in hero and hero.current_health <= 0:
+				is_dead_char = true
+
 			if portrait and hero_portraits.has(hero_type):
 				portrait.texture = hero_portraits[hero_type]
+				portrait.modulate = Color(0.4, 0.4, 0.4, 0.7) if is_dead_char else Color.WHITE
 
 			if leader_lbl:
 				leader_lbl.visible = true
-				leader_lbl.modulate.a = 1.0 if (slot_idx == active_leader_index) else 0.0
+				leader_lbl.modulate.a = 1.0 if (slot_idx == active_leader_index and not is_dead_char) else 0.0
 
 			var max_hp: int = hero.get("max_health") if "max_health" in hero else 10
 			var cur_hp: int = hero.get("current_health") if "current_health" in hero else max_hp
