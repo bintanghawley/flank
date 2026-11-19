@@ -963,7 +963,7 @@ func _apply_follower_slide_assist(move_dir: Vector2, speed: float) -> void:
 		move_and_slide()
 
 
-func process_follower_combat(delta: float) -> void:
+func process_follower_combat(_delta: float) -> void:
 	if not in_party_combat:
 		return
 	if is_attacking or is_skill_active:
