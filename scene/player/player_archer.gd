@@ -208,7 +208,7 @@ enum SkillState {
 var current_skill_state: SkillState = SkillState.INACTIVE
 
 @export var skill_mode_duration: float = 10.0      # Durasi mode skill (10 detik)
-@export var skill_cooldown_time: float = 5.0       # Cooldown tombol E (5 detik)
+@export var skill_cooldown_time: float = 9.0       # Cooldown tombol E (9 detik)
 @export var skill_max_charges: int = 3             # Kuota tembakan per mode skill (3 kali)
 @export var min_skill_range: float = 180.0         # Jarak minimum indikator di depan karakter
 @export var max_skill_range: float = 1050.0        # Jarak maksimum indikator (dibatasi 1 viewport zoom 0.65x)
@@ -230,7 +230,8 @@ var skill_stuck_timer: float = 0.0
 
 @export var attack_range: float = 520.0    # Jarak jangkauan tembak ranged (pixel)
 var attack_stuck_timer: float = 0.0
-@export var attack_cooldown: float = 1.4   # Jeda tembakan serangan dasar (dinaikkan menjadi 1.4s agar basic attack fire rate Archer berkurang sedikit)
+@export var attack_damage: int = 95        # Damage Basic Attack Archer (95 damage)
+@export var attack_cooldown: float = 1.25  # Attack Speed 0.8 serangan/dtk (~1.25s jeda tembakan)
 var attack_timer: float = 0.0
 var is_attacking: bool = false
 var attack_direction: Vector2 = Vector2.RIGHT
@@ -241,11 +242,12 @@ var require_mouse_release: bool = false
 # =========================
 # HEALTH & RESPAWN SETTINGS
 # =========================
-@export var max_health: int = 10
-@export var respawn_time: float = 3.0          # Waktu tunggu respawn setelah mati (detik)
-var current_health: int = 10
+@export var max_health: int = 450          # HP Maksimal Archer: 450 (Sniper/DPS)
+@export var respawn_time: float = 3.0      # Waktu tunggu respawn setelah mati (detik)
+var current_health: int = 450
 var is_dead: bool = false
 var spawn_position: Vector2
+var shield_points: int = 0
 
 # Node references
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -1378,6 +1380,7 @@ func reset_attack_state(token: int) -> void:
 	arrow.rotation = shoot_dir.angle()
 	arrow.shooter_node = self
 	arrow.speed = get_dynamic_projectile_speed()
+	arrow.damage = attack_damage
 	if last_direction == Vector2.UP or animated_sprite.animation == "atk_n":
 		arrow.get_node("Sprite2D").z_index = 3
 	else:
@@ -1420,15 +1423,26 @@ func take_damage(amount: int, _source_position = null) -> void:
 		return
 	invulnerability_timer = invulnerability_duration
 
-	# Shield Guard: menahan seluruh damage serangan musuh
+	# Shield Guard: menahan damage dengan Shield Points (+300)
 	if is_shield_active:
 		modulate = Color(1.8, 1.8, 2.4)
 		var tween = create_tween()
 		tween.tween_property(self, "modulate", Color.WHITE, 0.2)
 		apply_camera_shake(3.0)
 		play_sfx(SFX_SHIELD_BLOCK, 0.0)
-		print(name, " memblok serangan dengan perisai! 0 damage diterima.")
-		return
+		if shield_points > 0:
+			if amount <= shield_points:
+				shield_points -= amount
+				print(name, " menahan serangan dengan perisai! Sisa Shield: ", shield_points)
+				return
+			else:
+				var absorbed: int = shield_points
+				shield_points = 0
+				amount -= absorbed
+				deactivate_shield()
+				print(name, " perisai pecah! Menerima sisa damage: ", amount)
+		else:
+			return
 
 	current_health -= amount
 	play_sfx(SFX_HURT, -4.0)
@@ -1882,11 +1896,12 @@ func _setup_shield_sprite() -> void:
 		shield_sprite.modulate.a = 0.0
 
 
-func grant_shield(duration: float) -> void:
+func grant_shield(duration: float, points: int = 300) -> void:
 	if is_dead:
 		return
 	is_shield_active = true
 	shield_timer = duration
+	shield_points = points
 
 	_setup_shield_sprite()
 	if shield_sprite:
@@ -1900,7 +1915,7 @@ func grant_shield(duration: float) -> void:
 			.set_trans(Tween.TRANS_QUAD)\
 			.set_ease(Tween.EASE_OUT)
 
-	print(name, " menerima pelindung Shield Guard selama ", duration, " detik!")
+	print(name, " menerima pelindung Shield Guard (+", points, " Shield Point) selama ", duration, " detik!")
 
 
 func deactivate_shield() -> void:
@@ -1908,6 +1923,7 @@ func deactivate_shield() -> void:
 		return
 	is_shield_active = false
 	shield_timer = 0.0
+	shield_points = 0
 
 	if shield_sprite and shield_sprite.visible:
 		if shield_tween and shield_tween.is_valid():

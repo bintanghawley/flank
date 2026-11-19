@@ -33,12 +33,14 @@ extends Control
 @onready var iris_mask: ColorRect = $IrisMask
 
 const GAME_SCENE_PATH := "res://scene/game.tscn"
+const GameScript = preload("res://scene/game.gd")
 const GAMEPLAY_HUD_SCENE := preload("res://scene/ui/gameplay/gameplay_hud.tscn")
 
 const SFX_HOVER = preload("res://assets/audio/sfx/ui/ui_hover.wav")
 const SFX_CLICK = preload("res://assets/audio/sfx/ui/ui_click.wav")
 const SFX_SWORD_RAISE = preload("res://assets/audio/sfx/ui/start_sword_raise.wav")
 const SFX_IRIS_CLOSE = preload("res://assets/audio/sfx/ui/transition_iris.wav")
+const SWORD_INDICATOR_TEXTURE = preload("res://assets/ui/menus/start_menu/menu_sword_indicator.png")
 
 # Kecepatan dasar parallax
 const BASE_CLOUD_SPEED: float = 20.0
@@ -78,15 +80,26 @@ var _btn_tweens: Dictionary = {}
 var _current_selected: Button = null
 
 func _ready() -> void:
+	# Mulai muat scene game utama di background thread sedini mungkin agar tidak ada freeze saat transisi
+	if ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH) != ResourceLoader.THREAD_LOAD_IN_PROGRESS and ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH) != ResourceLoader.THREAD_LOAD_LOADED:
+		ResourceLoader.load_threaded_request(GAME_SCENE_PATH)
+
 	# Pastikan material circular mask terbuka penuh saat menu muncul
 	var mat: ShaderMaterial = iris_mask.material as ShaderMaterial
 	if mat:
 		mat.set_shader_parameter("radius", 1.45)
 	
+	# Warmup sword_glint di GPU agar tidak stutter saat pertama kali dimainkan
 	if sword_glint:
-		sword_glint.visible = false
+		sword_glint.modulate.a = 0.0
+		sword_glint.visible = true
+		sword_glint.frame = 0
 		if not sword_glint.animation_finished.is_connected(_on_sword_glint_animation_finished):
 			sword_glint.animation_finished.connect(_on_sword_glint_animation_finished)
+
+	# Warmup tekstur skill Knight agar tidak hitch saat animasi skill pertama kali dipanggil
+	if knight and knight.sprite_frames:
+		var _warmup_tex = knight.sprite_frames.get_frame_texture("skill_w", 0)
 
 	_settings_overlay_hud = GAMEPLAY_HUD_SCENE.instantiate() as CanvasLayer
 	if _settings_overlay_hud:
@@ -259,8 +272,7 @@ func _setup_sword_indicator() -> void:
 	if not _sword_indicator:
 		_sword_indicator = TextureRect.new()
 		_sword_indicator.name = "MenuSwordIndicator"
-		if ResourceLoader.exists(SWORD_INDICATOR_PATH):
-			_sword_indicator.texture = load(SWORD_INDICATOR_PATH)
+		_sword_indicator.texture = SWORD_INDICATOR_TEXTURE
 		_sword_indicator.texture_filter = Control.TEXTURE_FILTER_NEAREST as Control.TextureFilter
 		_sword_indicator.stretch_mode = TextureRect.STRETCH_KEEP
 		_sword_indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
@@ -442,9 +454,11 @@ func _launch_game(mode: String) -> void:
 	_play_sfx(SFX_CLICK, -2.0)
 	_play_sfx(SFX_SWORD_RAISE, 0.0)
 
-	var game_script = load(GAME_SCENE_PATH.replace(".tscn", ".gd"))
-	if game_script and "selected_game_mode" in game_script:
-		game_script.selected_game_mode = mode
+	GameScript.selected_game_mode = mode
+
+	# Pastikan proses background loading game.tscn sudah dimulai
+	if ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH) != ResourceLoader.THREAD_LOAD_IN_PROGRESS and ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH) != ResourceLoader.THREAD_LOAD_LOADED:
+		ResourceLoader.load_threaded_request(GAME_SCENE_PATH)
 
 	# Matikan interaksi menu
 	for container in [menu_container, mode_container]:
@@ -493,7 +507,7 @@ func _launch_game(mode: String) -> void:
 	_play_sfx(SFX_IRIS_CLOSE, -2.0)
 	if sword_glint:
 		sword_glint.position = sword_tip_pos
-		sword_glint.visible = true
+		sword_glint.modulate.a = 1.0
 		sword_glint.frame = 0
 		sword_glint.play("glint")
 
@@ -506,15 +520,20 @@ func _launch_game(mode: String) -> void:
 
 	if sword_glint:
 		sword_glint.stop()
-		sword_glint.visible = false
+		sword_glint.modulate.a = 0.0
 
 	# Jeda sejenak saat layar sudah hitam total sebelum masuk ke scene game utama
 	await get_tree().create_timer(0.15).timeout
+	if ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH) == ResourceLoader.THREAD_LOAD_LOADED:
+		var packed_game: PackedScene = ResourceLoader.load_threaded_get(GAME_SCENE_PATH) as PackedScene
+		if packed_game:
+			get_tree().change_scene_to_packed(packed_game)
+			return
 	get_tree().change_scene_to_file(GAME_SCENE_PATH)
 
 func _on_sword_glint_animation_finished() -> void:
 	# Setelah intro kilau mencapai puncak, beralih ke animasi shimmer berulang agar terus berkilauan
-	if sword_glint and sword_glint.visible and sword_glint.animation == "glint":
+	if sword_glint and sword_glint.modulate.a > 0.0 and sword_glint.animation == "glint":
 		sword_glint.play("shimmer")
 
 func _on_regular_button_clicked() -> void:
@@ -573,9 +592,7 @@ func _on_settings_closed() -> void:
 func _on_load_game_requested(slot_id: int) -> void:
 	if _is_starting:
 		return
-	var game_script = load(GAME_SCENE_PATH.replace(".tscn", ".gd"))
-	if game_script and "pending_load_slot_id" in game_script:
-		game_script.pending_load_slot_id = slot_id
+	GameScript.pending_load_slot_id = slot_id
 	if is_instance_valid(_settings_overlay_hud) and _settings_overlay_hud.has_method("close_start_menu_settings"):
 		_settings_overlay_hud.call("close_start_menu_settings")
 	_launch_game("story")

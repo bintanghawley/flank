@@ -301,6 +301,7 @@ const CARD_FRAME_NORMAL_TEX: Texture2D = preload("res://assets/ui/gameplay/party
 const CARD_FRAME_SELECTED_TEX: Texture2D = preload("res://assets/ui/gameplay/party_hud/hud_frame_character-selected.png")
 
 # Journal State
+var is_open_world_mode: bool = false
 var quest_list: Array[Dictionary] = []
 var selected_quest_id: String = ""
 var tracked_quest_id: String = ""
@@ -344,12 +345,12 @@ var _active_dragging_slider: String = ""
 
 # Settings Controls State
 const CONTROL_ACTION_ORDER: Array[String] = [
-	"switch_character",
+	"use_skill",
+	"interact",
 	"skill_1",
 	"skill_2",
 	"skill_3",
 	"skill_4",
-	"interact",
 	"skip",
 	"open_journal",
 	"open_inventory",
@@ -357,12 +358,12 @@ const CONTROL_ACTION_ORDER: Array[String] = [
 ]
 
 const CONTROL_ACTION_INFO: Dictionary = {
-	"switch_character": { "name": "Beralih Karakter", "default_key": KEY_Q, "node_name": "RowSwitch" },
-	"skill_1":          { "name": "Skill 1",           "default_key": KEY_1, "node_name": "RowSkill1" },
-	"skill_2":          { "name": "Skill 2",           "default_key": KEY_2, "node_name": "RowSkill2" },
-	"skill_3":          { "name": "Skill 3",           "default_key": KEY_3, "node_name": "RowSkill3" },
-	"skill_4":          { "name": "Skill 4",           "default_key": KEY_4, "node_name": "RowSkill4" },
+	"use_skill":        { "name": "Gunakan Skill",     "default_key": KEY_E, "node_name": "RowSkill" },
 	"interact":         { "name": "Interaksi",         "default_key": KEY_E, "node_name": "RowInteract" },
+	"skill_1":          { "name": "Karakter 1",        "default_key": KEY_1, "node_name": "RowSkill1" },
+	"skill_2":          { "name": "Karakter 2",        "default_key": KEY_2, "node_name": "RowSkill2" },
+	"skill_3":          { "name": "Karakter 3",        "default_key": KEY_3, "node_name": "RowSkill3" },
+	"skill_4":          { "name": "Karakter 4",        "default_key": KEY_4, "node_name": "RowSkill4" },
 	"skip":             { "name": "Skip",              "default_key": KEY_SPACE, "node_name": "RowSkip" },
 	"open_journal":     { "name": "Jurnal",            "default_key": KEY_J, "node_name": "RowJournal" },
 	"open_inventory":   { "name": "Inventori",         "default_key": KEY_B, "node_name": "RowInventory" },
@@ -485,31 +486,31 @@ const HERO_LORE: Dictionary = {
 		"title": "Ksatria Kerajaan",
 		"race": "Manusia",
 		"birthday": "31 Agustus",
-		"skill_desc": "Shield seluruh tim\nselama 5 detik\nCD 5 detik"
+		"skill_desc": "+300 Shield Point (5 dtk)\nPerisai pelindung tim\nCD 12 detik"
 	},
 	1: {
 		"display_name": "Hellene",
 		"full_name": "Carina Hellene",
 		"title": "Bandit",
 		"race": "Manusia",
-		"birthday": "-",
-		"skill_desc": "Dash & Triple Slash\nKombo tebasan 3x\nCD 5.0 detik"
+		"birthday": "27 Mei",
+		"skill_desc": "210 Damage + Knock-up\nDash & Triple Slash\nCD 8 detik"
 	},
 	2: {
 		"display_name": "Anastasya",
 		"full_name": "Astuta Anastasya",
 		"title": "Pemanah Kerajaan",
 		"race": "Elf",
-		"birthday": "-",
-		"skill_desc": "Charged Line Snipe\nTembakan garis linear\nCD 5.0 detik"
+		"birthday": "10 Maret",
+		"skill_desc": "280 Piercing Damage\nTembakan panah linear\nCD 9 detik"
 	},
 	3: {
 		"display_name": "Magnus",
 		"full_name": "Pensatore Magnus",
 		"title": "Penyihir Kerajaan",
 		"race": "Manusia",
-		"birthday": "-",
-		"skill_desc": "Meteor Strike\nSihir meteor AoE\nCD 6.0 detik"
+		"birthday": "22 November",
+		"skill_desc": "220 Area Damage\nSihir ledakan meteor AoE\nCD 10 detik"
 	}
 }
 
@@ -528,6 +529,7 @@ func _ready() -> void:
 	set_combat_hud_visible(false, false)
 	_setup_interact_prompt_ui()
 	_setup_quest_navigation_ui()
+	_check_initial_game_mode()
 
 	# Connect Pause Menu Buttons
 	if btn_pause_menu:
@@ -1007,6 +1009,24 @@ func setup(members: Array[CharacterBody2D], current_leader_idx: int, initial_inv
 	_refresh_inventory_ui()
 
 
+func _check_initial_game_mode() -> void:
+	var game_script = load("res://scene/game.gd")
+	if game_script and "selected_game_mode" in game_script:
+		if str(game_script.selected_game_mode) == "open_world":
+			set_open_world_mode(true)
+
+
+func set_open_world_mode(enabled: bool) -> void:
+	is_open_world_mode = enabled
+	if is_open_world_mode:
+		hide_quest_navigation()
+		if is_instance_valid(quest_header):
+			quest_header.visible = false
+		if is_instance_valid(quest_container):
+			quest_container.visible = false
+	_refresh_journal_ui()
+
+
 func set_inventory(items: Array[Dictionary]) -> void:
 	inventory_items = items
 	_refresh_inventory_ui()
@@ -1072,7 +1092,7 @@ func _init_pause_menu_textures() -> void:
 	hero_portraits[0] = preload("res://assets/ui/gameplay/party_hud/portrait_arthur.png")
 	hero_portraits[1] = preload("res://assets/ui/gameplay/party_hud/portrait_hellene.png")
 	hero_portraits[2] = preload("res://assets/ui/gameplay/party_hud/portrait_anastasya.png")
-	hero_portraits[3] = _create_atlas(preload("res://assets/ui/gameplay/party_hud/portrait_magnus.png"), Rect2(3, 1, 20, 16))
+	hero_portraits[3] = preload("res://assets/ui/gameplay/party_hud/portrait_magnus.png")
 
 	cat_btn_normal_tex = _create_atlas(sheet, Rect2(113, 292, 14, 9))
 	cat_btn_selected_tex = _create_atlas(sheet, Rect2(113, 305, 14, 9))
@@ -2104,8 +2124,10 @@ func toggle_pause_menu(initial_tab: int = 3) -> void:
 		_update_character_info_ui()
 		_update_pause_party_display()
 		_refresh_inventory_ui()
-		if initial_tab == 1 and tracked_quest_id != "":
-			_select_quest(tracked_quest_id)
+		if initial_tab == 1:
+			_refresh_journal_ui()
+			if not is_open_world_mode and tracked_quest_id != "":
+				_select_quest(tracked_quest_id)
 		elif initial_tab == 3:
 			active_settings_submenu = 0
 			_scan_all_save_slots()
@@ -2214,6 +2236,7 @@ func _on_tab_pressed(tab_idx: int) -> void:
 	if tab_idx == 0:
 		_refresh_inventory_ui()
 	elif tab_idx == 1:
+		_refresh_journal_ui()
 		_sync_journal_scrollbar()
 	elif tab_idx == 2:
 		if active_leader_index >= 0 and active_leader_index < party_members.size():
@@ -2984,15 +3007,13 @@ func set_combat_hud_visible(active: bool, animated: bool = true) -> void:
 			var lbl = action_q.get_node_or_null("Label") as Label
 			var ico = action_q.get_node_or_null("Icon") as TextureRect
 			if active:
+				action_q.visible = true
 				if lbl:
 					lbl.text = "Ganti Karakter (1-4)"
 				if ico:
 					ico.visible = false
 			else:
-				if lbl:
-					lbl.text = "Beralih Karakter"
-				if ico:
-					ico.visible = true
+				action_q.visible = false
 	if _combat_hud_tween and _combat_hud_tween.is_valid():
 		_combat_hud_tween.kill()
 	_combat_hud_tween = null
@@ -3015,7 +3036,7 @@ func set_combat_hud_visible(active: bool, animated: bool = true) -> void:
 		for node in targets:
 			node.visible = active
 			node.modulate.a = 1.0 if active else 0.0
-		var show_quest: bool = (not active) and (not _is_dialogue_active)
+		var show_quest: bool = (not active) and (not _is_dialogue_active) and (not is_open_world_mode)
 		for node in quest_targets:
 			node.visible = show_quest
 			node.modulate.a = 1.0 if show_quest else 0.0
@@ -3051,7 +3072,7 @@ func set_combat_hud_visible(active: bool, animated: bool = true) -> void:
 				_combat_hud_tween.tween_property(node, "modulate:a", 0.0, fade_dur)\
 					.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		# UI Quest: fade IN dari 0.0 -> 1.0 (mulai dan selesai barengan)
-		var show_quest: bool = not _is_dialogue_active
+		var show_quest: bool = (not _is_dialogue_active) and (not is_open_world_mode)
 		for node in quest_targets:
 			if is_instance_valid(node):
 				if show_quest:
@@ -3078,11 +3099,16 @@ func set_combat_hud_visible(active: bool, animated: bool = true) -> void:
 				if is_instance_valid(node) and not is_combat_hud_visible:
 					node.visible = false
 					node.modulate.a = 0.0
-			if not _is_dialogue_active:
+			if not _is_dialogue_active and not is_open_world_mode:
 				for node in quest_targets:
 					if is_instance_valid(node) and not is_combat_hud_visible:
 						node.visible = true
 						node.modulate.a = 1.0
+			else:
+				for node in quest_targets:
+					if is_instance_valid(node):
+						node.visible = false
+						node.modulate.a = 0.0
 	)
 
 
@@ -3919,12 +3945,28 @@ func _use_item_on_party_member(slot_idx: int) -> void:
 # JOURNAL / QUEST SYSTEM LOGIC
 # =========================================================
 
+func _get_open_world_journal_data() -> Dictionary:
+	return {
+		"id": "mode_jelajah",
+		"category": "main",
+		"title": "Mode Jelajah",
+		"location": "Dunia Terbuka",
+		"objective": "Eksplorasi Bebas",
+		"description": "Kamu sedang berada dalam Mode Jelajah. Kamu tidak memiliki tanggungan quest di mode ini.\n\nJelajahi seluruh penjuru dunia dengan bebas tanpa batasan misi cerita!",
+		"status": "active"
+	}
+
+
 func set_quests(quests: Array[Dictionary], initial_tracked_id: String = "") -> void:
 	quest_list = quests
-	if initial_tracked_id != "":
-		tracked_quest_id = initial_tracked_id
-	elif tracked_quest_id == "" and quest_list.size() > 0:
-		tracked_quest_id = quest_list[0].get("id", "")
+	if is_open_world_mode:
+		tracked_quest_id = ""
+		selected_quest_id = "mode_jelajah"
+	else:
+		if initial_tracked_id != "":
+			tracked_quest_id = initial_tracked_id
+		elif tracked_quest_id == "" and quest_list.size() > 0:
+			tracked_quest_id = quest_list[0].get("id", "")
 	_refresh_journal_ui()
 
 
@@ -3937,6 +3979,33 @@ func _refresh_journal_ui() -> void:
 		child.queue_free()
 	for child in world_quest_container.get_children():
 		child.queue_free()
+
+	var w_header = world_quest_container.get_parent().get_node_or_null("WorldQuestHeader")
+	var quest_spacer = main_quest_container.get_parent().get_node_or_null("Spacer")
+	var m_title = main_quest_container.get_parent().get_node_or_null("MainQuestHeader/Title") as Label
+
+	if is_open_world_mode:
+		if is_instance_valid(w_header):
+			w_header.visible = false
+		if is_instance_valid(quest_spacer):
+			quest_spacer.visible = false
+		if is_instance_valid(m_title):
+			m_title.text = "Mode Permainan"
+
+		var open_world_data := _get_open_world_journal_data()
+		selected_quest_id = "mode_jelajah"
+		var item_node := _create_quest_item_node(open_world_data, true)
+		main_quest_container.add_child(item_node)
+		_update_journal_detail_panel(open_world_data)
+		call_deferred("_sync_journal_scrollbar")
+		return
+
+	if is_instance_valid(w_header):
+		w_header.visible = true
+	if is_instance_valid(quest_spacer):
+		quest_spacer.visible = true
+	if is_instance_valid(m_title):
+		m_title.text = "Misi Utama"
 
 	# Validate selection: if selected_quest_id is empty or not in quest_list, select first valid active quest
 	var found_selected: bool = false
@@ -4065,10 +4134,13 @@ func _create_quest_item_node(quest: Dictionary, is_selected: bool) -> Control:
 func _select_quest(q_id: String) -> void:
 	selected_quest_id = q_id
 	var found_quest: Dictionary = {}
-	for q in quest_list:
-		if q.get("id", "") == q_id:
-			found_quest = q
-			break
+	if is_open_world_mode or q_id == "mode_jelajah":
+		found_quest = _get_open_world_journal_data()
+	else:
+		for q in quest_list:
+			if q.get("id", "") == q_id:
+				found_quest = q
+				break
 
 	# Update visual selection markers in both list containers
 	_update_quest_list_selection_visuals(main_quest_container)
@@ -4140,6 +4212,21 @@ func _update_quest_list_selection_visuals(container: VBoxContainer) -> void:
 func _update_journal_detail_panel(quest: Dictionary) -> void:
 	if is_instance_valid(journal_detail_scroll):
 		journal_detail_scroll.scroll_vertical = 0
+
+	if is_open_world_mode or quest.get("id") == "mode_jelajah":
+		if journal_detail_title:
+			journal_detail_title.text = "Mode Jelajah"
+		if journal_detail_location:
+			journal_detail_location.text = "Dunia Terbuka"
+		if journal_detail_objective:
+			journal_detail_objective.text = "Eksplorasi Bebas"
+		if journal_detail_desc:
+			journal_detail_desc.text = "Kamu sedang berada dalam Mode Jelajah. Kamu tidak memiliki tanggungan quest di mode ini.\n\nJelajahi seluruh penjuru dunia dengan bebas tanpa batasan misi cerita!"
+		if journal_btn_navigasi:
+			journal_btn_navigasi.disabled = true
+			journal_btn_navigasi.visible = false
+		return
+
 	if quest.is_empty():
 		if journal_detail_title:
 			journal_detail_title.text = "Tidak Ada Misi"
@@ -4150,6 +4237,7 @@ func _update_journal_detail_panel(quest: Dictionary) -> void:
 		if journal_detail_desc:
 			journal_detail_desc.text = "Pilih misi dari daftar di sebelah kiri untuk melihat detail petunjuk."
 		if journal_btn_navigasi:
+			journal_btn_navigasi.visible = true
 			journal_btn_navigasi.disabled = true
 			journal_btn_navigasi.modulate = Color(0.6, 0.6, 0.6, 0.5)
 		return
@@ -4168,12 +4256,13 @@ func _update_journal_detail_panel(quest: Dictionary) -> void:
 	var can_nav: bool = has_valid_loc and is_active
 
 	if journal_btn_navigasi:
+		journal_btn_navigasi.visible = true
 		journal_btn_navigasi.disabled = not can_nav
 		journal_btn_navigasi.modulate = Color.WHITE if can_nav else Color(0.6, 0.6, 0.6, 0.5)
 
 
 func _on_btn_navigasi_pressed() -> void:
-	if journal_btn_navigasi and journal_btn_navigasi.disabled:
+	if is_open_world_mode or (journal_btn_navigasi and (journal_btn_navigasi.disabled or not journal_btn_navigasi.visible)):
 		return
 	var selected_quest: Dictionary = {}
 	for q in quest_list:
@@ -4191,6 +4280,12 @@ func _on_btn_navigasi_pressed() -> void:
 
 
 func update_hud_quest_display(quest: Dictionary) -> void:
+	if is_open_world_mode:
+		if is_instance_valid(quest_header):
+			quest_header.visible = false
+		if is_instance_valid(quest_container):
+			quest_container.visible = false
+		return
 	if is_instance_valid(quest_title):
 		quest_title.text = quest.get("title", "Judul utama misi")
 	if is_instance_valid(quest_objective):
@@ -4743,6 +4838,8 @@ func _apply_all_control_settings() -> void:
 	for action_name in control_bindings:
 		var keycode: int = control_bindings[action_name]
 		_bind_action_key(action_name, keycode)
+		if action_name == "use_skill":
+			_bind_action_key("ui_skill", keycode)
 
 
 func _bind_action_key(action_name: String, keycode: int) -> void:
@@ -4844,8 +4941,8 @@ func _sync_gameplay_hud_controls_prompts() -> void:
 			if ico:
 				ico.visible = false
 	var hud_bindings := {
-		"switch_character": { "node": controls_prompt.get_node_or_null("ActionQ/Icon") if (is_instance_valid(controls_prompt) and not is_combat_hud_visible) else null, "fixed_square": false, "target_h": 24.0 },
-		"interact": { "node": controls_prompt.get_node_or_null("ActionE/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 24.0 },
+		"use_skill": { "node": controls_prompt.get_node_or_null("ActionE/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 24.0 },
+		"interact": { "node": null, "fixed_square": false, "target_h": 24.0 },
 		"open_journal": { "node": null, "fixed_square": false, "target_h": 26.0 },
 		"open_inventory": { "node": btn_hud_inventory.get_node_or_null("KeyHint") if is_instance_valid(btn_hud_inventory) else null, "fixed_square": false, "target_h": 20.0 },
 		"open_info": { "node": btn_hud_info.get_node_or_null("KeyHint") if is_instance_valid(btn_hud_info) else null, "fixed_square": false, "target_h": 20.0 },
@@ -4931,6 +5028,10 @@ func _apply_rebind(action_name: String, new_key: int) -> void:
 
 	control_bindings[action_name] = new_key
 	_bind_action_key(action_name, new_key)
+	if action_name == "use_skill":
+		_bind_action_key("ui_skill", new_key)
+	if conflict_action == "use_skill":
+		_bind_action_key("ui_skill", control_bindings["use_skill"])
 	save_control_settings()
 	_play_ui_sfx(SFX_BOOK_CONFIRM, -3.0)
 
@@ -5817,9 +5918,9 @@ func _set_gameplay_hud_visible_for_dialogue(show_hud: bool) -> void:
 	if is_instance_valid(btn_pause_menu):
 		btn_pause_menu.visible = show_hud
 	if is_instance_valid(quest_header):
-		quest_header.visible = show_hud and not is_combat_hud_visible
+		quest_header.visible = show_hud and not is_combat_hud_visible and not is_open_world_mode
 	if is_instance_valid(quest_container):
-		quest_container.visible = show_hud and not is_combat_hud_visible
+		quest_container.visible = show_hud and not is_combat_hud_visible and not is_open_world_mode
 
 
 func _display_current_dialogue_entry() -> void:
@@ -6153,6 +6254,9 @@ func _setup_quest_navigation_ui() -> void:
 
 
 func set_quest_navigation(target_pos: Vector2, target_name: String) -> void:
+	if is_open_world_mode:
+		hide_quest_navigation()
+		return
 	_nav_target_pos = target_pos
 	_nav_target_name = target_name
 	_is_nav_active = true
@@ -6167,7 +6271,9 @@ func hide_quest_navigation() -> void:
 
 
 func update_quest_navigation(leader_pos: Vector2) -> void:
-	if not _is_nav_active or not is_instance_valid(_nav_tracker_panel):
+	if is_open_world_mode or not _is_nav_active or not is_instance_valid(_nav_tracker_panel):
+		if is_instance_valid(_nav_tracker_panel):
+			_nav_tracker_panel.visible = false
 		return
 	var diff := _nav_target_pos - leader_pos
 	var dist := diff.length()

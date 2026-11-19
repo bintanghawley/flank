@@ -76,7 +76,8 @@ var _footstep_toggle: bool = false
 
 @export var attack_range: float = 520.0
 var attack_stuck_timer: float = 0.0
-@export var attack_cooldown: float = 1.5 # Jeda tembakan serangan dasar (dinaikkan menjadi 1.5s agar basic attack fire rate Mage sedikit lebih lambat dari Archer)
+@export var attack_damage: int = 65          # Damage Basic Attack Mage (65 damage)
+@export var attack_cooldown: float = 1.11    # Attack Speed 0.9 serangan/dtk (~1.11s jeda tembakan)
 var attack_timer: float = 0.0
 var is_attacking: bool = false
 var attack_direction: Vector2 = Vector2.RIGHT
@@ -85,13 +86,13 @@ var attack_token: int = 0
 var require_mouse_release: bool = false
 
 # =========================
-# SPECIAL SKILL MODE SETTINGS (METEOR STRIKE)
+# SPECIAL SKILL MODE SETTINGS (METEOR STRIKE - 220 AREA DAMAGE, CD 10 DETIK)
 # =========================
 const METEOR_INDICATOR_SCENE = preload("res://scene/projectile/meteor_indicator.tscn")
 const METEOR_STRIKE_SCENE = preload("res://scene/projectile/meteor_strike.tscn")
 const METEOR_MAX_CAST_RADIUS: float = 480.0 # Batas radius maksimum casting reticle meteor dari posisi Magnus
 
-@export var skill_cooldown_max: float = 6.0
+@export var skill_cooldown_max: float = 10.0 # Cooldown Skill (10 detik)
 var skill_cooldown_timer: float = 0.0
 var is_aiming_skill: bool = false
 var is_skill_releasing: bool = false
@@ -137,11 +138,12 @@ const DUST_INTERVAL: float = 0.13
 # =========================
 # HEALTH & KNOCKBACK
 # =========================
-@export var max_health: int = 10
+@export var max_health: int = 600             # HP Maksimal Mage: 600 (Area Damage)
 @export var respawn_time: float = 3.0
-var current_health: int = 10
+var current_health: int = 600
 var is_dead: bool = false
 var spawn_position: Vector2
+var shield_points: int = 0
 
 @export var knockback_strength: float = 0.0 # Knockback dinonaktifkan saat terkena damage (0.0)
 var knockback_velocity: Vector2 = Vector2.ZERO
@@ -1032,6 +1034,7 @@ func reset_attack_state(token: int) -> void:
 	bolt.rotation = shoot_dir.angle()
 	bolt.shooter_node = self
 	bolt.speed = get_dynamic_projectile_speed()
+	bolt.damage = attack_damage
 	get_tree().current_scene.add_child(bolt)
 	play_sfx(SFX_MAGE_CAST, -2.0)
 
@@ -1264,15 +1267,26 @@ func take_damage(amount: int, _source_position = null) -> void:
 		return
 	invulnerability_timer = invulnerability_duration
 
-	# Shield Guard: menahan seluruh damage serangan musuh
+	# Shield Guard: menahan damage dengan Shield Points (+300)
 	if is_shield_active:
 		modulate = Color(1.8, 1.8, 2.4)
 		var tween = create_tween()
 		tween.tween_property(self, "modulate", Color.WHITE, 0.2)
 		apply_camera_shake(3.0)
 		play_sfx(SFX_SHIELD_BLOCK, 0.0)
-		print(name, " memblok serangan dengan perisai! 0 damage diterima.")
-		return
+		if shield_points > 0:
+			if amount <= shield_points:
+				shield_points -= amount
+				print(name, " menahan serangan dengan perisai! Sisa Shield: ", shield_points)
+				return
+			else:
+				var absorbed: int = shield_points
+				shield_points = 0
+				amount -= absorbed
+				deactivate_shield()
+				print(name, " perisai pecah! Menerima sisa damage: ", amount)
+		else:
+			return
 
 	current_health -= amount
 	play_sfx(SFX_HURT, -4.0)
@@ -1440,11 +1454,12 @@ func _setup_shield_sprite() -> void:
 		shield_sprite.modulate.a = 0.0
 
 
-func grant_shield(duration: float) -> void:
+func grant_shield(duration: float, points: int = 300) -> void:
 	if is_dead:
 		return
 	is_shield_active = true
 	shield_timer = duration
+	shield_points = points
 
 	_setup_shield_sprite()
 	if shield_sprite:
@@ -1458,7 +1473,7 @@ func grant_shield(duration: float) -> void:
 			.set_trans(Tween.TRANS_QUAD)\
 			.set_ease(Tween.EASE_OUT)
 
-	print(name, " menerima pelindung Shield Guard selama ", duration, " detik!")
+	print(name, " menerima pelindung Shield Guard (+", points, " Shield Point) selama ", duration, " detik!")
 
 
 func deactivate_shield() -> void:
@@ -1466,6 +1481,7 @@ func deactivate_shield() -> void:
 		return
 	is_shield_active = false
 	shield_timer = 0.0
+	shield_points = 0
 
 	if shield_sprite and shield_sprite.visible:
 		if shield_tween and shield_tween.is_valid():
