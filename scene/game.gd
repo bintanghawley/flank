@@ -2027,27 +2027,41 @@ func start_castle_meeting_cutscene() -> void:
 		set_party_movement_locked(false)
 		return
 
-	# Nonaktifkan collision leader sementara agar Arthur bisa menempati posisi rapat dengan mulus
+	# Nonaktifkan physics & input leader sementara agar animasi cutscene jalan mulus tanpa terinterupsi
+	leader.set_physics_process(false)
+	leader.set_process_unhandled_input(false)
 	_set_character_collision_active(leader, false)
 	leader.z_index = 6
 
-	# Arthur bergerak menempati posisi rapat di depan meja
+	# Hitung durasi jalan berdasarkan jarak agar tempo langkah konsisten dan alami
+	var dist: float = leader.global_position.distance_to(CASTLE_MEETING_SIT_POS)
+	var walk_duration: float = clampf(dist / 140.0, 0.6, 2.2)
+
+	# Mainkan animasi berjalan menghadap utara menuju meja rapat
+	if "last_direction" in leader:
+		leader.last_direction = Vector2.UP
+	if leader.has_node("AnimatedSprite2D"):
+		var anim_spr = leader.get_node("AnimatedSprite2D") as AnimatedSprite2D
+		if anim_spr:
+			anim_spr.play("walk_n")
+
+	# Arthur otomatis berjalan sendiri menuju posisi berdirinya di meja rapat
 	var move_tween := create_tween()
-	move_tween.tween_property(leader, "global_position", CASTLE_MEETING_SIT_POS, 0.40).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	move_tween.tween_property(leader, "global_position", CASTLE_MEETING_SIT_POS, walk_duration).set_trans(Tween.TRANS_LINEAR)
 	await move_tween.finished
 
-	# Pastikan animasi Arthur menghadap ke meja rapat (Utara)
+	# Begitu sampai di depan meja, Arthur berhenti dan menghadap ke raja (Utara)
+	if "last_direction" in leader:
+		leader.last_direction = Vector2.UP
 	if leader.has_node("AnimatedSprite2D"):
 		var anim_spr = leader.get_node("AnimatedSprite2D") as AnimatedSprite2D
 		if anim_spr:
 			anim_spr.play("idle_n")
-	if "last_direction" in leader:
-		leader.last_direction = Vector2.UP
 
 	# Jeda bernapas singkat sebelum dialog dimulai
-	await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(0.4).timeout
 
-	# Jalankan dialog rapat istana
+	# Jalankan dialog rapat istana (kendali dialog Space/Enter/Klik berada di tangan player melalui HUD)
 	trigger_castle_meeting_dialogue(func():
 		_on_castle_meeting_finished()
 	)
@@ -2062,19 +2076,22 @@ func _on_castle_meeting_finished() -> void:
 		await stand_tween.finished
 
 		leader.z_index = 4
+		if "last_direction" in leader:
+			leader.last_direction = Vector2.DOWN
 		if leader.has_node("AnimatedSprite2D"):
 			var anim_spr = leader.get_node("AnimatedSprite2D") as AnimatedSprite2D
 			if anim_spr:
 				anim_spr.play("idle_s")
-		if "last_direction" in leader:
-			leader.last_direction = Vector2.DOWN
 
 		_set_character_collision_active(leader, true)
+		leader.set_physics_process(true)
+		leader.set_process_unhandled_input(true)
 
+	breadcrumbs.clear()
 	is_meeting_in_progress = false
 	is_castle_meeting_completed = true
 
-	# Buka kunci kontrol player
+	# Buka kunci kontrol player sepenuhnya (gameplay normal kembali ke player)
 	set_party_movement_locked(false)
 
 	# Selesaikan quest main_02 dan aktifkan main_03 (Persiapan Pasukan)
@@ -2658,14 +2675,6 @@ func check_castle_interactions(delta: float) -> void:
 		if dist <= 75.0:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
 				gameplay_hud.show_interact_prompt("Keluar ke Gerbang Kastil", "E", "exit_castle")
-		elif not is_castle_meeting_completed and not is_meeting_in_progress:
-			var dist_seat := leader.global_position.distance_to(CASTLE_MEETING_SEAT_GLOBAL_POS)
-			if dist_seat <= 100.0:
-				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
-					gameplay_hud.show_interact_prompt("Ikut Rapat", "E", "join_meeting")
-			else:
-				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
-					gameplay_hud.hide_interact_prompt()
 		else:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 				gameplay_hud.hide_interact_prompt()
@@ -2715,7 +2724,10 @@ func enter_castle_hall() -> void:
 	if is_instance_valid(marker):
 		marker.visible = false
 
-	transition_to_location(CASTLE_HALL_SPAWN_POS, "Aula Rapat Istana")
+	await transition_to_location(CASTLE_HALL_SPAWN_POS, "Aula Rapat Istana")
+
+	if not is_castle_meeting_completed and not is_meeting_in_progress:
+		start_castle_meeting_cutscene()
 
 
 func exit_castle_hall() -> void:
