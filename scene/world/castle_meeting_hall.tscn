@@ -61,27 +61,27 @@ position = Vector2(0, -360)
 scale = Vector2(5, 5)
 texture = ExtResource("2_furniture")
 region_enabled = true
-region_rect = Rect2(15, 0, 162, 48)
+region_rect = Rect2(0, 0, 192, 48)
 
 [node name="TopPillarLeft" type="Sprite2D" parent="." unique_id=2126615605]
 z_index = 4
-y_sort_origin = 172.5
+y_sort_origin = 57.5
 texture_filter = 1
-position = Vector2(-442.5, -302.5)
+position = Vector2(-442.5, -182.5)
 scale = Vector2(5, 5)
 texture = ExtResource("2_furniture")
 region_enabled = true
-region_rect = Rect2(0, 0, 15, 71)
+region_rect = Rect2(0, 48, 15, 23)
 
 [node name="TopPillarRight" type="Sprite2D" parent="." unique_id=2126615606]
 z_index = 4
-y_sort_origin = 172.5
+y_sort_origin = 57.5
 texture_filter = 1
-position = Vector2(442.5, -302.5)
+position = Vector2(442.5, -182.5)
 scale = Vector2(5, 5)
 texture = ExtResource("2_furniture")
 region_enabled = true
-region_rect = Rect2(177, 0, 15, 71)
+region_rect = Rect2(177, 48, 15, 23)
 
 [node name="TopChair1" type="Sprite2D" parent="." unique_id=2126615607]
 z_index = 4
