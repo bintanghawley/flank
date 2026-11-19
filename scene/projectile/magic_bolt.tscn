@@ -8,7 +8,7 @@ _data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
 point_count = 2
 
 [sub_resource type="Gradient" id="Gradient_trail"]
-colors = PackedColorArray(1, 0.25, 0.05, 0, 1, 0.8, 0.2, 0.85)
+colors = PackedColorArray(0, 0.403922, 0.72549, 0, 0.0980392, 0.858824, 0.933333, 0.85)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_fb0"]
 atlas = ExtResource("2_fireball")

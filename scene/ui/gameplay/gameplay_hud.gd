@@ -4813,10 +4813,7 @@ func _refresh_controls_ui() -> void:
 func _sync_gameplay_hud_controls_prompts() -> void:
 	var hud_bindings := {
 		"switch_character": { "node": controls_prompt.get_node_or_null("ActionQ/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 24.0 },
-		"skill_1": { "node": skill_container.get_node_or_null("SkillSlot1/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 24.0 },
-		"skill_2": { "node": skill_container.get_node_or_null("SkillSlot2/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 24.0 },
-		"skill_3": { "node": skill_container.get_node_or_null("SkillSlot3/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 24.0 },
-		"skill_4": { "node": skill_container.get_node_or_null("SkillSlot4/Hotkey") if is_instance_valid(skill_container) else null, "fixed_square": false, "target_h": 24.0 },
+		"interact": { "node": controls_prompt.get_node_or_null("ActionE/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 24.0 },
 		"open_journal": { "node": null, "fixed_square": false, "target_h": 26.0 },
 		"open_inventory": { "node": btn_hud_inventory.get_node_or_null("KeyHint") if is_instance_valid(btn_hud_inventory) else null, "fixed_square": false, "target_h": 20.0 },
 		"open_info": { "node": btn_hud_info.get_node_or_null("KeyHint") if is_instance_valid(btn_hud_info) else null, "fixed_square": false, "target_h": 20.0 },
