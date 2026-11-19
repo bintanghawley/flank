@@ -2813,6 +2813,7 @@ func _update_pause_party_display() -> void:
 			var portrait := slot_node.get_node_or_null("Frame/Portrait") as TextureRect
 			var leader_lbl := slot_node.get_node_or_null("Leader") as Label
 			var hp_bar := slot_node.get_node_or_null("HpBar") as TextureProgressBar
+			var key_hint := slot_node.get_node_or_null("KeyHint") as TextureRect
 
 			if portrait and hero_portraits.has(hero_type):
 				portrait.texture = hero_portraits[hero_type]
@@ -2820,6 +2821,10 @@ func _update_pause_party_display() -> void:
 			if leader_lbl:
 				leader_lbl.visible = true
 				leader_lbl.modulate.a = 1.0 if (slot_idx == active_leader_index) else 0.0
+
+			if key_hint:
+				key_hint.texture = _get_control_keycap_tex(KEY_1 + slot_idx)
+				key_hint.visible = true
 
 			if hp_bar:
 				var max_hp = hero.get("max_health") if "max_health" in hero else 10
@@ -2971,6 +2976,21 @@ func set_combat_hud_visible(active: bool, animated: bool = true) -> void:
 	if is_start_menu_mode:
 		return
 	is_combat_hud_visible = active
+	if is_instance_valid(controls_prompt):
+		var action_q = controls_prompt.get_node_or_null("ActionQ")
+		if is_instance_valid(action_q):
+			var lbl = action_q.get_node_or_null("Label") as Label
+			var ico = action_q.get_node_or_null("Icon") as TextureRect
+			if active:
+				if lbl:
+					lbl.text = "Ganti Karakter (1-4)"
+				if ico:
+					ico.visible = false
+			else:
+				if lbl:
+					lbl.text = "Beralih Karakter"
+				if ico:
+					ico.visible = true
 	if _combat_hud_tween and _combat_hud_tween.is_valid():
 		_combat_hud_tween.kill()
 	_combat_hud_tween = null
@@ -3075,6 +3095,9 @@ func update_party_hud() -> void:
 			var card = hero_card_map[hero_type]
 			if is_instance_valid(card) and party_container:
 				party_container.move_child(card, i)
+				var key_hint := card.get_node_or_null("KeyHint") as TextureRect
+				if is_instance_valid(key_hint):
+					key_hint.texture = _get_control_keycap_tex(KEY_1 + i)
 
 	update_skill_slots_hud()
 	_update_hp_bars()
@@ -4809,8 +4832,17 @@ func _refresh_controls_ui() -> void:
 
 
 func _sync_gameplay_hud_controls_prompts() -> void:
+	if is_combat_hud_visible and is_instance_valid(controls_prompt):
+		var action_q = controls_prompt.get_node_or_null("ActionQ")
+		if is_instance_valid(action_q):
+			var lbl = action_q.get_node_or_null("Label") as Label
+			var ico = action_q.get_node_or_null("Icon") as TextureRect
+			if lbl:
+				lbl.text = "Ganti Karakter (1-4)"
+			if ico:
+				ico.visible = false
 	var hud_bindings := {
-		"switch_character": { "node": controls_prompt.get_node_or_null("ActionQ/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 24.0 },
+		"switch_character": { "node": controls_prompt.get_node_or_null("ActionQ/Icon") if (is_instance_valid(controls_prompt) and not is_combat_hud_visible) else null, "fixed_square": false, "target_h": 24.0 },
 		"interact": { "node": controls_prompt.get_node_or_null("ActionE/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 24.0 },
 		"open_journal": { "node": null, "fixed_square": false, "target_h": 26.0 },
 		"open_inventory": { "node": btn_hud_inventory.get_node_or_null("KeyHint") if is_instance_valid(btn_hud_inventory) else null, "fixed_square": false, "target_h": 20.0 },

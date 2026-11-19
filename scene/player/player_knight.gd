@@ -25,9 +25,12 @@ var facing_debounce_timer: float = 0.0
 # =========================
 const NORMAL_SPEED := 128.0
 const SPRINT_SPEED := 220.0
+const FEET_OFFSET_Y: float = 36.0
 
 var target_position: Vector2
 var is_moving := false
+var hold_indicator_timer: float = 0.0
+var last_indicator_pos: Vector2 = Vector2.ZERO
 
 var last_direction := Vector2.DOWN
 var last_movement_direction := Vector2.DOWN
@@ -141,6 +144,8 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 	is_moving = false
 	is_attacking = false
 	velocity = Vector2.ZERO
+	if not active and CursorManager.has_method("hide_ground_move_indicator"):
+		CursorManager.hide_ground_move_indicator()
 
 	attack_stuck_timer = 0.0
 
@@ -334,41 +339,65 @@ func _unhandled_input(event: InputEvent) -> void:
 		if is_in_combat_mode() and skill_cooldown_timer <= 0.0 and not is_attacking:
 			activate_shield()
 			get_viewport().set_input_as_handled()
+			return
+
+	# Click to Move (Klik Kanan)
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		if not is_attacking and not is_skill_animating:
+			target_position = get_global_mouse_position()
+			is_moving = true
+			hold_indicator_timer = 0.22
+			last_indicator_pos = target_position
+			if CursorManager.has_method("spawn_ground_move_indicator"):
+				CursorManager.spawn_ground_move_indicator(target_position)
+			get_viewport().set_input_as_handled()
 
 
-func process_leader_movement(_delta: float) -> void:
+func process_leader_movement(delta: float) -> void:
+	if hold_indicator_timer > 0.0:
+		hold_indicator_timer -= delta
+
 	# Serangan dasar klik kiri (Hold / Tap) - hanya aktif saat mode tempur (ada musuh)
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		if is_in_combat_mode() and attack_timer <= 0.0 and not is_attacking and not is_skill_animating:
 			shoot_towards(get_global_mouse_position())
 
-	var input_dir := Vector2.ZERO
-	if Input.is_action_pressed("ui_right") or Input.is_key_pressed(KEY_D):
-		input_dir.x += 1
-	if Input.is_action_pressed("ui_left") or Input.is_key_pressed(KEY_A):
-		input_dir.x -= 1
-	if Input.is_action_pressed("ui_down") or Input.is_key_pressed(KEY_S):
-		input_dir.y += 1
-	if Input.is_action_pressed("ui_up") or Input.is_key_pressed(KEY_W):
-		input_dir.y -= 1
+	# Click to Move & Hold to Move (Klik Kanan)
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+		if not is_attacking and not is_skill_animating:
+			var mouse_pos := get_global_mouse_position()
+			target_position = mouse_pos
+			is_moving = true
+			if hold_indicator_timer <= 0.0 and mouse_pos.distance_to(last_indicator_pos) > 28.0:
+				hold_indicator_timer = 0.22
+				last_indicator_pos = mouse_pos
+				if CursorManager.has_method("spawn_ground_move_indicator"):
+					CursorManager.spawn_ground_move_indicator(mouse_pos)
 
-	input_dir = input_dir.normalized()
-	var is_sprinting: bool = Input.is_key_pressed(KEY_SHIFT)
-	var current_speed: float = SPRINT_SPEED if is_sprinting else NORMAL_SPEED
-
+	var current_speed: float = SPRINT_SPEED
 	var move_velocity := Vector2.ZERO
 
-	if input_dir != Vector2.ZERO:
-		is_moving = true
-		last_movement_direction = input_dir
-
-		if is_attacking or is_skill_animating:
-			move_velocity = attack_lunge_velocity
+	if is_moving:
+		var current_feet_pos := global_position + Vector2(0.0, FEET_OFFSET_Y)
+		var dist := current_feet_pos.distance_to(target_position)
+		if dist > 6.0:
+			var move_dir := current_feet_pos.direction_to(target_position)
+			last_movement_direction = move_dir
+			if is_attacking or is_skill_animating:
+				move_velocity = attack_lunge_velocity
+			else:
+				move_velocity = move_dir * current_speed
+				update_direction_animation(move_dir)
 		else:
-			move_velocity = input_dir * current_speed
-			update_direction_animation(input_dir)
+			is_moving = false
+			target_position = current_feet_pos
+			if CursorManager.has_method("hide_ground_move_indicator"):
+				CursorManager.hide_ground_move_indicator()
+			if not is_attacking and not is_skill_animating and animated_sprite.animation.begins_with("walk_"):
+				play_idle_animation()
+			if is_attacking:
+				move_velocity = attack_lunge_velocity
 	else:
-		is_moving = false
 		if not is_attacking and not is_skill_animating and animated_sprite.animation.begins_with("walk_"):
 			play_idle_animation()
 		if is_attacking:
@@ -376,6 +405,25 @@ func process_leader_movement(_delta: float) -> void:
 
 	velocity = move_velocity + knockback_velocity
 	move_and_slide_with_separation()
+
+	# Corner-Slide Assist & anti-stuck di dinding saat bergerak menggunakan klik mouse
+	if is_moving and not is_attacking and not is_skill_animating and get_slide_collision_count() > 0:
+		if velocity.length() < current_speed * 0.4:
+			var col := get_slide_collision(0)
+			var n := col.get_normal()
+			var tangent := Vector2(-n.y, n.x)
+			var current_feet_pos := global_position + Vector2(0.0, FEET_OFFSET_Y)
+			var dir_to_target := current_feet_pos.direction_to(target_position)
+			if dir_to_target.dot(tangent) < 0.0:
+				tangent = -tangent
+			velocity = tangent * (current_speed * 0.8) + knockback_velocity
+			move_and_slide()
+		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and get_real_velocity().length() < 10.0:
+			is_moving = false
+			if CursorManager.has_method("hide_ground_move_indicator"):
+				CursorManager.hide_ground_move_indicator()
+			if animated_sprite.animation.begins_with("walk_"):
+				play_idle_animation()
 
 
 func handle_run_dust_cycle(delta: float) -> void:
@@ -777,13 +825,9 @@ func process_follower_exploring(delta: float) -> void:
 			aim_pos = follow_slot
 
 		var move_dir := global_position.direction_to(aim_pos)
-		var follow_speed := NORMAL_SPEED
-		if Input.is_key_pressed(KEY_SHIFT) or (leader_node and is_instance_valid(leader_node) and leader_node.velocity.length() > NORMAL_SPEED + 10.0):
-			follow_speed = SPRINT_SPEED
-		elif dist_to_slot > 180.0:
-			follow_speed = SPRINT_SPEED
-		elif dist_to_slot > 90.0:
-			follow_speed = NORMAL_SPEED * 1.15
+		var follow_speed := SPRINT_SPEED
+		if dist_to_slot > 180.0:
+			follow_speed = SPRINT_SPEED * 1.15
 
 		# 1. Pencegahan Overshoot Jitter (Arrival Clamping)
 		var current_speed: float = min(follow_speed, dist_to_target / max(delta, 0.001))
@@ -854,17 +898,17 @@ func process_follower_combat(delta: float) -> void:
 	else:
 		# Dekati musuh ke jarak melee
 		var move_dir := global_position.direction_to(target_enemy.global_position)
-		velocity = (move_dir * NORMAL_SPEED) + knockback_velocity
+		velocity = (move_dir * SPRINT_SPEED) + knockback_velocity
 		move_and_slide_with_separation()
 
 		# Corner-Slide Assist saat mengejar musuh melewati sudut bangunan
-		if get_slide_collision_count() > 0 and velocity.length() < NORMAL_SPEED * 0.4:
+		if get_slide_collision_count() > 0 and velocity.length() < SPRINT_SPEED * 0.4:
 			var col := get_slide_collision(0)
 			var n := col.get_normal()
 			var tangent := Vector2(-n.y, n.x)
 			if move_dir.dot(tangent) < 0.0:
 				tangent = -tangent
-			velocity = tangent * (NORMAL_SPEED * 0.8) + knockback_velocity
+			velocity = tangent * (SPRINT_SPEED * 0.8) + knockback_velocity
 			move_and_slide()
 
 		is_moving = true
@@ -929,6 +973,8 @@ func die() -> void:
 	play_sfx(SFX_DEATH, -2.0)
 	velocity = Vector2.ZERO
 	is_moving = false
+	if is_leader and CursorManager.has_method("hide_ground_move_indicator"):
+		CursorManager.hide_ground_move_indicator()
 	is_attacking = false
 	is_slash_active = false
 	slash_windup_timer = 0.0
@@ -1092,14 +1138,24 @@ func _on_animated_sprite_animation_finished() -> void:
 		slash_active_timer = 0.0
 		slash_hit_enemies.clear()
 		attack_stuck_timer = 0.0
-		if not is_dead and not is_moving:
-			play_idle_animation()
+		if not is_dead:
+			if is_moving and is_leader:
+				var current_feet_pos := global_position + Vector2(0.0, FEET_OFFSET_Y)
+				var move_dir := current_feet_pos.direction_to(target_position)
+				update_direction_animation(move_dir)
+			else:
+				play_idle_animation()
 
 	if is_skill_animating:
 		is_skill_animating = false
 		_deploy_shield()
-		if not is_dead and not is_moving:
-			play_idle_animation()
+		if not is_dead:
+			if is_moving and is_leader:
+				var current_feet_pos := global_position + Vector2(0.0, FEET_OFFSET_Y)
+				var move_dir := current_feet_pos.direction_to(target_position)
+				update_direction_animation(move_dir)
+			else:
+				play_idle_animation()
 
 
 # =========================================================

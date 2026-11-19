@@ -45,9 +45,12 @@ var facing_debounce_timer: float = 0.0
 # =========================
 const NORMAL_SPEED := 128.0
 const SPRINT_SPEED := 220.0
+const FEET_OFFSET_Y: float = 36.0
 
 var target_position: Vector2
 var is_moving := false
+var hold_indicator_timer: float = 0.0
+var last_indicator_pos: Vector2 = Vector2.ZERO
 
 # Pemisahan Arah Hadap (Visual/Bidikan) vs Arah Tempuh (Langkah Aktual Formasi)
 var last_direction := Vector2.DOWN
@@ -194,6 +197,8 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 	is_moving = false
 	is_attacking = false
 	velocity = Vector2.ZERO
+	if not active and CursorManager.has_method("hide_ground_move_indicator"):
+		CursorManager.hide_ground_move_indicator()
 
 	attack_stuck_timer = 0.0
 
@@ -412,7 +417,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 		return
 
-	# Serangan dasar klik kiri
+	# Serangan dasar klik kiri & Pergerakan klik kanan
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
@@ -420,6 +425,16 @@ func _unhandled_input(event: InputEvent) -> void:
 					shoot_towards(get_global_mouse_position())
 			else:
 				require_mouse_release = false
+		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			if not is_aiming_skill and not is_skill_releasing and not is_attacking:
+				target_position = get_global_mouse_position()
+				is_moving = true
+				hold_indicator_timer = 0.22
+				last_indicator_pos = target_position
+				if CursorManager.has_method("spawn_ground_move_indicator"):
+					CursorManager.spawn_ground_move_indicator(target_position)
+				if get_viewport():
+					get_viewport().set_input_as_handled()
 
 
 # =========================================================
@@ -435,6 +450,9 @@ func process_leader_movement(delta: float) -> void:
 	if attack_timer > 0.0:
 		attack_timer -= delta
 
+	if hold_indicator_timer > 0.0:
+		hold_indicator_timer -= delta
+
 	# Reset require_mouse_release jika tombol mouse kiri telah dilepas
 	if require_mouse_release:
 		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
@@ -445,48 +463,41 @@ func process_leader_movement(delta: float) -> void:
 		if is_in_combat_mode() and not require_mouse_release and attack_timer <= 0.0 and not is_attacking:
 			shoot_towards(get_global_mouse_position())
 
-	# Input keyboard WASD / Arrow
-	var input_dir := Vector2.ZERO
-	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
-		input_dir.y -= 1.0
-	if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
-		input_dir.y += 1.0
-	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
-		input_dir.x -= 1.0
-	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
-		input_dir.x += 1.0
-	input_dir = input_dir.normalized()
+	# =====================================================
+	# MOVEMENT (CLICK TO MOVE / HOLD TO MOVE - MOUSE KLIK KANAN)
+	# =====================================================
+	if not is_aiming_skill and not is_skill_releasing and not is_attacking:
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+			var mouse_pos := get_global_mouse_position()
+			target_position = mouse_pos
+			is_moving = true
+			if hold_indicator_timer <= 0.0 and mouse_pos.distance_to(last_indicator_pos) > 28.0:
+				hold_indicator_timer = 0.22
+				last_indicator_pos = mouse_pos
+				if CursorManager.has_method("spawn_ground_move_indicator"):
+					CursorManager.spawn_ground_move_indicator(mouse_pos)
 
+	var current_speed: float = SPRINT_SPEED
 	var move_velocity := Vector2.ZERO
-	var current_speed := NORMAL_SPEED
-	if Input.is_key_pressed(KEY_SHIFT):
-		current_speed = SPRINT_SPEED
 
-	if input_dir != Vector2.ZERO:
-		is_moving = false
-		target_position = global_position
-		last_movement_direction = input_dir
-
-		if is_attacking:
-			move_velocity = Vector2.ZERO
-		else:
-			move_velocity = input_dir * current_speed
-			update_direction_animation(input_dir)
-
-	elif is_moving:
-		if is_attacking:
-			move_velocity = Vector2.ZERO
-		else:
-			var direction := global_position.direction_to(target_position)
+	if is_moving:
+		var current_feet_pos := global_position + Vector2(0.0, FEET_OFFSET_Y)
+		var dist := current_feet_pos.distance_to(target_position)
+		if dist > 6.0:
+			var direction := current_feet_pos.direction_to(target_position)
 			last_movement_direction = direction
-			move_velocity = direction * current_speed
-			update_direction_animation(direction)
-
-			if global_position.distance_to(target_position) < 4.0:
-				global_position = target_position
-				is_moving = false
-				if not is_attacking:
-					play_idle_animation()
+			if is_attacking:
+				move_velocity = Vector2.ZERO
+			else:
+				move_velocity = direction * current_speed
+				update_direction_animation(direction)
+		else:
+			is_moving = false
+			target_position = current_feet_pos
+			if CursorManager.has_method("hide_ground_move_indicator"):
+				CursorManager.hide_ground_move_indicator()
+			if not is_attacking and animated_sprite.animation.begins_with("walk_"):
+				play_idle_animation()
 	else:
 		if not is_attacking and animated_sprite.animation.begins_with("walk_"):
 			play_idle_animation()
@@ -494,18 +505,24 @@ func process_leader_movement(delta: float) -> void:
 	velocity = move_velocity + knockback_velocity
 	move_and_slide_with_separation()
 
-	# Respon benturan saat klik mouse
-	if is_moving:
-		if global_position.distance_to(target_position) < 4.0:
-			global_position = target_position
+	# Corner-Slide Assist & anti-stuck di dinding saat bergerak menggunakan klik mouse
+	if is_moving and not is_attacking and get_slide_collision_count() > 0:
+		if velocity.length() < current_speed * 0.4:
+			var col := get_slide_collision(0)
+			var n := col.get_normal()
+			var tangent := Vector2(-n.y, n.x)
+			var current_feet_pos := global_position + Vector2(0.0, FEET_OFFSET_Y)
+			var dir_to_target := current_feet_pos.direction_to(target_position)
+			if dir_to_target.dot(tangent) < 0.0:
+				tangent = -tangent
+			velocity = tangent * (current_speed * 0.8) + knockback_velocity
+			move_and_slide_with_separation()
+		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and get_real_velocity().length() < 10.0:
 			is_moving = false
-			if not is_attacking:
+			if CursorManager.has_method("hide_ground_move_indicator"):
+				CursorManager.hide_ground_move_indicator()
+			if animated_sprite.animation.begins_with("walk_"):
 				play_idle_animation()
-		elif get_slide_collision_count() > 0:
-			if get_real_velocity().length() < 12.0:
-				is_moving = false
-				if not is_attacking:
-					play_idle_animation()
 
 
 # =========================================================
@@ -619,13 +636,9 @@ func process_follower_exploring(delta: float) -> void:
 			aim_pos = follow_slot
 
 		var move_dir := global_position.direction_to(aim_pos)
-		var follow_speed := NORMAL_SPEED
-		if Input.is_key_pressed(KEY_SHIFT) or (leader_node and leader_node.velocity.length() > NORMAL_SPEED + 10.0):
-			follow_speed = SPRINT_SPEED
-		elif dist_to_slot > 180.0:
-			follow_speed = SPRINT_SPEED
-		elif dist_to_slot > 90.0:
-			follow_speed = NORMAL_SPEED * 1.15
+		var follow_speed := SPRINT_SPEED
+		if dist_to_slot > 180.0:
+			follow_speed = SPRINT_SPEED * 1.15
 
 		# 1. Pencegahan Overshoot Jitter (Arrival Clamping)
 		var current_speed: float = min(follow_speed, dist_to_target / max(delta, 0.001))
@@ -691,7 +704,7 @@ func process_follower_combat(delta: float) -> void:
 			var to_enemy := target_enemy.global_position - global_position
 			var right_wing := Vector2(to_enemy.y, -to_enemy.x).normalized() * 0.35
 			var approach_dir := (to_enemy.normalized() + right_wing).normalized()
-			velocity = (approach_dir * NORMAL_SPEED) + knockback_velocity
+			velocity = (approach_dir * SPRINT_SPEED) + knockback_velocity
 			is_moving = true
 			move_and_slide_with_separation()
 			last_movement_direction = approach_dir
@@ -729,7 +742,7 @@ func process_follower_combat(delta: float) -> void:
 	var move_dir := global_position.direction_to(active_wp)
 	if move_dir == Vector2.ZERO:
 		move_dir = last_direction
-	velocity = (move_dir * NORMAL_SPEED) + knockback_velocity
+	velocity = (move_dir * SPRINT_SPEED) + knockback_velocity
 	is_moving = true
 	move_and_slide_with_separation()
 	last_movement_direction = move_dir
@@ -1033,7 +1046,8 @@ func reset_attack_state(token: int) -> void:
 	is_attacking = false
 	attack_stuck_timer = 0.0
 	if is_moving:
-		var move_dir := global_position.direction_to(target_position) if is_leader else (velocity.normalized() if velocity != Vector2.ZERO else last_movement_direction)
+		var current_feet_pos := global_position + Vector2(0.0, FEET_OFFSET_Y)
+		var move_dir := current_feet_pos.direction_to(target_position) if is_leader else (velocity.normalized() if velocity != Vector2.ZERO else last_movement_direction)
 		update_direction_animation(move_dir)
 	else:
 		play_idle_animation()
@@ -1282,6 +1296,8 @@ func die() -> void:
 	is_dead = true
 	play_sfx(SFX_DEATH, -2.0)
 	is_moving = false
+	if is_leader and CursorManager.has_method("hide_ground_move_indicator"):
+		CursorManager.hide_ground_move_indicator()
 	is_attacking = false
 	in_party_combat = false
 	ai_attack_timer = 0.0
@@ -1354,6 +1370,8 @@ func respawn() -> void:
 	current_health = max_health
 	play_sfx(SFX_RESPAWN, -2.0)
 	is_moving = false
+	if is_leader and CursorManager.has_method("hide_ground_move_indicator"):
+		CursorManager.hide_ground_move_indicator()
 	is_attacking = false
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO

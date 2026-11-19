@@ -281,28 +281,29 @@ func setup_party_enemy_collision_exceptions() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if is_transitioning:
 		return
-	# Tombol pintasan pergantian karakter, skill, dan perintah party berbasis action mapping
+	# Tombol pintasan pergantian karakter di arena combat (1, 2, 3, 4)
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.is_action_pressed("switch_character"):
-			if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
-				switch_to_next_character()
-			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("skill_1"):
-			if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
-				trigger_hero_skill_by_slot(0)
-			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("skill_2"):
-			if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
-				trigger_hero_skill_by_slot(1)
-			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("skill_3"):
-			if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
-				trigger_hero_skill_by_slot(2)
-			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("skill_4"):
-			if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
-				trigger_hero_skill_by_slot(3)
-			get_viewport().set_input_as_handled()
+		if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
+			if event.keycode == KEY_1 or event.physical_keycode == KEY_1 or event.is_action_pressed("skill_1"):
+				switch_to_character(0)
+				get_viewport().set_input_as_handled()
+				return
+			elif event.keycode == KEY_2 or event.physical_keycode == KEY_2 or event.is_action_pressed("skill_2"):
+				switch_to_character(1)
+				get_viewport().set_input_as_handled()
+				return
+			elif event.keycode == KEY_3 or event.physical_keycode == KEY_3 or event.is_action_pressed("skill_3"):
+				switch_to_character(2)
+				get_viewport().set_input_as_handled()
+				return
+			elif event.keycode == KEY_4 or event.physical_keycode == KEY_4 or event.is_action_pressed("skill_4"):
+				switch_to_character(3)
+				get_viewport().set_input_as_handled()
+				return
+			elif event.keycode == KEY_Q or event.physical_keycode == KEY_Q or event.is_action_pressed("switch_character"):
+				# Pergantian karakter di arena combat kini menggunakan tombol 1, 2, 3, 4 bukan Q
+				get_viewport().set_input_as_handled()
+				return
 		elif event.keycode == KEY_ESCAPE:
 			if gameplay_hud:
 				_on_hud_pause_menu_requested()
@@ -1268,6 +1269,9 @@ func exit_training_arena() -> void:
 	is_in_training_arena = false
 	current_combat_state = PartyCombatState.EXPLORING
 
+	if active_leader_index != 0 and party_members.size() > 0:
+		set_active_leader(0)
+
 	for member in party_members:
 		if is_instance_valid(member):
 			member.modulate.a = 1.0
@@ -1517,11 +1521,36 @@ func _start_party_combat_fade_out() -> void:
 			tw.kill()
 	_party_fade_tweens.clear()
 
-	var fade_duration: float = 0.35
+	# 1. Pastikan hero di Slot 0 (Leader utama paling kiri) dipulihkan jika sempat gugur
+	if party_members.size() > 0:
+		var slot0_hero := party_members[0]
+		if is_instance_valid(slot0_hero):
+			if "is_dead" in slot0_hero and slot0_hero.is_dead:
+				slot0_hero.is_dead = false
+				if "current_health" in slot0_hero and "max_health" in slot0_hero:
+					slot0_hero.current_health = slot0_hero.max_health
+				slot0_hero.visible = true
+				slot0_hero.modulate = Color.WHITE
+				if slot0_hero.has_method("play_idle_animation"):
+					slot0_hero.play_idle_animation()
+				_set_character_collision_active(slot0_hero, true)
+				var prev_active := get_active_leader()
+				if prev_active and is_instance_valid(prev_active) and prev_active != slot0_hero:
+					slot0_hero.global_position = prev_active.global_position
+
+			# Kembalikan status Leader aktif ke Slot 0 (paling kiri)
+			if active_leader_index != 0:
+				set_active_leader(0)
+
+	# 2. Kembalikan kamera secara natural ke Leader utama (zoom explore dan smoothing glide)
+	is_camera_locked_to_arena = false
+	target_camera_zoom = CAMERA_ZOOM_EXPLORE
+
+	var fade_duration: float = 0.5
 	var _has_companion_to_fade: bool = false
 
 	for i in range(party_members.size()):
-		if i == active_leader_index:
+		if i == 0:
 			continue
 		var member = party_members[i]
 		if not is_instance_valid(member) or not member.is_inside_tree():
