@@ -570,9 +570,9 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -250.0
-offset_top = -152.0
+offset_top = -142.0
 offset_right = -24.0
-offset_bottom = -122.0
+offset_bottom = -82.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_constants/separation = 6
@@ -599,6 +599,31 @@ texture_filter = 1
 custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 texture = SubResource("Atlas_btn_q")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ActionE" type="HBoxContainer" parent="RootControl/ControlsPrompt"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="Label" type="Label" parent="RootControl/ControlsPrompt/ActionE"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = SubResource("SystemFont_serif")
+theme_override_font_sizes/font_size = 17
+text = "Gunakan Skill"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionE"]
+texture_filter = 1
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture = SubResource("Atlas_btn_e")
 expand_mode = 1
 stretch_mode = 5
 
@@ -890,9 +915,9 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -260.0
-offset_top = -104.0
+offset_top = -72.0
 offset_right = -24.0
-offset_bottom = -22.0
+offset_bottom = -24.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_constants/separation = 14
@@ -945,15 +970,6 @@ text = "5"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Hotkey" type="TextureRect" parent="RootControl/SkillContainer/SkillSlot1"]
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-size_flags_horizontal = 4
-texture_filter = 1
-texture = SubResource("Atlas_btn_1")
-expand_mode = 1
-stretch_mode = 5
-
 [node name="SkillSlot2" type="VBoxContainer" parent="RootControl/SkillContainer"]
 layout_mode = 2
 theme_override_constants/separation = 4
@@ -1000,15 +1016,6 @@ theme_override_font_sizes/font_size = 18
 text = "5"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="Hotkey" type="TextureRect" parent="RootControl/SkillContainer/SkillSlot2"]
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-size_flags_horizontal = 4
-texture_filter = 1
-texture = SubResource("Atlas_btn_2")
-expand_mode = 1
-stretch_mode = 5
 
 [node name="SkillSlot3" type="VBoxContainer" parent="RootControl/SkillContainer"]
 layout_mode = 2
@@ -1057,15 +1064,6 @@ text = "5"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Hotkey" type="TextureRect" parent="RootControl/SkillContainer/SkillSlot3"]
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-size_flags_horizontal = 4
-texture_filter = 1
-texture = SubResource("Atlas_btn_3")
-expand_mode = 1
-stretch_mode = 5
-
 [node name="SkillSlot4" type="VBoxContainer" parent="RootControl/SkillContainer"]
 layout_mode = 2
 theme_override_constants/separation = 4
@@ -1112,15 +1110,6 @@ theme_override_font_sizes/font_size = 18
 text = "5"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="Hotkey" type="TextureRect" parent="RootControl/SkillContainer/SkillSlot4"]
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-size_flags_horizontal = 4
-texture_filter = 1
-texture = SubResource("Atlas_btn_4")
-expand_mode = 1
-stretch_mode = 5
 
 [node name="DialogueContainer" type="Control" parent="RootControl"]
 visible = false

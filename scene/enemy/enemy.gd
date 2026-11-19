@@ -1059,9 +1059,23 @@ func take_damage(amount: int, attacker: CharacterBody2D = null) -> void:
 
 	# Multi-Target Aggro: Prioritaskan penyerang yang baru memberi damage
 	if attacker != null and is_instance_valid(attacker) and attacker.is_in_group("player") and not ("is_dead" in attacker and attacker.is_dead):
-		threat_target = attacker
+		# Jika diserang Bandit dari belakang sementara Knight masih hidup membadani di depan, musuh tetap fokus pada Knight
+		var knight_focus: CharacterBody2D = null
+		if "Bandit" in attacker.name:
+			var party := get_tree().get_nodes_in_group("player")
+			for p in party:
+				if is_instance_valid(p) and ("Knight" in p.name or "knight" in p.name.to_lower()):
+					if not ("is_dead" in p and p.is_dead) and p.visible and global_position.distance_to(p.global_position) <= 160.0:
+						knight_focus = p
+						break
+
+		if knight_focus:
+			threat_target = knight_focus
+			player = knight_focus
+		else:
+			threat_target = attacker
+			player = attacker
 		threat_timer = 3.0
-		player = attacker
 		current_state = State.CHASE
 
 		# Serangan dan skill Bandit dilarang memberikan knockback horizontal pada musuh

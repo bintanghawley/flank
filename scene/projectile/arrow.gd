@@ -54,7 +54,7 @@ func _physics_process(delta: float) -> void:
 
 	# Panah meluncur lurus sesuai arahnya
 	var move_step: float = speed * delta
-	position += direction * move_step
+	global_position += direction * move_step
 
 	# Perbarui garis trail lurus di belakang ekor panah
 	if trail_line:

@@ -17,7 +17,7 @@ var leader_node: CharacterBody2D = null
 var queue_slot_index: int = 0
 var in_party_combat: bool = false
 var ai_attack_timer: float = 0.0
-const COMBAT_ATTACK_RANGE: float = 90.0 # Jangkauan serang melee petarung Knight
+const COMBAT_ATTACK_RANGE: float = 68.0 # Jangkauan serang melee petarung Knight (garis depan)
 var facing_debounce_timer: float = 0.0
 
 # =========================
@@ -1061,6 +1061,7 @@ func update_direction_animation(dir: Vector2) -> void:
 func play_idle_animation() -> void:
 	if is_attacking or is_skill_animating or is_dead:
 		return
+	animated_sprite.flip_h = false
 	var facing := get_4_direction_str(last_direction)
 	animated_sprite.play("idle_" + facing)
 
@@ -1068,6 +1069,7 @@ func play_idle_animation() -> void:
 func play_walk_animation() -> void:
 	if is_attacking or is_skill_animating or is_dead:
 		return
+	animated_sprite.flip_h = false
 	var facing := get_4_direction_str(last_direction)
 	animated_sprite.play("walk_" + facing)
 
@@ -1105,14 +1107,16 @@ func _on_animated_sprite_animation_finished() -> void:
 # =========================================================
 
 func get_cardinal_direction(dir: Vector2) -> Vector2:
-	if abs(dir.x) > abs(dir.y):
+	# Prioritaskan horizontal (kiri/kanan) saat bergerak diagonal (WD, WA, SA, SD)
+	if abs(dir.x) >= abs(dir.y):
 		return Vector2.RIGHT if dir.x > 0 else Vector2.LEFT
 	else:
 		return Vector2.DOWN if dir.y > 0 else Vector2.UP
 
 
 func get_4_direction_str(dir: Vector2) -> String:
-	if abs(dir.x) > abs(dir.y):
+	# Prioritaskan horizontal (e/w) saat bergerak diagonal
+	if abs(dir.x) >= abs(dir.y):
 		return "e" if dir.x > 0 else "w"
 	else:
 		return "s" if dir.y > 0 else "n"
@@ -1159,15 +1163,16 @@ func get_separation_vector() -> Vector2:
 				push_dir = diff.normalized() if d > 0.5 else Vector2(1.0, 0.0)
 				separation += push_dir * (min_sep_dist - d)
 
-	# 2. Pisahkan diri dari anggota tim terdekat jika saling menumpuk
+	# 2. Pisahkan diri dari rekan tim (jarak renggang saat mode tempur agar tidak berdempetan)
+	var min_teammate_dist: float = 72.0 if in_party_combat else 38.0
 	var players := get_tree().get_nodes_in_group("player")
 	for p in players:
 		if p != self and is_instance_valid(p) and p.visible and not ("is_dead" in p and p.is_dead):
 			diff = global_position - p.global_position
 			d = diff.length()
-			if d < 35.0:
+			if d < min_teammate_dist:
 				push_dir = diff.normalized() if d > 0.5 else Vector2(-1.0, 0.0)
-				separation += push_dir * ((35.0 - d) * 0.5)
+				separation += push_dir * ((min_teammate_dist - d) * 0.8)
 
 	return separation
 

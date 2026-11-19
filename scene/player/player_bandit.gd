@@ -17,7 +17,7 @@ var leader_node: CharacterBody2D = null
 var queue_slot_index: int = 1
 var in_party_combat: bool = false
 var ai_attack_timer: float = 0.0
-const COMBAT_ATTACK_RANGE: float = 90.0 # Jarak serang melee Bandit
+const COMBAT_ATTACK_RANGE: float = 72.0 # Jarak serang melee Bandit (garis depan kedua)
 
 # =========================
 # MOVEMENT SETTINGS
@@ -42,8 +42,6 @@ const SFX_RESPAWN = preload("res://assets/audio/sfx/characters/universal/hero_re
 const SFX_BANDIT_SLASH_1 = preload("res://assets/audio/sfx/characters/bandit/bandit_slash_1.wav")
 const SFX_BANDIT_SLASH_2 = preload("res://assets/audio/sfx/characters/bandit/bandit_slash_2.wav")
 const SFX_BANDIT_SLASH_HIT = preload("res://assets/audio/sfx/characters/bandit/bandit_slash_hit.wav")
-const SFX_BANDIT_AMBUSH_LUNGE = preload("res://assets/audio/sfx/characters/bandit/bandit_ambush_lunge.wav")
-const SFX_BANDIT_AMBUSH_HIT = preload("res://assets/audio/sfx/characters/bandit/bandit_ambush_hit.wav")
 const SFX_BANDIT_SKILL_DASH = preload("res://assets/audio/sfx/characters/bandit/bandit_skill_dash.wav")
 const SFX_BANDIT_KNOCKUP = preload("res://assets/audio/sfx/characters/bandit/bandit_knockup.wav")
 const SFX_BANDIT_TRIPLE_SLASH_HIT = preload("res://assets/audio/sfx/characters/bandit/bandit_triple_slash_hit.wav")
@@ -68,19 +66,6 @@ const SWING_1_IMPACT_TIME: float = 0.15   # Timing ayunan pertama (Frame 2)
 const SWING_2_IMPACT_TIME: float = 0.40   # Timing ayunan kedua (Frame 6)
 const ATTACK_TOTAL_DURATION: float = 0.58 # Total durasi siklus tebasan dasar (8 frame pada 14 FPS)
 
-# =========================
-# KEMAMPUAN PASIF: OUT-OF-COMBAT AMBUSH LUNGE
-# =========================
-const PASSIVE_OUT_OF_COMBAT_TIME: float = 5.0 # 5 detik berturut-turut tanpa menerima/memberikan damage
-var passive_timer: float = 0.0
-var is_passive_ready: bool = false
-const AMBUSH_ENGAGE_RANGE: float = 260.0      # Jangkauan engage pembuka pasif ambush (jauh melebihi melee biasa)
-const AMBUSH_BONUS_DAMAGE: int = 3            # Bonus damage serangan pembuka ambush (+3 damage = 5 damage total)
-var is_ambush_lunging: bool = false
-var ambush_target_enemy: Node2D = null
-var ambush_lunge_dir: Vector2 = Vector2.DOWN
-var ambush_lunge_timer: float = 0.0
-var is_ambush_attack: bool = false
 var is_damage_flash_active: bool = false
 
 # =========================
@@ -176,14 +161,14 @@ func set_as_leader(active: bool, new_leader: CharacterBody2D = null, slot_idx: i
 		elif not in_party_combat:
 			in_party_combat = false
 		ai_attack_timer = 0.0
-		if not is_attacking and not is_skill_active and not is_ambush_lunging:
+		if not is_attacking and not is_skill_active:
 			play_idle_animation()
 		print(name, " maju sebagai Leader aktif!")
 	else:
 		if is_skill_active:
 			cancel_skill()
 		ai_attack_timer = randf_range(0.3, 0.7)
-		if not is_attacking and not is_skill_active and not is_ambush_lunging:
+		if not is_attacking and not is_skill_active:
 			play_idle_animation()
 
 
@@ -199,15 +184,13 @@ func cancel_skill() -> void:
 	skill_hit_enemies_step.clear()
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		require_mouse_release = true
-	if not is_dead and not is_moving and not is_attacking and not is_ambush_lunging:
+	if not is_dead and not is_moving and not is_attacking:
 		play_idle_animation()
 
 
 func cancel_attack() -> void:
 	attack_token += 1
 	is_attacking = false
-	is_ambush_lunging = false
-	is_ambush_attack = false
 	attack_step = 0
 	attack_elapsed_timer = 0.0
 	attack_stuck_timer = 0.0
@@ -220,10 +203,6 @@ func cancel_attack() -> void:
 func reset_combat_skills() -> void:
 	cancel_skill()
 	cancel_attack()
-	is_ambush_lunging = false
-	is_ambush_attack = false
-	passive_timer = 0.0
-	is_passive_ready = false
 	skill_cooldown_timer = 0.0
 	attack_timer = 0.0
 	is_attacking = false
@@ -293,27 +272,13 @@ func _physics_process(delta: float) -> void:
 	if skill_cooldown_timer > 0.0:
 		skill_cooldown_timer -= delta
 
-	# Pastikan skill dan lunge otomatis reset jika tidak dalam mode combat
-	if not is_in_combat_mode() and (is_skill_active or is_ambush_lunging):
+	# Pastikan skill otomatis reset jika tidak dalam mode combat
+	if not is_in_combat_mode() and is_skill_active:
 		reset_combat_skills()
-
-	# Penghitungan Pasif Out-of-Combat Ambush Lunge (5 detik)
-	if not is_passive_ready:
-		passive_timer += delta
-		if passive_timer >= PASSIVE_OUT_OF_COMBAT_TIME:
-			is_passive_ready = true
-			passive_timer = PASSIVE_OUT_OF_COMBAT_TIME
-			print(name, " [Pasif Siap] Ambush Lunge siap dilancarkan!")
-
-	update_passive_visual(delta)
 
 	# Penanganan aktif skill Dash & Triple Slash
 	if is_skill_active:
 		process_triple_slash_skill(delta)
-
-	# Penanganan aktif melesat cepat pasif (Ambush Lunge)
-	if is_ambush_lunging:
-		process_ambush_lunge(delta)
 
 	# Shield timer & visual update (dari Knight)
 	if is_shield_active or (shield_sprite and shield_sprite.visible):
@@ -343,12 +308,11 @@ func _physics_process(delta: float) -> void:
 		# Selesai setelah siklus 8 frame tuntas (~0.58s)
 		if attack_elapsed_timer >= ATTACK_TOTAL_DURATION or attack_stuck_timer >= 0.75:
 			is_attacking = false
-			is_ambush_attack = false
 			attack_step = 0
 			attack_elapsed_timer = 0.0
 			attack_stuck_timer = 0.0
 			attack_token += 1
-			if not is_dead and not is_moving and not is_skill_active and not is_ambush_lunging:
+			if not is_dead and not is_moving and not is_skill_active:
 				play_idle_animation()
 	else:
 		attack_stuck_timer = 0.0
@@ -364,18 +328,6 @@ func _physics_process(delta: float) -> void:
 
 	# Debu lari saat sprint
 	handle_run_dust_cycle(delta)
-
-
-func update_passive_visual(_delta: float) -> void:
-	if is_dead:
-		return
-	if is_passive_ready and not is_attacking and not is_skill_active and not is_ambush_lunging and not is_damage_flash_active:
-		# Denyut aura tipis bayangan (shimmer biru-violet) penanda pasif siap
-		var pulse: float = (sin(Time.get_ticks_msec() * 0.007) + 1.0) * 0.5
-		modulate = Color(0.85 + 0.3 * pulse, 0.95 + 0.15 * pulse, 1.35 + 0.35 * pulse, 1.0)
-	elif not is_passive_ready and not is_damage_flash_active:
-		if modulate != Color.WHITE:
-			modulate = Color.WHITE
 
 
 func is_skill_action_pressed(event: InputEvent) -> bool:
@@ -396,7 +348,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	# Tombol E: Aktivasi Skill Triple Slash (HANYA Leader dan dalam mode combat)
 	if is_skill_action_pressed(event):
-		if is_in_combat_mode() and skill_cooldown_timer <= 0.0 and not is_attacking and not is_skill_active and not is_ambush_lunging:
+		if is_in_combat_mode() and skill_cooldown_timer <= 0.0 and not is_attacking and not is_skill_active:
 			activate_triple_slash()
 			get_viewport().set_input_as_handled()
 		return
@@ -405,14 +357,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
-				if is_in_combat_mode() and not require_mouse_release and attack_timer <= 0.0 and not is_attacking and not is_skill_active and not is_ambush_lunging:
+				if is_in_combat_mode() and not require_mouse_release and attack_timer <= 0.0 and not is_attacking and not is_skill_active:
 					shoot_towards(get_global_mouse_position())
 			else:
 				require_mouse_release = false
 
 
 func process_leader_movement(_delta: float) -> void:
-	if is_skill_active or is_ambush_lunging:
+	if is_skill_active:
 		return
 
 	# Reset require_mouse_release jika mouse kiri dilepas
@@ -422,7 +374,7 @@ func process_leader_movement(_delta: float) -> void:
 
 	# Serangan dasar klik kiri (Hold / Tap) - hanya aktif saat mode tempur (ada musuh)
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		if is_in_combat_mode() and not require_mouse_release and attack_timer <= 0.0 and not is_attacking and not is_skill_active and not is_ambush_lunging:
+		if is_in_combat_mode() and not require_mouse_release and attack_timer <= 0.0 and not is_attacking and not is_skill_active:
 			shoot_towards(get_global_mouse_position())
 
 	var input_dir := Vector2.ZERO
@@ -445,14 +397,14 @@ func process_leader_movement(_delta: float) -> void:
 		is_moving = true
 		last_movement_direction = input_dir
 
-		if is_attacking or is_skill_active or is_ambush_lunging:
+		if is_attacking or is_skill_active:
 			move_velocity = Vector2.ZERO
 		else:
 			move_velocity = input_dir * current_speed
 			update_direction_animation(input_dir)
 	else:
 		is_moving = false
-		if not is_attacking and not is_skill_active and not is_ambush_lunging and animated_sprite.animation.begins_with("walk_"):
+		if not is_attacking and not is_skill_active and animated_sprite.animation.begins_with("walk_"):
 			play_idle_animation()
 
 	velocity = move_velocity + knockback_velocity
@@ -465,13 +417,12 @@ func process_leader_movement(_delta: float) -> void:
 
 func activate_triple_slash(target_pos: Vector2 = Vector2.ZERO) -> void:
 	# Skill E HANYA boleh digunakan saat Bandit menjadi karakter aktif (Leader) dan berada dalam mode combat
-	if not is_in_combat_mode() or not is_leader or is_skill_active or is_dead or is_attacking or is_ambush_lunging or skill_cooldown_timer > 0.0:
+	if not is_in_combat_mode() or not is_leader or is_skill_active or is_dead or is_attacking or skill_cooldown_timer > 0.0:
 		return
 
 	is_skill_active = true
 	is_moving = false
 	is_attacking = false
-	is_ambush_lunging = false
 	skill_phase = SkillPhase.DASHING
 	skill_timer = 0.0
 	skill_dash_time = 0.0
@@ -680,10 +631,8 @@ func execute_triple_slash_step(step: int, damage: int, range_dist: float, shake_
 					if e.has_method("take_damage"):
 						e.take_damage(damage, self)
 
-	# Reset timer pasif saat memberikan damage
+	# Reset dan SFX saat memberikan damage
 	if not skill_hit_enemies_step.is_empty():
-		passive_timer = 0.0
-		is_passive_ready = false
 		if step == 3:
 			play_sfx(SFX_BANDIT_TRIPLE_SLASH_FINISH, 0.0)
 		else:
@@ -698,11 +647,11 @@ func execute_triple_slash_step(step: int, damage: int, range_dist: float, shake_
 
 
 # =========================================================
-# SERANGAN DASAR (DOUBLE SLASH DAGGER & AMBUSH LUNGE)
+# SERANGAN DASAR (DOUBLE SLASH DAGGER)
 # =========================================================
 
 func shoot_towards(target_pos: Vector2) -> void:
-	if attack_timer > 0.0 or is_attacking or is_dead or is_skill_active or is_ambush_lunging:
+	if attack_timer > 0.0 or is_attacking or is_dead or is_skill_active:
 		return
 
 	# Hanya dapat menyerang saat mode tempur (ada musuh) tanpa batasan jarak
@@ -720,79 +669,11 @@ func shoot_towards(target_pos: Vector2) -> void:
 	attack_direction = dir
 	last_direction = get_cardinal_direction(dir)
 
-	# Cek apakah Pasif Ambush Lunge siap
-	if is_passive_ready:
-		var target_enemy := find_ambush_target_in_range(target_pos, AMBUSH_ENGAGE_RANGE)
-		if target_enemy:
-			start_ambush_lunge(target_enemy)
-			return
-
-	# Serangan dasar normal
-	start_normal_attack(false)
+	start_normal_attack()
 
 
-func find_ambush_target_in_range(target_pos: Vector2, max_range: float) -> Node2D:
-	var cam_rect := get_camera_world_rect()
-	var enemies := get_tree().get_nodes_in_group("enemy")
-	var best_enemy: Node2D = null
-	var min_cursor_dist: float = 120.0
-	var min_dist: float = max_range
-
-	for e in enemies:
-		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
-			if cam_rect.has_point(e.global_position):
-				var d_char: float = global_position.distance_to(e.global_position)
-				if d_char <= max_range:
-					var d_cursor: float = target_pos.distance_to(e.global_position)
-					if d_cursor < min_cursor_dist:
-						min_cursor_dist = d_cursor
-						min_dist = d_char
-						best_enemy = e
-					elif best_enemy == null and d_char < min_dist:
-						min_dist = d_char
-						best_enemy = e
-	return best_enemy
-
-
-func start_ambush_lunge(target_enemy: Node2D) -> void:
-	is_ambush_lunging = true
-	ambush_target_enemy = target_enemy
-	ambush_lunge_timer = 0.0
-	ambush_lunge_dir = global_position.direction_to(target_enemy.global_position).normalized()
-	if ambush_lunge_dir == Vector2.ZERO:
-		ambush_lunge_dir = last_direction
-
-	attack_direction = ambush_lunge_dir
-	last_direction = get_cardinal_direction(ambush_lunge_dir)
-	play_attack_animation()
-	spawn_run_dust(ambush_lunge_dir)
-	apply_camera_shake(3.0)
-	play_sfx(SFX_BANDIT_AMBUSH_LUNGE, -2.0)
-	print(name, " melancarkan AMBUSH LUNGE ke arah musuh!")
-
-
-func process_ambush_lunge(delta: float) -> void:
-	ambush_lunge_timer += delta
-	var dist_to_target: float = INF
-	if ambush_target_enemy and is_instance_valid(ambush_target_enemy):
-		dist_to_target = global_position.distance_to(ambush_target_enemy.global_position)
-		ambush_lunge_dir = global_position.direction_to(ambush_target_enemy.global_position).normalized()
-		attack_direction = ambush_lunge_dir
-		last_direction = get_cardinal_direction(ambush_lunge_dir)
-
-	velocity = ambush_lunge_dir * 680.0
-	move_and_slide_with_separation()
-
-	# Jika sudah dalam jarak jangkauan tebasan (<= 70 px) atau batas waktu lunge tercapai (0.22s)
-	if dist_to_target <= 70.0 or ambush_lunge_timer >= 0.22:
-		is_ambush_lunging = false
-		velocity = Vector2.ZERO
-		start_normal_attack(true)
-
-
-func start_normal_attack(with_ambush: bool) -> void:
+func start_normal_attack() -> void:
 	is_attacking = true
-	is_ambush_attack = with_ambush
 	attack_step = 0
 	attack_elapsed_timer = 0.0
 	attack_stuck_timer = 0.0
@@ -805,17 +686,6 @@ func execute_slash_damage(attack_dir: Vector2, swing_number: int = 1) -> void:
 	var current_swing_hits: Array[Node2D] = []
 	var shake_val: float = 3.5
 	var base_dmg: int = attack_damage
-
-	# Serangan pembuka dari pasif Ambush memberikan damage bonus
-	if is_ambush_attack and swing_number == 1:
-		base_dmg += AMBUSH_BONUS_DAMAGE # 2 + 3 = 5 damage pembuka
-		shake_val = 6.0
-		# Pasif dikonsumsi
-		is_passive_ready = false
-		passive_timer = 0.0
-		if not is_damage_flash_active:
-			modulate = Color.WHITE
-		print(name, " [AMBUSH STRIKE LANDED!] Damage pembuka bertambah: ", base_dmg)
 
 	apply_camera_shake(shake_val)
 
@@ -841,7 +711,7 @@ func execute_slash_damage(attack_dir: Vector2, swing_number: int = 1) -> void:
 		var dist: float = to_enemy.length()
 		var is_hit: bool = false
 
-		if dist <= close_contact_radius or (is_ambush_attack and e == ambush_target_enemy):
+		if dist <= close_contact_radius:
 			is_hit = true
 		elif dist <= slash_range:
 			var angle_diff: float = absf(attack_dir.angle_to(to_enemy))
@@ -854,14 +724,8 @@ func execute_slash_damage(attack_dir: Vector2, swing_number: int = 1) -> void:
 			if e.has_method("take_damage"):
 				e.take_damage(base_dmg, self)
 
-	# Reset timer pasif saat memberikan damage
 	if not current_swing_hits.is_empty():
-		passive_timer = 0.0
-		is_passive_ready = false
-		if is_ambush_attack and swing_number == 1:
-			play_sfx(SFX_BANDIT_AMBUSH_HIT, -1.0)
-		else:
-			play_sfx(SFX_BANDIT_SLASH_HIT, -2.0)
+		play_sfx(SFX_BANDIT_SLASH_HIT, -2.0)
 
 	print(name, " [Double Slash Swing ", swing_number, "/2] mengenai ", current_swing_hits.size(), " musuh (Damage: ", base_dmg, ")")
 
@@ -904,7 +768,7 @@ func process_follower_exploring(delta: float) -> void:
 	if not leader_node or not is_instance_valid(leader_node) or ("is_dead" in leader_node and leader_node.is_dead):
 		velocity = knockback_velocity
 		move_and_slide_with_separation()
-		if not is_attacking and not is_skill_active and not is_ambush_lunging:
+		if not is_attacking and not is_skill_active:
 			play_idle_animation()
 		return
 
@@ -989,7 +853,7 @@ func process_follower_exploring(delta: float) -> void:
 			last_direction = leader_node.last_direction
 		else:
 			last_direction = target_facing
-		if not is_attacking and not is_skill_active and not is_ambush_lunging:
+		if not is_attacking and not is_skill_active:
 			play_idle_animation()
 	else:
 		var aim_pos: Vector2 = target_pos
@@ -1024,22 +888,74 @@ func process_follower_exploring(delta: float) -> void:
 		update_direction_animation(move_dir)
 
 
+func get_party_knight() -> CharacterBody2D:
+	var game_node = get_tree().current_scene if is_inside_tree() else null
+	if game_node and "party_members" in game_node:
+		for p in game_node.party_members:
+			if is_instance_valid(p) and p != self and ("Knight" in p.name or "knight" in p.name.to_lower()):
+				return p
+	for p in get_tree().get_nodes_in_group("player"):
+		if is_instance_valid(p) and p != self and ("Knight" in p.name or "knight" in p.name.to_lower()):
+			return p
+	return null
+
+
+func is_knight_alive() -> bool:
+	var knight := get_party_knight()
+	return knight != null and not ("is_dead" in knight and knight.is_dead) and knight.visible
+
+
+func _apply_follower_slide_assist(move_dir: Vector2, speed: float) -> void:
+	if get_slide_collision_count() > 0 and velocity.length() < speed * 0.4:
+		var col := get_slide_collision(0)
+		var n := col.get_normal()
+		var tangent := Vector2(-n.y, n.x)
+		if move_dir.dot(tangent) < 0.0:
+			tangent = -tangent
+		velocity = tangent * (speed * 0.8) + knockback_velocity
+		move_and_slide()
+
+
 func process_follower_combat(delta: float) -> void:
 	if not in_party_combat:
 		return
-	if is_attacking or is_skill_active or is_ambush_lunging:
+	if is_attacking or is_skill_active:
 		velocity = knockback_velocity
 		move_and_slide_with_separation()
 		return
 
 	var cam_rect := get_camera_world_rect()
 	var enemies := get_tree().get_nodes_in_group("enemy")
-	var target_enemy: Node2D = null
-	var min_dist: float = INF
+	var knight := get_party_knight()
+	var knight_alive := is_knight_alive()
 
+	# 1. Prioritas Pemilihan Target (Bandit sebagai orang kedua membantu Knight):
+	var target_enemy: Node2D = null
+
+	# Prioritas A: Jika ada musuh yang sudah sangat dekat / menempel Bandit, serang musuh tersebut agar tidak nyangkut
+	var min_self_dist: float = INF
 	for e in enemies:
-		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
-			if cam_rect.has_point(e.global_position):
+		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead) and cam_rect.has_point(e.global_position):
+			var d: float = global_position.distance_to(e.global_position)
+			if d <= COMBAT_ATTACK_RANGE + 15.0 and d < min_self_dist:
+				min_self_dist = d
+				target_enemy = e
+
+	# Prioritas B: Bantu musuh yang sedang dihadapi Knight di depan
+	if not target_enemy and knight_alive and is_instance_valid(knight):
+		var min_knight_dist: float = INF
+		for e in enemies:
+			if is_instance_valid(e) and not ("is_dead" in e and e.is_dead) and cam_rect.has_point(e.global_position):
+				var kd: float = knight.global_position.distance_to(e.global_position)
+				if kd < min_knight_dist:
+					min_knight_dist = kd
+					target_enemy = e
+
+	# Prioritas C: Musuh hidup terdekat di dalam jangkauan kamera
+	if not target_enemy:
+		var min_dist: float = INF
+		for e in enemies:
+			if is_instance_valid(e) and not ("is_dead" in e and e.is_dead) and cam_rect.has_point(e.global_position):
 				var d: float = global_position.distance_to(e.global_position)
 				if d < min_dist:
 					min_dist = d
@@ -1049,43 +965,50 @@ func process_follower_combat(delta: float) -> void:
 		velocity = knockback_velocity
 		is_moving = false
 		move_and_slide_with_separation()
-		if not is_attacking and not is_skill_active and not is_ambush_lunging:
+		if not is_attacking and not is_skill_active:
 			play_idle_animation()
 		return
 
 	var dist_to_enemy := global_position.distance_to(target_enemy.global_position)
-	var engage_threshold := AMBUSH_ENGAGE_RANGE if is_passive_ready else COMBAT_ATTACK_RANGE
 
-	if dist_to_enemy <= engage_threshold:
+	# 2. KONDISI SERANG: Jika sudah dalam jangkauan serangan melee (COMBAT_ATTACK_RANGE)
+	if dist_to_enemy <= COMBAT_ATTACK_RANGE:
 		velocity = knockback_velocity
 		is_moving = false
 		move_and_slide_with_separation()
 		last_direction = get_cardinal_direction(global_position.direction_to(target_enemy.global_position))
-		if not is_attacking and not is_skill_active and not is_ambush_lunging:
+		if not is_attacking and not is_skill_active:
 			play_idle_animation()
 		ai_attack_timer -= delta
-		if ai_attack_timer <= 0.0 and not is_attacking and not is_ambush_lunging:
+		if ai_attack_timer <= 0.0 and not is_attacking:
 			ai_attack_timer = attack_cooldown
-			# Follower Bandit HANYA menggunakan serangan dasar melee (dilarang menggunakan skill otomatis)
 			shoot_towards(target_enemy.global_position)
 		return
+
+	# 3. KONDISI MENDEKAT: Membantu menyerang musuh dari samping agar tidak bertabrakan dengan Knight
+	var move_dir: Vector2 = Vector2.ZERO
+	if knight_alive and is_instance_valid(knight) and knight.global_position.distance_to(target_enemy.global_position) <= 240.0:
+		var to_knight := (knight.global_position - target_enemy.global_position).normalized()
+		if to_knight == Vector2.ZERO:
+			to_knight = Vector2.DOWN
+		# Ambil arah samping yang tegak lurus terhadap Knight
+		var side_vec := Vector2(-to_knight.y, to_knight.x)
+		if (global_position - target_enemy.global_position).dot(side_vec) < 0.0:
+			side_vec = -side_vec
+		# Arahkan ke titik samping musuh (~50 px) agar tidak bertumpuk dengan Knight
+		var side_spot := target_enemy.global_position + (side_vec * 50.0)
+		move_dir = global_position.direction_to(side_spot)
 	else:
-		var move_dir := global_position.direction_to(target_enemy.global_position)
-		velocity = (move_dir * NORMAL_SPEED) + knockback_velocity
-		move_and_slide_with_separation()
+		# Jika Knight gugur atau jauh, dekati musuh secara langsung
+		move_dir = global_position.direction_to(target_enemy.global_position)
 
-		# Corner-Slide Assist saat mengejar musuh melewati sudut bangunan
-		if get_slide_collision_count() > 0 and velocity.length() < NORMAL_SPEED * 0.4:
-			var col := get_slide_collision(0)
-			var n := col.get_normal()
-			var tangent := Vector2(-n.y, n.x)
-			if move_dir.dot(tangent) < 0.0:
-				tangent = -tangent
-			velocity = tangent * (NORMAL_SPEED * 0.8) + knockback_velocity
-			move_and_slide()
+	velocity = (move_dir * NORMAL_SPEED) + knockback_velocity
+	move_and_slide_with_separation()
+	_apply_follower_slide_assist(move_dir, NORMAL_SPEED)
 
-		last_movement_direction = move_dir
-		update_direction_animation(move_dir)
+	is_moving = true
+	last_movement_direction = move_dir
+	update_direction_animation(move_dir)
 
 
 # =========================================================
@@ -1093,7 +1016,7 @@ func process_follower_combat(delta: float) -> void:
 # =========================================================
 
 func has_super_armor() -> bool:
-	return is_skill_active or is_ambush_lunging or (is_attacking and is_ambush_attack)
+	return is_skill_active
 
 
 func take_damage(amount: int, source_position = null) -> void:
@@ -1147,16 +1070,14 @@ func take_damage(amount: int, source_position = null) -> void:
 		die()
 		return
 
-	# 3. SUPER ARMOR / POISE: Jika sedang dalam aksi pasif lunge atau skill 'E', dilarang terinterupsi!
+	# 3. SUPER ARMOR / POISE: Jika sedang dalam aksi skill 'E', dilarang terinterupsi!
 	if in_super_armor:
-		print(name, " [SUPER ARMOR AKTIF]: Menerima damage namun aksi lunge/skill dilarang batal!")
+		print(name, " [SUPER ARMOR AKTIF]: Menerima damage namun aksi skill dilarang batal!")
 		return
 
-	# 4. TERAPKAN KNOCKBACK HANYA JIKA TIDAK SEDANG MENYERANG ATAU MENGGUNAKAN SKILL
-	passive_timer = 0.0
-	is_passive_ready = false
+	# 4. RESPON DAMAGE: Karakter menerima knockback standar di tempat tanpa menghindar/kabur otomatis
 	if not in_super_armor and not is_attacking and not is_skill_active:
-		apply_knockback(knockback_dir * knockback_strength)
+		apply_knockback(knockback_dir * (knockback_strength * 0.5))
 
 
 func apply_knockback(force: Vector2) -> void:
@@ -1174,15 +1095,11 @@ func die() -> void:
 	velocity = Vector2.ZERO
 	is_moving = false
 	is_attacking = false
-	is_ambush_lunging = false
-	is_ambush_attack = false
 	attack_step = 0
 	attack_elapsed_timer = 0.0
 	attack_stuck_timer = 0.0
 	is_skill_active = false
 	skill_phase = SkillPhase.INACTIVE
-	passive_timer = 0.0
-	is_passive_ready = false
 	deactivate_shield()
 	ai_attack_timer = 0.0
 	knockback_velocity = Vector2.ZERO
@@ -1239,8 +1156,6 @@ func respawn() -> void:
 	invulnerability_timer = 1.5
 	is_moving = false
 	is_attacking = false
-	is_ambush_lunging = false
-	is_ambush_attack = false
 	attack_step = 0
 	attack_elapsed_timer = 0.0
 	attack_stuck_timer = 0.0
@@ -1248,8 +1163,6 @@ func respawn() -> void:
 	skill_phase = SkillPhase.INACTIVE
 	is_dead = false
 	knockback_velocity = Vector2.ZERO
-	passive_timer = 0.0
-	is_passive_ready = false
 
 	add_to_group("player")
 	if collision_shape:
@@ -1414,7 +1327,8 @@ func get_camera_world_rect() -> Rect2:
 
 
 func get_cardinal_direction(dir: Vector2) -> Vector2:
-	if abs(dir.x) > abs(dir.y):
+	# Prioritaskan horizontal (kiri/kanan) saat bergerak diagonal (WD, WA, SA, SD)
+	if abs(dir.x) >= abs(dir.y):
 		return Vector2.RIGHT if dir.x > 0 else Vector2.LEFT
 	else:
 		return Vector2.DOWN if dir.y > 0 else Vector2.UP
@@ -1478,14 +1392,16 @@ func get_separation_vector() -> Vector2:
 				push_dir = diff.normalized() if d > 0.5 else Vector2(1.0, 0.0)
 				separation += push_dir * (min_sep_dist - d)
 
+	# 2. Pisahkan diri dari rekan tim (jarak renggang saat mode tempur agar tidak berdempetan)
+	var min_teammate_dist: float = 72.0 if in_party_combat else 38.0
 	var players := get_tree().get_nodes_in_group("player")
 	for p in players:
 		if p != self and is_instance_valid(p) and p.visible and not ("is_dead" in p and p.is_dead):
 			diff = global_position - p.global_position
 			d = diff.length()
-			if d < 35.0:
+			if d < min_teammate_dist:
 				push_dir = diff.normalized() if d > 0.5 else Vector2(-1.0, 0.0)
-				separation += push_dir * ((35.0 - d) * 0.5)
+				separation += push_dir * ((min_teammate_dist - d) * 0.8)
 
 	return separation
 

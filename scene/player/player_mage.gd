@@ -18,7 +18,7 @@ const SHIELD_DIRECTIONAL_OFFSETS: Dictionary = {
 	"e": Vector2(0.0, 1.0),
 	"w": Vector2(0.0, 1.0)
 }
-const BASIC_ATTACK_STAFF_OFFSET: Vector2 = Vector2(0.0, 47.0) # Titik poros tengah senjata tongkat sihir Mage di ruang global
+const BASIC_ATTACK_STAFF_OFFSET: Vector2 = Vector2(0.0, 40.0) # Titik poros tengah senjata tongkat sihir Mage di ruang global
 var is_shield_active: bool = false
 var shield_timer: float = 0.0
 var shield_tween: Tween = null
@@ -32,7 +32,7 @@ var leader_node: CharacterBody2D = null
 var queue_slot_index: int = 0
 var in_party_combat: bool = false
 var ai_attack_timer: float = 0.0
-const COMBAT_ATTACK_RANGE: float = 480.0
+const COMBAT_ATTACK_RANGE: float = 440.0
 var is_flanking: bool = false
 var flank_wp1: Vector2 = Vector2.ZERO
 var flank_wp2: Vector2 = Vector2.ZERO
@@ -77,6 +77,7 @@ var attack_stuck_timer: float = 0.0
 var attack_timer: float = 0.0
 var is_attacking: bool = false
 var attack_direction: Vector2 = Vector2.RIGHT
+var attack_target_pos: Vector2 = Vector2.ZERO
 var attack_token: int = 0
 var require_mouse_release: bool = false
 
@@ -609,7 +610,7 @@ func process_follower_exploring(delta: float) -> void:
 		if not leader_is_moving and "last_direction" in leader_node:
 			last_direction = leader_node.last_direction
 		else:
-			last_direction = target_facing
+			last_direction = get_cardinal_direction(target_facing)
 		if not is_attacking:
 			play_idle_animation()
 	else:
@@ -677,33 +678,37 @@ func process_follower_combat(delta: float) -> void:
 			play_idle_animation()
 		return
 		
-	# 2. Uji koridor tembak
+	# 2. Uji koridor tembak dan jarak tempur ideal Mage (Ranged Spellcaster Jarak Jauh)
 	var has_los := has_clear_projectile_los_to(target_enemy, 12.0)
 	var dist_to_enemy := global_position.distance_to(target_enemy.global_position)
-	
-	# 3. KONDISI TEMBAK (STAND & SHOOT): Jika koridor bebas DAN masuk jarak tembak
+	const RANGED_ATTACK_DIST: float = 440.0    # Jarak serang jarak jauh Mage (Long Range)
+
+	# 3. KONDISI TEMBAK (STAND & CAST JAUH): Jika koridor tembak bebas
 	if has_los:
 		is_flanking = false
-		if dist_to_enemy <= COMBAT_ATTACK_RANGE:
+		if dist_to_enemy > RANGED_ATTACK_DIST:
+			# Musuh masih terlalu jauh: mendekat ke jarak tembak dengan bias sayap kanan agar tidak berdempetan dengan Archer
+			var to_enemy := target_enemy.global_position - global_position
+			var right_wing := Vector2(to_enemy.y, -to_enemy.x).normalized() * 0.35
+			var approach_dir := (to_enemy.normalized() + right_wing).normalized()
+			velocity = (approach_dir * NORMAL_SPEED) + knockback_velocity
+			is_moving = true
+			move_and_slide_with_separation()
+			last_movement_direction = approach_dir
+			apply_smoothed_facing(approach_dir, delta)
+			return
+		else:
+			# Berada dalam jarak tembak optimal (<= 380 px): berdiri di tempat, bidik dan tembak (tanpa mundur/menghindar)
 			velocity = knockback_velocity
 			is_moving = false
 			move_and_slide_with_separation()
-			last_direction = get_cardinal_direction(global_position.direction_to(target_enemy.global_position))
+			last_direction = get_cardinal_aim_direction((global_position + BASIC_ATTACK_STAFF_OFFSET).direction_to(target_enemy.global_position))
 			if not is_attacking:
 				play_idle_animation()
 			ai_attack_timer -= delta
 			if ai_attack_timer <= 0.0 and not is_attacking:
 				ai_attack_timer = attack_cooldown
 				shoot_towards(target_enemy.global_position)
-			return
-		else:
-			# Jalur bersih tapi musuh masih agak jauh: dekati langsung
-			var approach_dir := global_position.direction_to(target_enemy.global_position)
-			velocity = (approach_dir * NORMAL_SPEED) + knockback_velocity
-			is_moving = true
-			move_and_slide_with_separation()
-			last_movement_direction = approach_dir
-			apply_smoothed_facing(approach_dir, delta)
 			return
 			
 	# 4. KONDISI TERHALANG RINTANGAN (NAVIGASI MEMUTAR):
@@ -921,14 +926,18 @@ func shoot_towards(target_pos: Vector2) -> void:
 	is_moving = false
 	velocity = knockback_velocity
 
+	# Simpan target posisi klik kursor
+	attack_target_pos = target_pos
+
 	# Titik visual tengah senjata tongkat sihir Mage
 	var staff_pos := global_position + BASIC_ATTACK_STAFF_OFFSET
 	var dir := staff_pos.direction_to(target_pos)
 	if dir == Vector2.ZERO:
 		dir = last_direction
 
+	# Simpan arah tembakan awal
 	attack_direction = dir
-	last_direction = get_8_direction(dir)
+	last_direction = get_cardinal_aim_direction(dir)
 
 	attack_token += 1
 	var token := attack_token
@@ -954,23 +963,15 @@ func get_magic_bolt_spawn_position() -> Vector2:
 	var offset: Vector2 = Vector2.ZERO
 	match last_direction:
 		Vector2.UP:
-			offset = Vector2(-28.0, -110.0)
+			offset = Vector2(-32.5, -135.0)
 		Vector2.DOWN:
-			offset = Vector2(22.0, 58.0)
+			offset = Vector2(22.5, 87.5)
 		Vector2.LEFT:
-			offset = Vector2(-92.0, 0.0)
+			offset = Vector2(-117.5, 0.0)
 		Vector2.RIGHT:
-			offset = Vector2(92.0, 0.0)
-		Vector2(-1, -1):
-			offset = Vector2(-78.0, -35.0)
-		Vector2(1, -1):
-			offset = Vector2(78.0, -35.0)
-		Vector2(-1, 1):
-			offset = Vector2(-78.0, 30.0)
-		Vector2(1, 1):
-			offset = Vector2(78.0, 30.0)
+			offset = Vector2(107.5, 0.0)
 		_:
-			offset = attack_direction * 92.0
+			offset = Vector2(107.5, 0.0)
 
 	# Safeguard: pastikan komponen horizontal proyektil selalu selaras dengan arah hadap sprite animasi (mencegah spawn di belakang karakter saat diagonal)
 	if animated_sprite.animation == "atk_e":
@@ -996,10 +997,26 @@ func reset_attack_state(token: int) -> void:
 		return
 
 	var spawn_pos := get_magic_bolt_spawn_position()
+	var staff_pos := global_position + BASIC_ATTACK_STAFF_OFFSET
+	var aim_forward := staff_pos.direction_to(attack_target_pos)
+	if aim_forward == Vector2.ZERO:
+		aim_forward = attack_direction if attack_direction != Vector2.ZERO else last_direction
+
+	# Hitung lintasan akurat langsung dari ujung kristal tongkat sihir menuju koordinat klik kursor
+	var to_target: Vector2 = attack_target_pos - spawn_pos
+	var shoot_dir: Vector2 = aim_forward
+	if to_target.dot(aim_forward) > 10.0:
+		shoot_dir = to_target.normalized()
+	else:
+		var far_target := staff_pos + aim_forward * maxf(staff_pos.distance_to(attack_target_pos), 300.0)
+		shoot_dir = spawn_pos.direction_to(far_target)
+
+	attack_direction = shoot_dir
+
 	var bolt = MAGIC_BOLT_SCENE.instantiate()
 	bolt.global_position = spawn_pos
-	bolt.direction = attack_direction
-	bolt.rotation = attack_direction.angle()
+	bolt.direction = shoot_dir
+	bolt.rotation = shoot_dir.angle()
 	bolt.shooter_node = self
 	bolt.speed = get_dynamic_projectile_speed()
 	get_tree().current_scene.add_child(bolt)
@@ -1016,8 +1033,8 @@ func reset_attack_state(token: int) -> void:
 	is_attacking = false
 	attack_stuck_timer = 0.0
 	if is_moving:
-		var direction := global_position.direction_to(target_position)
-		update_direction_animation(direction)
+		var move_dir := global_position.direction_to(target_position) if is_leader else (velocity.normalized() if velocity != Vector2.ZERO else last_movement_direction)
+		update_direction_animation(move_dir)
 	else:
 		play_idle_animation()
 
@@ -1030,7 +1047,8 @@ func update_direction_animation(direction: Vector2) -> void:
 	if direction == Vector2.ZERO or is_aiming_skill or is_skill_releasing:
 		return
 
-	last_direction = get_8_direction(direction)
+	# Simpan arah terakhir (prioritas horizontal untuk diagonal WD, WA, SA, SD)
+	last_direction = get_cardinal_direction(direction)
 
 	if not is_attacking:
 		play_walk_animation()
@@ -1044,6 +1062,23 @@ func get_cardinal_direction(dir: Vector2) -> Vector2:
 		return Vector2.RIGHT if dir.x > 0 else Vector2.LEFT
 	else:
 		return Vector2.DOWN if dir.y > 0 else Vector2.UP
+
+func get_cardinal_aim_direction(dir: Vector2) -> Vector2:
+	if dir == Vector2.ZERO:
+		return Vector2.DOWN
+	var angle := dir.angle()
+	# Kanan (East): [-45 deg, 45 deg)
+	if angle >= -PI * 0.25 and angle < PI * 0.25:
+		return Vector2.RIGHT
+	# Bawah (South): [45 deg, 135 deg)
+	elif angle >= PI * 0.25 and angle < PI * 0.75:
+		return Vector2.DOWN
+	# Atas (North): [-135 deg, -45 deg)
+	elif angle >= -PI * 0.75 and angle < -PI * 0.25:
+		return Vector2.UP
+	# Kiri (West): [-180, -135 deg) atau [135 deg, 180 deg]
+	else:
+		return Vector2.LEFT
 
 func get_8_direction(direction: Vector2) -> Vector2:
 	var angle := direction.angle()
@@ -1080,20 +1115,20 @@ func play_walk_animation() -> void:
 		animated_sprite.play("walk_n")
 	elif last_direction == Vector2.DOWN:
 		animated_sprite.play("walk_s")
-	elif last_direction == Vector2.LEFT:
+	elif last_direction == Vector2.LEFT or last_direction == Vector2(-1, -1) or last_direction == Vector2(-1, 1):
 		animated_sprite.play("walk_w")
-	elif last_direction == Vector2.RIGHT:
+	elif last_direction == Vector2.RIGHT or last_direction == Vector2(1, -1) or last_direction == Vector2(1, 1):
 		animated_sprite.play("walk_e")
-	elif last_direction == Vector2(-1, -1):
-		animated_sprite.play("walk_w")
-	elif last_direction == Vector2(1, -1):
-		animated_sprite.play("walk_w")
-		animated_sprite.flip_h = true
-	elif last_direction == Vector2(-1, 1):
-		animated_sprite.play("walk_e")
-		animated_sprite.flip_h = true
-	elif last_direction == Vector2(1, 1):
-		animated_sprite.play("walk_e")
+	else:
+		var cardinal := get_cardinal_direction(last_direction)
+		if cardinal == Vector2.UP:
+			animated_sprite.play("walk_n")
+		elif cardinal == Vector2.DOWN:
+			animated_sprite.play("walk_s")
+		elif cardinal == Vector2.LEFT:
+			animated_sprite.play("walk_w")
+		else:
+			animated_sprite.play("walk_e")
 
 
 func play_idle_animation() -> void:
@@ -1106,20 +1141,20 @@ func play_idle_animation() -> void:
 		animated_sprite.play("idle_n")
 	elif last_direction == Vector2.DOWN:
 		animated_sprite.play("idle_s")
-	elif last_direction == Vector2.LEFT:
+	elif last_direction == Vector2.LEFT or last_direction == Vector2(-1, -1) or last_direction == Vector2(-1, 1):
 		animated_sprite.play("idle_w")
-	elif last_direction == Vector2.RIGHT:
+	elif last_direction == Vector2.RIGHT or last_direction == Vector2(1, -1) or last_direction == Vector2(1, 1):
 		animated_sprite.play("idle_e")
-	elif last_direction == Vector2(-1, -1):
-		animated_sprite.play("idle_w")
-	elif last_direction == Vector2(1, -1):
-		animated_sprite.play("idle_w")
-		animated_sprite.flip_h = true
-	elif last_direction == Vector2(-1, 1):
-		animated_sprite.play("idle_e")
-		animated_sprite.flip_h = true
-	elif last_direction == Vector2(1, 1):
-		animated_sprite.play("idle_e")
+	else:
+		var cardinal := get_cardinal_direction(last_direction)
+		if cardinal == Vector2.UP:
+			animated_sprite.play("idle_n")
+		elif cardinal == Vector2.DOWN:
+			animated_sprite.play("idle_s")
+		elif cardinal == Vector2.LEFT:
+			animated_sprite.play("idle_w")
+		else:
+			animated_sprite.play("idle_e")
 
 
 func play_attack_animation() -> void:
@@ -1133,16 +1168,8 @@ func play_attack_animation() -> void:
 		animated_sprite.play("atk_w")
 	elif last_direction == Vector2.RIGHT:
 		animated_sprite.play("atk_e")
-	elif last_direction == Vector2(-1, -1):
-		animated_sprite.play("atk_w")
-	elif last_direction == Vector2(1, -1):
-		animated_sprite.play("atk_w")
-		animated_sprite.flip_h = true
-	elif last_direction == Vector2(-1, 1):
-		animated_sprite.play("atk_e")
-		animated_sprite.flip_h = true
-	elif last_direction == Vector2(1, 1):
-		animated_sprite.play("atk_e")
+	else:
+		animated_sprite.play("atk_s")
 
 
 # =========================================================
@@ -1685,15 +1712,16 @@ func get_separation_vector() -> Vector2:
 				push_dir = diff.normalized() if d > 0.5 else Vector2(1.0, 0.0)
 				separation += push_dir * (min_sep_dist - d)
 
-	# 2. Pisahkan diri dari anggota tim terdekat jika saling menumpuk
+	# 2. Pisahkan diri dari rekan tim (jarak renggang saat mode tempur agar tidak berdempetan)
+	var min_teammate_dist: float = 75.0 if in_party_combat else 38.0
 	var players := get_tree().get_nodes_in_group("player")
 	for p in players:
 		if p != self and is_instance_valid(p) and p.visible and not ("is_dead" in p and p.is_dead):
 			diff = global_position - p.global_position
 			d = diff.length()
-			if d < 35.0:
+			if d < min_teammate_dist:
 				push_dir = diff.normalized() if d > 0.5 else Vector2(-1.0, 0.0)
-				separation += push_dir * ((35.0 - d) * 0.5)
+				separation += push_dir * ((min_teammate_dist - d) * 0.8)
 
 	return separation
 
