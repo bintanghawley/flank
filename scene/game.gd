@@ -86,67 +86,43 @@ const PROLOGUE_DIALOGUE: Array[Dictionary] = [
 
 # =========================================================
 # NASKAH DIALOG AULA RAPAT KASTIL (CHAPTER 1.1 / CH1-SC05)
+# Sesuai Storyboard FLK-005
 # =========================================================
 const CASTLE_MEETING_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Raja",
-		"portrait": "raja",
-		"text": "Arthur, putraku... Magnus dan para peramal istana baru saja menyampaikan firasat buruk yang mengguncang ketenangan kerajaan kita."
-	},
-	{
 		"speaker": "Arthur (Pangeran)",
 		"portrait": "arthur",
-		"text": "Ayahanda Raja, Ibunda Ratu... Magnus sudah sempat memberitahuku di hutan tadi. Mungkin para peramal bisa menjelaskan secara rinci, apa yang sebenarnya terjadi?"
-	},
-	{
-		"speaker": "NPC Peramal 1",
-		"portrait": "peramal_1",
-		"text": "Tujuh hari ke depan, akan terjadi Seven Deadly Days. Hari kebangkitan tujuh bangsa iblis secara berurutan melalui tujuh tempat berbeda; mulai dari sela lempeng bumi, pegunungan, bebukitan, hingga langit-langit perut bumi."
-	},
-	{
-		"speaker": "NPC Peramal 1",
-		"portrait": "peramal_1",
-		"text": "Kami belum mengetahui rupa dan wujud pasti dari iblis-iblis yang akan bangkit itu..."
-	},
-	{
-		"speaker": "NPC Peramal 2",
-		"portrait": "peramal_2",
-		"text": "Hanya saja, kami mengetahui tujuh bangsa ini dari catatan leluhur kuno:\n- Superbia (Pride) - Iblis Kesombongan\n- Avarizia (Greed) - Iblis Keserakahan\n- Lussuria (Lust) - Iblis Hawa Nafsu"
-	},
-	{
-		"speaker": "NPC Peramal 2",
-		"portrait": "peramal_2",
-		"text": "Dan empat bangsa berikutnya:\n- Invidia (Envy) - Iblis Rasa Iri\n- Gola (Gluttony) - Iblis Kerakusan\n- Ira (Wrath) - Iblis Kemarahan\n- Accidia (Sloth) - Iblis Kemalasan"
-	},
-	{
-		"speaker": "Anastasya (Pemanah)",
-		"portrait": "anastasya",
-		"text": "Tujuh bangsa iblis sekaligus... Pertahanan perbatasan kerajaan tidak akan sanggup menahan gempuran mereka jika kita hanya diam menunggu di dalam istana."
+		"text": "Mungkin para peramal bisa menjelaskan, apa yang terjadi akhir-akhir ini."
 	},
 	{
 		"speaker": "Magnus (Penyihir)",
 		"portrait": "magnus",
-		"text": "Benar. Beberapa dari mereka bersatu, dan beberapa lainnya saling melahap satu sama lain. Jika kita tidak bertindak cepat, bumi ini akan menjadi sarang mereka berkembang biak!"
+		"text": "Setidaknya, kami menyimpulkan bahwa akan ada bencana besar yang terjadi."
 	},
 	{
-		"speaker": "Ratu",
-		"portrait": "ratu",
-		"text": "Dewa langit lindungi kita... Apakah ada cara untuk menghentikan kebangkitan mereka sebelum terlambat?"
+		"speaker": "NPC Peramal 1",
+		"portrait": "peramal_1",
+		"text": "7 hari ke depan, akan terjadi seven deadly day. Hari kebangkitan 7 bangsa iblis secara berurutan melalui 7 tempat berbeda. Aku tidak tahu rupa iblis yang akan datang dan seperti apa mereka."
+	},
+	{
+		"speaker": "NPC Peramal 2",
+		"portrait": "peramal_2",
+		"text": "Hanya saja, aku mengetahui 7 bangsa ini dari ingatan leluhur kami:\n- Superbia (Pride) - Sombong\n- Avarizia (Greed) - Serakah\n- Lussuria (Lust) - Nafsu"
+	},
+	{
+		"speaker": "NPC Peramal 2",
+		"portrait": "peramal_2",
+		"text": "Dan bangsa iblis berikutnya:\n- Invidia (Envy) - Iri\n- Gola (Gluttony) - Rakus\n- Ira (Wrath) - Marah\n- Accidia (Sloth) - Malas"
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Beberapa dari mereka bersatu, beberapa dari mereka saling melahap satu sama lain. Pada intinya, jika kita tidak bertindak cepat, bumi ini akan menjadi sarang mereka berkembang biak."
 	},
 	{
 		"speaker": "Arthur (Pangeran)",
 		"portrait": "arthur",
-		"text": "Aku sudah menyimpulkan apa yang harus kita lakukan. Besok pagi, kita akan memulai pelatihan ketat di camp latihan untuk mempersiapkan seluruh kesatria!"
-	},
-	{
-		"speaker": "Arthur (Pangeran)",
-		"portrait": "arthur",
-		"text": "Sekarang semuanya beristirahat, kumpulkan tenaga kalian dan tunggu perintah dariku untuk esok pagi."
-	},
-	{
-		"speaker": "Raja",
-		"portrait": "raja",
-		"text": "Keputusan yang tepat, Arthur. Kerahkan seluruh kemampuanmu. Keselamatan kerajaan ini ada di tanganmu dan kawan-kawanmu."
+		"text": "Aku sudah menyimpulkan apa yang akan kita lakukan. Besok pagi kita akan melakukan pelatihan ketat, sekarang semuanya beristirahat dan tunggu perintah dariku untuk esok pagi."
 	}
 ]
 
@@ -2170,24 +2146,25 @@ func _setup_meeting_participants() -> void:
 		anastasya.name = "Participant_Anastasya"
 		hall.add_child(anastasya)
 
-	# Pastikan kursi baris bawah berada di z_index = 4 agar y-sort bekerja natural dengan karakter di baliknya
+	# Pastikan kursi dan furnitur baris bawah berada di z_index = 5 agar sandaran kursi menutupi karakter di baliknya
+	var table_bottom = hall.get_node_or_null("TableBottomFurniture") as CanvasItem
+	if is_instance_valid(table_bottom):
+		table_bottom.z_index = 5
+	var table_main = hall.get_node_or_null("MeetingTableFurniture") as CanvasItem
+	if is_instance_valid(table_main):
+		table_main.z_index = 5
 	for chair_name in ["BottomChair1", "BottomChair2", "BottomChair3"]:
 		var chair = hall.get_node_or_null(chair_name) as CanvasItem
 		if is_instance_valid(chair):
-			chair.z_index = 4
+			chair.z_index = 5
 
 	# 6. Peramal 2 (BottomChair1 - Bawah Kiri)
-	# Karakter di z_index = 4 di balik BottomChair1 (z_index = 5) sehingga kepala tertutupi bingkai atas kursi
+	# Karakter di z_index = 4 di balik kursi (z_index = 5) sehingga badan dan kepala tertutupi bingkai atas kursi
 	if tex_mage_n:
-		var seer2 := _create_meeting_npc(tex_mage_n, 96, 64, 4, Vector2(-220, 35), "idle_n", Color(0.78, 0.95, 1.1), Vector2(-0.5, 0.0))
+		var seer2 := _create_meeting_npc(tex_mage_n, 96, 64, 4, Vector2(-220, 48), "idle_n", Color(0.78, 0.95, 1.1), Vector2(-0.5, 0.0))
 		seer2.name = "Participant_Peramal2"
+		seer2.z_index = 4
 		hall.add_child(seer2)
-
-	# 7. Peramal 3 (BottomChair3 - Bawah Kanan)
-	if tex_mage_n:
-		var seer3 := _create_meeting_npc(tex_mage_n, 96, 64, 4, Vector2(230, 35), "idle_n", Color(1.05, 0.88, 0.78), Vector2(-0.5, 0.0))
-		seer3.name = "Participant_Peramal3"
-		hall.add_child(seer3)
 
 
 func _create_meeting_npc(
