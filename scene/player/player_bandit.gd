@@ -17,7 +17,7 @@ var leader_node: CharacterBody2D = null
 var queue_slot_index: int = 1
 var in_party_combat: bool = false
 var ai_attack_timer: float = 0.0
-const COMBAT_ATTACK_RANGE: float = 72.0 # Jarak serang melee Bandit (garis depan kedua)
+const COMBAT_ATTACK_RANGE: float = 85.0 # Jarak serang melee Bandit (garis depan kedua)
 
 # =========================
 # MOVEMENT SETTINGS
@@ -924,38 +924,15 @@ func process_follower_combat(delta: float) -> void:
 		move_and_slide_with_separation()
 		return
 
+	# 1. Cari musuh hidup terdekat di dalam jangkauan kamera
 	var cam_rect := get_camera_world_rect()
 	var enemies := get_tree().get_nodes_in_group("enemy")
-	var knight := get_party_knight()
-	var knight_alive := is_knight_alive()
-
-	# 1. Prioritas Pemilihan Target (Bandit sebagai orang kedua membantu Knight):
 	var target_enemy: Node2D = null
+	var min_dist: float = INF
 
-	# Prioritas A: Jika ada musuh yang sudah sangat dekat / menempel Bandit, serang musuh tersebut agar tidak nyangkut
-	var min_self_dist: float = INF
 	for e in enemies:
-		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead) and cam_rect.has_point(e.global_position):
-			var d: float = global_position.distance_to(e.global_position)
-			if d <= COMBAT_ATTACK_RANGE + 15.0 and d < min_self_dist:
-				min_self_dist = d
-				target_enemy = e
-
-	# Prioritas B: Bantu musuh yang sedang dihadapi Knight di depan
-	if not target_enemy and knight_alive and is_instance_valid(knight):
-		var min_knight_dist: float = INF
-		for e in enemies:
-			if is_instance_valid(e) and not ("is_dead" in e and e.is_dead) and cam_rect.has_point(e.global_position):
-				var kd: float = knight.global_position.distance_to(e.global_position)
-				if kd < min_knight_dist:
-					min_knight_dist = kd
-					target_enemy = e
-
-	# Prioritas C: Musuh hidup terdekat di dalam jangkauan kamera
-	if not target_enemy:
-		var min_dist: float = INF
-		for e in enemies:
-			if is_instance_valid(e) and not ("is_dead" in e and e.is_dead) and cam_rect.has_point(e.global_position):
+		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
+			if cam_rect.has_point(e.global_position):
 				var d: float = global_position.distance_to(e.global_position)
 				if d < min_dist:
 					min_dist = d
@@ -971,44 +948,36 @@ func process_follower_combat(delta: float) -> void:
 
 	var dist_to_enemy := global_position.distance_to(target_enemy.global_position)
 
-	# 2. KONDISI SERANG: Jika sudah dalam jangkauan serangan melee (COMBAT_ATTACK_RANGE)
-	if dist_to_enemy <= COMBAT_ATTACK_RANGE:
+	# 2. KONDISI SERANG: Jika sudah dalam jangkauan melee atau menyentuh musuh
+	if dist_to_enemy <= COMBAT_ATTACK_RANGE or (dist_to_enemy <= attack_range and get_slide_collision_count() > 0):
 		velocity = knockback_velocity
 		is_moving = false
 		move_and_slide_with_separation()
 		last_direction = get_cardinal_direction(global_position.direction_to(target_enemy.global_position))
 		if not is_attacking and not is_skill_active:
 			play_idle_animation()
-		ai_attack_timer -= delta
-		if ai_attack_timer <= 0.0 and not is_attacking:
-			ai_attack_timer = attack_cooldown
+		if attack_timer <= 0.0 and not is_attacking and not is_skill_active:
 			shoot_towards(target_enemy.global_position)
 		return
-
-	# 3. KONDISI MENDEKAT: Membantu menyerang musuh dari samping agar tidak bertabrakan dengan Knight
-	var move_dir: Vector2 = Vector2.ZERO
-	if knight_alive and is_instance_valid(knight) and knight.global_position.distance_to(target_enemy.global_position) <= 240.0:
-		var to_knight := (knight.global_position - target_enemy.global_position).normalized()
-		if to_knight == Vector2.ZERO:
-			to_knight = Vector2.DOWN
-		# Ambil arah samping yang tegak lurus terhadap Knight
-		var side_vec := Vector2(-to_knight.y, to_knight.x)
-		if (global_position - target_enemy.global_position).dot(side_vec) < 0.0:
-			side_vec = -side_vec
-		# Arahkan ke titik samping musuh (~50 px) agar tidak bertumpuk dengan Knight
-		var side_spot := target_enemy.global_position + (side_vec * 50.0)
-		move_dir = global_position.direction_to(side_spot)
 	else:
-		# Jika Knight gugur atau jauh, dekati musuh secara langsung
-		move_dir = global_position.direction_to(target_enemy.global_position)
+		# 3. KONDISI MENDEKAT LANGSUNG KE MUSUH (TANPA FLANKING)
+		var move_dir := global_position.direction_to(target_enemy.global_position)
+		velocity = (move_dir * NORMAL_SPEED) + knockback_velocity
+		move_and_slide_with_separation()
 
-	velocity = (move_dir * NORMAL_SPEED) + knockback_velocity
-	move_and_slide_with_separation()
-	_apply_follower_slide_assist(move_dir, NORMAL_SPEED)
+		# Corner-Slide Assist saat mengejar musuh melewati sudut bangunan
+		if get_slide_collision_count() > 0 and velocity.length() < NORMAL_SPEED * 0.4:
+			var col := get_slide_collision(0)
+			var n := col.get_normal()
+			var tangent := Vector2(-n.y, n.x)
+			if move_dir.dot(tangent) < 0.0:
+				tangent = -tangent
+			velocity = tangent * (NORMAL_SPEED * 0.8) + knockback_velocity
+			move_and_slide()
 
-	is_moving = true
-	last_movement_direction = move_dir
-	update_direction_animation(move_dir)
+		is_moving = true
+		last_movement_direction = move_dir
+		update_direction_animation(move_dir)
 
 
 # =========================================================
