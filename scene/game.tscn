@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://bwrcpv48t8r6w" path="res://scene/player/player_archer.tscn" id="1_33cqm"]
 [ext_resource type="Script" uid="uid://vjhhky8r2m43" path="res://scene/game.gd" id="1_game_script"]
 [ext_resource type="PackedScene" uid="uid://dol0jnt4w2mn7" path="res://scene/enemy/enemy.tscn" id="2_xwcet"]
-[ext_resource type="PackedScene" uid="uid://dlatxleiag3o8" path="res://scene/world/kingdom_map.tscn" id="3_map"]
+[ext_resource type="PackedScene" uid="uid://b7v8y5k8m1q02" path="res://scene/world/outdoor_world.tscn" id="3_map"]
 [ext_resource type="PackedScene" uid="uid://cmkcndgxhr4gq" path="res://scene/player/player_mage.tscn" id="4_mage"]
 [ext_resource type="PackedScene" uid="uid://c7yak2m4n8p1q" path="res://scene/player/player_knight.tscn" id="5_knight"]
 [ext_resource type="PackedScene" uid="uid://df7k2nab1nd1t" path="res://scene/player/player_bandit.tscn" id="6_bandit"]
