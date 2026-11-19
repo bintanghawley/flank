@@ -61,97 +61,67 @@ position = Vector2(0, -360)
 scale = Vector2(5, 5)
 texture = ExtResource("2_furniture")
 region_enabled = true
-region_rect = Rect2(0, 0, 192, 48)
+region_rect = Rect2(15, 0, 162, 48)
 
-[node name="PillarUpperLeft" type="Sprite2D" parent="." unique_id=2126615605]
+[node name="TopPillarLeft" type="Sprite2D" parent="." unique_id=2126615605]
 z_index = 4
+y_sort_origin = 172.5
 texture_filter = 1
-position = Vector2(-445, -150)
+position = Vector2(-442.5, -302.5)
 scale = Vector2(5, 5)
 texture = ExtResource("2_furniture")
-offset = Vector2(0, -21.5)
 region_enabled = true
-region_rect = Rect2(2, 24, 10, 41)
+region_rect = Rect2(0, 0, 15, 71)
 
-[node name="PillarUpperLeftBase" type="Sprite2D" parent="." unique_id=2126615610]
+[node name="TopPillarRight" type="Sprite2D" parent="." unique_id=2126615606]
 z_index = 4
+y_sort_origin = 172.5
 texture_filter = 1
-position = Vector2(-445, -150)
+position = Vector2(442.5, -302.5)
 scale = Vector2(5, 5)
 texture = ExtResource("2_furniture")
-offset = Vector2(0, 2)
 region_enabled = true
-region_rect = Rect2(0, 65, 14, 6)
+region_rect = Rect2(177, 0, 15, 71)
 
-[node name="PillarUpperRight" type="Sprite2D" parent="." unique_id=2126615606]
+[node name="TopChair1" type="Sprite2D" parent="." unique_id=2126615607]
 z_index = 4
+y_sort_origin = 37.5
 texture_filter = 1
-position = Vector2(445, -150)
+position = Vector2(-220, -92.5)
 scale = Vector2(5, 5)
 texture = ExtResource("2_furniture")
-offset = Vector2(0, -21.5)
 region_enabled = true
-region_rect = Rect2(180, 24, 10, 41)
+region_rect = Rect2(46, 69, 12, 17)
 
-[node name="PillarUpperRightBase" type="Sprite2D" parent="." unique_id=2126615611]
+[node name="TopChair2" type="Sprite2D" parent="." unique_id=2126615608]
 z_index = 4
+y_sort_origin = 37.5
 texture_filter = 1
-position = Vector2(445, -150)
+position = Vector2(0, -92.5)
 scale = Vector2(5, 5)
 texture = ExtResource("2_furniture")
-offset = Vector2(0, 2)
 region_enabled = true
-region_rect = Rect2(178, 65, 14, 6)
+region_rect = Rect2(90, 69, 12, 17)
 
-[node name="ChairTopLeft" type="Sprite2D" parent="." unique_id=2126615607]
+[node name="TopChair3" type="Sprite2D" parent="." unique_id=2126615609]
 z_index = 4
+y_sort_origin = 37.5
 texture_filter = 1
-position = Vector2(-220, -45)
+position = Vector2(230, -92.5)
 scale = Vector2(5, 5)
-texture = ExtResource("1_ground")
-offset = Vector2(0, -8)
+texture = ExtResource("2_furniture")
 region_enabled = true
-region_rect = Rect2(46, 71, 12, 16)
-
-[node name="ChairTopMid" type="Sprite2D" parent="." unique_id=2126615608]
-z_index = 4
-texture_filter = 1
-position = Vector2(0, -45)
-scale = Vector2(5, 5)
-texture = ExtResource("1_ground")
-offset = Vector2(0, -8)
-region_enabled = true
-region_rect = Rect2(90, 71, 12, 16)
-
-[node name="ChairTopRight" type="Sprite2D" parent="." unique_id=2126615609]
-z_index = 4
-texture_filter = 1
-position = Vector2(230, -45)
-scale = Vector2(5, 5)
-texture = ExtResource("1_ground")
-offset = Vector2(0, -8)
-region_enabled = true
-region_rect = Rect2(136, 71, 12, 16)
+region_rect = Rect2(136, 69, 12, 17)
 
 [node name="MeetingTableFurniture" type="Sprite2D" parent="." unique_id=2126615597]
 z_index = 4
+y_sort_origin = 27.5
 texture_filter = 1
-position = Vector2(-2.5, 7.5)
+position = Vector2(-2.5, 12.5)
 scale = Vector2(5, 5)
 texture = ExtResource("2_furniture")
-offset = Vector2(0, 1)
 region_enabled = true
 region_rect = Rect2(36, 85, 119, 27)
-
-[node name="TableBottomFurniture" type="Sprite2D" parent="." unique_id=2126615604]
-z_index = 4
-texture_filter = 1
-position = Vector2(-2.5, 77.5)
-scale = Vector2(5, 5)
-texture = ExtResource("2_furniture")
-offset = Vector2(0, 6)
-region_enabled = true
-region_rect = Rect2(36, 112, 119, 11)
 
 [node name="BottomChair1" type="Sprite2D" parent="." unique_id=2126615612]
 z_index = 5
@@ -183,63 +153,63 @@ texture = ExtResource("2_furniture")
 region_enabled = true
 region_rect = Rect2(135, 105, 14, 18)
 
-[node name="ChairLeftFurniture" type="Sprite2D" parent="." unique_id=2126615598]
+[node name="SideChairLeft" type="Sprite2D" parent="." unique_id=2126615598]
 z_index = 4
+y_sort_origin = 60.0
 texture_filter = 1
-position = Vector2(-347.5, 27.5)
+position = Vector2(-347.5, -7.5)
 scale = Vector2(5, 5)
 texture = ExtResource("2_furniture")
-offset = Vector2(0, -7)
 region_enabled = true
 region_rect = Rect2(20, 79, 13, 31)
 
-[node name="ChairRightFurniture" type="Sprite2D" parent="." unique_id=2126615599]
+[node name="SideChairRight" type="Sprite2D" parent="." unique_id=2126615599]
 z_index = 4
+y_sort_origin = 60.0
 texture_filter = 1
-position = Vector2(342.5, 27.5)
+position = Vector2(342.5, -7.5)
 scale = Vector2(5, 5)
 texture = ExtResource("2_furniture")
-offset = Vector2(0, -7)
 region_enabled = true
 region_rect = Rect2(158, 79, 13, 31)
 
 [node name="PillarBannerLeft" type="Sprite2D" parent="." unique_id=2126615600]
 z_index = 4
+y_sort_origin = 100.0
 texture_filter = 1
-position = Vector2(-442.5, 180)
+position = Vector2(-442.5, 80)
 scale = Vector2(5, 5)
 texture = ExtResource("2_furniture")
-offset = Vector2(0, -20)
 region_enabled = true
 region_rect = Rect2(0, 88, 15, 48)
 
 [node name="PillarBannerRight" type="Sprite2D" parent="." unique_id=2126615601]
 z_index = 4
+y_sort_origin = 100.0
 texture_filter = 1
-position = Vector2(442.5, 180)
+position = Vector2(442.5, 80)
 scale = Vector2(5, 5)
 texture = ExtResource("2_furniture")
-offset = Vector2(0, -20)
 region_enabled = true
 region_rect = Rect2(177, 88, 15, 48)
 
 [node name="EntrancePillarLeft" type="Sprite2D" parent="." unique_id=2126615602]
 z_index = 4
+y_sort_origin = 50.0
 texture_filter = 1
-position = Vector2(-205, 460)
+position = Vector2(-205, 360)
 scale = Vector2(5, 5)
 texture = ExtResource("2_furniture")
-offset = Vector2(0, -20)
 region_enabled = true
 region_rect = Rect2(48, 144, 14, 48)
 
 [node name="EntrancePillarRight" type="Sprite2D" parent="." unique_id=2126615603]
 z_index = 4
+y_sort_origin = 50.0
 texture_filter = 1
-position = Vector2(205, 460)
+position = Vector2(205, 360)
 scale = Vector2(5, 5)
 texture = ExtResource("2_furniture")
-offset = Vector2(0, -20)
 region_enabled = true
 region_rect = Rect2(130, 144, 14, 48)
 
