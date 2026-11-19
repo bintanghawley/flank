@@ -28,8 +28,8 @@ const CASTLE_ENTRANCE_POS: Vector2 = Vector2(2533.0, 1035.0)
 const CASTLE_HALL_SPAWN_POS: Vector2 = Vector2(2533.0, -1180.0)
 const CASTLE_HALL_EXIT_POS: Vector2 = Vector2(2533.0, -1060.0)
 const CASTLE_OUTSIDE_SPAWN_POS: Vector2 = Vector2(2533.0, 1090.0)
-const CASTLE_MEETING_SEAT_GLOBAL_POS: Vector2 = Vector2(2533.0, -1375.0)
-const CASTLE_MEETING_SIT_POS: Vector2 = Vector2(2533.0, -1465.0)
+const CASTLE_MEETING_SEAT_GLOBAL_POS: Vector2 = Vector2(2457.0, -1375.0)
+const CASTLE_MEETING_SIT_POS: Vector2 = Vector2(2457.0, -1385.0)
 const CASTLE_MEETING_TABLE_CENTER: Vector2 = Vector2(2533.0, -1490.0)
 var is_inside_castle_hall: bool = false
 var is_meeting_in_progress: bool = false
@@ -39,116 +39,400 @@ var world_map_max: Vector2 = Vector2.ZERO
 var _nav_compass: Node2D = null
 
 # =========================================================
-# NASKAH DIALOG CERITA PROLOG
+# NASKAH DIALOG CERITA PROLOG (CH0-SC02)
+# Sesuai Storyboard FLK-002
 # =========================================================
 const PROLOGUE_DIALOGUE: Array[Dictionary] = [
 	{
 		"speaker": "Arthur (Pangeran)",
 		"portrait": "arthur",
-		"text": "Hutan di depan istana ini cukup luas dan kaya akan batuan mineral. Lokasi yang sangat strategis untuk membangun rumah tambang kerajaan."
+		"text": "Hmm.. aku pikir hari ini cukup sampai sini aja, tempat ini menarik untuk menjadi pusat pertambangan kita. Menurutmu bagaimana?"
 	},
 	{
-		"speaker": "Burung Gagak",
-		"portrait": "raven",
-		"text": "*KAAK!* Pangeran Arthur! Berhenti! Hamba membawa pesan sihir mendesak langsung dari Penasehat Istana, Tuan Magnus!"
-	},
-	{
-		"speaker": "Arthur (Pangeran)",
-		"portrait": "arthur",
-		"text": "Burung gagak sihir Magnus? Ada apa gerangan? Mengapa terburu-buru sampai harus mengirim pengintai udara?"
-	},
-	{
-		"speaker": "Burung Gagak",
-		"portrait": "raven",
-		"text": "Langit istana dipenuhi pertanda kutukan buruk! Ada pangeran kerajaan tetangga yang membongkar makam pusaka kuno secara semena-mena."
-	},
-	{
-		"speaker": "Burung Gagak",
-		"portrait": "raven",
-		"text": "Arwah leluhur murka! Dalam rentang tujuh hari ke depan, gerombolan iblis akan bangkit dari bumi dan langit untuk meluluhlantakkan peradaban."
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Perintahmu kan kewajiban bagi kita. Sebagai kawan lamamu, aku sudah cukup yakin dengan segala yang kau pilih."
 	},
 	{
 		"speaker": "Arthur (Pangeran)",
 		"portrait": "arthur",
-		"text": "Tujuh hari... bangsa iblis?! Ini bukan ancaman biasa. Kita tidak boleh membuang waktu sedetik pun di hutan ini!"
+		"text": "Hahaha, semenjak aku diutus memimpin kerajaan ini, aku benci dengan bahasa mereka yang terlalu sopan, padahal dulunya kita duduk di bangku yang sama."
 	},
 	{
 		"speaker": "Burung Gagak",
 		"portrait": "raven",
-		"text": "Benar, Yang Mulia! Tuan Magnus dan para petinggi kerajaan menunggu Anda di aula kastil untuk segera menggelar rapat darurat!"
+		"text": "krok - krokk KROKK! KROK!!"
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Yang benar saja?"
 	},
 	{
 		"speaker": "Arthur (Pangeran)",
 		"portrait": "arthur",
-		"text": "Baik! Pengawal, bersiaga! Kita kembali ke kastil sekarang juga!"
+		"text": "Apa yang burung itu katakan? ia membentak seperti sedang ada banyak masalah dikeluarganya."
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Tidak! INI LEBIH DARI ITU. Dunia kita terancam, Para penyihir itu mendapat ramalan kiamat."
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Ayo segera kembali ke kerajaan dan melakukan rapat dengan para petinggi lainya."
 	}
 ]
 
 # =========================================================
 # NASKAH DIALOG AULA RAPAT KASTIL (CHAPTER 1.1 / CH1-SC05)
+# Sesuai Storyboard FLK-005
 # =========================================================
 const CASTLE_MEETING_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Raja",
-		"portrait": "raja",
-		"text": "Arthur, putraku... Magnus dan para peramal istana baru saja menyampaikan firasat buruk yang mengguncang ketenangan kerajaan kita."
-	},
-	{
 		"speaker": "Arthur (Pangeran)",
 		"portrait": "arthur",
-		"text": "Ayahanda Raja, Ibunda Ratu... Magnus sudah sempat memberitahuku di hutan tadi. Mungkin para peramal bisa menjelaskan secara rinci, apa yang sebenarnya terjadi?"
-	},
-	{
-		"speaker": "NPC Peramal 1",
-		"portrait": "peramal_1",
-		"text": "Tujuh hari ke depan, akan terjadi Seven Deadly Days. Hari kebangkitan tujuh bangsa iblis secara berurutan melalui tujuh tempat berbeda; mulai dari sela lempeng bumi, pegunungan, bebukitan, hingga langit-langit perut bumi."
-	},
-	{
-		"speaker": "NPC Peramal 1",
-		"portrait": "peramal_1",
-		"text": "Kami belum mengetahui rupa dan wujud pasti dari iblis-iblis yang akan bangkit itu..."
-	},
-	{
-		"speaker": "NPC Peramal 2",
-		"portrait": "peramal_2",
-		"text": "Hanya saja, kami mengetahui tujuh bangsa ini dari catatan leluhur kuno:\n- Superbia (Pride) - Iblis Kesombongan\n- Avarizia (Greed) - Iblis Keserakahan\n- Lussuria (Lust) - Iblis Hawa Nafsu"
-	},
-	{
-		"speaker": "NPC Peramal 2",
-		"portrait": "peramal_2",
-		"text": "Dan empat bangsa berikutnya:\n- Invidia (Envy) - Iblis Rasa Iri\n- Gola (Gluttony) - Iblis Kerakusan\n- Ira (Wrath) - Iblis Kemarahan\n- Accidia (Sloth) - Iblis Kemalasan"
-	},
-	{
-		"speaker": "Anastasya (Pemanah)",
-		"portrait": "anastasya",
-		"text": "Tujuh bangsa iblis sekaligus... Pertahanan perbatasan kerajaan tidak akan sanggup menahan gempuran mereka jika kita hanya diam menunggu di dalam istana."
+		"text": "Mungkin para peramal bisa menjelaskan, apa yang terjadi akhir-akhir ini."
 	},
 	{
 		"speaker": "Magnus (Penyihir)",
 		"portrait": "magnus",
-		"text": "Benar. Beberapa dari mereka bersatu, dan beberapa lainnya saling melahap satu sama lain. Jika kita tidak bertindak cepat, bumi ini akan menjadi sarang mereka berkembang biak!"
+		"text": "Setidaknya, kami menyimpulkan bahwa akan ada bencana besar yang terjadi."
 	},
 	{
-		"speaker": "Ratu",
-		"portrait": "ratu",
-		"text": "Dewa langit lindungi kita... Apakah ada cara untuk menghentikan kebangkitan mereka sebelum terlambat?"
+		"speaker": "NPC Peramal 1",
+		"portrait": "peramal_1",
+		"text": "7 hari ke depan, akan terjadi seven deadly day. Hari kebangkitan 7 bangsa iblis secara berurutan melalui 7 tempat berbeda. Aku tidak tahu rupa iblis yang akan datang dan seperti apa mereka."
+	},
+	{
+		"speaker": "NPC Peramal 2",
+		"portrait": "peramal_2",
+		"text": "Hanya saja, aku mengetahui 7 bangsa ini dari ingatan leluhur kami:\n- Superbia (Pride) - Sombong\n- Avarizia (Greed) - Serakah\n- Lussuria (Lust) - Nafsu"
+	},
+	{
+		"speaker": "NPC Peramal 2",
+		"portrait": "peramal_2",
+		"text": "Dan bangsa iblis berikutnya:\n- Invidia (Envy) - Iri\n- Gola (Gluttony) - Rakus\n- Ira (Wrath) - Marah\n- Accidia (Sloth) - Malas"
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Beberapa dari mereka bersatu, beberapa dari mereka saling melahap satu sama lain. Pada intinya, jika kita tidak bertindak cepat, bumi ini akan menjadi sarang mereka berkembang biak."
 	},
 	{
 		"speaker": "Arthur (Pangeran)",
 		"portrait": "arthur",
-		"text": "Aku sudah menyimpulkan apa yang harus kita lakukan. Besok pagi, kita akan memulai pelatihan ketat di camp latihan untuk mempersiapkan seluruh kesatria!"
-	},
-	{
-		"speaker": "Arthur (Pangeran)",
-		"portrait": "arthur",
-		"text": "Sekarang semuanya beristirahat, kumpulkan tenaga kalian dan tunggu perintah dariku untuk esok pagi."
-	},
-	{
-		"speaker": "Raja",
-		"portrait": "raja",
-		"text": "Keputusan yang tepat, Arthur. Kerahkan seluruh kemampuanmu. Keselamatan kerajaan ini ada di tanganmu dan kawan-kawanmu."
+		"text": "Aku sudah menyimpulkan apa yang akan kita lakukan. Besok pagi kita akan melakukan pelatihan ketat, sekarang semuanya beristirahat dan tunggu perintah dariku untuk esok pagi."
 	}
 ]
+
+# =========================================================
+# NASKAH DIALOG KAMAR KNIGHT (CHAPTER 1.2 / CH1-SC06)
+# Sesuai Storyboard FLK-006
+# =========================================================
+const CH1_KNIGHT_ROOM_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Aku harus segera pergi berlatih, \"pelatih\" pasti sudah menungguku di sana."
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Huft, semoga semua ini berjalan seperti semestinya."
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG CAMP LATIHAN SEBELUM DUEL (CHAPTER 1.2)
+# Sesuai Storyboard FLK-007
+# =========================================================
+const CH1_CAMP_TRAINING_PRE_FIGHT_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Alaric, aku cukup siap untuk ini. Aku akan melawanmu, kan?"
+	},
+	{
+		"speaker": "Alaric (Pelatih)",
+		"portrait": "alaric",
+		"text": "Iya Yang Mulia, setidaknya cukup bertahan saja dariku ha-ha-ha."
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Sedari dulu kau memang kesatria yang arogan, ayo kita lihat siapa yang lebih kuat!"
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG PASCA LATIHAN & PETUNJUK PEMAKAMAN (CHAPTER 1.2)
+# Sesuai Storyboard FLK-008
+# =========================================================
+const CH1_CAMP_TRAINING_POST_FIGHT_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Alaric (Pelatih)",
+		"portrait": "alaric",
+		"text": "Kau memang cukup tangguh Yang Mulia, sayangnya aku cukup lihai untuk melawanmu haha."
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Astaga, kurasa kita cukup imbang..."
+	},
+	{
+		"speaker": "Alaric (Pelatih)",
+		"portrait": "alaric",
+		"text": "Menurut saya, kau sudah cukup tangguh untuk perjalanan ini."
+	},
+	{
+		"speaker": "Alaric (Pelatih)",
+		"portrait": "alaric",
+		"text": "Pergi ke daerah pemakaman, di situ terdapat makam prajurit terhebat yang pernah kulatih dahulu, Lancelot. Terdapat pedang yang pernah ditempa oleh penempa legendaris di sana."
+	},
+	{
+		"speaker": "Alaric (Pelatih)",
+		"portrait": "alaric",
+		"text": "Gali saja makam itu dan ambil pedangnya, dia sudah mewariskan padaku sejak masa kritisnya, hanya saja aku menunggu saat yang tepat."
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG MENEMUKAN PEDANG DI PEMAKAMAN (CHAPTER 1.2)
+# Sesuai Storyboard FLK-009
+# =========================================================
+const CH1_GRAVEYARD_SWORD_FOUND_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Pedang ini terasa sangat kokoh. Hanya saja mungkin sedikit termakan oleh umur..."
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Aku akan pergi untuk memperbaikinya."
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG PERMINTAAN MAGNUS DI FORGE (CHAPTER 1.2)
+# Sesuai Storyboard FLK-011
+# =========================================================
+const CH1_FORGE_MAGNUS_REQUEST_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Arthur, bisa bantu aku sebentar?"
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Memangnya ada apa sampai kamu perlu bantuanku?"
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Ibuku pernah bercerita kalau ada artefak kuno dari keturunan darah keluargaku."
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Artefak itu sengaja disegel dan hanya boleh digunakan ketika ada hal genting seperti kondisi kita sekarang."
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Katanya sih ada di dalam perpustakaan, dan ada ruang rahasia di sana."
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Dengan senang hati! Lagipula kamu yang akan melindungiku dengan sihir-sihir kuatmu itu."
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Dasar..., baiklah ikuti aku."
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG MEMASUKI PERPUSTAKAAN (CHAPTER 1.2)
+# Sesuai Storyboard FLK-012
+# =========================================================
+const CH1_LIBRARY_ENTER_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Magnus, lihatlah sekelilingmu, penuh dengan buku ya!"
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Ya karena ini perpustakaan..."
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG PUZZLE PERPUSTAKAAN BAWAH TANAH (CHAPTER 1.2)
+# Sesuai Storyboard FLK-013
+# =========================================================
+const CH1_LIBRARY_PUZZLE_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Buku-buku ini merangkai suatu kata..."
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG BOSS FIGHT PERPUSTAKAAN - ARCHON (CHAPTER 1.2)
+# Sesuai Storyboard FLK-014 (Library)
+# =========================================================
+const CH1_LIBRARY_BOSS_PRE_FIGHT_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Archon - The Mindfulness",
+		"portrait": "archon",
+		"text": "Berani-beraninya kalian menapakkan kaki di sini. Pergi sebelum aku mengubah kalian menjadi salah satu dari buku yang tersusun di rak-rak itu!"
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Sebentar! Kami hanya ingin mencari artefak yang tersegel di tempat ini, bukankah itu diperbolehkan!?"
+	},
+	{
+		"speaker": "Archon - The Mindfulness",
+		"portrait": "archon",
+		"text": "Kalian diperbolehkan jika berhasil mengalahkanku. Aku akan menguji kepantasan kalian untuk artefak itu!"
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG KLAIM BUKU EMAS ARTEFAK (CHAPTER 1.3)
+# Sesuai Storyboard FLK-015 (Buku Emas)
+# =========================================================
+const CH1_LIBRARY_GOLDEN_BOOK_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Buku ini bercahaya saat kusentuh..."
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG SERBUAN GERBANG ISTANA (CHAPTER 1.2 CLEAR / CH1-SC07)
+# Sesuai Storyboard FLK-017 (Gerbang)
+# =========================================================
+const CH1_GATE_INVASION_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "SERANGG!!!"
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG KEMUNCULAN ASSASSIN (CHAPTER 1.3 / CH1-SC08)
+# Sesuai Storyboard FLK-014 (Assassin)
+# =========================================================
+const CH1_ASSASSIN_APPEARANCE_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Hellene (Assassin)",
+		"portrait": "assassin",
+		"text": "Akan kujelaskan nanti setelah mengalahkan raksasa ini bersama!"
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG LEPAS TOPENG ASSASSIN & ALIANSI (CHAPTER 1.3 CLEAR / CH1-SC11)
+# Sesuai Storyboard FLK-017 (Aliansi Assassin)
+# =========================================================
+const CH1_ASSASSIN_UNMASK_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Hellene (Assassin)",
+		"portrait": "assassin",
+		"text": "Aku adalah assassin dari kerajaan seberang. Aku bisa sampai ke sini karena menyamar saat aku dan pengawalku sedang berada di hutan."
+	},
+	{
+		"speaker": "Hellene (Assassin)",
+		"portrait": "assassin",
+		"text": "Pengawalku habis pada malam itu. Aku berhasil membunuh satu dari mereka dan menggunakan sebagian dari tubuhnya sebagai penyamaran ini."
+	},
+	{
+		"speaker": "Hellene (Assassin)",
+		"portrait": "assassin",
+		"text": "Saat ini aku yakin, tidak hanya kastilmu yang diserang, kastilku sedang dalam bahaya, esok hari akan ada iblis yang menyerang kastilku."
+	},
+	{
+		"speaker": "Hellene (Assassin)",
+		"portrait": "assassin",
+		"text": "Tolong bantu aku menyelesaikan masalah ini, kita perlu bersatu untuk menyelamatkan kehidupan manusia."
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Aku tidak akan ikut denganmu, kau yang akan ikut dengan kita. Tunjukkan aku jalannya!"
+	}
+]
+
+# =========================================================
+# REGISTRI KAMUS DIALOG STORYBOARD LENGKAP (FLK-001 s/d FLK-017)
+# =========================================================
+const STORY_DIALOGUES: Dictionary = {
+	"FLK-001": PROLOGUE_DIALOGUE,
+	"FLK-002": PROLOGUE_DIALOGUE,
+	"CH0-SC02": PROLOGUE_DIALOGUE,
+	"prologue_intro": PROLOGUE_DIALOGUE,
+	"prologue": PROLOGUE_DIALOGUE,
+
+	"FLK-004": CASTLE_MEETING_DIALOGUE,
+	"FLK-005": CASTLE_MEETING_DIALOGUE,
+	"CH1-SC04": CASTLE_MEETING_DIALOGUE,
+	"CH1-SC05": CASTLE_MEETING_DIALOGUE,
+	"castle_meeting": CASTLE_MEETING_DIALOGUE,
+
+	"FLK-006": CH1_KNIGHT_ROOM_DIALOGUE,
+	"CH1-SC06": CH1_KNIGHT_ROOM_DIALOGUE,
+	"ch1_knight_room": CH1_KNIGHT_ROOM_DIALOGUE,
+
+	"FLK-007": CH1_CAMP_TRAINING_PRE_FIGHT_DIALOGUE,
+	"ch1_camp_training_pre": CH1_CAMP_TRAINING_PRE_FIGHT_DIALOGUE,
+
+	"FLK-008": CH1_CAMP_TRAINING_POST_FIGHT_DIALOGUE,
+	"ch1_camp_training_post": CH1_CAMP_TRAINING_POST_FIGHT_DIALOGUE,
+
+	"FLK-009": CH1_GRAVEYARD_SWORD_FOUND_DIALOGUE,
+	"ch1_graveyard_sword": CH1_GRAVEYARD_SWORD_FOUND_DIALOGUE,
+
+	"FLK-011": CH1_FORGE_MAGNUS_REQUEST_DIALOGUE,
+	"ch1_forge_magnus": CH1_FORGE_MAGNUS_REQUEST_DIALOGUE,
+
+	"FLK-012": CH1_LIBRARY_ENTER_DIALOGUE,
+	"ch1_library_enter": CH1_LIBRARY_ENTER_DIALOGUE,
+
+	"FLK-013": CH1_LIBRARY_PUZZLE_DIALOGUE,
+	"ch1_library_puzzle": CH1_LIBRARY_PUZZLE_DIALOGUE,
+
+	"FLK-014": CH1_LIBRARY_BOSS_PRE_FIGHT_DIALOGUE,
+	"ch1_library_boss": CH1_LIBRARY_BOSS_PRE_FIGHT_DIALOGUE,
+
+	"FLK-015": CH1_LIBRARY_GOLDEN_BOOK_DIALOGUE,
+	"ch1_library_golden_book": CH1_LIBRARY_GOLDEN_BOOK_DIALOGUE,
+
+	"FLK-017_GATE": CH1_GATE_INVASION_DIALOGUE,
+	"CH1-SC07": CH1_GATE_INVASION_DIALOGUE,
+	"ch1_gate_invasion": CH1_GATE_INVASION_DIALOGUE,
+
+	"FLK-014_ASSASSIN": CH1_ASSASSIN_APPEARANCE_DIALOGUE,
+	"CH1-SC08": CH1_ASSASSIN_APPEARANCE_DIALOGUE,
+	"ch1_assassin_appearance": CH1_ASSASSIN_APPEARANCE_DIALOGUE,
+
+	"FLK-017": CH1_ASSASSIN_UNMASK_DIALOGUE,
+	"FLK-017_ASSASSIN": CH1_ASSASSIN_UNMASK_DIALOGUE,
+	"CH1-SC11": CH1_ASSASSIN_UNMASK_DIALOGUE,
+	"ch1_assassin_unmask": CH1_ASSASSIN_UNMASK_DIALOGUE
+}
 
 var is_castle_meeting_completed: bool = false
 
@@ -407,7 +691,7 @@ func _unhandled_input(event: InputEvent) -> void:
 							exit_castle_hall()
 							get_viewport().set_input_as_handled()
 						elif not is_castle_meeting_completed and not is_meeting_in_progress:
-							if leader.global_position.distance_to(CASTLE_MEETING_SEAT_GLOBAL_POS) <= 90.0:
+							if leader.global_position.distance_to(CASTLE_MEETING_SEAT_GLOBAL_POS) <= 100.0:
 								start_castle_meeting_cutscene()
 								get_viewport().set_input_as_handled()
 
@@ -986,7 +1270,7 @@ func _init_starter_quests() -> void:
 			"title": "Peringatan Dari Langit",
 			"location": "Hutan Depan Istana",
 			"objective": "Dengarkan ramalan buruk dari burung gagak pengintai.",
-			"description": "Burung gagak sihir utusan Magnus menyampaikan kabar gawat mengenai ancaman kutukan 7 hari bangsa iblis.",
+			"description": "Burung gagak sihir menyampaikan kabar gawat ramalan kiamat kebangkitan bangsa iblis kepada Arthur dan Magnus.",
 			"status": "completed" if is_prologue_completed else "active",
 			"target_position": Vector2(3000, 1000)
 		},
@@ -995,20 +1279,80 @@ func _init_starter_quests() -> void:
 			"category": "main",
 			"title": "Chapter 1.1: Rapat Darurat Istana",
 			"location": "Aula Kastil",
-			"objective": "Menuju aula rapat kastil untuk menemui Tuan Magnus dan petinggi kerajaan.",
+			"objective": "Menuju aula rapat kastil untuk menemui petinggi kerajaan.",
 			"description": "Pangeran Arthur bersama pasukannya harus segera masuk ke aula kastil untuk menghadiri rapat darurat strategi menghadapi 7 jenis iblis.",
-			"status": "active" if is_prologue_completed else "inactive",
+			"status": "completed" if is_castle_meeting_completed else ("active" if is_prologue_completed else "inactive"),
 			"target_position": CASTLE_ENTRANCE_POS
 		},
 		{
 			"id": "main_03",
 			"category": "main",
-			"title": "Persiapan Pasukan",
-			"location": "Barak Militer",
-			"objective": "Kumpulkan perlengkapan senjata dan ramuan.",
-			"description": "Pastikan seluruh anggota pasukan dilengkapi perlengkapan tempur yang memadai sebelum ekspedisi.",
-			"status": "active",
+			"title": "Chapter 1.2: Ujian Sang Pelatih",
+			"location": "Camp Latihan Istana",
+			"objective": "Buktikan ketangguhan beradu pedang melawan Pelatih Alaric.",
+			"description": "Terbangun dari tidur yang resah, Arthur harus segera menuju camp pelatihan untuk beradu pedang dan membuktikan kesiapannya bertempur pada Pelatih Alaric.",
+			"status": "active" if is_castle_meeting_completed else "inactive",
 			"target_position": Vector2(2500, 1500)
+		},
+		{
+			"id": "main_04",
+			"category": "main",
+			"title": "Chapter 1.2: Pusaka Makam Ksatria",
+			"location": "Pemakaman Kerajaan",
+			"objective": "Gali makam ksatria Lancelot dan ambil pedang legendaris.",
+			"description": "Pelatih Alaric mengakui ketangguhan Arthur dan menyuruhnya menggali makam Lancelot di area pemakaman untuk mengambil pedang pusaka yang pernah ditempa penempa legendaris.",
+			"status": "inactive",
+			"target_position": Vector2(3800, 1200)
+		},
+		{
+			"id": "main_05",
+			"category": "main",
+			"title": "Chapter 1.2: Penempaan Pedang & Panggilan Magnus",
+			"location": "Tempat Forge Istana",
+			"objective": "Tempa kembali pedang pusaka dan dengarkan permintaan bantuan Magnus.",
+			"description": "Arthur memperbaiki pedang pusaka di ruang tempa. Magnus kemudian menghampiri dan meminta bantuan mencari artefak kuno rahasia milik keluarganya di dalam perpustakaan.",
+			"status": "inactive",
+			"target_position": Vector2(2100, 1600)
+		},
+		{
+			"id": "main_06",
+			"category": "main",
+			"title": "Chapter 1.2: Rahasia Perpustakaan Kuno",
+			"location": "Perpustakaan Bawah Tanah",
+			"objective": "Pecahkan teka-teki buku dan kalahkan penjaga Archon - The Mindfulness.",
+			"description": "Arthur dan Magnus memasuki ruang rahasia perpustakaan melalui teka-teki susunan kata di rak buku, lalu menghadapi ujian pertempuran melawan entitas penjaga Archon.",
+			"status": "inactive",
+			"target_position": Vector2(1900, 800)
+		},
+		{
+			"id": "main_07",
+			"category": "main",
+			"title": "Chapter 1.3: Kekuatan Sihir Meteor",
+			"location": "Halaman Luar Istana",
+			"objective": "Serap ilmu sihir Buku Emas dan uji coba skill meteor di area terbuka.",
+			"description": "Setelah Archon dikalahkan, Buku Emas bersinar dan mentransmisikan sihir penghancur meteor ke dalam diri Magnus. Mereka bergegas ke luar istana untuk menguji kekuatan baru ini.",
+			"status": "inactive",
+			"target_position": Vector2(2800, 1800)
+		},
+		{
+			"id": "main_08",
+			"category": "main",
+			"title": "Chapter 1.3: Serbuan Gerbang Utama",
+			"location": "Gerbang Utama Kastil",
+			"objective": "Pertahankan istana dan tumpas gerombolan kroco iblis di gerbang utama.",
+			"description": "Gerbang utama istana dijebol oleh serbuan iblis! Pangeran Arthur, Magnus, dan segenap prajurit istana bertarung menahan dan membasmi kroco-kroco iblis.",
+			"status": "inactive",
+			"target_position": CASTLE_ENTRANCE_POS
+		},
+		{
+			"id": "main_09",
+			"category": "main",
+			"title": "Chapter 1.3: Raksasa Envy & Sekutu Assassin",
+			"location": "Luar Gerbang Istana",
+			"objective": "Tumbangkan Boss Raksasa Envy dan jalin aliansi bersama sang Assassin misterius.",
+			"description": "Boss Raksasa Envy memangsa pasukannya dan membesar. Seorang assassin misterius berkulit iblis datang membantu menerkam titik lemah sang boss. Bersama-sama, mereka menyelamatkan kerajaan dan membentuk aliansi penyelamatan dunia.",
+			"status": "inactive",
+			"target_position": Vector2(2533, 1300)
 		},
 		{
 			"id": "world_01",
@@ -1046,6 +1390,8 @@ func _on_hud_quest_tracked(quest: Dictionary) -> void:
 	tracked_quest_id = quest.get("id", "")
 	if gameplay_hud:
 		gameplay_hud.update_hud_quest_display(quest)
+		if quest.has("target_position") and gameplay_hud.has_method("set_quest_navigation"):
+			gameplay_hud.set_quest_navigation(quest["target_position"], quest.get("location", ""))
 
 
 func _on_hud_quest_navigation_requested(quest: Dictionary) -> void:
@@ -1054,6 +1400,8 @@ func _on_hud_quest_navigation_requested(quest: Dictionary) -> void:
 	tracked_quest_id = quest.get("id", "")
 	if gameplay_hud:
 		gameplay_hud.update_hud_quest_display(quest)
+		if quest.has("target_position") and gameplay_hud.has_method("set_quest_navigation"):
+			gameplay_hud.set_quest_navigation(quest["target_position"], quest.get("location", ""))
 
 
 func enter_location(location_name: String) -> void:
@@ -2096,12 +2444,45 @@ func _on_prologue_dialogue_completed() -> void:
 		marker.visible = true
 
 
-func trigger_castle_meeting_dialogue(on_completed: Callable = Callable()) -> void:
+func get_story_dialogue(story_code_or_id: String) -> Array[Dictionary]:
+	var key: String = story_code_or_id.strip_edges()
+	var raw_dialogue = null
+	if STORY_DIALOGUES.has(key):
+		raw_dialogue = STORY_DIALOGUES[key]
+	elif STORY_DIALOGUES.has(key.to_upper()):
+		raw_dialogue = STORY_DIALOGUES[key.to_upper()]
+	elif STORY_DIALOGUES.has(key.to_lower()):
+		raw_dialogue = STORY_DIALOGUES[key.to_lower()]
+
+	if raw_dialogue == null:
+		return []
+
+	var dialogue_data: Array[Dictionary] = []
+	dialogue_data.assign(raw_dialogue)
+	return dialogue_data
+
+
+func play_story_dialogue(story_code_or_id: String, on_complete: Callable = Callable()) -> bool:
+	var dialogue_data: Array[Dictionary] = get_story_dialogue(story_code_or_id)
+	if dialogue_data.is_empty():
+		push_warning("play_story_dialogue: Naskah dialog '%s' tidak ditemukan dalam STORY_DIALOGUES!" % story_code_or_id)
+		if on_complete.is_valid():
+			on_complete.call()
+		return false
+
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_dialogue"):
-		gameplay_hud.show_dialogue("castle_meeting", CASTLE_MEETING_DIALOGUE, func():
-			if on_completed.is_valid():
-				on_completed.call()
+		gameplay_hud.show_dialogue(story_code_or_id, dialogue_data, func():
+			if on_complete.is_valid():
+				on_complete.call()
 		)
+		return true
+	elif on_complete.is_valid():
+		on_complete.call()
+	return false
+
+
+func trigger_castle_meeting_dialogue(on_completed: Callable = Callable()) -> void:
+	play_story_dialogue("castle_meeting", on_completed)
 
 
 func start_castle_meeting_cutscene() -> void:
@@ -2122,54 +2503,71 @@ func start_castle_meeting_cutscene() -> void:
 		set_party_movement_locked(false)
 		return
 
-	# Nonaktifkan collision leader sementara agar Arthur bisa menempati kursi tanpa terdorong collision
+	# Nonaktifkan physics & input leader sementara agar animasi cutscene jalan mulus tanpa terinterupsi
+	leader.set_physics_process(false)
+	leader.set_process_unhandled_input(false)
 	_set_character_collision_active(leader, false)
-	leader.z_index = 4
+	leader.z_index = 6
 
-	# Arthur bergerak menempati kursi rapat (BottomChair2)
+	# Hitung durasi jalan berdasarkan jarak agar tempo langkah konsisten dan alami
+	var dist: float = leader.global_position.distance_to(CASTLE_MEETING_SIT_POS)
+	var walk_duration: float = clampf(dist / 140.0, 0.6, 2.2)
+
+	# Mainkan animasi berjalan menghadap utara menuju meja rapat
+	if "last_direction" in leader:
+		leader.last_direction = Vector2.UP
+	if leader.has_node("AnimatedSprite2D"):
+		var anim_spr = leader.get_node("AnimatedSprite2D") as AnimatedSprite2D
+		if anim_spr:
+			anim_spr.play("walk_n")
+
+	# Arthur otomatis berjalan sendiri menuju posisi berdirinya di meja rapat
 	var move_tween := create_tween()
-	move_tween.tween_property(leader, "global_position", CASTLE_MEETING_SIT_POS, 0.40).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	move_tween.tween_property(leader, "global_position", CASTLE_MEETING_SIT_POS, walk_duration).set_trans(Tween.TRANS_LINEAR)
 	await move_tween.finished
 
-	# Pastikan animasi Arthur menghadap ke meja rapat (Utara)
+	# Begitu sampai di depan meja, Arthur berhenti dan menghadap ke raja (Utara)
+	if "last_direction" in leader:
+		leader.last_direction = Vector2.UP
 	if leader.has_node("AnimatedSprite2D"):
 		var anim_spr = leader.get_node("AnimatedSprite2D") as AnimatedSprite2D
 		if anim_spr:
 			anim_spr.play("idle_n")
-	if "last_direction" in leader:
-		leader.last_direction = Vector2.UP
 
 	# Jeda bernapas singkat sebelum dialog dimulai
-	await get_tree().create_timer(0.3).timeout
+	await get_tree().create_timer(0.4).timeout
 
-	# Jalankan dialog rapat istana
+	# Jalankan dialog rapat istana (kendali dialog Space/Enter/Klik berada di tangan player melalui HUD)
 	trigger_castle_meeting_dialogue(func():
 		_on_castle_meeting_finished()
 	)
 
 
 func _on_castle_meeting_finished() -> void:
-	# Arthur berdiri dan melangkah mundur sedikit dari kursi ke area bebas jalan
+	# Arthur melangkah mundur sedikit dari meja ke area bebas setelah rapat selesai
 	var leader := get_active_leader()
 	if is_instance_valid(leader):
 		var stand_tween := create_tween()
-		stand_tween.tween_property(leader, "global_position", CASTLE_MEETING_SEAT_GLOBAL_POS, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		stand_tween.tween_property(leader, "global_position", CASTLE_MEETING_SEAT_GLOBAL_POS, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		await stand_tween.finished
 
 		leader.z_index = 4
+		if "last_direction" in leader:
+			leader.last_direction = Vector2.DOWN
 		if leader.has_node("AnimatedSprite2D"):
 			var anim_spr = leader.get_node("AnimatedSprite2D") as AnimatedSprite2D
 			if anim_spr:
 				anim_spr.play("idle_s")
-		if "last_direction" in leader:
-			leader.last_direction = Vector2.DOWN
 
 		_set_character_collision_active(leader, true)
+		leader.set_physics_process(true)
+		leader.set_process_unhandled_input(true)
 
+	breadcrumbs.clear()
 	is_meeting_in_progress = false
 	is_castle_meeting_completed = true
 
-	# Buka kunci kontrol player
+	# Buka kunci kontrol player sepenuhnya (gameplay normal kembali ke player)
 	set_party_movement_locked(false)
 
 	# Selesaikan quest main_02 dan aktifkan main_03 (Persiapan Pasukan)
@@ -2221,44 +2619,46 @@ func _setup_meeting_participants() -> void:
 		queen.name = "Participant_Queen"
 		hall.add_child(queen)
 
-	# 3. Peramal 1 (TopChair3 - Atas Kanan)
+	# 3. Peramal 1 (Di sebelah kanan pilar besar kiri)
 	if tex_mage_s:
-		var seer1 := _create_meeting_npc(tex_mage_s, 96, 64, 4, Vector2(230, -50), "idle_s", Color(0.88, 0.78, 1.05), Vector2(-0.5, -3.6))
+		var seer1 := _create_meeting_npc(tex_mage_s, 96, 64, 4, Vector2(-360.0, -180.0), "idle_s", Color(0.88, 0.78, 1.05), Vector2(-0.5, 0.0))
 		seer1.name = "Participant_Peramal1"
+		seer1.z_index = 5
 		hall.add_child(seer1)
 
 	# 4. Magnus / Wizard (SideChairLeft - Samping Kiri)
 	# Disortir di Y = 15 (di depan SideChair Y = -7.5)
-	# offset.y = -10.6 menggeser visual 53px ke atas agar pas di alas kursi
+	# offset.y = -7.0 menggeser visual agar duduk pas di atas alas kursi
 	if tex_mage_e:
-		var magnus := _create_meeting_npc(tex_mage_e, 96, 64, 4, Vector2(-345, 15), "idle_e", Color.WHITE, Vector2(-0.5, -10.6))
+		var magnus := _create_meeting_npc(tex_mage_e, 96, 64, 4, Vector2(-345, 15), "idle_e", Color.WHITE, Vector2(-0.5, -7.0))
 		magnus.name = "Participant_Magnus"
 		hall.add_child(magnus)
 
 	# 5. Anastasya / Archer (SideChairRight - Samping Kanan)
+	# offset.y = -7.0 menggeser visual agar duduk pas di atas alas kursi
 	if tex_archer_w:
-		var anastasya := _create_meeting_npc(tex_archer_w, 32, 32, 4, Vector2(340, 15), "idle_w", Color.WHITE, Vector2(-1, -10.6))
+		var anastasya := _create_meeting_npc(tex_archer_w, 32, 32, 4, Vector2(340, 15), "idle_w", Color.WHITE, Vector2(-1, -7.0))
 		anastasya.name = "Participant_Anastasya"
 		hall.add_child(anastasya)
 
-	# Pastikan kursi baris bawah berada di z_index = 4 agar y-sort bekerja natural dengan karakter di baliknya
+	# Pastikan kursi dan furnitur baris bawah berada di z_index = 5 agar sandaran kursi menutupi karakter di baliknya
+	var table_bottom = hall.get_node_or_null("TableBottomFurniture") as CanvasItem
+	if is_instance_valid(table_bottom):
+		table_bottom.z_index = 5
+	var table_main = hall.get_node_or_null("MeetingTableFurniture") as CanvasItem
+	if is_instance_valid(table_main):
+		table_main.z_index = 5
 	for chair_name in ["BottomChair1", "BottomChair2", "BottomChair3"]:
 		var chair = hall.get_node_or_null(chair_name) as CanvasItem
 		if is_instance_valid(chair):
-			chair.z_index = 4
+			chair.z_index = 5
 
-	# 6. Peramal 2 (BottomChair1 - Bawah Kiri)
-	# Karakter di z_index = 4 di balik BottomChair1 (z_index = 5) sehingga kepala tertutupi bingkai atas kursi
-	if tex_mage_n:
-		var seer2 := _create_meeting_npc(tex_mage_n, 96, 64, 4, Vector2(-220, 35), "idle_n", Color(0.78, 0.95, 1.1), Vector2(-0.5, 0.0))
+	# 6. Peramal 2 (Di sebelah kiri pilar besar kanan)
+	if tex_mage_s:
+		var seer2 := _create_meeting_npc(tex_mage_s, 96, 64, 4, Vector2(360.0, -180.0), "idle_s", Color(0.78, 0.95, 1.1), Vector2(-0.5, 0.0))
 		seer2.name = "Participant_Peramal2"
+		seer2.z_index = 5
 		hall.add_child(seer2)
-
-	# 7. Peramal 3 (BottomChair3 - Bawah Kanan)
-	if tex_mage_n:
-		var seer3 := _create_meeting_npc(tex_mage_n, 96, 64, 4, Vector2(230, 35), "idle_n", Color(1.05, 0.88, 0.78), Vector2(-0.5, 0.0))
-		seer3.name = "Participant_Peramal3"
-		hall.add_child(seer3)
 
 
 func _create_meeting_npc(
@@ -2737,9 +3137,11 @@ func check_castle_interactions(delta: float) -> void:
 		marker.position.y = 940.0 + sin(_marker_bob_time) * 6.0
 
 	# Update quest navigation di HUD jika sedang aktif
-	if selected_game_mode != "open_world" and tracked_quest_id == "main_02" and not is_inside_castle_hall:
-		if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("update_quest_navigation"):
-			gameplay_hud.update_quest_navigation(leader.global_position)
+	if selected_game_mode != "open_world" and not is_inside_castle_hall:
+		var cur_q := _get_quest_by_id(tracked_quest_id)
+		if not cur_q.is_empty() and cur_q.get("status", "") == "active":
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("update_quest_navigation"):
+				gameplay_hud.update_quest_navigation(leader.global_position)
 
 	# Update visual arrow kompas navigasi yang mengorbit dan mengikuti karakter
 	update_nav_compass(delta)
@@ -2758,14 +3160,6 @@ func check_castle_interactions(delta: float) -> void:
 		if dist <= 75.0:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
 				gameplay_hud.show_interact_prompt("Keluar ke Gerbang Kastil", "E", "exit_castle")
-		elif not is_castle_meeting_completed and not is_meeting_in_progress:
-			var dist_seat := leader.global_position.distance_to(CASTLE_MEETING_SEAT_GLOBAL_POS)
-			if dist_seat <= 90.0:
-				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
-					gameplay_hud.show_interact_prompt("Ikut Rapat", "E", "join_meeting")
-			else:
-				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
-					gameplay_hud.hide_interact_prompt()
 		else:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 				gameplay_hud.hide_interact_prompt()
@@ -2815,7 +3209,10 @@ func enter_castle_hall() -> void:
 	if is_instance_valid(marker):
 		marker.visible = false
 
-	transition_to_location(CASTLE_HALL_SPAWN_POS, "Aula Rapat Istana")
+	await transition_to_location(CASTLE_HALL_SPAWN_POS, "Aula Rapat Istana")
+
+	if not is_castle_meeting_completed and not is_meeting_in_progress:
+		start_castle_meeting_cutscene()
 
 
 func exit_castle_hall() -> void:
@@ -2972,8 +3369,15 @@ func update_nav_compass(delta: float) -> void:
 	if not is_instance_valid(_nav_compass):
 		return
 
-	var is_active := (selected_game_mode != "open_world" and tracked_quest_id == "main_02" and not is_inside_castle_hall and not is_transitioning)
+	if selected_game_mode == "open_world":
+		if _nav_compass.visible:
+			_nav_compass.visible = false
+		return
+
 	var leader := get_active_leader()
+	var cur_q := _get_quest_by_id(tracked_quest_id)
+	var has_target: bool = not cur_q.is_empty() and cur_q.has("target_position") and cur_q.get("status", "") == "active"
+	var is_active: bool = has_target and not is_inside_castle_hall and not is_transitioning
 	if not is_active or leader == null or not is_instance_valid(leader):
 		if _nav_compass.visible:
 			_nav_compass.modulate.a = lerpf(_nav_compass.modulate.a, 0.0, delta * 8.0)
@@ -2981,14 +3385,16 @@ func update_nav_compass(delta: float) -> void:
 				_nav_compass.visible = false
 		return
 
-	var to_target: Vector2 = CASTLE_ENTRANCE_POS - leader.global_position
+	var target_pos: Vector2 = cur_q["target_position"]
+	var to_target: Vector2 = target_pos - leader.global_position
 	var dist: float = to_target.length()
 
-	# Jika sudah sampai di gerbang kastil (<= 110 px), pudar keluar
+	# Jika sudah dekat dengan tujuan (<= 110 px), pudar keluar
 	if dist <= 110.0:
-		_nav_compass.modulate.a = lerpf(_nav_compass.modulate.a, 0.0, delta * 6.0)
-		if _nav_compass.modulate.a <= 0.02:
-			_nav_compass.visible = false
+		if _nav_compass.visible:
+			_nav_compass.modulate.a = lerpf(_nav_compass.modulate.a, 0.0, delta * 6.0)
+			if _nav_compass.modulate.a <= 0.02:
+				_nav_compass.visible = false
 		return
 
 	_nav_compass.visible = true
