@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b5k8vyg6w3xqm"]
 
 [ext_resource type="Script" path="res://scene/ui/gameplay/gameplay_hud.gd" id="1_hud_script"]
-[ext_resource type="FontFile" uid="uid://elttrgb25xpi" path="res://assets/ui/fonts/beholden-bold.ttf" id="2_font"]
+[ext_resource type="FontFile" uid="uid://c74m8bvtvqkpw" path="res://assets/ui/fonts/beholden-bold.ttf" id="2_font"]
 [ext_resource type="Texture2D" uid="uid://bfa32ug12h1aw" path="res://assets/ui/menus/pause_menu/btn_pause_menu.png" id="3_book"]
 [ext_resource type="Texture2D" uid="uid://cdt67qa3yox00" path="res://assets/ui/gameplay/location/location_banner.png" id="4_banner"]
 [ext_resource type="Texture2D" uid="uid://dmvf7owi6ynl1" path="res://assets/ui/icons/actions/action_buttons.png" id="5_action_buttons"]
@@ -5103,7 +5103,7 @@ anchor_bottom = 1.0
 offset_left = 32.0
 offset_top = 34.0
 offset_right = 320.0
-offset_bottom = -20.0
+offset_bottom = -34.0
 grow_vertical = 2
 mouse_filter = 2
 
@@ -5182,9 +5182,9 @@ anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -320.0
-offset_top = 22.0
+offset_top = 34.0
 offset_right = -32.0
-offset_bottom = -38.0
+offset_bottom = -34.0
 grow_horizontal = 0
 grow_vertical = 2
 mouse_filter = 1
@@ -5195,9 +5195,9 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 14.0
-offset_top = 10.0
+offset_top = 24.0
 offset_right = -14.0
-offset_bottom = -16.0
+offset_bottom = -26.0
 grow_horizontal = 2
 grow_vertical = 2
 horizontal_scroll_mode = 0
@@ -5205,167 +5205,241 @@ horizontal_scroll_mode = 0
 [node name="CreditsVBox" type="VBoxContainer" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 3
+theme_override_constants/separation = 4
 alignment = 1
+
+[node name="SpTop" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
 
 [node name="H_Lead" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.2, 0.12, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 15
 text = "LEAD & GAME DIRECTION"
 horizontal_alignment = 1
 
-[node name="N_Lead" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+[node name="SpR_Lead" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+custom_minimum_size = Vector2(0, 2)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.18, 0.12, 0.14, 1)
+
+[node name="Lead_Lead" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.14, 0.09, 0.1, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 17
-text = "M Ghofar Jalesa W"
+theme_override_font_sizes/font_size = 18
+text = "Ghofar Jalesa"
 horizontal_alignment = 1
 
 [node name="Sp1" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
-custom_minimum_size = Vector2(0, 8)
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 
 [node name="H_Prog" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.2, 0.12, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 15
 text = "PROGRAMMING & COMBAT"
 horizontal_alignment = 1
 
-[node name="N_Prog" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+[node name="SpR_Prog" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+custom_minimum_size = Vector2(0, 2)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.18, 0.12, 0.14, 1)
+
+[node name="Lead_Prog" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.14, 0.09, 0.1, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Raffi Setiawan"
+horizontal_alignment = 1
+
+[node name="Members_Prog" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.17, 0.18, 1)
 theme_override_constants/line_spacing = 3
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 17
-text = "Raffi Setiawan P
-Firman Dwi Nugraha
-Evan Satria M"
+theme_override_font_sizes/font_size = 14
+text = "Firman Nugraha
+Evan Mahardika"
 horizontal_alignment = 1
 
 [node name="Sp2" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
-custom_minimum_size = Vector2(0, 8)
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 
 [node name="H_Art" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.2, 0.12, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 15
 text = "VISUAL ART, UI & ANIMATION"
 horizontal_alignment = 1
 
-[node name="N_Art" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+[node name="SpR_Art" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+custom_minimum_size = Vector2(0, 2)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.18, 0.12, 0.14, 1)
+
+[node name="Lead_Art" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.14, 0.09, 0.1, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Evan Mahardika"
+horizontal_alignment = 1
+
+[node name="Members_Art" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.17, 0.18, 1)
 theme_override_constants/line_spacing = 3
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 17
-text = "Evan Satria M
-M Daffa Ronalviatno P
-M Ghofar Jalesa W
-Raffi Setiawan P
-Firman Dwi Nugraha"
+theme_override_font_sizes/font_size = 14
+text = "Daffa Ronalvinato
+Ghofar Jalesa
+Raffi Setiawan
+Firman Nugraha"
 horizontal_alignment = 1
 
 [node name="Sp3" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
-custom_minimum_size = Vector2(0, 8)
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 
 [node name="H_Level" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.2, 0.12, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 15
 text = "LEVEL & TECHNICAL DESIGN"
 horizontal_alignment = 1
 
-[node name="N_Level" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+[node name="SpR_Level" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+custom_minimum_size = Vector2(0, 2)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.18, 0.12, 0.14, 1)
+
+[node name="Lead_Level" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.14, 0.09, 0.1, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Ghofar Jalesa"
+horizontal_alignment = 1
+
+[node name="Members_Level" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.17, 0.18, 1)
 theme_override_constants/line_spacing = 3
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 17
-text = "M Ghofar Jalesa W
-M Daffa Ronalviatno P
-Dhafin Kautsar Alif R. P
-Raffi Setiawan P
-Evan Satria M"
+theme_override_font_sizes/font_size = 14
+text = "Daffa Ronalvinato
+Dhafin Kautsar
+Raffi Setiawan
+Evan Mahardika"
 horizontal_alignment = 1
 
 [node name="Sp4" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
-custom_minimum_size = Vector2(0, 10)
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 
 [node name="H_Story" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.2, 0.12, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 15
 text = "WRITING & WORLDBUILDING"
 horizontal_alignment = 1
 
-[node name="N_Story" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+[node name="SpR_Story" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+custom_minimum_size = Vector2(0, 2)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.18, 0.12, 0.14, 1)
+
+[node name="Lead_Story" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.14, 0.09, 0.1, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Daffa Ronalvinato"
+horizontal_alignment = 1
+
+[node name="Members_Story" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.17, 0.18, 1)
 theme_override_constants/line_spacing = 3
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 17
-text = "M Daffa Ronalviatno P
-M Ghofar Jalesa W
-Evan Satria M"
+theme_override_font_sizes/font_size = 14
+text = "Ghofar Jalesa
+Evan Mahardika"
 horizontal_alignment = 1
 
 [node name="Sp5" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
-custom_minimum_size = Vector2(0, 10)
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 
 [node name="H_Audio" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.2, 0.12, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 15
 text = "AUDIO & SOUND DESIGN"
 horizontal_alignment = 1
 
-[node name="N_Audio" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+[node name="SpR_Audio" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+custom_minimum_size = Vector2(0, 2)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.18, 0.12, 0.14, 1)
+
+[node name="Lead_Audio" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.14, 0.09, 0.1, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Raffi Setiawan"
+horizontal_alignment = 1
+
+[node name="Members_Audio" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.17, 0.18, 1)
 theme_override_constants/line_spacing = 3
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 17
-text = "Raffi Setiawan P
-Firman Dwi Nugraha"
+theme_override_font_sizes/font_size = 14
+text = "Firman Nugraha"
 horizontal_alignment = 1
 
 [node name="Sp6" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
-custom_minimum_size = Vector2(0, 10)
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 
 [node name="H_QA" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.2, 0.12, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 15
 text = "QUALITY ASSURANCE"
 horizontal_alignment = 1
 
-[node name="N_QA" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+[node name="SpR_QA" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+custom_minimum_size = Vector2(0, 2)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.18, 0.12, 0.14, 1)
+
+[node name="Lead_QA" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.14, 0.09, 0.1, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 18
+text = "Raffi Setiawan"
+horizontal_alignment = 1
+
+[node name="Members_QA" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.24, 0.17, 0.18, 1)
 theme_override_constants/line_spacing = 3
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 17
-text = "Raffi Setiawan P
-Hikmawal Anugerah D"
+theme_override_font_sizes/font_size = 14
+text = "Hikmawal Dzachwan"
 horizontal_alignment = 1
 
 [node name="Sp7" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
-custom_minimum_size = Vector2(0, 12)
+custom_minimum_size = Vector2(0, 22)
 layout_mode = 2
 
 [node name="H_Tech" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
@@ -5375,6 +5449,10 @@ theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 14
 text = "TEKNOLOGI"
 horizontal_alignment = 1
+
+[node name="SpR_Tech" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 2
 
 [node name="N_Tech" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
 layout_mode = 2
@@ -5387,7 +5465,7 @@ Font: Beholden by Tiny Speck"
 horizontal_alignment = 1
 
 [node name="Sp8" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
-custom_minimum_size = Vector2(0, 12)
+custom_minimum_size = Vector2(0, 22)
 layout_mode = 2
 
 [node name="H_Thanks" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
@@ -5397,6 +5475,10 @@ theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 15
 text = "--- UCAPAN TERIMA KASIH ---"
 horizontal_alignment = 1
+
+[node name="SpR_Thanks" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 2
 
 [node name="N_Thanks" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
 layout_mode = 2
@@ -5409,7 +5491,7 @@ Seluruh Rekan & Playtester Tim"
 horizontal_alignment = 1
 
 [node name="Sp9" type="Control" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
-custom_minimum_size = Vector2(0, 14)
+custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
 
 [node name="FinalThanks" type="Label" parent="RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageCredits/RightPage/ScrollContainer/CreditsVBox"]
