@@ -127,6 +127,313 @@ const CASTLE_MEETING_DIALOGUE: Array[Dictionary] = [
 	}
 ]
 
+# =========================================================
+# NASKAH DIALOG KAMAR KNIGHT (CHAPTER 1.2 / CH1-SC06)
+# Sesuai Storyboard FLK-006
+# =========================================================
+const CH1_KNIGHT_ROOM_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Aku harus segera pergi berlatih, \"pelatih\" pasti sudah menungguku di sana."
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Huft, semoga semua ini berjalan seperti semestinya."
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG CAMP LATIHAN SEBELUM DUEL (CHAPTER 1.2)
+# Sesuai Storyboard FLK-007
+# =========================================================
+const CH1_CAMP_TRAINING_PRE_FIGHT_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Alaric, aku cukup siap untuk ini. Aku akan melawanmu, kan?"
+	},
+	{
+		"speaker": "Alaric (Pelatih)",
+		"portrait": "alaric",
+		"text": "Iya Yang Mulia, setidaknya cukup bertahan saja dariku ha-ha-ha."
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Sedari dulu kau memang kesatria yang arogan, ayo kita lihat siapa yang lebih kuat!"
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG PASCA LATIHAN & PETUNJUK PEMAKAMAN (CHAPTER 1.2)
+# Sesuai Storyboard FLK-008
+# =========================================================
+const CH1_CAMP_TRAINING_POST_FIGHT_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Alaric (Pelatih)",
+		"portrait": "alaric",
+		"text": "Kau memang cukup tangguh Yang Mulia, sayangnya aku cukup lihai untuk melawanmu haha."
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Astaga, kurasa kita cukup imbang..."
+	},
+	{
+		"speaker": "Alaric (Pelatih)",
+		"portrait": "alaric",
+		"text": "Menurut saya, kau sudah cukup tangguh untuk perjalanan ini."
+	},
+	{
+		"speaker": "Alaric (Pelatih)",
+		"portrait": "alaric",
+		"text": "Pergi ke daerah pemakaman, di situ terdapat makam prajurit terhebat yang pernah kulatih dahulu, Lancelot. Terdapat pedang yang pernah ditempa oleh penempa legendaris di sana."
+	},
+	{
+		"speaker": "Alaric (Pelatih)",
+		"portrait": "alaric",
+		"text": "Gali saja makam itu dan ambil pedangnya, dia sudah mewariskan padaku sejak masa kritisnya, hanya saja aku menunggu saat yang tepat."
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG MENEMUKAN PEDANG DI PEMAKAMAN (CHAPTER 1.2)
+# Sesuai Storyboard FLK-009
+# =========================================================
+const CH1_GRAVEYARD_SWORD_FOUND_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Pedang ini terasa sangat kokoh. Hanya saja mungkin sedikit termakan oleh umur..."
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Aku akan pergi untuk memperbaikinya."
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG PERMINTAAN MAGNUS DI FORGE (CHAPTER 1.2)
+# Sesuai Storyboard FLK-011
+# =========================================================
+const CH1_FORGE_MAGNUS_REQUEST_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Arthur, bisa bantu aku sebentar?"
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Memangnya ada apa sampai kamu perlu bantuanku?"
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Ibuku pernah bercerita kalau ada artefak kuno dari keturunan darah keluargaku."
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Artefak itu sengaja disegel dan hanya boleh digunakan ketika ada hal genting seperti kondisi kita sekarang."
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Katanya sih ada di dalam perpustakaan, dan ada ruang rahasia di sana."
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Dengan senang hati! Lagipula kamu yang akan melindungiku dengan sihir-sihir kuatmu itu."
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Dasar..., baiklah ikuti aku."
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG MEMASUKI PERPUSTAKAAN (CHAPTER 1.2)
+# Sesuai Storyboard FLK-012
+# =========================================================
+const CH1_LIBRARY_ENTER_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Magnus, lihatlah sekelilingmu, penuh dengan buku ya!"
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Ya karena ini perpustakaan..."
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG PUZZLE PERPUSTAKAAN BAWAH TANAH (CHAPTER 1.2)
+# Sesuai Storyboard FLK-013
+# =========================================================
+const CH1_LIBRARY_PUZZLE_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Buku-buku ini merangkai suatu kata..."
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG BOSS FIGHT PERPUSTAKAAN - ARCHON (CHAPTER 1.2)
+# Sesuai Storyboard FLK-014 (Library)
+# =========================================================
+const CH1_LIBRARY_BOSS_PRE_FIGHT_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Archon - The Mindfulness",
+		"portrait": "archon",
+		"text": "Berani-beraninya kalian menapakkan kaki di sini. Pergi sebelum aku mengubah kalian menjadi salah satu dari buku yang tersusun di rak-rak itu!"
+	},
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Sebentar! Kami hanya ingin mencari artefak yang tersegel di tempat ini, bukankah itu diperbolehkan!?"
+	},
+	{
+		"speaker": "Archon - The Mindfulness",
+		"portrait": "archon",
+		"text": "Kalian diperbolehkan jika berhasil mengalahkanku. Aku akan menguji kepantasan kalian untuk artefak itu!"
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG KLAIM BUKU EMAS ARTEFAK (CHAPTER 1.3)
+# Sesuai Storyboard FLK-015 (Buku Emas)
+# =========================================================
+const CH1_LIBRARY_GOLDEN_BOOK_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Magnus (Penyihir)",
+		"portrait": "magnus",
+		"text": "Buku ini bercahaya saat kusentuh..."
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG SERBUAN GERBANG ISTANA (CHAPTER 1.2 CLEAR / CH1-SC07)
+# Sesuai Storyboard FLK-017 (Gerbang)
+# =========================================================
+const CH1_GATE_INVASION_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "SERANGG!!!"
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG KEMUNCULAN ASSASSIN (CHAPTER 1.3 / CH1-SC08)
+# Sesuai Storyboard FLK-014 (Assassin)
+# =========================================================
+const CH1_ASSASSIN_APPEARANCE_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Hellene (Assassin)",
+		"portrait": "assassin",
+		"text": "Akan kujelaskan nanti setelah mengalahkan raksasa ini bersama!"
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG LEPAS TOPENG ASSASSIN & ALIANSI (CHAPTER 1.3 CLEAR / CH1-SC11)
+# Sesuai Storyboard FLK-017 (Aliansi Assassin)
+# =========================================================
+const CH1_ASSASSIN_UNMASK_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Hellene (Assassin)",
+		"portrait": "assassin",
+		"text": "Aku adalah assassin dari kerajaan seberang. Aku bisa sampai ke sini karena menyamar saat aku dan pengawalku sedang berada di hutan."
+	},
+	{
+		"speaker": "Hellene (Assassin)",
+		"portrait": "assassin",
+		"text": "Pengawalku habis pada malam itu. Aku berhasil membunuh satu dari mereka dan menggunakan sebagian dari tubuhnya sebagai penyamaran ini."
+	},
+	{
+		"speaker": "Hellene (Assassin)",
+		"portrait": "assassin",
+		"text": "Saat ini aku yakin, tidak hanya kastilmu yang diserang, kastilku sedang dalam bahaya, esok hari akan ada iblis yang menyerang kastilku."
+	},
+	{
+		"speaker": "Hellene (Assassin)",
+		"portrait": "assassin",
+		"text": "Tolong bantu aku menyelesaikan masalah ini, kita perlu bersatu untuk menyelamatkan kehidupan manusia."
+	},
+	{
+		"speaker": "Arthur (Pangeran)",
+		"portrait": "arthur",
+		"text": "Aku tidak akan ikut denganmu, kau yang akan ikut dengan kita. Tunjukkan aku jalannya!"
+	}
+]
+
+# =========================================================
+# REGISTRI KAMUS DIALOG STORYBOARD LENGKAP (FLK-001 s/d FLK-017)
+# =========================================================
+const STORY_DIALOGUES: Dictionary = {
+	"FLK-001": PROLOGUE_DIALOGUE,
+	"FLK-002": PROLOGUE_DIALOGUE,
+	"CH0-SC02": PROLOGUE_DIALOGUE,
+	"prologue_intro": PROLOGUE_DIALOGUE,
+	"prologue": PROLOGUE_DIALOGUE,
+
+	"FLK-004": CASTLE_MEETING_DIALOGUE,
+	"FLK-005": CASTLE_MEETING_DIALOGUE,
+	"CH1-SC04": CASTLE_MEETING_DIALOGUE,
+	"CH1-SC05": CASTLE_MEETING_DIALOGUE,
+	"castle_meeting": CASTLE_MEETING_DIALOGUE,
+
+	"FLK-006": CH1_KNIGHT_ROOM_DIALOGUE,
+	"CH1-SC06": CH1_KNIGHT_ROOM_DIALOGUE,
+	"ch1_knight_room": CH1_KNIGHT_ROOM_DIALOGUE,
+
+	"FLK-007": CH1_CAMP_TRAINING_PRE_FIGHT_DIALOGUE,
+	"ch1_camp_training_pre": CH1_CAMP_TRAINING_PRE_FIGHT_DIALOGUE,
+
+	"FLK-008": CH1_CAMP_TRAINING_POST_FIGHT_DIALOGUE,
+	"ch1_camp_training_post": CH1_CAMP_TRAINING_POST_FIGHT_DIALOGUE,
+
+	"FLK-009": CH1_GRAVEYARD_SWORD_FOUND_DIALOGUE,
+	"ch1_graveyard_sword": CH1_GRAVEYARD_SWORD_FOUND_DIALOGUE,
+
+	"FLK-011": CH1_FORGE_MAGNUS_REQUEST_DIALOGUE,
+	"ch1_forge_magnus": CH1_FORGE_MAGNUS_REQUEST_DIALOGUE,
+
+	"FLK-012": CH1_LIBRARY_ENTER_DIALOGUE,
+	"ch1_library_enter": CH1_LIBRARY_ENTER_DIALOGUE,
+
+	"FLK-013": CH1_LIBRARY_PUZZLE_DIALOGUE,
+	"ch1_library_puzzle": CH1_LIBRARY_PUZZLE_DIALOGUE,
+
+	"FLK-014": CH1_LIBRARY_BOSS_PRE_FIGHT_DIALOGUE,
+	"ch1_library_boss": CH1_LIBRARY_BOSS_PRE_FIGHT_DIALOGUE,
+
+	"FLK-015": CH1_LIBRARY_GOLDEN_BOOK_DIALOGUE,
+	"ch1_library_golden_book": CH1_LIBRARY_GOLDEN_BOOK_DIALOGUE,
+
+	"FLK-017_GATE": CH1_GATE_INVASION_DIALOGUE,
+	"CH1-SC07": CH1_GATE_INVASION_DIALOGUE,
+	"ch1_gate_invasion": CH1_GATE_INVASION_DIALOGUE,
+
+	"FLK-014_ASSASSIN": CH1_ASSASSIN_APPEARANCE_DIALOGUE,
+	"CH1-SC08": CH1_ASSASSIN_APPEARANCE_DIALOGUE,
+	"ch1_assassin_appearance": CH1_ASSASSIN_APPEARANCE_DIALOGUE,
+
+	"FLK-017": CH1_ASSASSIN_UNMASK_DIALOGUE,
+	"FLK-017_ASSASSIN": CH1_ASSASSIN_UNMASK_DIALOGUE,
+	"CH1-SC11": CH1_ASSASSIN_UNMASK_DIALOGUE,
+	"ch1_assassin_unmask": CH1_ASSASSIN_UNMASK_DIALOGUE
+}
+
 var is_castle_meeting_completed: bool = false
 
 
@@ -2066,12 +2373,45 @@ func _on_prologue_dialogue_completed() -> void:
 		marker.visible = true
 
 
-func trigger_castle_meeting_dialogue(on_completed: Callable = Callable()) -> void:
+func get_story_dialogue(story_code_or_id: String) -> Array[Dictionary]:
+	var key: String = story_code_or_id.strip_edges()
+	var raw_dialogue = null
+	if STORY_DIALOGUES.has(key):
+		raw_dialogue = STORY_DIALOGUES[key]
+	elif STORY_DIALOGUES.has(key.to_upper()):
+		raw_dialogue = STORY_DIALOGUES[key.to_upper()]
+	elif STORY_DIALOGUES.has(key.to_lower()):
+		raw_dialogue = STORY_DIALOGUES[key.to_lower()]
+
+	if raw_dialogue == null:
+		return []
+
+	var dialogue_data: Array[Dictionary] = []
+	dialogue_data.assign(raw_dialogue)
+	return dialogue_data
+
+
+func play_story_dialogue(story_code_or_id: String, on_complete: Callable = Callable()) -> bool:
+	var dialogue_data: Array[Dictionary] = get_story_dialogue(story_code_or_id)
+	if dialogue_data.is_empty():
+		push_warning("play_story_dialogue: Naskah dialog '%s' tidak ditemukan dalam STORY_DIALOGUES!" % story_code_or_id)
+		if on_complete.is_valid():
+			on_complete.call()
+		return false
+
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_dialogue"):
-		gameplay_hud.show_dialogue("castle_meeting", CASTLE_MEETING_DIALOGUE, func():
-			if on_completed.is_valid():
-				on_completed.call()
+		gameplay_hud.show_dialogue(story_code_or_id, dialogue_data, func():
+			if on_complete.is_valid():
+				on_complete.call()
 		)
+		return true
+	elif on_complete.is_valid():
+		on_complete.call()
+	return false
+
+
+func trigger_castle_meeting_dialogue(on_completed: Callable = Callable()) -> void:
+	play_story_dialogue("castle_meeting", on_completed)
 
 
 func start_castle_meeting_cutscene() -> void:

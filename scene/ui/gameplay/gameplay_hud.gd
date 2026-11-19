@@ -5909,6 +5909,10 @@ func resolve_dialogue_portrait(key: String) -> Texture2D:
 		return portrait_queen
 	elif "peramal" in lower or "oracle" in lower or "seer" in lower:
 		return PORTRAIT_MAGNUS
+	elif "alaric" in lower or "pelatih" in lower or "trainer" in lower:
+		return PORTRAIT_ARTHUR
+	elif "archon" in lower or "mindfulness" in lower or "penjaga" in lower:
+		return PORTRAIT_MAGNUS
 	return null
 
 
