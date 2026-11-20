@@ -62,7 +62,7 @@ var _interact_prompt_label: Label = null
 var _interact_key_label: Label = null
 var _interact_action_type: String = ""
 
-var _nav_tracker_panel: PanelContainer = null
+var _nav_tracker_panel: Control = null
 var _nav_tracker_arrow: Label = null
 var _nav_tracker_label: Label = null
 var _nav_target_pos: Vector2 = Vector2.ZERO
@@ -196,7 +196,9 @@ var tab_btn_next_tex: Texture2D = null
 @onready var inv_scrollbar: Control = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/InventoryScrollBar
 @onready var inv_scroll_container: ScrollContainer = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/ScrollContainer
 @onready var inv_item_grid: GridContainer = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/ScrollContainer/ItemGrid
+@onready var inv_empty_state_container: VBoxContainer = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/EmptyStateContainer if has_node("RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/EmptyStateContainer") else null
 @onready var inv_btn_gunakan: TextureButton = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/BottomRow/BtnGunakan
+@onready var inv_label_gunakan: Label = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/BottomRow/BtnGunakan/LabelGunakan if has_node("RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/BottomRow/BtnGunakan/LabelGunakan") else null
 @onready var inv_label_capacity: Label = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/LeftPage/BottomRow/CapacityContainer/LabelCapacity
 
 # Inventory Detail UI (Right Page)
@@ -205,6 +207,16 @@ var tab_btn_next_tex: Texture2D = null
 @onready var inv_detail_count_container: HBoxContainer = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/DetailCountContainer
 @onready var inv_detail_count_label: Label = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/DetailCountContainer/DetailCountLabel
 @onready var inv_detail_desc: Label = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/DetailDesc
+@onready var note_content_panel: Control = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/NoteContentPanel if has_node("RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/NoteContentPanel") else null
+@onready var note_header_label: Label = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/NoteContentPanel/NoteHeader/HeaderLabel if has_node("RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/NoteContentPanel/NoteHeader/HeaderLabel") else null
+@onready var note_body_label: Label = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/NoteContentPanel/ScrollContainer/BodyLabel if has_node("RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/NoteContentPanel/ScrollContainer/BodyLabel") else null
+@onready var note_footer_hint: Label = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/NoteContentPanel/FooterHint if has_node("RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/NoteContentPanel/FooterHint") else null
+var _reading_note_id: String = ""
+
+const DEFAULT_NOTE_CONTENTS: Dictionary = {
+	"intel_report": "LAPORAN INTELIJEN - RAHASIA ISTANA\n\nKepada: Yang Mulia Pangeran Arthur\nPengirim: Skuadron Pengintai Sayap Bayangan\n\nAktivitas komplotan bandit di sekitar perbatasan selatan meningkat pesat dalam tiga hari terakhir. Jalur pasokan logistik dan kafilah dagang mulai dihadang.\n\nMata-mata kami mengonfirmasi adanya keterlibatan sosok misterius bertopeng yang memegang lambang terlarang. Diperkirakan mereka sedang mempersiapkan serangan pengalihan di gerbang utama untuk menyusup ke ruang arsip kuno istana.\n\nHarap seluruh penjaga gerbang diperintahkan waspada penuh dan mengamankan seluruh artefak penting.",
+	"soldier_diary": "CATATAN HARIAN PRAJURIT PENJAGA\n\nHari ke-14:\nKabut tebal di pos benteng utara tidak kunjung sirna. Suara gemerisik aneh terdengar dari semak belukar setiap malam. Kami mulai kekurangan persediaan obor.\n\nHari ke-21:\nGandum cadangan di lumbung mulai berjamur, namun moral prajurit tetap tegak. Kami mendengar kabar bahwa Yang Mulia Arthur dan Tuan Magnus sedang mengumpulkan para kesatria terbaik di aula istana.\n\nHari ke-28:\nSerbuan makhluk bayangan akhirnya dimulai saat fajar menyingsing. Jika pos pertahanan terluar ini runtuh, aku telah menyembunyikan kunci gerbang darurat di balik salah satu nisan tua di dekat monumen barat.\n\nSemoga dewa penjaga melindungi kerajaan ini dari kehancuran."
+}
 @onready var inv_target_slots_container: HBoxContainer = $RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots
 @onready var inv_target_slots: Array = [
 	$RootControl/PauseOverlay/PauseBookRoot/BookContainer/PagesContainer/PageInventory/RightPage/TargetPartySlots/Slot0,
@@ -241,6 +253,7 @@ const SFX_UI_HOVER: AudioStream = preload("res://assets/audio/sfx/ui/ui_hover.wa
 const SFX_BOOK_OPEN: AudioStream = preload("res://assets/audio/sfx/ui/book_open.wav")
 const SFX_BOOK_CLOSE: AudioStream = preload("res://assets/audio/sfx/ui/book_close.wav")
 const SFX_BOOK_PAGE_FLIP: AudioStream = preload("res://assets/audio/sfx/ui/book_page_flip.wav")
+const SFX_BOOK_FLIP: AudioStream = SFX_BOOK_PAGE_FLIP
 const SFX_BOOK_TAB_SELECT: AudioStream = preload("res://assets/audio/sfx/ui/book_tab_select.wav")
 const SFX_BOOK_CONFIRM: AudioStream = preload("res://assets/audio/sfx/ui/book_confirm.wav")
 var _last_hover_sfx_msec: int = 0
@@ -663,6 +676,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		if current_tab_index == 0 and pause_overlay.visible:
 			if _is_dragging:
 				return
+			if _reading_note_id != "":
+				if key_code == KEY_ESCAPE:
+					_reading_note_id = ""
+					_update_inventory_detail_panel()
+					_safe_set_input_handled()
+					return
 			if _is_selecting_item_target:
 				if key_code == KEY_ESCAPE:
 					_cancel_item_targeting()
@@ -881,6 +900,12 @@ func _input(event: InputEvent) -> void:
 				if current_tab_index == 0:
 					if _is_dragging:
 						return
+					if _reading_note_id != "":
+						if key_code == KEY_ESCAPE:
+							_reading_note_id = ""
+							_update_inventory_detail_panel()
+							_safe_set_input_handled()
+							return
 					if _is_selecting_item_target:
 						if key_code == KEY_ESCAPE:
 							_cancel_item_targeting()
@@ -1446,24 +1471,25 @@ const INVENTORY_CONSUMABLES_SHEET_TEX: Texture2D = preload("res://assets/ui/menu
 ## Default icon definitions for all recognized items (fallback jika item tidak memiliki icon_rect/icon_path spesifik)
 const DEFAULT_ITEM_ICON_MAPPING: Dictionary = {
 	"potion_hp": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(16, 496, 16, 16)},
-	"apple": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(16, 560, 16, 16)},
+	"apple": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(48, 560, 16, 16)},
 	"bread": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(192, 528, 16, 16)},
 	"meat": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 512, 16, 16)},
 	"holy_water": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(48, 496, 16, 16)},
+	"carrot": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 560, 16, 16)},
 	"herb": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 560, 16, 16)},
 	"honey": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 496, 16, 16)},
 	"cheese": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 544, 16, 16)},
-	"soup": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(144, 576, 16, 16)},
+	"soup": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 576, 16, 16)},
 	"big_potion": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(128, 496, 16, 16)},
-	"berry": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(112, 560, 16, 16)},
+	"berry": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(96, 560, 16, 16)},
 	"soul_elixir": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(144, 496, 16, 16)},
 	"pumpkin_pie": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(208, 528, 16, 16)},
-	"palace_key": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 336, 16, 16)},
-	"dungeon_key": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(16, 336, 16, 16)},
-	"ancient_coin": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 320, 16, 16)},
+	"palace_key": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(16, 176, 16, 16)},
+	"dungeon_key": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 176, 16, 16)},
+	"ancient_coin": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(16, 128, 16, 16)},
 	"honor_chalice": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(64, 352, 16, 16)},
 	"intel_report": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 304, 16, 16)},
-	"soldier_diary": {"tex": INVENTORY_BOOKS_SHEET_TEX, "rect": Rect2(0, 0, 16, 16)},
+	"soldier_diary": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 96, 16, 16)},
 }
 
 
@@ -2703,19 +2729,6 @@ func set_combat_hud_visible(active: bool, animated: bool = true) -> void:
 	if is_start_menu_mode:
 		return
 	is_combat_hud_visible = active
-	if is_instance_valid(controls_prompt):
-		var action_q = controls_prompt.get_node_or_null("ActionQ")
-		if is_instance_valid(action_q):
-			var lbl = action_q.get_node_or_null("Label") as Label
-			var ico = action_q.get_node_or_null("Icon") as TextureRect
-			if active:
-				action_q.visible = true
-				if lbl:
-					lbl.text = "Ganti Karakter (1-4)"
-				if ico:
-					ico.visible = false
-			else:
-				action_q.visible = false
 	if _combat_hud_tween and _combat_hud_tween.is_valid():
 		_combat_hud_tween.kill()
 	_combat_hud_tween = null
@@ -2877,7 +2890,7 @@ func _update_hp_bars() -> void:
 				var target_text: String = "KO" if is_dead else def_name
 				if name_label.text != target_text:
 					name_label.text = target_text
-					var target_color: Color = Color(0.78, 0.16, 0.16, 1.0) if is_dead else Color(0.24, 0.15, 0.16, 1.0)
+					var target_color: Color = Color(0.78, 0.16, 0.16, 1.0) if is_dead else Color(0.18, 0.10, 0.11, 1.0)
 					name_label.add_theme_color_override("font_color", target_color)
 
 
@@ -3061,15 +3074,30 @@ func _refresh_inventory_ui() -> void:
 	if inv_label_capacity:
 		inv_label_capacity.text = "%d/50" % inventory_items.size()
 
-	# Rebuild item grid
+	# Rebuild item grid or show empty state message
 	if is_instance_valid(inv_item_grid):
 		for child in inv_item_grid.get_children():
 			child.queue_free()
 
-		var total_slots: int = maxi(12, _filtered_inventory_items.size())
-		for slot_idx in range(total_slots):
-			var slot_node = _create_inventory_slot_node(slot_idx)
-			inv_item_grid.add_child(slot_node)
+		if _filtered_inventory_items.is_empty():
+			if is_instance_valid(inv_scroll_container):
+				inv_scroll_container.visible = false
+			if is_instance_valid(inv_scrollbar):
+				inv_scrollbar.visible = false
+			if is_instance_valid(inv_empty_state_container):
+				inv_empty_state_container.visible = true
+		else:
+			if is_instance_valid(inv_scroll_container):
+				inv_scroll_container.visible = true
+			if is_instance_valid(inv_scrollbar):
+				inv_scrollbar.visible = true
+			if is_instance_valid(inv_empty_state_container):
+				inv_empty_state_container.visible = false
+
+			var total_slots: int = maxi(9, _filtered_inventory_items.size())
+			for slot_idx in range(total_slots):
+				var slot_node = _create_inventory_slot_node(slot_idx)
+				inv_item_grid.add_child(slot_node)
 
 	# Update right page detail panel
 	_update_inventory_detail_panel()
@@ -3265,6 +3293,10 @@ func _update_inventory_selection_visuals() -> void:
 func _update_inventory_detail_panel() -> void:
 	if selected_item_category_index >= 0 and selected_item_category_index < _filtered_inventory_items.size():
 		var item: Dictionary = _filtered_inventory_items[selected_item_category_index]
+		var item_id: String = item.get("id", "")
+		var is_note_item: bool = (current_inventory_category == 3 or item.get("category", 0) == 3 or item.has("content"))
+		var is_reading_this_note: bool = (is_note_item and _reading_note_id == item_id and not item_id.is_empty())
+
 		if inv_detail_icon:
 			inv_detail_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST as CanvasItem.TextureFilter
 			inv_detail_icon.texture = _resolve_inventory_item_texture(item)
@@ -3274,14 +3306,46 @@ func _update_inventory_detail_panel() -> void:
 			inv_detail_count_label.text = _format_clean_number(item.get("quantity", 1))
 		if inv_detail_count_container:
 			inv_detail_count_container.visible = true
-		if inv_detail_desc:
-			inv_detail_desc.text = item.get("description", "")
+
+		if is_reading_this_note:
+			# Mode Baca Catatan: Tampilkan NoteContentPanel di kanan
+			if inv_detail_desc:
+				inv_detail_desc.visible = false
+			if is_instance_valid(note_content_panel):
+				note_content_panel.visible = true
+				if is_instance_valid(note_header_label):
+					note_header_label.text = "--- %s ---" % item.get("name", "ISI DOKUMEN").to_upper()
+				if is_instance_valid(note_body_label):
+					var note_text: String = item.get("content", "")
+					if note_text.is_empty():
+						note_text = DEFAULT_NOTE_CONTENTS.get(item_id, item.get("description", ""))
+					note_body_label.text = note_text
+		else:
+			# Mode Normal / Deskripsi Barang
+			if is_instance_valid(note_content_panel):
+				note_content_panel.visible = false
+			if inv_detail_desc:
+				inv_detail_desc.visible = true
+				var base_desc: String = item.get("description", "")
+				if is_note_item:
+					inv_detail_desc.text = "%s\n\n[Tekan 'Gunakan' (E) untuk membaca isi dokumen]" % base_desc
+				else:
+					inv_detail_desc.text = base_desc
+
 		if inv_btn_gunakan:
-			var can_use: bool = item.get("usable", false)
+			var can_use: bool = item.get("usable", false) or is_note_item
 			inv_btn_gunakan.disabled = not can_use
 			inv_btn_gunakan.modulate = Color.WHITE if can_use else Color(0.6, 0.6, 0.6, 0.5)
+			if is_instance_valid(inv_label_gunakan):
+				if is_reading_this_note:
+					inv_label_gunakan.text = "Tutup"
+				else:
+					inv_label_gunakan.text = "Gunakan"
 	else:
 		# Empty State
+		_reading_note_id = ""
+		if is_instance_valid(note_content_panel):
+			note_content_panel.visible = false
 		if inv_detail_icon:
 			inv_detail_icon.texture = null
 		if inv_detail_name:
@@ -3289,10 +3353,13 @@ func _update_inventory_detail_panel() -> void:
 		if inv_detail_count_container:
 			inv_detail_count_container.visible = false
 		if inv_detail_desc:
-			inv_detail_desc.text = "Kategori ini masih kosong."
+			inv_detail_desc.visible = true
+			inv_detail_desc.text = "Tidak ada barang di bagian ini, silakan eksplorasi."
 		if inv_btn_gunakan:
 			inv_btn_gunakan.disabled = true
 			inv_btn_gunakan.modulate = Color(0.6, 0.6, 0.6, 0.5)
+			if is_instance_valid(inv_label_gunakan):
+				inv_label_gunakan.text = "Gunakan"
 
 	_update_inventory_target_slots()
 
@@ -3393,7 +3460,21 @@ func _on_btn_gunakan_pressed() -> void:
 	if selected_item_category_index < 0 or selected_item_category_index >= _filtered_inventory_items.size():
 		return
 	var item: Dictionary = _filtered_inventory_items[selected_item_category_index]
-	if not item.get("usable", false):
+	var item_id: String = item.get("id", "")
+	var is_note_item: bool = (current_inventory_category == 3 or item.get("category", 0) == 3 or item.has("content"))
+
+	if not (item.get("usable", false) or is_note_item):
+		return
+
+	# Handle Notes reading toggle
+	if is_note_item:
+		if _reading_note_id == item_id and not item_id.is_empty():
+			_reading_note_id = ""
+			_play_ui_sfx(SFX_BOOK_TAB_SELECT, -2.5)
+		else:
+			_reading_note_id = item_id
+			_play_ui_sfx(SFX_BOOK_PAGE_FLIP, -2.0)
+		_update_inventory_detail_panel()
 		return
 
 	if item.has("heal_amount") or current_inventory_category == 0:
@@ -3468,6 +3549,7 @@ func _update_target_slot_selection_visuals() -> void:
 func _cancel_item_targeting() -> void:
 	_is_selecting_item_target = false
 	selected_target_slot_index = -1
+	_reading_note_id = ""
 	if is_instance_valid(inv_target_slots_container):
 		inv_target_slots_container.visible = false
 	for i in range(inv_target_slots.size()):
@@ -3596,12 +3678,32 @@ func _use_item_on_party_member(slot_idx: int) -> void:
 	if not is_instance_valid(hero):
 		return
 
-	var heal_val: int = int(item.get("heal_amount", 5))
+	var is_revive_item: bool = item.get("is_revive", false) or item.get("id") == "bread"
+	var is_dead_char: bool = hero.get("is_dead") if "is_dead" in hero else false
+	if "current_health" in hero and hero.current_health <= 0:
+		is_dead_char = true
+
+	# Karakter KO hanya dapat dipulihkan dengan item revive (seperti roti gandum)
+	if is_dead_char and not is_revive_item:
+		_play_ui_sfx(SFX_BOOK_TAB_SELECT, -2.5)
+		return
+
+	var heal_val: int = int(item.get("heal_amount", 150))
 	var old_hp: int = hero.get("current_health") if "current_health" in hero else 10
 	var max_hp: int = hero.get("max_health") if "max_health" in hero else 10
-	var new_hp: int = mini(max_hp, old_hp + heal_val)
-	var healed: int = new_hp - old_hp
-	hero.current_health = new_hp
+
+	var new_hp: int = 0
+	if is_dead_char and is_revive_item:
+		if hero.has_method("respawn"):
+			hero.respawn()
+			hero.current_health = mini(max_hp, heal_val)
+		else:
+			hero.is_dead = false
+			hero.current_health = mini(max_hp, heal_val)
+		new_hp = hero.current_health
+	else:
+		new_hp = mini(max_hp, old_hp + heal_val)
+		hero.current_health = new_hp
 
 	_play_ui_sfx(SFX_BOOK_CONFIRM, -2.5)
 
@@ -3630,6 +3732,19 @@ func _use_item_on_party_member(slot_idx: int) -> void:
 			var frame = slot_node.get_node_or_null("Frame") as CanvasItem
 			var float_lbl = slot_node.get_node_or_null("Frame/FloatFeedback") as Label
 
+			if float_lbl:
+				float_lbl.text = "REVIVE!" if is_dead_char else "+%d" % heal_val
+				float_lbl.modulate = Color(1.0, 0.85, 0.2, 1.0) if is_dead_char else Color(0.2, 0.9, 0.3, 1.0)
+				float_lbl.visible = true
+				var ftw := create_tween()
+				ftw.tween_property(float_lbl, "position:y", float_lbl.position.y - 14.0, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+				ftw.parallel().tween_property(float_lbl, "modulate:a", 0.0, 0.5).set_delay(0.2)
+				ftw.tween_callback(func():
+					float_lbl.visible = false
+					float_lbl.position.y += 14.0
+					float_lbl.modulate.a = 1.0
+				)
+
 			if hp_bar:
 				var tw := create_tween()
 				tw.tween_property(hp_bar, "value", float(new_hp), 0.35).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
@@ -3642,21 +3757,10 @@ func _use_item_on_party_member(slot_idx: int) -> void:
 
 			if frame:
 				var tw_fr := create_tween()
+				tw_fr.tween_property(frame, "scale", Vector2(1.08, 1.08), 0.08).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+				tw_fr.tween_property(frame, "scale", Vector2(1.0, 1.0), 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 				frame.modulate = Color(1.5, 1.5, 1.2, 1.0)
 				tw_fr.tween_property(frame, "modulate", Color(1.35, 1.25, 0.75, 1.0) if slot_idx == selected_target_slot_index else Color.WHITE, 0.35)
-
-			if float_lbl:
-				float_lbl.text = "+%d HP" % heal_val if healed > 0 else "Penuh"
-				float_lbl.visible = true
-				float_lbl.modulate.a = 1.0
-				var orig_y: float = float_lbl.position.y
-				var tw_fl := create_tween()
-				tw_fl.parallel().tween_property(float_lbl, "position:y", orig_y - 12.0, 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-				tw_fl.parallel().tween_property(float_lbl, "modulate:a", 0.0, 0.7)
-				tw_fl.tween_callback(func():
-					float_lbl.visible = false
-					float_lbl.position.y = orig_y
-				)
 
 	_update_hp_bars()
 	_update_pause_party_hp_bars()
@@ -4664,15 +4768,6 @@ func _refresh_controls_ui() -> void:
 
 
 func _sync_gameplay_hud_controls_prompts() -> void:
-	if is_combat_hud_visible and is_instance_valid(controls_prompt):
-		var action_q = controls_prompt.get_node_or_null("ActionQ")
-		if is_instance_valid(action_q):
-			var lbl = action_q.get_node_or_null("Label") as Label
-			var ico = action_q.get_node_or_null("Icon") as TextureRect
-			if lbl:
-				lbl.text = "Ganti Karakter (1-4)"
-			if ico:
-				ico.visible = false
 	var hud_bindings := {
 		"use_skill": { "node": controls_prompt.get_node_or_null("ActionE/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 24.0 },
 		"interact": { "node": null, "fixed_square": false, "target_h": 24.0 },
@@ -5947,47 +6042,48 @@ func _setup_quest_navigation_ui() -> void:
 	if not is_instance_valid(root_control):
 		return
 
-	_nav_tracker_panel = PanelContainer.new()
-	_nav_tracker_panel.name = "QuestNavTrackerPanel"
-	_nav_tracker_panel.anchor_left = 0.0
-	_nav_tracker_panel.anchor_top = 0.0
-	_nav_tracker_panel.offset_left = 24
-	_nav_tracker_panel.offset_top = 112
-	_nav_tracker_panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	var nav_row: Control = get_node_or_null("RootControl/QuestContainer/HBox/TextContainer/NavRow")
+	if is_instance_valid(nav_row):
+		_nav_tracker_panel = nav_row
+		_nav_tracker_arrow = nav_row.get_node_or_null("NavArrow") as Label
+		_nav_tracker_label = nav_row.get_node_or_null("NavLabel") as Label
+		_nav_tracker_panel.visible = false
+		return
 
-	var nav_style := StyleBoxFlat.new()
-	nav_style.bg_color = Color(0.08, 0.09, 0.14, 0.85)
-	nav_style.border_color = Color(0.9, 0.78, 0.35, 0.9)
-	nav_style.set_border_width_all(1)
-	nav_style.set_corner_radius_all(4)
-	nav_style.content_margin_left = 8
-	nav_style.content_margin_right = 10
-	nav_style.content_margin_top = 4
-	nav_style.content_margin_bottom = 4
-	_nav_tracker_panel.add_theme_stylebox_override("panel", nav_style)
+	# Fallback if NavRow not yet in static scene
+	var text_container = get_node_or_null("RootControl/QuestContainer/HBox/TextContainer")
+	if is_instance_valid(text_container):
+		var hbox := HBoxContainer.new()
+		hbox.name = "NavRow"
+		hbox.add_theme_constant_override("separation", 6)
 
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 6)
-	_nav_tracker_panel.add_child(hbox)
+		var font: Font = preload("res://assets/ui/fonts/beholden-bold.ttf")
 
-	var font: Font = preload("res://assets/ui/fonts/beholden-bold.ttf")
+		_nav_tracker_arrow = Label.new()
+		_nav_tracker_arrow.name = "NavArrow"
+		_nav_tracker_arrow.text = "▲"
+		_nav_tracker_arrow.add_theme_font_override("font", font)
+		_nav_tracker_arrow.add_theme_font_size_override("font_size", 13)
+		_nav_tracker_arrow.add_theme_color_override("font_color", Color(1.0, 0.85, 0.25, 1.0))
+		_nav_tracker_arrow.add_theme_color_override("font_shadow_color", Color(0.08, 0.05, 0.08, 0.8))
+		_nav_tracker_arrow.add_theme_constant_override("shadow_offset_x", 1)
+		_nav_tracker_arrow.add_theme_constant_override("shadow_offset_y", 1)
+		hbox.add_child(_nav_tracker_arrow)
 
-	_nav_tracker_arrow = Label.new()
-	_nav_tracker_arrow.text = "▲"
-	_nav_tracker_arrow.add_theme_font_override("font", font)
-	_nav_tracker_arrow.add_theme_font_size_override("font_size", 12)
-	_nav_tracker_arrow.add_theme_color_override("font_color", Color(1.0, 0.85, 0.25, 1.0))
-	hbox.add_child(_nav_tracker_arrow)
+		_nav_tracker_label = Label.new()
+		_nav_tracker_label.name = "NavLabel"
+		_nav_tracker_label.text = "Menuju Kastil"
+		_nav_tracker_label.add_theme_font_override("font", font)
+		_nav_tracker_label.add_theme_font_size_override("font_size", 13)
+		_nav_tracker_label.add_theme_color_override("font_color", Color(0.95, 0.93, 0.85, 1.0))
+		_nav_tracker_label.add_theme_color_override("font_shadow_color", Color(0.08, 0.05, 0.08, 0.8))
+		_nav_tracker_label.add_theme_constant_override("shadow_offset_x", 1)
+		_nav_tracker_label.add_theme_constant_override("shadow_offset_y", 1)
+		hbox.add_child(_nav_tracker_label)
 
-	_nav_tracker_label = Label.new()
-	_nav_tracker_label.text = "Menuju Kastil"
-	_nav_tracker_label.add_theme_font_override("font", font)
-	_nav_tracker_label.add_theme_font_size_override("font_size", 12)
-	_nav_tracker_label.add_theme_color_override("font_color", Color(0.95, 0.93, 0.85, 1.0))
-	hbox.add_child(_nav_tracker_label)
-
-	_nav_tracker_panel.visible = false
-	root_control.add_child(_nav_tracker_panel)
+		hbox.visible = false
+		text_container.add_child(hbox)
+		_nav_tracker_panel = hbox
 
 
 func set_quest_navigation(target_pos: Vector2, target_name: String) -> void:
