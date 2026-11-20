@@ -561,6 +561,31 @@ grow_horizontal = 0
 grow_vertical = 0
 theme_override_constants/separation = 6
 
+[node name="ActionQ" type="HBoxContainer" parent="RootControl/ControlsPrompt" unique_id=1728964694]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="Label" type="Label" parent="RootControl/ControlsPrompt/ActionQ" unique_id=1305781366]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = SubResource("SystemFont_serif")
+theme_override_font_sizes/font_size = 17
+text = "Beralih Karakter"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="RootControl/ControlsPrompt/ActionQ" unique_id=481222585]
+texture_filter = 1
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture = SubResource("Atlas_btn_q")
+expand_mode = 1
+stretch_mode = 5
 [node name="ActionE" type="HBoxContainer" parent="RootControl/ControlsPrompt" unique_id=369307347]
 layout_mode = 2
 theme_override_constants/separation = 10

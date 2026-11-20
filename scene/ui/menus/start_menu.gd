@@ -36,11 +36,22 @@ const GAME_SCENE_PATH := "res://scene/game.tscn"
 const GameScript = preload("res://scene/game.gd")
 const GAMEPLAY_HUD_SCENE := preload("res://scene/ui/gameplay/gameplay_hud.tscn")
 
+const BGM_START_MENU = preload("res://assets/audio/bgm/start_menu.ogg")
 const SFX_HOVER = preload("res://assets/audio/sfx/ui/ui_hover.wav")
 const SFX_CLICK = preload("res://assets/audio/sfx/ui/ui_click.wav")
 const SFX_SWORD_RAISE = preload("res://assets/audio/sfx/ui/start_sword_raise.wav")
 const SFX_IRIS_CLOSE = preload("res://assets/audio/sfx/ui/transition_iris.wav")
 const SWORD_INDICATOR_TEXTURE = preload("res://assets/ui/menus/start_menu/menu_sword_indicator.png")
+
+# Sistem Musik Latar (BGM) Start Menu - Dual-Deck Equal-Power Seamless Crossfade
+var _bgm_player_a: AudioStreamPlayer = null
+var _bgm_player_b: AudioStreamPlayer = null
+var _active_bgm_player: AudioStreamPlayer = null
+var _next_bgm_player: AudioStreamPlayer = null
+var _bgm_tween: Tween = null
+var _is_crossfading: bool = false
+const BGM_CROSSFADE_DURATION: float = 2.5
+const BGM_BASE_VOLUME_DB: float = -4.0 # Dikalibrasi seimbang saat volume UI 100%
 
 # Kecepatan dasar parallax
 const BASE_CLOUD_SPEED: float = 20.0
@@ -96,6 +107,9 @@ func _ready() -> void:
 		sword_glint.frame = 0
 		if not sword_glint.animation_finished.is_connected(_on_sword_glint_animation_finished):
 			sword_glint.animation_finished.connect(_on_sword_glint_animation_finished)
+
+	# Inisialisasi dan putar musik latar (BGM) Start Menu
+	_init_and_play_bgm()
 
 	# Warmup tekstur skill Knight agar tidak hitch saat animasi skill pertama kali dipanggil
 	if knight and knight.sprite_frames:
@@ -167,6 +181,7 @@ func _process(delta: float) -> void:
 		_cloud_speed = move_toward(_cloud_speed, 0.0, 40.0 * delta)
 	
 	_update_parallax_movement(delta)
+	_update_bgm_loop()
 
 func _update_parallax_movement(delta: float) -> void:
 	var w: float = size.x if size.x > 0.0 else 1152.0
@@ -505,6 +520,7 @@ func _launch_game(mode: String) -> void:
 
 	# Mulai efek Circular Mask (Iris Wipe) menutup ke ujung pedang bersamaan dengan kilau senjata
 	_play_sfx(SFX_IRIS_CLOSE, -2.0)
+	_fade_out_bgm_on_launch(0.85)
 	if sword_glint:
 		sword_glint.position = sword_tip_pos
 		sword_glint.modulate.a = 1.0
@@ -642,3 +658,141 @@ func _play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 	add_child(player)
 	player.finished.connect(player.queue_free)
 	player.play()
+
+
+# ==========================================
+# BGM AUTO-FADE NATURAL LOOPING SYSTEM
+# ==========================================
+
+func _ensure_music_bus() -> void:
+	if AudioServer.get_bus_index("Music") == -1:
+		var idx = AudioServer.bus_count
+		AudioServer.add_bus(idx)
+		AudioServer.set_bus_name(idx, "Music")
+		AudioServer.set_bus_send(idx, &"Master")
+
+
+func _init_and_play_bgm(fade_in_at_start: bool = false) -> void:
+	if not BGM_START_MENU:
+		return
+	_ensure_music_bus()
+	
+	if not is_instance_valid(_bgm_player_a):
+		_bgm_player_a = AudioStreamPlayer.new()
+		_bgm_player_a.name = "BgmPlayerA"
+		_bgm_player_a.stream = BGM_START_MENU
+		_bgm_player_a.bus = &"Music"
+		_bgm_player_a.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_child(_bgm_player_a)
+	
+	if not is_instance_valid(_bgm_player_b):
+		_bgm_player_b = AudioStreamPlayer.new()
+		_bgm_player_b.name = "BgmPlayerB"
+		_bgm_player_b.stream = BGM_START_MENU
+		_bgm_player_b.bus = &"Music"
+		_bgm_player_b.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_child(_bgm_player_b)
+	
+	if _bgm_player_a.stream is AudioStreamOggVorbis:
+		(_bgm_player_a.stream as AudioStreamOggVorbis).loop = false
+	if _bgm_player_b.stream is AudioStreamOggVorbis:
+		(_bgm_player_b.stream as AudioStreamOggVorbis).loop = false
+	
+	_active_bgm_player = _bgm_player_a
+	_next_bgm_player = _bgm_player_b
+	_next_bgm_player.stop()
+	_next_bgm_player.volume_db = -80.0
+	_is_crossfading = false
+	
+	if _bgm_tween and _bgm_tween.is_valid():
+		_bgm_tween.kill()
+	
+	if fade_in_at_start:
+		_active_bgm_player.volume_db = -80.0
+		_active_bgm_player.play(0.0)
+		var base_linear := db_to_linear(BGM_BASE_VOLUME_DB)
+		_bgm_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		_bgm_tween.tween_method(func(val: float):
+			if is_instance_valid(_active_bgm_player) and _active_bgm_player.playing:
+				_active_bgm_player.volume_db = linear_to_db(maxf(val, 0.0001) * base_linear) if val > 0.001 else -80.0
+		, 0.0, 1.0, 1.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	else:
+		# Bagian awal langsung memutar di volume penuh tanpa fade-in sesuai permintaan
+		_active_bgm_player.volume_db = BGM_BASE_VOLUME_DB
+		_active_bgm_player.play(0.0)
+
+
+func _update_bgm_loop() -> void:
+	if _is_crossfading or not is_instance_valid(_active_bgm_player) or not _active_bgm_player.playing:
+		return
+	if not _active_bgm_player.stream:
+		return
+	
+	var total_len: float = _active_bgm_player.stream.get_length()
+	if total_len <= BGM_CROSSFADE_DURATION + 0.5:
+		return
+	
+	var pos: float = _active_bgm_player.get_playback_position()
+	# Hanya picu crossfade di paruh kedua lagu ketika tepat mendekati akhir lagu
+	if pos > total_len * 0.5:
+		var time_left: float = total_len - pos
+		if time_left <= BGM_CROSSFADE_DURATION:
+			_start_bgm_crossfade(time_left)
+
+
+func _start_bgm_crossfade(time_left: float) -> void:
+	if _is_crossfading or not is_instance_valid(_active_bgm_player) or not is_instance_valid(_next_bgm_player):
+		return
+	_is_crossfading = true
+	
+	var outgoing := _active_bgm_player
+	var incoming := _next_bgm_player
+	var fade_time := clampf(time_left, 1.0, BGM_CROSSFADE_DURATION)
+	var base_linear := db_to_linear(BGM_BASE_VOLUME_DB)
+	
+	incoming.volume_db = -80.0
+	incoming.play(0.0)
+	
+	if _bgm_tween and _bgm_tween.is_valid():
+		_bgm_tween.kill()
+	_bgm_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	
+	# Equal-power crossfade (cosinus/sinus) menjaga amplitudo perseptual tetap konstan (bebas dip/jeda)
+	_bgm_tween.tween_method(func(progress: float):
+		if is_instance_valid(outgoing) and outgoing.playing:
+			var out_factor: float = cos(progress * 0.5 * PI)
+			outgoing.volume_db = linear_to_db(maxf(out_factor * base_linear, 0.0001)) if out_factor > 0.001 else -80.0
+		if is_instance_valid(incoming) and incoming.playing:
+			var in_factor: float = sin(progress * 0.5 * PI)
+			incoming.volume_db = linear_to_db(maxf(in_factor * base_linear, 0.0001)) if in_factor > 0.001 else -80.0
+	, 0.0, 1.0, fade_time)
+	
+	_bgm_tween.tween_callback(func():
+		if is_instance_valid(outgoing):
+			outgoing.stop()
+			outgoing.volume_db = -80.0
+		if is_instance_valid(incoming):
+			incoming.volume_db = BGM_BASE_VOLUME_DB
+		_active_bgm_player = incoming
+		_next_bgm_player = outgoing
+		_is_crossfading = false
+	)
+
+
+func _fade_out_bgm_on_launch(duration: float = 0.85) -> void:
+	_is_crossfading = false
+	if _bgm_tween and _bgm_tween.is_valid():
+		_bgm_tween.kill()
+	var t := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_parallel(true)
+	if is_instance_valid(_bgm_player_a) and _bgm_player_a.playing:
+		t.tween_property(_bgm_player_a, "volume_db", -80.0, duration)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	if is_instance_valid(_bgm_player_b) and _bgm_player_b.playing:
+		t.tween_property(_bgm_player_b, "volume_db", -80.0, duration)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	t.chain().tween_callback(func():
+		if is_instance_valid(_bgm_player_a):
+			_bgm_player_a.stop()
+		if is_instance_valid(_bgm_player_b):
+			_bgm_player_b.stop()
+	)
