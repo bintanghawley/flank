@@ -12,6 +12,29 @@
 [ext_resource type="PackedScene" uid="uid://df7k2nguard1t" path="res://scene/npc/npc_guard.tscn" id="9_npc_guard"]
 [ext_resource type="PackedScene" uid="uid://df7lam2e3p4q1" path="res://scene/world/castle_meeting_hall.tscn" id="10_hall"]
 [ext_resource type="FontFile" uid="uid://c74m8bvtvqkpw" path="res://assets/ui/fonts/beholden-bold.ttf" id="14_font"]
+[ext_resource type="Texture2D" uid="uid://cgyctt7vwk5d7" path="res://assets/environment/outdoor/arena-kamp-ground.png" id="15_arena_ground"]
+[ext_resource type="Texture2D" uid="uid://clu5fh5jgwjpv" path="res://assets/environment/outdoor/arena-kamp-structure.png" id="16_arena_structure"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_wall_top"]
+size = Vector2(2530, 455)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_wall_bottom"]
+size = Vector2(2530, 70)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_wall_left"]
+size = Vector2(140, 700)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_wall_right"]
+size = Vector2(170, 700)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_crates"]
+size = Vector2(325, 145)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_notice"]
+size = Vector2(240, 175)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_dummies"]
+size = Vector2(300, 600)
 
 [sub_resource type="Shader" id="Shader_iris"]
 code = "shader_type canvas_item;
@@ -127,6 +150,62 @@ vertical_alignment = 1
 
 [node name="CastleMeetingHall" parent="." unique_id=25331500 instance=ExtResource("10_hall")]
 position = Vector2(2533, -1500)
+
+[node name="ArenaKamp" type="Node2D" parent="." unique_id=70002000]
+position = Vector2(7000, -2000)
+
+[node name="DarkBackdrop" type="ColorRect" parent="ArenaKamp" unique_id=70002001]
+z_index = -10
+offset_left = -1000.0
+offset_top = -800.0
+offset_right = 3530.0
+offset_bottom = 2000.0
+mouse_filter = 2
+color = Color(0.03, 0.03, 0.05, 1)
+
+[node name="Ground" type="Sprite2D" parent="ArenaKamp" unique_id=70002002]
+z_index = -2
+texture_filter = 1
+scale = Vector2(5, 5)
+texture = ExtResource("15_arena_ground")
+centered = false
+
+[node name="Structure" type="Sprite2D" parent="ArenaKamp" unique_id=70002003]
+z_index = 0
+texture_filter = 1
+scale = Vector2(5, 5)
+texture = ExtResource("16_arena_structure")
+centered = false
+
+[node name="ArenaCollisions" type="StaticBody2D" parent="ArenaKamp" unique_id=70002004]
+
+[node name="WallTop" type="CollisionShape2D" parent="ArenaKamp/ArenaCollisions" unique_id=70002005]
+position = Vector2(1265, 227.5)
+shape = SubResource("RectangleShape2D_arena_wall_top")
+
+[node name="WallBottom" type="CollisionShape2D" parent="ArenaKamp/ArenaCollisions" unique_id=70002006]
+position = Vector2(1265, 1145)
+shape = SubResource("RectangleShape2D_arena_wall_bottom")
+
+[node name="WallLeft" type="CollisionShape2D" parent="ArenaKamp/ArenaCollisions" unique_id=70002007]
+position = Vector2(70, 800)
+shape = SubResource("RectangleShape2D_arena_wall_left")
+
+[node name="WallRight" type="CollisionShape2D" parent="ArenaKamp/ArenaCollisions" unique_id=70002008]
+position = Vector2(2445, 800)
+shape = SubResource("RectangleShape2D_arena_wall_right")
+
+[node name="ObstacleCrates" type="CollisionShape2D" parent="ArenaKamp/ArenaCollisions" unique_id=70002009]
+position = Vector2(737.5, 1097.5)
+shape = SubResource("RectangleShape2D_arena_crates")
+
+[node name="ObstacleNoticeBoard" type="CollisionShape2D" parent="ArenaKamp/ArenaCollisions" unique_id=70002010]
+position = Vector2(1870, 487.5)
+shape = SubResource("RectangleShape2D_arena_notice")
+
+[node name="ObstacleRightDummies" type="CollisionShape2D" parent="ArenaKamp/ArenaCollisions" unique_id=70002011]
+position = Vector2(2325, 875)
+shape = SubResource("RectangleShape2D_arena_dummies")
 
 [node name="TransitionLayer" type="CanvasLayer" parent="." unique_id=98127341]
 layer = 100

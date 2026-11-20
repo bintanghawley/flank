@@ -1031,6 +1031,8 @@ func setup(members: Array[CharacterBody2D], current_leader_idx: int, initial_inv
 
 	update_party_hud()
 	update_leader_indicator()
+	_update_pause_party_display()
+	_update_character_info_ui()
 	_refresh_inventory_ui()
 
 
@@ -2277,10 +2279,13 @@ func _update_drag_hover_visuals() -> void:
 		elif i == _current_hovered_target_slot and _current_hovered_target_slot != _dragging_slot_idx:
 			# Highlight hangat keemasan pada target hover
 			frame.modulate = Color(1.3, 1.2, 0.7, 1.0)
-		elif i == current_viewed_party_slot:
-			frame.modulate = Color(1.35, 1.25, 0.75, 1.0)
+		elif i < party_members.size():
+			if i == current_viewed_party_slot:
+				frame.modulate = Color(1.35, 1.25, 0.75, 1.0)
+			else:
+				frame.modulate = Color.WHITE
 		else:
-			frame.modulate = Color.WHITE
+			frame.modulate = Color(0.7, 0.7, 0.7, 0.45)
 
 
 func _get_slot_at_pos(global_pos: Vector2) -> int:
@@ -2334,10 +2339,13 @@ func _reset_drag_visuals() -> void:
 		if is_instance_valid(slot_node):
 			var frame = slot_node.get_node_or_null("Frame") as CanvasItem
 			if frame:
-				if slot_idx == current_viewed_party_slot:
-					frame.modulate = Color(1.35, 1.25, 0.75, 1.0)
+				if slot_idx < party_members.size():
+					if slot_idx == current_viewed_party_slot:
+						frame.modulate = Color(1.35, 1.25, 0.75, 1.0)
+					else:
+						frame.modulate = Color.WHITE
 				else:
-					frame.modulate = Color.WHITE
+					frame.modulate = Color(0.7, 0.7, 0.7, 0.45)
 
 
 func _on_party_slot_clicked(slot_idx: int) -> void:
@@ -2521,6 +2529,12 @@ func _update_character_info_ui() -> void:
 	if skill_preview_desc:
 		skill_preview_desc.text = data.get("skill_desc", "-")
 
+	# Navigasi tombol panah biodata (hanya tampil jika anggota party > 1)
+	if is_instance_valid(btn_prev_char):
+		btn_prev_char.visible = (party_members.size() > 1)
+	if is_instance_valid(btn_next_char):
+		btn_next_char.visible = (party_members.size() > 1)
+
 
 func _update_bio_char_animation(delta: float) -> void:
 	if not is_instance_valid(bio_char_sprite):
@@ -2559,9 +2573,11 @@ func _update_pause_party_display() -> void:
 			if "current_health" in hero and hero.current_health <= 0:
 				is_dead_char = true
 
-			if portrait and hero_portraits.has(hero_type):
-				portrait.texture = hero_portraits[hero_type]
-				portrait.modulate = Color(0.4, 0.4, 0.4, 0.7) if is_dead_char else Color.WHITE
+			if portrait:
+				portrait.visible = true
+				if hero_portraits.has(hero_type):
+					portrait.texture = hero_portraits[hero_type]
+					portrait.modulate = Color(0.4, 0.4, 0.4, 0.7) if is_dead_char else Color.WHITE
 
 			if leader_lbl:
 				leader_lbl.visible = true
@@ -2572,6 +2588,7 @@ func _update_pause_party_display() -> void:
 				key_hint.visible = true
 
 			if hp_bar:
+				hp_bar.visible = true
 				var max_hp = hero.get("max_health") if "max_health" in hero else 10
 				var cur_hp = hero.get("current_health") if "current_health" in hero else max_hp
 				if is_dead_char:
@@ -2585,7 +2602,25 @@ func _update_pause_party_display() -> void:
 				else:
 					frame.modulate = Color.WHITE
 		else:
-			slot_node.visible = false
+			# Kotak party kosong untuk slot yang belum direkrut
+			slot_node.visible = true
+			var frame := slot_node.get_node_or_null("Frame") as TextureRect
+			var portrait := slot_node.get_node_or_null("Frame/Portrait") as TextureRect
+			var leader_lbl := slot_node.get_node_or_null("Leader") as Label
+			var hp_bar := slot_node.get_node_or_null("HpBar") as TextureProgressBar
+			var key_hint := slot_node.get_node_or_null("KeyHint") as TextureRect
+
+			if leader_lbl:
+				leader_lbl.modulate.a = 0.0
+			if portrait:
+				portrait.visible = false
+				portrait.texture = null
+			if hp_bar:
+				hp_bar.visible = false
+			if key_hint:
+				key_hint.visible = false
+			if frame:
+				frame.modulate = Color(0.7, 0.7, 0.7, 0.45)
 
 
 func _update_pause_party_hp_bars() -> void:
@@ -2729,6 +2764,19 @@ func set_combat_hud_visible(active: bool, animated: bool = true) -> void:
 	if is_start_menu_mode:
 		return
 	is_combat_hud_visible = active
+	if is_instance_valid(controls_prompt):
+		var action_q = controls_prompt.get_node_or_null("ActionQ")
+		if is_instance_valid(action_q):
+			var lbl = action_q.get_node_or_null("Label") as Label
+			var ico = action_q.get_node_or_null("Icon") as TextureRect
+			if active and party_members.size() > 1:
+				action_q.visible = true
+				if lbl:
+					lbl.text = "Ganti Karakter (1-4)"
+				if ico:
+					ico.visible = false
+			else:
+				action_q.visible = false
 	if _combat_hud_tween and _combat_hud_tween.is_valid():
 		_combat_hud_tween.kill()
 	_combat_hud_tween = null
@@ -2840,6 +2888,13 @@ func update_party_order(new_party: Array[CharacterBody2D], new_leader_idx: int =
 
 
 func update_party_hud() -> void:
+	# Update visibilitas kartu party: hanya kartu hero yang ada di party_members yang ditampilkan
+	for h_type in hero_card_map.keys():
+		var card = hero_card_map[h_type]
+		if is_instance_valid(card):
+			var member = get_member_by_hero_type(h_type)
+			card.visible = is_instance_valid(member)
+
 	# Urutkan posisi kartu di PartyContainer sesuai urutan party_members
 	for i in range(party_members.size()):
 		var hero = party_members[i]
@@ -2857,6 +2912,7 @@ func update_party_hud() -> void:
 	update_skill_slots_hud()
 	_update_hp_bars()
 	update_leader_indicator()
+	_sync_gameplay_hud_controls_prompts()
 
 
 func _update_hp_bars() -> void:
@@ -2865,33 +2921,37 @@ func _update_hp_bars() -> void:
 		if not is_instance_valid(card):
 			continue
 		var hero := get_member_by_hero_type(h_type)
-		if is_instance_valid(hero):
-			var max_hp = hero.get("max_health") if "max_health" in hero else 10
-			var cur_hp: int = hero.get("current_health") if "current_health" in hero else max_hp
-			var is_dead: bool = hero.get("is_dead") if "is_dead" in hero else (cur_hp <= 0)
+		if not is_instance_valid(hero):
+			card.visible = false
+			continue
+		card.visible = true
 
-			var cached: Dictionary = hero_card_cached_nodes.get(h_type, {})
-			var hp_bar: TextureProgressBar = cached.get("hp_bar")
-			if hp_bar:
-				if hp_bar.max_value != max_hp:
-					hp_bar.max_value = max_hp
-				if hp_bar.value != cur_hp:
-					hp_bar.value = cur_hp
+		var max_hp = hero.get("max_health") if "max_health" in hero else 10
+		var cur_hp: int = hero.get("current_health") if "current_health" in hero else max_hp
+		var is_dead: bool = hero.get("is_dead") if "is_dead" in hero else (cur_hp <= 0)
 
-			var portrait: TextureRect = cached.get("portrait")
-			if portrait:
-				var target_modulate: Color = Color(0.35, 0.35, 0.35, 0.55) if is_dead else Color.WHITE
-				if portrait.modulate != target_modulate:
-					portrait.modulate = target_modulate
+		var cached: Dictionary = hero_card_cached_nodes.get(h_type, {})
+		var hp_bar: TextureProgressBar = cached.get("hp_bar")
+		if hp_bar:
+			if hp_bar.max_value != max_hp:
+				hp_bar.max_value = max_hp
+			if hp_bar.value != cur_hp:
+				hp_bar.value = cur_hp
 
-			var name_label: Label = cached.get("name_label")
-			if name_label:
-				var def_name: String = HERO_NAMES.get(h_type, hero.name)
-				var target_text: String = "KO" if is_dead else def_name
-				if name_label.text != target_text:
-					name_label.text = target_text
-					var target_color: Color = Color(0.78, 0.16, 0.16, 1.0) if is_dead else Color(0.18, 0.10, 0.11, 1.0)
-					name_label.add_theme_color_override("font_color", target_color)
+		var portrait: TextureRect = cached.get("portrait")
+		if portrait:
+			var target_modulate: Color = Color(0.35, 0.35, 0.35, 0.55) if is_dead else Color.WHITE
+			if portrait.modulate != target_modulate:
+				portrait.modulate = target_modulate
+
+		var name_label: Label = cached.get("name_label")
+		if name_label:
+			var def_name: String = HERO_NAMES.get(h_type, hero.name)
+			var target_text: String = "KO" if is_dead else def_name
+			if name_label.text != target_text:
+				name_label.text = target_text
+				var target_color: Color = Color(0.78, 0.16, 0.16, 1.0) if is_dead else Color(0.18, 0.10, 0.11, 1.0)
+				name_label.add_theme_color_override("font_color", target_color)
 
 
 func _update_skill_cooldowns() -> void:
@@ -4768,6 +4828,18 @@ func _refresh_controls_ui() -> void:
 
 
 func _sync_gameplay_hud_controls_prompts() -> void:
+	if is_instance_valid(controls_prompt):
+		var action_q = controls_prompt.get_node_or_null("ActionQ")
+		if is_instance_valid(action_q):
+			var can_switch: bool = is_combat_hud_visible and (party_members.size() > 1)
+			action_q.visible = can_switch
+			if can_switch:
+				var lbl = action_q.get_node_or_null("Label") as Label
+				var ico = action_q.get_node_or_null("Icon") as TextureRect
+				if lbl:
+					lbl.text = "Ganti Karakter (1-4)"
+				if ico:
+					ico.visible = false
 	var hud_bindings := {
 		"use_skill": { "node": controls_prompt.get_node_or_null("ActionE/Icon") if is_instance_valid(controls_prompt) else null, "fixed_square": false, "target_h": 24.0 },
 		"interact": { "node": null, "fixed_square": false, "target_h": 24.0 },
@@ -5749,6 +5821,9 @@ func _set_gameplay_hud_visible_for_dialogue(show_hud: bool) -> void:
 		quest_header.visible = show_hud and not is_combat_hud_visible and not is_open_world_mode
 	if is_instance_valid(quest_container):
 		quest_container.visible = show_hud and not is_combat_hud_visible and not is_open_world_mode
+	if not show_hud and is_instance_valid(_interact_prompt_panel):
+		_interact_prompt_panel.visible = false
+		_interact_prompt_panel.modulate.a = 0.0
 
 
 func _display_current_dialogue_entry() -> void:
@@ -6013,7 +6088,7 @@ func _setup_interact_prompt_ui() -> void:
 
 
 func show_interact_prompt(prompt_text: String = "Masuk ke Aula Kastil", key_str: String = "E", action_type: String = "") -> void:
-	if not is_instance_valid(_interact_prompt_panel):
+	if not is_instance_valid(_interact_prompt_panel) or _is_dialogue_active:
 		return
 	_interact_action_type = action_type if action_type != "" else prompt_text
 	if is_instance_valid(_interact_prompt_label):
@@ -6027,8 +6102,14 @@ func show_interact_prompt(prompt_text: String = "Masuk ke Aula Kastil", key_str:
 		t.tween_property(_interact_prompt_panel, "modulate:a", 1.0, 0.15)
 
 
-func hide_interact_prompt() -> void:
-	if not is_instance_valid(_interact_prompt_panel) or not _interact_prompt_panel.visible:
+func hide_interact_prompt(instant: bool = false) -> void:
+	if not is_instance_valid(_interact_prompt_panel):
+		return
+	if instant or _is_dialogue_active:
+		_interact_prompt_panel.visible = false
+		_interact_prompt_panel.modulate.a = 0.0
+		return
+	if not _interact_prompt_panel.visible:
 		return
 	var t := create_tween()
 	t.tween_property(_interact_prompt_panel, "modulate:a", 0.0, 0.12)
