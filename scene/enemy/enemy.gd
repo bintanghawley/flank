@@ -118,6 +118,8 @@ func _ready() -> void:
 		contact_damage = 0
 		melee_damage = 0
 		projectile_damage = 0
+	else:
+		max_health = 1
 	current_health = max_health
 	spawn_position = global_position
 	wander_target = spawn_position
@@ -1078,6 +1080,8 @@ func take_damage(amount: int, attacker: CharacterBody2D = null) -> void:
 		return
 
 	wait_for_arena = false
+	if not is_training_dummy:
+		amount = max(amount, current_health)
 	current_health -= amount
 	play_sfx(SFX_HURT, -2.0)
 

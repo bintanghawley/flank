@@ -87,19 +87,15 @@ y_sort_enabled = true
 position = Vector2(2560, 2900)
 
 [node name="Enemy_Knight_1" parent="." unique_id=110304380 instance=ExtResource("7_enemy_knight")]
-position = Vector2(5908, 3350)
+position = Vector2(6764, 5391.0005)
 can_respawn = false
-melee_attack_range = 120.0
-melee_damage = 50
 
 [node name="Enemy_Knight_2" parent="." unique_id=110304381 instance=ExtResource("7_enemy_knight")]
-position = Vector2(5731, 3139)
+position = Vector2(6804, 5595)
 can_respawn = false
-melee_attack_range = 120.0
-melee_damage = 50
 
 [node name="Enemy_Archer_1" parent="." unique_id=110304382 instance=ExtResource("2_xwcet")]
-position = Vector2(6003, 3138)
+position = Vector2(6647, 5553)
 can_respawn = false
 
 [node name="Npc_Guard_Left" parent="." unique_id=1290897880 instance=ExtResource("9_npc_guard")]
@@ -171,7 +167,6 @@ texture = ExtResource("15_arena_ground")
 centered = false
 
 [node name="Structure" type="Sprite2D" parent="ArenaKamp" unique_id=70002003]
-z_index = 0
 texture_filter = 1
 scale = Vector2(5, 5)
 texture = ExtResource("16_arena_structure")

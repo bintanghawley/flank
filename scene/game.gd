@@ -479,9 +479,9 @@ const COMBAT_WINDDOWN_DELAY: float = 0.4
 # =========================================================
 enum ArenaState { INACTIVE, COMBAT, CLEARED }
 var arena_state: ArenaState = ArenaState.INACTIVE
-var arena_bounds: Rect2 = Rect2(Vector2(5320.0, 2810.0), Vector2(1920.0, 1080.0))
-var arena_trigger_bounds: Rect2 = Rect2(Vector2(5500.0, 2700.0), Vector2(1500.0, 1200.0))
-var arena_center: Vector2 = Vector2(6280.0, 3350.0)
+var arena_bounds: Rect2 = Rect2(Vector2(5780.0, 4960.0), Vector2(1920.0, 1080.0))
+var arena_trigger_bounds: Rect2 = Rect2(Vector2(6290.0, 5150.0), Vector2(900.0, 700.0))
+var arena_center: Vector2 = Vector2(6740.0, 5500.0)
 var arena_enemies: Array[CharacterBody2D] = []
 var arena_barrier_body: StaticBody2D = null
 const CAMERA_ZOOM_EXPLORE: Vector2 = Vector2(0.8, 0.8)
@@ -1664,7 +1664,7 @@ func _process(delta: float) -> void:
 	if arena_state == ArenaState.INACTIVE:
 		check_arena_trigger()
 		var cur_lead := get_active_leader()
-		if is_instance_valid(cur_lead) and not arena_bounds.grow(40.0).has_point(cur_lead.global_position):
+		if is_instance_valid(cur_lead) and not arena_trigger_bounds.grow(40.0).has_point(cur_lead.global_position):
 			last_pre_arena_leader_pos = cur_lead.global_position
 	elif arena_state == ArenaState.COMBAT:
 		check_arena_completion(delta)
@@ -2479,10 +2479,10 @@ func _on_defeat_overlay_gui_input(event: InputEvent) -> void:
 func _take_pre_arena_snapshot() -> void:
 	pre_arena_snapshot.clear()
 	var leader := get_active_leader()
-	var fallback_pos: Vector2 = Vector2(arena_bounds.position.x - 90.0, arena_center.y)
+	var fallback_pos: Vector2 = Vector2(arena_trigger_bounds.position.x - 60.0, arena_center.y)
 	var snap_pos: Vector2 = last_pre_arena_leader_pos if last_pre_arena_leader_pos != Vector2.ZERO else fallback_pos
 	if is_instance_valid(leader):
-		if leader.global_position.x < arena_bounds.position.x - 20.0:
+		if leader.global_position.x < arena_trigger_bounds.position.x:
 			snap_pos = leader.global_position
 
 	var party_data: Array[Dictionary] = []
@@ -2634,7 +2634,7 @@ func execute_arena_rewind() -> void:
 		if not restored_party.is_empty():
 			party_members = restored_party
 
-	var restore_pos: Vector2 = pre_arena_snapshot.get("restore_pos", Vector2(arena_bounds.position.x - 90.0, arena_center.y))
+	var restore_pos: Vector2 = pre_arena_snapshot.get("restore_pos", Vector2(arena_trigger_bounds.position.x - 60.0, arena_center.y))
 
 	# 5. Pulihkan kondisi hero dari snapshot
 	var party_data: Array = pre_arena_snapshot.get("party_state", [])
