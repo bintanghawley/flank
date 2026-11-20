@@ -41,7 +41,7 @@ const GRAVEYARD_POS: Vector2 = Vector2(4400.0, 2900.0)
 const FOREST_CABIN_DOOR_POS: Vector2 = Vector2(8600.0, 3840.0)
 const FOREST_CAMP_STOP_POS: Vector2 = Vector2(8600.0, 4350.0)
 const FOREST_CROW_SPAWN_POS: Vector2 = Vector2(9800.0, 3600.0)
-const FOREST_CROW_PERCH_POS: Vector2 = Vector2(8820.0, 4158.0)
+const FOREST_CROW_PERCH_POS: Vector2 = Vector2(8820.0, 4171.0)
 const FOREST_MAGNUS_POS: Vector2 = Vector2(8510.0, 4320.0)
 
 const CASTLE_APPROACH_START_POS: Vector2 = Vector2(2533.0, 2000.0)
@@ -121,18 +121,18 @@ const CASTLE_MEETING_DIALOGUE: Array[Dictionary] = [
 		"text": "Setidaknya, kami menyimpulkan bahwa akan ada bencana besar yang terjadi."
 	},
 	{
-		"speaker": "Peramal Morvyn",
-		"portrait": "peramal_1",
+		"speaker": "Wizandy",
+		"portrait": "wizandy",
 		"text": "7 hari ke depan, akan terjadi seven deadly day. Hari kebangkitan 7 bangsa iblis secara berurutan melalui 7 tempat berbeda. Aku tidak tahu rupa iblis yang akan datang dan seperti apa mereka."
 	},
 	{
-		"speaker": "Peramal Vaelin",
-		"portrait": "peramal_2",
+		"speaker": "Wizashley",
+		"portrait": "wizashley",
 		"text": "Hanya saja, aku mengetahui 7 bangsa ini dari ingatan leluhur kami:\n- Superbia (Pride) - Sombong\n- Avarizia (Greed) - Serakah\n- Lussuria (Lust) - Nafsu"
 	},
 	{
-		"speaker": "Peramal Vaelin",
-		"portrait": "peramal_2",
+		"speaker": "Wizashley",
+		"portrait": "wizashley",
 		"text": "Dan bangsa iblis berikutnya:\n- Invidia (Envy) - Iri\n- Gola (Gluttony) - Rakus\n- Ira (Wrath) - Marah\n- Accidia (Sloth) - Malas"
 	},
 	{
@@ -3190,7 +3190,7 @@ func _start_story_prologue_sequence() -> void:
 				add_child(g)
 				_prologue_guards.append(g)
 
-	# 3. Spawn Burung Gagak di atas pepohonan kanan atas
+	# 3. Spawn Burung Gagak bertengger di atas tiang lampu kayu sejak awal
 	_prologue_crow = Sprite2D.new()
 	_prologue_crow.name = "PrologueCrow"
 	_prologue_crow.texture = load("res://assets/characters/animal/raven/raven.png")
@@ -3199,17 +3199,17 @@ func _start_story_prologue_sequence() -> void:
 	_prologue_crow.frame = 0
 	_prologue_crow.scale = Vector2(2.5, 2.5)
 	_prologue_crow.z_index = 8
-	_prologue_crow.global_position = FOREST_CROW_SPAWN_POS
+	_prologue_crow.global_position = FOREST_CROW_PERCH_POS
 	add_child(_prologue_crow)
 
-	# Animasi kepakan sayap gagak selama terbang meluncur
+	# Animasi idle bertengger gagak (gerakan menoleh / bobbing frame 0 dan 1)
 	if _prologue_crow_flap_tween and _prologue_crow_flap_tween.is_valid():
 		_prologue_crow_flap_tween.kill()
 	_prologue_crow_flap_tween = create_tween().set_loops()
 	_prologue_crow_flap_tween.tween_callback(func():
 		if is_instance_valid(_prologue_crow):
 			_prologue_crow.frame = (_prologue_crow.frame + 1) % 2
-	).set_delay(0.12)
+	).set_delay(0.4)
 
 	enter_location("Hutan Observasi")
 
@@ -3224,16 +3224,6 @@ func _start_story_prologue_sequence() -> void:
 
 	var arthur_tween := create_tween()
 	arthur_tween.tween_property(lead, "global_position", FOREST_CAMP_STOP_POS, 3.4).set_trans(Tween.TRANS_LINEAR)
-
-	# Gagak terbang meluncur menuju atas tiang lampu kayu di sebelah titik S
-	var crow_tween := create_tween()
-	crow_tween.tween_property(_prologue_crow, "global_position", FOREST_CROW_PERCH_POS, 3.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-
-	await crow_tween.finished
-	if _prologue_crow_flap_tween and _prologue_crow_flap_tween.is_valid():
-		_prologue_crow_flap_tween.kill()
-	if is_instance_valid(_prologue_crow):
-		_prologue_crow.frame = 0 # Bertengger di atas tiang lampu kayu
 
 	await arthur_tween.finished
 	if is_instance_valid(lead) and lead.has_method("play_idle_animation"):
@@ -3968,9 +3958,14 @@ func _setup_meeting_participants() -> void:
 		queen.name = "Participant_Queen"
 		hall.add_child(queen)
 
-	# 3. Peramal 1 (Di sebelah kanan pilar besar kiri)
-	if tex_mage_s:
-		var seer1 := _create_meeting_npc(tex_mage_s, 96, 64, 4, Vector2(-360.0, -180.0), "idle_s", Color(0.88, 0.78, 1.05), Vector2(-0.5, 0.0))
+	# 3. Peramal 1 - Wizandy (Di sebelah kanan pilar besar kiri)
+	var tex_wizandy: Texture2D = load("res://assets/characters/npc/seer/Wizandy.png")
+	if tex_wizandy:
+		var seer1 := Sprite2D.new()
+		seer1.texture = tex_wizandy
+		seer1.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		seer1.scale = Vector2(5.0, 5.0)
+		seer1.position = Vector2(-360.0, -180.0)
 		seer1.name = "Participant_Peramal1"
 		seer1.z_index = 5
 		hall.add_child(seer1)
@@ -4002,9 +3997,14 @@ func _setup_meeting_participants() -> void:
 		if is_instance_valid(chair):
 			chair.z_index = 5
 
-	# 6. Peramal 2 (Di sebelah kiri pilar besar kanan)
-	if tex_mage_s:
-		var seer2 := _create_meeting_npc(tex_mage_s, 96, 64, 4, Vector2(360.0, -180.0), "idle_s", Color(0.78, 0.95, 1.1), Vector2(-0.5, 0.0))
+	# 6. Peramal 2 - Wizashley (Di sebelah kiri pilar besar kanan)
+	var tex_wizashley: Texture2D = load("res://assets/characters/npc/seer/Wizashley.png")
+	if tex_wizashley:
+		var seer2 := Sprite2D.new()
+		seer2.texture = tex_wizashley
+		seer2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		seer2.scale = Vector2(5.0, 5.0)
+		seer2.position = Vector2(360.0, -180.0)
 		seer2.name = "Participant_Peramal2"
 		seer2.z_index = 5
 		hall.add_child(seer2)

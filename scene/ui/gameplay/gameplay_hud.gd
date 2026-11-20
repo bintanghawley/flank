@@ -263,6 +263,8 @@ const RAVEN_SHEET: Texture2D = preload("res://assets/characters/animal/raven/rav
 var portrait_raven: Texture2D = null
 var portrait_king: Texture2D = null
 var portrait_queen: Texture2D = null
+var portrait_wizandy: Texture2D = null
+var portrait_wizashley: Texture2D = null
 const PORTRAIT_ARTHUR: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_arthur.png")
 const PORTRAIT_MAGNUS: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_magnus.png")
 const PORTRAIT_ANASTASYA: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_anastasya.png")
@@ -6266,6 +6268,14 @@ func resolve_dialogue_portrait(key: String) -> Texture2D:
 			if tex:
 				portrait_queen = _create_atlas(tex, Rect2(36, 16, 24, 24))
 		return portrait_queen
+	elif "wizandy" in lower:
+		if portrait_wizandy == null:
+			portrait_wizandy = load("res://assets/characters/npc/seer/Wizandy.png")
+		return portrait_wizandy
+	elif "wizashley" in lower:
+		if portrait_wizashley == null:
+			portrait_wizashley = load("res://assets/characters/npc/seer/Wizashley.png")
+		return portrait_wizashley
 	elif "peramal" in lower or "oracle" in lower or "seer" in lower:
 		return PORTRAIT_MAGNUS
 	elif "alaric" in lower or "pelatih" in lower or "trainer" in lower:
