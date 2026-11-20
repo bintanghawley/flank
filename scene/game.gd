@@ -460,6 +460,9 @@ var is_knight_room_cutscene_in_progress: bool = false
 var is_alaric_sparring_in_progress: bool = false
 var is_alaric_sparring_completed: bool = false
 var alaric_node: CharacterBody2D = null
+var _alaric_sprite_frames_cache: SpriteFrames = null
+var _alaric_boss_prompt_layer: CanvasLayer = null
+var _alaric_boss_modal_input_cb: Callable = Callable()
 
 
 # State Tempur Party ala Guardian Tales
@@ -914,6 +917,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
+	# Tangani navigasi input keyboard ketika popup konfirmasi Boss Alaric sedang aktif
+	if is_instance_valid(_alaric_boss_prompt_layer):
+		if _alaric_boss_modal_input_cb.is_valid() and _alaric_boss_modal_input_cb.call(event):
+			get_viewport().set_input_as_handled()
+		return
+
 	if is_transitioning:
 		return
 	# Tombol pintasan pergantian karakter di arena combat (1, 2, 3, 4) dan pause (ESC)
@@ -931,7 +940,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					get_viewport().set_input_as_handled()
 				return
 
-		if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
+		if (arena_state == ArenaState.COMBAT or is_in_training_arena or is_in_arena_kamp or is_alaric_sparring_in_progress) and not is_party_fading_out:
 			if key_code == KEY_1 or (InputMap.has_action("skill_1") and event.is_action_pressed("skill_1")):
 				switch_to_character(0)
 				get_viewport().set_input_as_handled()
@@ -955,6 +964,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif key_code == KEY_E or (InputMap.has_action("interact") and event.is_action_pressed("interact")):
 			if not is_transitioning:
 				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("is_dialogue_active") and gameplay_hud.is_dialogue_active():
+					return
+				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("is_any_menu_open") and gameplay_hud.is_any_menu_open():
+					return
+				if is_instance_valid(_alaric_boss_prompt_layer):
 					return
 				var leader = get_active_leader()
 				if leader:
@@ -986,7 +999,7 @@ func is_character_alive(character: CharacterBody2D) -> bool:
 
 
 func switch_to_next_character(force: bool = false) -> void:
-	if not force and arena_state != ArenaState.COMBAT and not is_in_training_arena:
+	if not force and arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress:
 		return
 	if party_members.is_empty():
 		return
@@ -1006,7 +1019,7 @@ func switch_to_next_character(force: bool = false) -> void:
 
 
 func switch_to_character(idx: int, force: bool = false) -> void:
-	if not force and arena_state != ArenaState.COMBAT and not is_in_training_arena:
+	if not force and arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress:
 		return
 	if idx < 0 or idx >= party_members.size() or idx == active_leader_index:
 		return
@@ -1106,7 +1119,7 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 
 	# Fallback eksplorasi: jika prev_leader tidak valid atau sama dengan target,
 	# cari karakter lain yang saat ini masih aktif berada di dalam SceneTree
-	if _is_party_initialized and arena_state != ArenaState.COMBAT and not is_in_training_arena:
+	if _is_party_initialized and arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress:
 		var target_candidate := party_members[idx]
 		if not prev_leader or prev_leader == target_candidate or not prev_leader.is_inside_tree():
 			for member in party_members:
@@ -1122,7 +1135,7 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 	leader.modulate = Color.WHITE
 
 	# Jika berganti karakter saat eksplorasi 1 karakter, posisikan karakter baru tepat di posisi karakter sebelumnya
-	if arena_state != ArenaState.COMBAT and not is_in_training_arena:
+	if arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress:
 		if prev_leader and is_instance_valid(prev_leader) and prev_leader != leader:
 			var prev_pos: Vector2 = prev_leader.global_position
 			var prev_last_dir: Vector2 = prev_leader.last_direction if "last_direction" in prev_leader else Vector2.DOWN
@@ -1152,7 +1165,8 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 
 	# Berikan status Leader langsung ke karakter terpilih
 	breadcrumbs.clear()
-	leader.set_as_leader(true, null, 0)
+	if leader.has_method("set_as_leader"):
+		leader.set_as_leader(true, null, 0)
 
 	# Berikan referensi langsung ke Leader dan nomor urutan slot tetap (1, 2, 3)
 	var slot_order: int = 1
@@ -1160,8 +1174,9 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 		var follower_idx := (active_leader_index + step) % party_members.size()
 		var follower := party_members[follower_idx]
 		if is_instance_valid(follower):
-			follower.set_as_leader(false, leader, slot_order)
-			if arena_state != ArenaState.COMBAT and not is_in_training_arena and follower.is_inside_tree() and not ("is_dead" in follower and follower.is_dead):
+			if follower.has_method("set_as_leader"):
+				follower.set_as_leader(false, leader, slot_order)
+			if arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress and follower.is_inside_tree() and not ("is_dead" in follower and follower.is_dead):
 				remove_child(follower)
 		slot_order += 1
 
@@ -1198,7 +1213,7 @@ func _set_character_collision_active(char_node: CharacterBody2D, active: bool) -
 
 
 func update_party_visibility() -> void:
-	var in_arena_combat: bool = (arena_state == ArenaState.COMBAT or is_in_training_arena)
+	var in_arena_combat: bool = (arena_state == ArenaState.COMBAT or is_in_training_arena or is_in_arena_kamp or is_alaric_sparring_in_progress)
 	for i in range(party_members.size()):
 		var member = party_members[i]
 		if not is_instance_valid(member):
@@ -1259,7 +1274,7 @@ func update_party_visibility() -> void:
 
 
 func trigger_hero_skill_by_slot(slot_idx: int) -> void:
-	if arena_state != ArenaState.COMBAT and not is_in_training_arena and current_combat_state != PartyCombatState.COMBAT:
+	if arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress and current_combat_state != PartyCombatState.COMBAT:
 		var has_nearby_enemy: bool = false
 		var leader := get_active_leader()
 		if is_instance_valid(leader):
@@ -1286,7 +1301,7 @@ func trigger_hero_skill_by_slot(slot_idx: int) -> void:
 
 
 func execute_hero_skill(hero: CharacterBody2D) -> void:
-	if arena_state != ArenaState.COMBAT and not is_in_training_arena and current_combat_state != PartyCombatState.COMBAT:
+	if arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress and current_combat_state != PartyCombatState.COMBAT:
 		var has_nearby_enemy: bool = false
 		for e in get_tree().get_nodes_in_group("enemy"):
 			if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
@@ -3648,13 +3663,95 @@ func _on_knight_room_dialogue_finished(fade_canvas: CanvasLayer, fade_rect: Colo
 # PELATIH ALARIC & SISTEM SPARRING CAMP LATIHAN (FLK-007 & FLK-008)
 # =========================================================
 
+func _get_or_create_alaric_sprite_frames() -> SpriteFrames:
+	if _alaric_sprite_frames_cache != null:
+		return _alaric_sprite_frames_cache
+
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.remove_animation(&"default")
+
+	var anim_configs: Array[Dictionary] = [
+		{"name": &"idle_s", "path": "res://assets/characters/npc/alaric/idle-s.png", "count": 4, "speed": 6.0, "loop": true},
+		{"name": &"idle_n", "path": "res://assets/characters/npc/alaric/idle-n.png", "count": 4, "speed": 6.0, "loop": true},
+		{"name": &"idle_w", "path": "res://assets/characters/npc/alaric/idle-w.png", "count": 4, "speed": 6.0, "loop": true},
+		{"name": &"idle_e", "path": "res://assets/characters/npc/alaric/idle-e.png", "count": 4, "speed": 6.0, "loop": true},
+		{"name": &"walk_s", "path": "res://assets/characters/npc/alaric/walk-s.png", "count": 8, "speed": 10.0, "loop": true},
+		{"name": &"walk_n", "path": "res://assets/characters/npc/alaric/walk-n.png", "count": 8, "speed": 10.0, "loop": true},
+		{"name": &"walk_w", "path": "res://assets/characters/npc/alaric/walk-w.png", "count": 8, "speed": 10.0, "loop": true},
+		{"name": &"walk_e", "path": "res://assets/characters/npc/alaric/walk-e.png", "count": 8, "speed": 10.0, "loop": true},
+		# Serangan Combo 1 (Tebasan Pertama)
+		{"name": &"atk_s", "path": "res://assets/characters/npc/alaric/atk-s-1.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_s_1", "path": "res://assets/characters/npc/alaric/atk-s-1.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_n", "path": "res://assets/characters/npc/alaric/atk-n-1.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_n_1", "path": "res://assets/characters/npc/alaric/atk-n-1.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_w", "path": "res://assets/characters/npc/alaric/atk-w-1.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_w_1", "path": "res://assets/characters/npc/alaric/atk-w-1.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_e", "path": "res://assets/characters/npc/alaric/atk-e-1.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_e_1", "path": "res://assets/characters/npc/alaric/atk-e-1.png", "count": 8, "speed": 14.0, "loop": false},
+		# Serangan Combo 2 (Tebasan Lanjutan)
+		{"name": &"atk_s_2", "path": "res://assets/characters/npc/alaric/atk-s-2.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_n_2", "path": "res://assets/characters/npc/alaric/atk-n-2.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_w_2", "path": "res://assets/characters/npc/alaric/atk-w-2.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_e_2", "path": "res://assets/characters/npc/alaric/atk-e-2.png", "count": 8, "speed": 14.0, "loop": false},
+		# Skill Khusus Pelatih Tempur
+		{"name": &"skill_s", "path": "res://assets/characters/npc/alaric/skill-s.png", "count": 9, "speed": 12.0, "loop": false},
+		{"name": &"skill_n", "path": "res://assets/characters/npc/alaric/skill-n.png", "count": 9, "speed": 12.0, "loop": false},
+		{"name": &"skill_w", "path": "res://assets/characters/npc/alaric/skill-w.png", "count": 9, "speed": 12.0, "loop": false},
+		{"name": &"skill_e", "path": "res://assets/characters/npc/alaric/skill-e.png", "count": 9, "speed": 12.0, "loop": false},
+	]
+
+	for cfg in anim_configs:
+		var tex := load(cfg["path"]) as Texture2D
+		if tex:
+			var anim_name: StringName = cfg["name"]
+			if not frames.has_animation(anim_name):
+				frames.add_animation(anim_name)
+			frames.set_animation_speed(anim_name, cfg["speed"])
+			frames.set_animation_loop(anim_name, cfg["loop"])
+			var count: int = cfg["count"]
+			for i in range(count):
+				var atlas_tex := AtlasTexture.new()
+				atlas_tex.atlas = tex
+				atlas_tex.region = Rect2(i * 96, 0, 96, 64)
+				frames.add_frame(anim_name, atlas_tex)
+
+	_alaric_sprite_frames_cache = frames
+	return _alaric_sprite_frames_cache
+
+
+func _clear_alaric_player_collision_exceptions() -> void:
+	if not is_instance_valid(alaric_node):
+		return
+	var party := get_tree().get_nodes_in_group("player")
+	for p in party:
+		if is_instance_valid(p) and p is CollisionObject2D:
+			alaric_node.remove_collision_exception_with(p)
+			p.remove_collision_exception_with(alaric_node)
+
+
 func _setup_alaric_npc() -> void:
 	if is_instance_valid(alaric_node):
+		for child in alaric_node.get_children():
+			if child is Label or child.name == "AlaricNameplate":
+				child.queue_free()
 		if not is_alaric_sparring_in_progress:
 			alaric_node.global_position = ALARIC_CAMP_POS
 			alaric_node.velocity = Vector2.ZERO
 			alaric_node.set_physics_process(false)
 			alaric_node.last_direction = Vector2.DOWN
+			alaric_node.scale = Vector2(5.0, 5.0)
+			alaric_node.modulate = Color.WHITE
+			alaric_node.y_sort_enabled = true
+			alaric_node.z_index = 4
+			alaric_node.collision_layer = 1
+			alaric_node.collision_mask = 1
+			_clear_alaric_player_collision_exceptions.call_deferred()
+			var spr = alaric_node.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+			if is_instance_valid(spr):
+				spr.modulate = Color.WHITE
+				spr.sprite_frames = _get_or_create_alaric_sprite_frames()
+				spr.offset = Vector2(0, 5)
 			if alaric_node.has_method("play_idle_animation"):
 				alaric_node.play_idle_animation()
 		return
@@ -3670,8 +3767,12 @@ func _setup_alaric_npc() -> void:
 	alaric_node = inst
 	alaric_node.name = "AlaricTrainerNPC"
 	alaric_node.global_position = ALARIC_CAMP_POS
-	alaric_node.scale = Vector2(1.1, 1.1)
-	alaric_node.modulate = Color(0.88, 0.75, 0.55) # Rona veteran perunggu ksatria
+	alaric_node.scale = Vector2(5.0, 5.0)
+	alaric_node.modulate = Color.WHITE
+	alaric_node.y_sort_enabled = true
+	alaric_node.z_index = 4
+	alaric_node.collision_layer = 1
+	alaric_node.collision_mask = 1
 	alaric_node.can_respawn = false
 	alaric_node.wait_for_arena = false
 	alaric_node.max_health = 600
@@ -3679,18 +3780,11 @@ func _setup_alaric_npc() -> void:
 	alaric_node.melee_damage = 25
 	alaric_node.melee_attack_range = 100.0
 
-	var nameplate := Label.new()
-	nameplate.name = "AlaricNameplate"
-	nameplate.text = "Alaric (Pelatih Tempur)"
-	nameplate.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	nameplate.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	nameplate.position = Vector2(-75.0, -42.0)
-	nameplate.size = Vector2(150.0, 18.0)
-	nameplate.add_theme_font_size_override("font_size", 9)
-	nameplate.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45, 1.0))
-	nameplate.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
-	nameplate.add_theme_constant_override("outline_size", 2)
-	alaric_node.add_child(nameplate)
+	var anim_spr = alaric_node.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if is_instance_valid(anim_spr):
+		anim_spr.modulate = Color.WHITE
+		anim_spr.sprite_frames = _get_or_create_alaric_sprite_frames()
+		anim_spr.offset = Vector2(0, 5)
 
 	add_child(alaric_node)
 
@@ -3700,6 +3794,7 @@ func _setup_alaric_npc() -> void:
 		alaric_node.set_physics_process(false)
 		alaric_node.velocity = Vector2.ZERO
 		alaric_node.last_direction = Vector2.DOWN
+		_clear_alaric_player_collision_exceptions.call_deferred()
 		if alaric_node.has_method("play_idle_animation"):
 			alaric_node.play_idle_animation()
 		if "health_bar" in alaric_node and is_instance_valid(alaric_node.health_bar):
@@ -3708,12 +3803,350 @@ func _setup_alaric_npc() -> void:
 			alaric_node.damage_bar.visible = false
 
 
+func _show_alaric_boss_challenge_prompt() -> void:
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
+
+	if is_instance_valid(_alaric_boss_prompt_layer):
+		_alaric_boss_prompt_layer.queue_free()
+		_alaric_boss_prompt_layer = null
+
+	set_party_movement_locked(true)
+
+	var cl := CanvasLayer.new()
+	cl.layer = 120
+	cl.name = "AlaricBossPromptLayer"
+	_alaric_boss_prompt_layer = cl
+	add_child(cl)
+
+	var root := Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_PASS
+	cl.add_child(root)
+
+	# 1. Dimmer background transparan gelap (Color(0, 0, 0, 0.45) identik SaveConfirmModal)
+	var dimmer := ColorRect.new()
+	dimmer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dimmer.color = Color(0.0, 0.0, 0.0, 0.45)
+	dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(dimmer)
+
+	# 2. Control container center untuk menampung shadow dan kotak dialog
+	var center := Control.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(center)
+
+	# 3. Shadow Panel (StyleBoxFlat_modal_shadow)
+	var shadow := Panel.new()
+	shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shadow.anchor_left = 0.5
+	shadow.anchor_top = 0.5
+	shadow.anchor_right = 0.5
+	shadow.anchor_bottom = 0.5
+	shadow.offset_left = -242.0
+	shadow.offset_top = -108.0
+	shadow.offset_right = 242.0
+	shadow.offset_bottom = 114.0
+	var shadow_sb := StyleBoxFlat.new()
+	shadow_sb.bg_color = Color(0, 0, 0, 0)
+	shadow_sb.shadow_color = Color(0, 0, 0, 0.45)
+	shadow_sb.shadow_size = 14
+	shadow_sb.shadow_offset = Vector2(0, 6)
+	shadow_sb.set_corner_radius_all(6)
+	shadow.add_theme_stylebox_override("panel", shadow_sb)
+	center.add_child(shadow)
+
+	# 4. DialogBox (NinePatchRect persis Atlas_modal_dialog_frame Rect2(0, 500, 32, 32))
+	var ui_sheet: Texture2D = load("res://assets/ui/menus/common/ui_menu_sheet.png")
+	var arrow_tex: Texture2D = load("res://assets/ui/menus/common/ui_arrow_indicator.png")
+
+	var dialog_box := NinePatchRect.new()
+	dialog_box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	dialog_box.mouse_filter = Control.MOUSE_FILTER_STOP
+	dialog_box.anchor_left = 0.5
+	dialog_box.anchor_top = 0.5
+	dialog_box.anchor_right = 0.5
+	dialog_box.anchor_bottom = 0.5
+	dialog_box.offset_left = -240.0
+	dialog_box.offset_top = -110.0
+	dialog_box.offset_right = 240.0
+	dialog_box.offset_bottom = 110.0
+	dialog_box.patch_margin_left = 10
+	dialog_box.patch_margin_top = 10
+	dialog_box.patch_margin_right = 10
+	dialog_box.patch_margin_bottom = 10
+	if ui_sheet:
+		var frame_atlas := AtlasTexture.new()
+		frame_atlas.atlas = ui_sheet
+		frame_atlas.region = Rect2(0, 500, 32, 32)
+		dialog_box.texture = frame_atlas
+	center.add_child(dialog_box)
+
+	# 5. DialogTitle ("Konfirmasi" persis SaveConfirmModal)
+	var title_lbl := Label.new()
+	title_lbl.anchor_left = 0.0
+	title_lbl.anchor_right = 1.0
+	title_lbl.offset_top = 18.0
+	title_lbl.offset_bottom = 46.0
+	title_lbl.text = "Konfirmasi"
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_lbl.add_theme_font_size_override("font_size", 22)
+	title_lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+	if UI_FONT_BEHOLDEN:
+		title_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	dialog_box.add_child(title_lbl)
+
+	# 6. HeaderDivider (Dots Divider ala SaveConfirmModal)
+	var div_row := HBoxContainer.new()
+	div_row.anchor_left = 0.0
+	div_row.anchor_right = 1.0
+	div_row.offset_top = 47.0
+	div_row.offset_bottom = 56.0
+	div_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	div_row.set("theme_override_constants/separation", 8)
+	div_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if ui_sheet:
+		var dots_atlas := AtlasTexture.new()
+		dots_atlas.atlas = ui_sheet
+		dots_atlas.region = Rect2(65, 263, 30, 3)
+
+		var dots_l := TextureRect.new()
+		dots_l.texture = dots_atlas
+		dots_l.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		dots_l.custom_minimum_size = Vector2(48, 9)
+		dots_l.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dots_l.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		dots_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		div_row.add_child(dots_l)
+
+		var dots_r := TextureRect.new()
+		dots_r.texture = dots_atlas
+		dots_r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		dots_r.custom_minimum_size = Vector2(48, 9)
+		dots_r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dots_r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		dots_r.flip_h = true
+		dots_r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		div_row.add_child(dots_r)
+	dialog_box.add_child(div_row)
+
+	# 7. DialogMessage (Dinaikkan agar berjarak proporsional dengan tombol Ya & Tidak)
+	var desc_lbl := Label.new()
+	desc_lbl.anchor_left = 0.0
+	desc_lbl.anchor_right = 1.0
+	desc_lbl.anchor_top = 0.5
+	desc_lbl.anchor_bottom = 0.5
+	desc_lbl.offset_left = 20.0
+	desc_lbl.offset_top = -52.0
+	desc_lbl.offset_right = -20.0
+	desc_lbl.offset_bottom = 10.0
+	desc_lbl.text = "Pelatih Alaric adalah ksatria veteran berilmu tinggi (Boss)!\nApakah kau siap menantangnya bertarung di arena tempur?"
+	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_lbl.add_theme_constant_override("line_spacing", 2)
+	desc_lbl.add_theme_font_size_override("font_size", 15)
+	desc_lbl.add_theme_color_override("font_color", Color(0.35, 0.25, 0.26, 1.0))
+	if UI_FONT_BEHOLDEN:
+		desc_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	dialog_box.add_child(desc_lbl)
+
+	# 8. ButtonsRow (HBoxContainer)
+	var btn_row := HBoxContainer.new()
+	btn_row.anchor_left = 0.0
+	btn_row.anchor_right = 1.0
+	btn_row.anchor_top = 1.0
+	btn_row.anchor_bottom = 1.0
+	btn_row.offset_top = -64.0
+	btn_row.offset_bottom = -24.0
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_row.set("theme_override_constants/separation", 32)
+	dialog_box.add_child(btn_row)
+
+	var btn_normal_atlas: AtlasTexture = null
+	var btn_hover_atlas: AtlasTexture = null
+	if ui_sheet:
+		btn_normal_atlas = AtlasTexture.new()
+		btn_normal_atlas.atlas = ui_sheet
+		btn_normal_atlas.region = Rect2(145, 433, 62, 14)
+
+		btn_hover_atlas = AtlasTexture.new()
+		btn_hover_atlas.atlas = ui_sheet
+		btn_hover_atlas.region = Rect2(65, 449, 62, 14)
+
+	var create_modal_btn = func(text_label: String) -> Dictionary:
+		var btn_box := NinePatchRect.new()
+		btn_box.custom_minimum_size = Vector2(104, 38)
+		btn_box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		btn_box.texture = btn_normal_atlas
+		btn_box.patch_margin_left = 5
+		btn_box.patch_margin_top = 4
+		btn_box.patch_margin_right = 5
+		btn_box.patch_margin_bottom = 4
+
+		var lbl := Label.new()
+		lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		lbl.text = text_label
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl.add_theme_font_size_override("font_size", 16)
+		lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+		if UI_FONT_BEHOLDEN:
+			lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+		btn_box.add_child(lbl)
+
+		var arrow := TextureRect.new()
+		arrow.texture = arrow_tex
+		arrow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		arrow.position = Vector2(-18.0, 13.5)
+		arrow.size = Vector2(9.0, 11.0)
+		arrow.stretch_mode = TextureRect.STRETCH_KEEP
+		arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		arrow.visible = false
+		btn_box.add_child(arrow)
+
+		var click_btn := TextureButton.new()
+		click_btn.set_anchors_preset(Control.PRESET_FULL_RECT)
+		click_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		btn_box.add_child(click_btn)
+
+		return {
+			"box": btn_box,
+			"label": lbl,
+			"arrow": arrow,
+			"click": click_btn
+		}
+
+	var btn_yes_data: Dictionary = create_modal_btn.call("Ya")
+	var btn_no_data: Dictionary = create_modal_btn.call("Tidak")
+
+	btn_row.add_child(btn_yes_data["box"])
+	btn_row.add_child(btn_no_data["box"])
+
+	var buttons: Array = [btn_yes_data, btn_no_data]
+	var selected_idx: Array = [0]
+
+	var update_btn_visuals = func():
+		for i in range(buttons.size()):
+			var b_data: Dictionary = buttons[i]
+			var is_sel: bool = (i == selected_idx[0])
+			var box: NinePatchRect = b_data["box"]
+			var lbl: Label = b_data["label"]
+			var arrow: TextureRect = b_data["arrow"]
+			if is_sel:
+				box.texture = btn_hover_atlas if btn_hover_atlas else btn_normal_atlas
+				box.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+				arrow.visible = true
+			else:
+				box.texture = btn_normal_atlas
+				box.modulate = Color(0.85, 0.82, 0.78, 1.0)
+				lbl.add_theme_color_override("font_color", Color(0.48, 0.38, 0.38, 1.0))
+				arrow.visible = false
+
+	update_btn_visuals.call()
+
+	var sfx_hover: AudioStream = load("res://assets/audio/sfx/ui/ui_hover.wav")
+	var sfx_click: AudioStream = load("res://assets/audio/sfx/ui/ui_click.wav")
+	var sfx_book_select: AudioStream = load("res://assets/audio/sfx/ui/book_tab_select.wav")
+
+	var close_popup = func():
+		_alaric_boss_modal_input_cb = Callable()
+		if is_instance_valid(_alaric_boss_prompt_layer):
+			_alaric_boss_prompt_layer.queue_free()
+			_alaric_boss_prompt_layer = null
+		set_party_movement_locked(false)
+		var lead := get_active_leader()
+		if is_instance_valid(lead):
+			_set_character_collision_active(lead, true)
+			lead.set_physics_process(true)
+			lead.set_process_unhandled_input(true)
+
+	var confirm_action = func():
+		if sfx_click and has_method("play_sfx"):
+			play_sfx(sfx_click, -2.0)
+		close_popup.call()
+		_teleport_to_arena_kamp_and_fight()
+
+	var cancel_action = func():
+		if sfx_book_select and has_method("play_sfx"):
+			play_sfx(sfx_book_select, -3.5)
+		elif sfx_click and has_method("play_sfx"):
+			play_sfx(sfx_click, -2.0)
+		close_popup.call()
+
+	(btn_yes_data["click"] as TextureButton).pressed.connect(confirm_action)
+	(btn_no_data["click"] as TextureButton).pressed.connect(cancel_action)
+
+	(btn_yes_data["click"] as TextureButton).mouse_entered.connect(func():
+		if selected_idx[0] != 0:
+			selected_idx[0] = 0
+			update_btn_visuals.call()
+			if sfx_hover and has_method("play_sfx"):
+				play_sfx(sfx_hover, -4.0)
+	)
+	(btn_no_data["click"] as TextureButton).mouse_entered.connect(func():
+		if selected_idx[0] != 1:
+			selected_idx[0] = 1
+			update_btn_visuals.call()
+			if sfx_hover and has_method("play_sfx"):
+				play_sfx(sfx_hover, -4.0)
+	)
+
+	dimmer.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+			var mb := event as InputEventMouseButton
+			if is_instance_valid(dialog_box) and not dialog_box.get_global_rect().has_point(mb.global_position):
+				cancel_action.call()
+	)
+
+	_alaric_boss_modal_input_cb = func(event: InputEvent) -> bool:
+		if not (event is InputEventKey):
+			return false
+		var ke := event as InputEventKey
+		if not ke.pressed or ke.echo:
+			return false
+		var kc: int = ke.keycode
+		if kc == 0:
+			kc = ke.physical_keycode
+		if kc == KEY_LEFT or kc == KEY_A:
+			if selected_idx[0] != 0:
+				selected_idx[0] = 0
+				update_btn_visuals.call()
+				if sfx_hover and has_method("play_sfx"):
+					play_sfx(sfx_hover, -4.0)
+			return true
+		elif kc == KEY_RIGHT or kc == KEY_D:
+			if selected_idx[0] != 1:
+				selected_idx[0] = 1
+				update_btn_visuals.call()
+				if sfx_hover and has_method("play_sfx"):
+					play_sfx(sfx_hover, -4.0)
+			return true
+		elif kc == KEY_ENTER or kc == KEY_KP_ENTER or kc == KEY_SPACE or kc == KEY_E:
+			if selected_idx[0] == 0:
+				confirm_action.call()
+			else:
+				cancel_action.call()
+			return true
+		elif kc == KEY_ESCAPE:
+			cancel_action.call()
+			return true
+		return true
+
+
 func _start_alaric_pre_fight_dialogue() -> void:
 	if is_alaric_sparring_in_progress or is_transitioning:
 		return
 
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 		gameplay_hud.hide_interact_prompt(true)
+
+	if selected_game_mode == "open_world":
+		_show_alaric_boss_challenge_prompt()
+		return
 
 	set_party_movement_locked(true)
 	var leader := get_active_leader()
@@ -3744,17 +4177,108 @@ func _start_alaric_pre_fight_dialogue() -> void:
 
 
 func _teleport_to_arena_kamp_and_fight() -> void:
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
+
+	if selected_game_mode != "open_world":
+		# Mode Cerita: Hanya Knight_1 (Arthur) yang berduel melawan Pelatih Alaric di arena!
+		var knight_hero: CharacterBody2D = all_heroes.get("Knight_1")
+		party_members.clear()
+		if is_instance_valid(knight_hero):
+			if not knight_hero.is_inside_tree():
+				add_child(knight_hero)
+			party_members.append(knight_hero)
+			knight_hero.visible = true
+			knight_hero.modulate.a = 1.0
+			knight_hero.is_dead = false
+			if "current_health" in knight_hero and "max_health" in knight_hero and knight_hero.current_health <= 0:
+				knight_hero.current_health = knight_hero.max_health
+			knight_hero.set_physics_process(true)
+			knight_hero.set_process_unhandled_input(true)
+			_set_character_collision_active(knight_hero, true)
+			if knight_hero.has_method("set_as_leader"):
+				knight_hero.set_as_leader(true, null, 0)
+		active_leader_index = 0
+
+		# Keluarkan karakter lain dari arena dan scene tree
+		var other_hero_names: Array[String] = ["Bandit_1", "Archer_1", "Mage_1"]
+		for oh_name in other_hero_names:
+			var oh: CharacterBody2D = all_heroes.get(oh_name)
+			if is_instance_valid(oh):
+				oh.visible = false
+				oh.set_physics_process(false)
+				oh.set_process_unhandled_input(false)
+				_set_character_collision_active(oh, false)
+				if oh.is_inside_tree():
+					remove_child(oh)
+
+		if is_instance_valid(gameplay_hud):
+			if gameplay_hud.has_method("update_party_order"):
+				gameplay_hud.update_party_order(party_members, 0)
+			elif gameplay_hud.has_method("update_party_hud"):
+				gameplay_hud.party_members = party_members
+				gameplay_hud.update_party_hud()
+				if gameplay_hud.has_method("update_leader_indicator"):
+					gameplay_hud.update_leader_indicator()
+	else:
+		# Mode Jelajah: Pastikan seluruh 4 hero siap di SceneTree dan terdaftar di party
+		var hero_names: Array[String] = ["Knight_1", "Bandit_1", "Archer_1", "Mage_1"]
+		for h_name in hero_names:
+			var hero: CharacterBody2D = all_heroes.get(h_name)
+			if is_instance_valid(hero):
+				if not hero.is_inside_tree():
+					add_child(hero)
+				if hero not in party_members:
+					party_members.append(hero)
+				hero.visible = true
+				hero.modulate.a = 1.0
+				hero.is_dead = false
+				if "current_health" in hero and "max_health" in hero and hero.current_health <= 0:
+					hero.current_health = hero.max_health
+				hero.set_physics_process(true)
+				hero.set_process_unhandled_input(true)
+				_set_character_collision_active(hero, true)
+
+		for i in range(party_members.size()):
+			for j in range(i + 1, party_members.size()):
+				party_members[i].add_collision_exception_with(party_members[j])
+				party_members[j].add_collision_exception_with(party_members[i])
+
+		setup_party_enemy_collision_exceptions.call_deferred()
+
+		if is_instance_valid(gameplay_hud):
+			if gameplay_hud.has_method("update_party_order"):
+				gameplay_hud.update_party_order(party_members, active_leader_index)
+			elif gameplay_hud.has_method("update_party_hud"):
+				gameplay_hud.party_members = party_members
+				gameplay_hud.update_party_hud()
+				if gameplay_hud.has_method("update_leader_indicator"):
+					gameplay_hud.update_leader_indicator()
+
 	play_black_fade_transition(
 		func():
 			is_in_arena_kamp = true
-			var leader := get_active_leader()
-			if is_instance_valid(leader):
-				leader.global_position = ARENA_KAMP_ARTHUR_POS
-				leader.velocity = Vector2.ZERO
-				if "last_direction" in leader:
-					leader.last_direction = Vector2.RIGHT
-				if leader.has_method("play_idle_animation"):
-					leader.play_idle_animation()
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+				gameplay_hud.hide_interact_prompt(true)
+
+			for i in range(party_members.size()):
+				var member: CharacterBody2D = party_members[i]
+				if is_instance_valid(member):
+					if not member.is_inside_tree():
+						add_child(member)
+					member.visible = true
+					member.modulate.a = 1.0
+					var offset_pos := Vector2(-70.0 * i, 30.0 * (1 if i % 2 == 1 else -1)) if i > 0 else Vector2.ZERO
+					member.global_position = ARENA_KAMP_ARTHUR_POS + offset_pos
+					member.velocity = Vector2.ZERO
+					if "last_direction" in member:
+						member.last_direction = Vector2.RIGHT
+					if member.has_method("play_idle_animation"):
+						member.play_idle_animation()
+					_set_character_collision_active(member, true)
+					member.set_physics_process(true)
+					if member.has_method("set_party_combat_mode"):
+						member.set_party_combat_mode(true)
 
 			if is_instance_valid(alaric_node):
 				alaric_node.global_position = ARENA_KAMP_ALARIC_POS
@@ -3762,6 +4286,7 @@ func _teleport_to_arena_kamp_and_fight() -> void:
 				alaric_node.last_direction = Vector2.LEFT
 				if alaric_node.has_method("play_idle_animation"):
 					alaric_node.play_idle_animation()
+				_clear_alaric_player_collision_exceptions.call_deferred()
 
 			update_camera_limits_for_location("arena_kamp")
 			if is_instance_valid(camera):
@@ -3777,12 +4302,17 @@ func _teleport_to_arena_kamp_and_fight() -> void:
 
 
 func _start_alaric_sparring_match() -> void:
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
 	set_party_movement_locked(false)
 	var leader := get_active_leader()
-	if is_instance_valid(leader):
-		_set_character_collision_active(leader, true)
-		leader.set_physics_process(true)
-		leader.set_process_unhandled_input(true)
+	for member in party_members:
+		if is_instance_valid(member):
+			_set_character_collision_active(member, true)
+			member.set_physics_process(true)
+			member.set_process_unhandled_input(true)
+			if member.has_method("set_party_combat_mode"):
+				member.set_party_combat_mode(true)
 
 	is_alaric_sparring_in_progress = true
 
@@ -3841,9 +4371,16 @@ func _end_alaric_sparring_match() -> void:
 		alaric_node.add_to_group("npc")
 		alaric_node.is_dead = false
 		alaric_node.visible = true
+		alaric_node.modulate = Color.WHITE
+		var anim_spr := alaric_node.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+		if is_instance_valid(anim_spr):
+			anim_spr.modulate = Color.WHITE
 		alaric_node.current_health = alaric_node.max_health
 		alaric_node.velocity = Vector2.ZERO
 		alaric_node.set_physics_process(false)
+		alaric_node.collision_layer = 1
+		alaric_node.collision_mask = 1
+		_clear_alaric_player_collision_exceptions.call_deferred()
 		if "collision_shape" in alaric_node and is_instance_valid(alaric_node.collision_shape):
 			alaric_node.collision_shape.set_deferred("disabled", false)
 		if "health_bar" in alaric_node and is_instance_valid(alaric_node.health_bar):
@@ -3879,21 +4416,28 @@ func _teleport_back_to_training_camp() -> void:
 	play_black_fade_transition(
 		func():
 			is_in_arena_kamp = false
-			var leader := get_active_leader()
-			if is_instance_valid(leader):
-				leader.global_position = ARTHUR_CAMP_RETURN_POS
-				leader.velocity = Vector2.ZERO
-				if "last_direction" in leader:
-					leader.last_direction = Vector2.RIGHT
-				if leader.has_method("play_idle_animation"):
-					leader.play_idle_animation()
+			for i in range(party_members.size()):
+				var member: CharacterBody2D = party_members[i]
+				if is_instance_valid(member):
+					var offset_pos := Vector2(-70.0 * i, 0.0) if i > 0 else Vector2.ZERO
+					member.global_position = ARTHUR_CAMP_RETURN_POS + offset_pos
+					member.velocity = Vector2.ZERO
+					if "last_direction" in member:
+						member.last_direction = Vector2.RIGHT
+					if member.has_method("play_idle_animation"):
+						member.play_idle_animation()
 
 			if is_instance_valid(alaric_node):
 				alaric_node.global_position = ALARIC_CAMP_POS
 				alaric_node.velocity = Vector2.ZERO
 				alaric_node.last_direction = Vector2.LEFT
+				alaric_node.modulate = Color.WHITE
+				var anim_spr := alaric_node.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+				if is_instance_valid(anim_spr):
+					anim_spr.modulate = Color.WHITE
 				if alaric_node.has_method("play_idle_animation"):
 					alaric_node.play_idle_animation()
+				_clear_alaric_player_collision_exceptions.call_deferred()
 
 			update_camera_limits_for_location("outdoor")
 			if is_instance_valid(camera):
@@ -3904,10 +4448,18 @@ func _teleport_back_to_training_camp() -> void:
 
 			enter_location("Camp Latihan Istana"),
 		func():
-			set_party_movement_locked(true)
-			play_story_dialogue("FLK-008", func():
-				_on_alaric_post_fight_dialogue_finished()
-			)
+			if selected_game_mode == "open_world":
+				set_party_movement_locked(false)
+				var leader := get_active_leader()
+				if is_instance_valid(leader):
+					_set_character_collision_active(leader, true)
+					leader.set_physics_process(true)
+					leader.set_process_unhandled_input(true)
+			else:
+				set_party_movement_locked(true)
+				play_story_dialogue("FLK-008", func():
+					_on_alaric_post_fight_dialogue_finished()
+				)
 	)
 
 
@@ -3918,6 +4470,11 @@ func _on_alaric_post_fight_dialogue_finished() -> void:
 		_set_character_collision_active(leader, true)
 		leader.set_physics_process(true)
 		leader.set_process_unhandled_input(true)
+	if is_instance_valid(alaric_node):
+		alaric_node.modulate = Color.WHITE
+		var anim_spr := alaric_node.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+		if is_instance_valid(anim_spr):
+			anim_spr.modulate = Color.WHITE
 
 	for q in quest_list:
 		if q.get("id") == "main_03":
@@ -4525,6 +5082,9 @@ func _update_active_leader_indicator(delta: float) -> void:
 
 func check_castle_interactions(delta: float) -> void:
 	if is_transitioning or is_in_arena_kamp or is_alaric_sparring_in_progress:
+		if is_in_arena_kamp or is_alaric_sparring_in_progress:
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+				gameplay_hud.hide_interact_prompt(true)
 		return
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("is_dialogue_active") and gameplay_hud.is_dialogue_active():
 		if gameplay_hud.has_method("hide_interact_prompt"):
@@ -4555,6 +5115,11 @@ func check_castle_interactions(delta: float) -> void:
 
 	# Cek kedekatan interaksi pintu masuk / keluar & NPC Pelatih Alaric
 	if not is_inside_castle_hall and not is_in_arena_kamp:
+		if get_tree().paused or (is_instance_valid(gameplay_hud) and gameplay_hud.has_method("is_any_menu_open") and gameplay_hud.is_any_menu_open()) or is_instance_valid(_alaric_boss_prompt_layer):
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+				gameplay_hud.hide_interact_prompt(true)
+			return
+
 		var dist_castle := leader.global_position.distance_to(CASTLE_ENTRANCE_POS)
 		var dist_alaric := leader.global_position.distance_to(ALARIC_CAMP_POS)
 		if dist_castle <= 110.0:
@@ -4562,11 +5127,17 @@ func check_castle_interactions(delta: float) -> void:
 				gameplay_hud.show_interact_prompt("Masuk ke Aula Kastil", "E", "enter_castle")
 		elif dist_alaric <= 110.0 and not is_alaric_sparring_in_progress:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
-				gameplay_hud.show_interact_prompt("Bicara dengan Pelatih Alaric", "E", "talk_alaric")
+				var prompt_title := "Tantang Pelatih Alaric" if selected_game_mode == "open_world" else "Bicara dengan Pelatih Alaric"
+				gameplay_hud.show_interact_prompt(prompt_title, "E", "talk_alaric")
 		else:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 				gameplay_hud.hide_interact_prompt()
 	else:
+		if get_tree().paused or (is_instance_valid(gameplay_hud) and gameplay_hud.has_method("is_any_menu_open") and gameplay_hud.is_any_menu_open()) or is_instance_valid(_alaric_boss_prompt_layer):
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+				gameplay_hud.hide_interact_prompt(true)
+			return
+
 		var dist := leader.global_position.distance_to(CASTLE_HALL_EXIT_POS)
 		if dist <= 75.0:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):

@@ -421,11 +421,11 @@ func process_leader_movement(delta: float) -> void:
 		if dist > 6.0:
 			var move_dir := current_feet_pos.direction_to(target_position)
 			last_movement_direction = move_dir
+			last_direction = get_cardinal_direction(move_dir)
 			if is_attacking or is_skill_animating:
 				move_velocity = attack_lunge_velocity
 			else:
 				move_velocity = move_dir * current_speed
-				update_direction_animation(move_dir)
 		else:
 			is_moving = false
 			has_pending_click_move = false
@@ -433,13 +433,9 @@ func process_leader_movement(delta: float) -> void:
 			target_position = current_feet_pos
 			if CursorManager.has_method("hide_ground_move_indicator"):
 				CursorManager.hide_ground_move_indicator()
-			if not is_attacking and not is_skill_animating and animated_sprite.animation.begins_with("walk_"):
-				play_idle_animation()
 			if is_attacking:
 				move_velocity = attack_lunge_velocity
 	else:
-		if not is_attacking and not is_skill_animating and animated_sprite.animation.begins_with("walk_"):
-			play_idle_animation()
 		if is_attacking:
 			move_velocity = attack_lunge_velocity
 
@@ -475,10 +471,19 @@ func process_leader_movement(delta: float) -> void:
 				click_move_stuck_timer = 0.0
 				if CursorManager.has_method("hide_ground_move_indicator"):
 					CursorManager.hide_ground_move_indicator()
-				if animated_sprite.animation.begins_with("walk_"):
-					play_idle_animation()
 		else:
 			click_move_stuck_timer = 0.0
+
+	# Sinkronisasi animasi gerak / diam: berhenti melangkah jika tertahan tabrakan fisik/halangan
+	if not is_attacking and not is_skill_animating and not is_dead:
+		if is_moving:
+			if get_slide_collision_count() > 0 and get_real_velocity().length() < 15.0:
+				play_idle_animation()
+			else:
+				play_walk_animation()
+		else:
+			if animated_sprite.animation.begins_with("walk_"):
+				play_idle_animation()
 
 
 func process_pending_click_move(delta: float) -> bool:
@@ -511,7 +516,6 @@ func process_pending_click_move(delta: float) -> bool:
 	var clamped_speed: float = minf(current_speed, dist / maxf(delta, 0.001))
 	velocity = (move_dir * clamped_speed) + knockback_velocity
 	move_and_slide_with_separation()
-	update_direction_animation(move_dir)
 
 	if get_slide_collision_count() > 0:
 		if velocity.length() < current_speed * 0.4:
@@ -523,24 +527,28 @@ func process_pending_click_move(delta: float) -> bool:
 			velocity = tangent * (current_speed * 0.8) + knockback_velocity
 			move_and_slide()
 
-		if get_real_velocity().length() < 10.0:
+		if get_real_velocity().length() < 15.0:
+			play_idle_animation()
 			click_move_stuck_timer += delta
 			if click_move_stuck_timer >= 0.4:
 				has_pending_click_move = false
 				is_moving = false
 				click_move_stuck_timer = 0.0
-				play_idle_animation()
 				return false
 		else:
+			update_direction_animation(move_dir)
 			click_move_stuck_timer = 0.0
 	else:
+		update_direction_animation(move_dir)
 		click_move_stuck_timer = 0.0
 
 	return true
 
 
 func handle_run_dust_cycle(delta: float) -> void:
-	var current_move_speed := velocity.length()
+	var current_move_speed := get_real_velocity().length() if get_slide_collision_count() > 0 else velocity.length()
+	if get_slide_collision_count() > 0 and current_move_speed < 15.0:
+		current_move_speed = 0.0
 	if current_move_speed >= (NORMAL_SPEED * 1.35) and not is_attacking and not is_skill_animating and not is_dead:
 		dust_timer -= delta
 		if dust_timer <= 0.0:

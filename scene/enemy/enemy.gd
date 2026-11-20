@@ -339,13 +339,13 @@ func _physics_process(delta: float) -> void:
 				is_flanking = false
 				velocity = Vector2.ZERO
 				move_and_slide_with_separation()
-				update_direction_animation(dir)
 
-				if shoot_timer <= 0.0 and not is_shooting:
-					execute_melee_attack()
-				elif not is_shooting:
-					last_direction = get_8_direction(dir)
-					play_idle_animation()
+				if not is_shooting:
+					if shoot_timer <= 0.0:
+						execute_melee_attack()
+					else:
+						last_direction = get_8_direction(dir)
+						play_idle_animation()
 			elif has_los:
 				is_flanking = false
 				if is_shooting:
@@ -790,7 +790,10 @@ func execute_melee_attack() -> void:
 
 	# Arah hadap ke player dan mainkan animasi serang sesuai arah
 	last_direction = get_8_direction(dir)
-	play_attack_animation()
+	if animated_sprite and animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("skill_s") and randf() < 0.25:
+		play_skill_animation()
+	else:
+		play_attack_animation()
 	play_sfx(SFX_KNIGHT_SLASH, 0.0)
 
 	# Jeda ancang-ancang (~0.18 detik) sebelum tebasan mengenai player
@@ -810,8 +813,8 @@ func execute_melee_attack() -> void:
 	shoot_timer = attack_cooldown
 	damage_timer = max(damage_timer, 0.6)
 
-	# Tunggu sisa durasi animasi tebasan (~0.25 detik), lalu kembali ke idle
-	await get_tree().create_timer(0.25).timeout
+	# Tunggu sisa durasi animasi tebasan (~0.38 detik), lalu kembali ke idle
+	await get_tree().create_timer(0.38).timeout
 	if is_instance_valid(self) and not is_dead:
 		is_shooting = false
 		if current_state == State.CHASE and player != null and is_instance_valid(player):
@@ -940,28 +943,75 @@ func play_attack_animation() -> void:
 		return
 	animated_sprite.flip_h = false
 
+	var anim_suffix: String = ""
+	if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("atk_s_2") and randf() > 0.5:
+		anim_suffix = "_2"
+
+	var anim_name: String = "atk_s"
 	if last_direction == Vector2.UP:
-		animated_sprite.play("atk_n")
+		anim_name = "atk_n"
 	elif last_direction == Vector2.DOWN:
-		animated_sprite.play("atk_s")
+		anim_name = "atk_s"
 	elif last_direction == Vector2.LEFT:
-		animated_sprite.play("atk_w")
+		anim_name = "atk_w"
 		animated_sprite.flip_h = false
 	elif last_direction == Vector2.RIGHT:
-		animated_sprite.play("atk_e")
+		anim_name = "atk_e"
 		animated_sprite.flip_h = false
 	elif last_direction == Vector2(-1, -1):
-		animated_sprite.play("atk_w")
+		anim_name = "atk_w"
 		animated_sprite.flip_h = false
 	elif last_direction == Vector2(1, -1):
-		animated_sprite.play("atk_w")
-		animated_sprite.flip_h = true
-	elif last_direction == Vector2(-1, 1):
-		animated_sprite.play("atk_e")
-		animated_sprite.flip_h = true
-	elif last_direction == Vector2(1, 1):
-		animated_sprite.play("atk_e")
+		anim_name = "atk_e"
 		animated_sprite.flip_h = false
+	elif last_direction == Vector2(-1, 1):
+		anim_name = "atk_w"
+		animated_sprite.flip_h = false
+	elif last_direction == Vector2(1, 1):
+		anim_name = "atk_e"
+		animated_sprite.flip_h = false
+
+	var target_anim: String = anim_name + anim_suffix
+	if animated_sprite.sprite_frames and not animated_sprite.sprite_frames.has_animation(target_anim):
+		target_anim = anim_name
+
+	if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation(target_anim):
+		animated_sprite.stop()
+		animated_sprite.play(target_anim)
+
+
+func play_skill_animation() -> void:
+	if not animated_sprite:
+		return
+	animated_sprite.flip_h = false
+
+	var anim_name: String = "skill_s"
+	if last_direction == Vector2.UP:
+		anim_name = "skill_n"
+	elif last_direction == Vector2.DOWN:
+		anim_name = "skill_s"
+	elif last_direction == Vector2.LEFT:
+		anim_name = "skill_w"
+		animated_sprite.flip_h = false
+	elif last_direction == Vector2.RIGHT:
+		anim_name = "skill_e"
+		animated_sprite.flip_h = false
+	elif last_direction == Vector2(-1, -1):
+		anim_name = "skill_w"
+		animated_sprite.flip_h = false
+	elif last_direction == Vector2(1, -1):
+		anim_name = "skill_e"
+		animated_sprite.flip_h = false
+	elif last_direction == Vector2(-1, 1):
+		anim_name = "skill_w"
+		animated_sprite.flip_h = false
+	elif last_direction == Vector2(1, 1):
+		anim_name = "skill_e"
+		animated_sprite.flip_h = false
+
+	if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation(anim_name):
+		animated_sprite.stop()
+		animated_sprite.play(anim_name)
 
 
 func apply_knockback(force: Vector2) -> void:
@@ -1057,7 +1107,8 @@ func take_damage(amount: int, attacker: CharacterBody2D = null) -> void:
 	if animated_sprite:
 		animated_sprite.modulate = Color(3.0, 3.0, 3.0)
 		var flash_tween := create_tween()
-		flash_tween.tween_property(animated_sprite, "modulate", Color(1.3, 0.4, 0.4), 0.1)
+		var default_col: Color = Color.WHITE if ("Alaric" in name or is_in_group("npc")) else Color(1.3, 0.4, 0.4)
+		flash_tween.tween_property(animated_sprite, "modulate", default_col, 0.1)
 
 	# Multi-Target Aggro: Prioritaskan penyerang yang baru memberi damage
 	if attacker != null and is_instance_valid(attacker) and attacker.is_in_group("player") and not ("is_dead" in attacker and attacker.is_dead):
@@ -1184,7 +1235,8 @@ func respawn() -> void:
 
 	# Reset warna normal
 	if animated_sprite:
-		animated_sprite.modulate = Color(1.3, 0.4, 0.4)
+		var default_col: Color = Color.WHITE if ("Alaric" in name or is_in_group("npc")) else Color(1.3, 0.4, 0.4)
+		animated_sprite.modulate = default_col
 		play_idle_animation()
 
 	# Nyalakan kembali tabrakan dan deteksi
