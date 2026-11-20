@@ -256,6 +256,9 @@ size = Vector2(166, 61)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_q4vr2"]
 size = Vector2(82.125, 52.625)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_iu1u6"]
+size = Vector2(100, 124)
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_w47py"]
 size = Vector2(154, 24.5)
 
@@ -353,19 +356,19 @@ size = Vector2(1520, 280)
 size = Vector2(1520, 200)
 
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_14"]
-size = Vector2(350, 150)
+size = Vector2(257, 81)
 
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_15"]
-size = Vector2(50, 450)
+size = Vector2(32, 667)
 
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_16"]
-size = Vector2(50, 450)
+size = Vector2(41, 330)
 
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_17"]
 size = Vector2(275, 75)
 
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_18"]
-size = Vector2(425, 75)
+size = Vector2(434, 75)
 
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_19"]
 size = Vector2(305, 155)
@@ -414,6 +417,7 @@ tile_map_data = PackedByteArray("AAAcAAAAAAAcAAAAAAAdAAAAAAAdAAAAAAAeAAAAAAAeAAA
 tile_set = ExtResource("2_tileset")
 
 [node name="Nature-Tree1" type="TileMapLayer" parent="." unique_id=1406301119]
+visible = false
 z_index = 4
 y_sort_enabled = true
 texture_filter = 1
@@ -423,6 +427,7 @@ tile_map_data = PackedByteArray("AAAiABwAAAAEAAkAAAAbACgAAAAEAAkAAAATAA0AAAAAAAQ
 tile_set = SubResource("TileSet_l7hw2")
 
 [node name="Nature-Tree2" type="TileMapLayer" parent="." unique_id=1252039916]
+visible = false
 z_index = 4
 y_sort_enabled = true
 texture_filter = 1
@@ -432,6 +437,7 @@ tile_map_data = PackedByteArray("AAAiABwAAAAEAAkAAAAbACgAAAAEAAkAAAATAA0AAAAAAAQ
 tile_set = SubResource("TileSet_l7hw2")
 
 [node name="Nature-Tree3" type="TileMapLayer" parent="." unique_id=1749325433]
+visible = false
 z_index = 4
 y_sort_enabled = true
 texture_filter = 1
@@ -441,6 +447,7 @@ tile_map_data = PackedByteArray("AAAiABwAAAAEAAkAAAAbACgAAAAEAAkAAAATAA0AAAAAAAQ
 tile_set = SubResource("TileSet_l7hw2")
 
 [node name="Nature-Bush1" type="TileMapLayer" parent="." unique_id=177402518]
+visible = false
 z_index = 4
 y_sort_enabled = true
 texture_filter = 1
@@ -450,6 +457,7 @@ tile_map_data = PackedByteArray("AAAiABwAAAAEAAkAAAAbACgAAAAEAAkAAAATAA0AAAAAAAQ
 tile_set = SubResource("TileSet_l7hw2")
 
 [node name="Nature-Bush2" type="TileMapLayer" parent="." unique_id=1809690155]
+visible = false
 z_index = 4
 y_sort_enabled = true
 texture_filter = 1
@@ -459,6 +467,7 @@ tile_map_data = PackedByteArray("AAAiABwAAAAEAAkAAAAbACgAAAAEAAkAAAATAA0AAAAAAAQ
 tile_set = SubResource("TileSet_l7hw2")
 
 [node name="Nature-ground" type="TileMapLayer" parent="." unique_id=983763280]
+visible = false
 z_index = 4
 y_sort_enabled = true
 texture_filter = 1
@@ -537,6 +546,10 @@ shape = SubResource("RectangleShape2D_q4vr2")
 [node name="CollisionShape2D65" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1037599166]
 position = Vector2(-3450, 9905)
 shape = SubResource("RectangleShape2D_q4vr2")
+
+[node name="CollisionShape2D67" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1086127209]
+position = Vector2(-3458, 9871)
+shape = SubResource("RectangleShape2D_iu1u6")
 
 [node name="CollisionShape2D56" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1162004152]
 position = Vector2(-2170, 7935)
@@ -783,15 +796,15 @@ position = Vector2(360, 10460)
 shape = SubResource("Rect_Obstacle_13")
 
 [node name="Camp_House_Wall" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112014]
-position = Vector2(8395, 3735)
+position = Vector2(8265.5, 3802.5)
 shape = SubResource("Rect_Obstacle_14")
 
 [node name="Camp_Fence_Left" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112015]
-position = Vector2(7945, 3885)
+position = Vector2(7933, 3993.5)
 shape = SubResource("Rect_Obstacle_15")
 
 [node name="Camp_Fence_Right" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112016]
-position = Vector2(9005, 3885)
+position = Vector2(9022.5, 3825)
 shape = SubResource("Rect_Obstacle_16")
 
 [node name="Camp_Fence_Top_Left" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112017]
@@ -799,7 +812,7 @@ position = Vector2(8082.5, 3697.5)
 shape = SubResource("Rect_Obstacle_17")
 
 [node name="Camp_Fence_Top_Right" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112018]
-position = Vector2(8782.5, 3697.5)
+position = Vector2(8787, 3697.5)
 shape = SubResource("Rect_Obstacle_18")
 
 [node name="Camp_Wagon" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112019]
@@ -807,7 +820,7 @@ position = Vector2(8427.5, 4007.5)
 shape = SubResource("Rect_Obstacle_19")
 
 [node name="Camp_Crate_Left" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112020]
-position = Vector2(8177.5, 3760)
+position = Vector2(8023, 3791)
 shape = SubResource("Rect_Obstacle_20")
 
 [node name="Camp_Crate_Right" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112021]
