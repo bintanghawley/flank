@@ -336,10 +336,10 @@ var hovered_settings_submenu: int = -1
 var confirm_modal_selected_idx: int = 0
 var _submenu_arrow_tweens: Dictionary = {}
 var audio_settings: Dictionary = {
-	"master": 65,
-	"music": 50,
-	"sfx": 50,
-	"dialog": 50
+	"master": 100,
+	"music": 100,
+	"sfx": 100,
+	"dialog": 100
 }
 var _active_dragging_slider: String = ""
 
@@ -4074,10 +4074,10 @@ func _ensure_audio_buses() -> void:
 func save_audio_settings() -> void:
 	var config := ConfigFile.new()
 	var _err := config.load(SETTINGS_FILE_PATH)
-	config.set_value("audio", "master_volume", audio_settings.get("master", 65))
-	config.set_value("audio", "music_volume", audio_settings.get("music", 50))
-	config.set_value("audio", "sfx_volume", audio_settings.get("sfx", 50))
-	config.set_value("audio", "dialog_volume", audio_settings.get("dialog", 50))
+	config.set_value("audio", "master_volume", audio_settings.get("master", 100))
+	config.set_value("audio", "music_volume", audio_settings.get("music", 100))
+	config.set_value("audio", "sfx_volume", audio_settings.get("sfx", 100))
+	config.set_value("audio", "dialog_volume", audio_settings.get("dialog", 100))
 	config.save(SETTINGS_FILE_PATH)
 
 
@@ -4085,24 +4085,35 @@ func load_audio_settings() -> void:
 	var config := ConfigFile.new()
 	var err := config.load(SETTINGS_FILE_PATH)
 	if err == OK:
-		audio_settings["master"] = int(config.get_value("audio", "master_volume", 65))
-		audio_settings["music"] = int(config.get_value("audio", "music_volume", 50))
-		audio_settings["sfx"] = int(config.get_value("audio", "sfx_volume", 50))
-		audio_settings["dialog"] = int(config.get_value("audio", "dialog_volume", 50))
+		audio_settings["master"] = int(config.get_value("audio", "master_volume", 100))
+		audio_settings["music"] = int(config.get_value("audio", "music_volume", 100))
+		audio_settings["sfx"] = int(config.get_value("audio", "sfx_volume", 100))
+		audio_settings["dialog"] = int(config.get_value("audio", "dialog_volume", 100))
+		# Migrasi otomatis: jika sfx atau dialog masih bernilai 50 (bawaan lama), perbarui ke 100
+		var needs_resave := false
+		if config.get_value("audio", "sfx_volume", 100) == 50:
+			audio_settings["sfx"] = 100
+			needs_resave = true
+		if config.get_value("audio", "dialog_volume", 100) == 50:
+			audio_settings["dialog"] = 100
+			needs_resave = true
+		if needs_resave:
+			save_audio_settings()
 	else:
-		audio_settings["master"] = 65
-		audio_settings["music"] = 50
-		audio_settings["sfx"] = 50
-		audio_settings["dialog"] = 50
+		audio_settings["master"] = 100
+		audio_settings["music"] = 100
+		audio_settings["sfx"] = 100
+		audio_settings["dialog"] = 100
+		save_audio_settings()
 
 	_apply_all_audio_settings()
 
 
 func _apply_all_audio_settings() -> void:
-	_apply_bus_volume("Master", audio_settings.get("master", 65))
-	_apply_bus_volume("Music", audio_settings.get("music", 50))
-	_apply_bus_volume("SFX", audio_settings.get("sfx", 50))
-	_apply_bus_volume("Dialog", audio_settings.get("dialog", 50))
+	_apply_bus_volume("Master", audio_settings.get("master", 100))
+	_apply_bus_volume("Music", audio_settings.get("music", 100))
+	_apply_bus_volume("SFX", audio_settings.get("sfx", 100))
+	_apply_bus_volume("Dialog", audio_settings.get("dialog", 100))
 
 
 func _apply_bus_volume(bus_name: String, int_val: int) -> void:
@@ -4392,12 +4403,12 @@ func _on_audio_slider_gui_input(type: String, event: InputEvent, slider_ctrl: Co
 					save_audio_settings()
 					_play_ui_sfx(SFX_BOOK_TAB_SELECT, -5.0)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
-			var cur_val: int = audio_settings.get(type, 50)
+			var cur_val: int = audio_settings.get(type, 100)
 			_set_slider_value(type, mini(100, cur_val + 5))
 			save_audio_settings()
 			_play_ui_sfx(SFX_BOOK_TAB_SELECT, -6.0, 0.02)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
-			var cur_val: int = audio_settings.get(type, 50)
+			var cur_val: int = audio_settings.get(type, 100)
 			_set_slider_value(type, maxi(0, cur_val - 5))
 			save_audio_settings()
 			_play_ui_sfx(SFX_BOOK_TAB_SELECT, -6.0, 0.02)
@@ -4429,10 +4440,10 @@ func _set_slider_value(type: String, int_val: int) -> void:
 
 	_update_audio_slider_visual(type, int_val)
 	settings_audio_changed.emit(
-		audio_settings.get("master", 65),
-		audio_settings.get("music", 50),
-		audio_settings.get("sfx", 50),
-		audio_settings.get("dialog", 50)
+		audio_settings.get("master", 100),
+		audio_settings.get("music", 100),
+		audio_settings.get("sfx", 100),
+		audio_settings.get("dialog", 100)
 	)
 
 
@@ -4481,7 +4492,7 @@ func _sync_all_audio_sliders() -> void:
 			var g_node = s_ctrl.get_node_or_null("Grabber") as TextureRect
 			if g_node and g_node.texture == null:
 				g_node.texture = h_grabber_tex
-		var val: int = audio_settings.get(t, 50)
+		var val: int = audio_settings.get(t, 100)
 		_update_audio_slider_visual(t, val)
 
 

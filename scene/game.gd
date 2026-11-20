@@ -2804,6 +2804,7 @@ func play_iris_opening_transition() -> void:
 		var sfx_iris_open: AudioStream = load("res://assets/audio/sfx/ui/transition_iris_open.wav")
 		if sfx_iris_open:
 			var sfx_player := AudioStreamPlayer.new()
+			sfx_player.bus = &"SFX"
 			sfx_player.stream = sfx_iris_open
 			sfx_player.volume_db = -3.0
 			add_child(sfx_player)
@@ -3853,6 +3854,7 @@ func transition_to_location(target_pos: Vector2, new_location_name: String = "")
 	var sfx_door: AudioStream = load("res://assets/audio/sfx/ui/transition_iris_open.wav")
 	if sfx_door:
 		var sfx_player := AudioStreamPlayer.new()
+		sfx_player.bus = &"SFX"
 		sfx_player.stream = sfx_door
 		sfx_player.volume_db = -3.0
 		add_child(sfx_player)

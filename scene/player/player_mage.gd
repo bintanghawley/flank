@@ -1397,7 +1397,7 @@ func spawn_run_dust(move_dir: Vector2) -> void:
 	if is_leader:
 		_footstep_toggle = not _footstep_toggle
 		if _footstep_toggle:
-			play_sfx(SFX_FOOTSTEP, 5.0)
+			play_sfx(SFX_FOOTSTEP, -4.0)
 
 
 func apply_camera_shake(intensity: float = -1.0) -> void:
@@ -1607,6 +1607,8 @@ func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 	if not stream:
 		return
 	var player := AudioStreamPlayer.new()
+	if AudioServer.get_bus_index("SFX") != -1:
+		player.bus = &"SFX"
 	player.stream = stream
 	player.volume_db = volume_db
 	add_child(player)

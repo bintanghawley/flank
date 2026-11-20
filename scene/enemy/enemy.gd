@@ -41,6 +41,8 @@ func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 	if not stream:
 		return
 	var player_sfx := AudioStreamPlayer2D.new()
+	if AudioServer.get_bus_index("SFX") != -1:
+		player_sfx.bus = &"SFX"
 	player_sfx.stream = stream
 	player_sfx.volume_db = volume_db
 	player_sfx.global_position = global_position
