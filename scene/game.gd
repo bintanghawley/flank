@@ -557,18 +557,30 @@ func _ready() -> void:
 		if node:
 			all_heroes[n] = node
 
-	# Sesuai alur cerita FLK: Awal game Arthur (Knight_1) bertualang secara SOLO.
-	# Anggota party lain (Magnus, Assassin, Archer) baru bergabung bertahap sesuai cerita.
-	if all_heroes.has("Knight_1"):
-		party_members.append(all_heroes["Knight_1"])
+	# Inisialisasi susunan party berdasarkan mode permainan:
+	if selected_game_mode == "open_world":
+		# Mode Jelajah: Seluruh 4 anggota party langsung aktif bersama sejak awal
+		# Urutan default: Knight_1 (Arthur), Bandit_1 (Hellene), Archer_1 (Anastasya), Mage_1 (Magnus)
+		for n in names:
+			if all_heroes.has(n):
+				party_members.append(all_heroes[n])
+		if party_members.is_empty():
+			for child in get_children():
+				if child.is_in_group("player") and child is CharacterBody2D:
+					party_members.append(child)
 	else:
-		# Fallback pencarian fleksibel jika node bernama Player_Knight dsb
-		for child in get_children():
-			if child.is_in_group("player") and child is CharacterBody2D:
-				party_members.append(child)
-				break
+		# Mode Cerita: Sesuai alur cerita FLK, awal game Arthur (Knight_1) bertualang secara SOLO.
+		# Anggota party lain (Magnus, Assassin, Archer) baru bergabung bertahap sesuai cerita (recruit_hero).
+		if all_heroes.has("Knight_1"):
+			party_members.append(all_heroes["Knight_1"])
+		else:
+			# Fallback pencarian fleksibel jika node bernama Player_Knight dsb
+			for child in get_children():
+				if child.is_in_group("player") and child is CharacterBody2D:
+					party_members.append(child)
+					break
 
-	# Copot hero non-party dari SceneTree agar tidak berkeliaran atau menghalangi map saat Arthur sedang solo
+	# Copot hero non-party dari SceneTree agar tidak berkeliaran atau menghalangi map saat ada anggota yang belum bergabung
 	for h_name in all_heroes.keys():
 		var h_node: CharacterBody2D = all_heroes[h_name]
 		if is_instance_valid(h_node) and h_node not in party_members and h_node.is_inside_tree():
@@ -3483,6 +3495,30 @@ func _create_meeting_npc(
 func _setup_open_world_mode() -> void:
 	is_prologue_completed = true
 	tracked_quest_id = ""
+
+	# Pastikan seluruh 4 hero terdaftar di party_members di mode jelajah
+	var names: Array[String] = ["Knight_1", "Bandit_1", "Archer_1", "Mage_1"]
+	var roster_changed: bool = false
+	for n in names:
+		if all_heroes.has(n) and all_heroes[n] not in party_members:
+			party_members.append(all_heroes[n])
+			roster_changed = true
+
+	if roster_changed:
+		for i in range(party_members.size()):
+			for j in range(i + 1, party_members.size()):
+				party_members[i].add_collision_exception_with(party_members[j])
+				party_members[j].add_collision_exception_with(party_members[i])
+		setup_party_enemy_collision_exceptions.call_deferred()
+		update_party_visibility()
+		if gameplay_hud:
+			if gameplay_hud.has_method("update_party_order"):
+				gameplay_hud.update_party_order(party_members, active_leader_index)
+			else:
+				gameplay_hud.party_members = party_members
+				gameplay_hud.update_party_hud()
+				gameplay_hud.update_leader_indicator()
+
 	if gameplay_hud:
 		if gameplay_hud.has_method("set_open_world_mode"):
 			gameplay_hud.set_open_world_mode(true)
@@ -3579,42 +3615,49 @@ func load_game_from_slot(slot_id: int) -> bool:
 	var restored_party: Array[CharacterBody2D] = []
 	for p_info in data.get("party", []):
 		var char_name: String = p_info.get("name", "")
-		for child in get_children():
-			if child is CharacterBody2D and child.name == char_name:
-				restored_party.append(child)
-				if p_info.has("position"):
-					var pos_dict: Dictionary = p_info["position"]
-					child.global_position = Vector2(float(pos_dict.get("x", child.global_position.x)), float(pos_dict.get("y", child.global_position.y)))
-				if "target_position" in child:
-					child.target_position = child.global_position
-				if "velocity" in child:
-					child.velocity = Vector2.ZERO
-				if "max_health" in child and p_info.has("max_hp"):
-					child.max_health = int(p_info["max_hp"])
-				if "current_health" in child and p_info.has("hp"):
-					child.current_health = int(p_info["hp"])
-				if "current_health" in child and "is_dead" in child:
-					if child.current_health <= 0:
-						child.is_dead = true
-						child.visible = false
-						child.modulate = Color(0.8, 0.2, 0.2, 0.0)
-						if "collision_shape" in child and child.collision_shape:
-							child.collision_shape.set_deferred("disabled", true)
-						if child.has_node("Hurtbox/CollisionShape2D"):
-							child.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", true)
-					else:
-						child.is_dead = false
-						child.visible = true
-						child.modulate = Color.WHITE
-						if "collision_shape" in child and child.collision_shape:
-							child.collision_shape.set_deferred("disabled", false)
-						if child.has_node("Hurtbox/CollisionShape2D"):
-							child.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", false)
-						if not child.is_in_group("player"):
-							child.add_to_group("player")
-				if "skill_cooldown_timer" in child:
-					child.skill_cooldown_timer = 0.0
-				break
+		var target_hero: CharacterBody2D = null
+		if all_heroes.has(char_name):
+			target_hero = all_heroes[char_name]
+		else:
+			for child in get_children():
+				if child is CharacterBody2D and child.name == char_name:
+					target_hero = child
+					break
+		if is_instance_valid(target_hero):
+			var child := target_hero
+			restored_party.append(child)
+			if p_info.has("position"):
+				var pos_dict: Dictionary = p_info["position"]
+				child.global_position = Vector2(float(pos_dict.get("x", child.global_position.x)), float(pos_dict.get("y", child.global_position.y)))
+			if "target_position" in child:
+				child.target_position = child.global_position
+			if "velocity" in child:
+				child.velocity = Vector2.ZERO
+			if "max_health" in child and p_info.has("max_hp"):
+				child.max_health = int(p_info["max_hp"])
+			if "current_health" in child and p_info.has("hp"):
+				child.current_health = int(p_info["hp"])
+			if "current_health" in child and "is_dead" in child:
+				if child.current_health <= 0:
+					child.is_dead = true
+					child.visible = false
+					child.modulate = Color(0.8, 0.2, 0.2, 0.0)
+					if "collision_shape" in child and child.collision_shape:
+						child.collision_shape.set_deferred("disabled", true)
+					if child.has_node("Hurtbox/CollisionShape2D"):
+						child.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", true)
+				else:
+					child.is_dead = false
+					child.visible = true
+					child.modulate = Color.WHITE
+					if "collision_shape" in child and child.collision_shape:
+						child.collision_shape.set_deferred("disabled", false)
+					if child.has_node("Hurtbox/CollisionShape2D"):
+						child.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", false)
+					if not child.is_in_group("player"):
+						child.add_to_group("player")
+			if "skill_cooldown_timer" in child:
+				child.skill_cooldown_timer = 0.0
 
 	if not restored_party.is_empty():
 		party_members = restored_party
