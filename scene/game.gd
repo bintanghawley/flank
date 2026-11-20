@@ -38,6 +38,18 @@ const ARENA_KAMP_ARTHUR_POS: Vector2 = Vector2(7950.0, -1210.0)
 const ARENA_KAMP_ALARIC_POS: Vector2 = Vector2(8350.0, -1210.0)
 const ARENA_KAMP_CENTER_POS: Vector2 = Vector2(8155.0, -1210.0)
 const GRAVEYARD_POS: Vector2 = Vector2(4400.0, 2900.0)
+const FOREST_CABIN_DOOR_POS: Vector2 = Vector2(8600.0, 3840.0)
+const FOREST_CAMP_STOP_POS: Vector2 = Vector2(8600.0, 4350.0)
+const FOREST_CROW_SPAWN_POS: Vector2 = Vector2(9800.0, 3600.0)
+const FOREST_CROW_PERCH_POS: Vector2 = Vector2(8820.0, 4158.0)
+const FOREST_MAGNUS_POS: Vector2 = Vector2(8510.0, 4320.0)
+
+const CASTLE_APPROACH_START_POS: Vector2 = Vector2(2533.0, 2000.0)
+const CASTLE_APPROACH_STOP_POS: Vector2 = Vector2(2533.0, 1350.0)
+
+var _prologue_guards: Array[Node2D] = []
+var _prologue_crow: Sprite2D = null
+var _prologue_crow_flap_tween: Tween = null
 var is_inside_castle_hall: bool = false
 var is_in_arena_kamp: bool = false
 var is_meeting_in_progress: bool = false
@@ -721,6 +733,19 @@ func _ready() -> void:
 					party_members.append(child)
 					break
 
+		if not is_prologue_completed and pending_load_slot_id <= 0:
+			var lead_node: CharacterBody2D = all_heroes.get("Knight_1")
+			if is_instance_valid(lead_node):
+				lead_node.global_position = FOREST_CABIN_DOOR_POS
+				lead_node.velocity = Vector2.ZERO
+				if "last_direction" in lead_node:
+					lead_node.last_direction = Vector2.DOWN
+				if lead_node.has_method("play_idle_animation"):
+					lead_node.play_idle_animation()
+			if is_instance_valid(camera):
+				camera.global_position = FOREST_CABIN_DOOR_POS
+				camera.reset_smoothing()
+
 	# Copot hero non-party dari SceneTree agar tidak berkeliaran atau menghalangi map saat ada anggota yang belum bergabung
 	for h_name in all_heroes.keys():
 		var h_node: CharacterBody2D = all_heroes[h_name]
@@ -834,7 +859,7 @@ func _ready() -> void:
 	elif selected_game_mode == "open_world":
 		_setup_open_world_mode.call_deferred()
 	else:
-		_trigger_prologue_cutscene.call_deferred()
+		_start_story_prologue_sequence.call_deferred()
 
 
 func setup_party_enemy_collision_exceptions() -> void:
@@ -2967,23 +2992,208 @@ func _on_hud_dialogue_finished(_dialogue_id: String) -> void:
 
 
 func _trigger_prologue_cutscene() -> void:
-	if is_prologue_completed:
+	_start_story_prologue_sequence()
+
+
+func _start_story_prologue_sequence() -> void:
+	if is_prologue_completed or selected_game_mode == "open_world":
 		return
-	await get_tree().create_timer(0.6).timeout
-	if gameplay_hud and gameplay_hud.has_method("show_dialogue"):
-		gameplay_hud.show_dialogue("prologue_intro", PROLOGUE_DIALOGUE, _on_prologue_dialogue_completed)
+
+	# Pastikan transisi pembuka awal (jika ada) selesai sebelum pergerakan cutscene dimulai
+	while is_transitioning:
+		await get_tree().process_frame
+
+	set_party_movement_locked(true)
+
+	var lead := get_active_leader()
+	if is_instance_valid(lead):
+		lead.set_physics_process(false)
+		lead.set_process_unhandled_input(false)
+		_set_character_collision_active(lead, false)
+		lead.global_position = FOREST_CABIN_DOOR_POS
+		lead.velocity = Vector2.ZERO
+		if "last_direction" in lead:
+			lead.last_direction = Vector2.DOWN
+		if lead.has_method("play_idle_animation"):
+			lead.play_idle_animation()
+
+	if is_instance_valid(camera):
+		camera.global_position = FOREST_CABIN_DOOR_POS
+		camera.reset_smoothing()
+
+	# 1. Tampilkan Magnus (Wizard) di camp observasi hutan
+	var mage = all_heroes.get("Mage_1")
+	if is_instance_valid(mage):
+		if not mage.is_inside_tree():
+			add_child(mage)
+		mage.global_position = FOREST_MAGNUS_POS
+		mage.set_physics_process(false)
+		mage.set_process_unhandled_input(false)
+		if "last_direction" in mage:
+			mage.last_direction = Vector2.RIGHT
+		if mage.has_method("play_idle_animation"):
+			mage.play_idle_animation()
+		mage.visible = true
+
+	# 2. Spawn 3 NPC Pengawal Kerajaan di camp observasi hutan
+	_cleanup_prologue_entities()
+	var guard_scene: PackedScene = load("res://scene/npc/npc_guard.tscn")
+	if guard_scene:
+		var guard_data: Array[Dictionary] = [
+			{"pos": Vector2(8420.0, 4320.0), "anim": "idle_e"},
+			{"pos": Vector2(8720.0, 4220.0), "anim": "idle_w"},
+			{"pos": Vector2(8780.0, 4360.0), "anim": "idle_w"}
+		]
+		for idx in range(guard_data.size()):
+			var g = guard_scene.instantiate() as CharacterBody2D
+			if g:
+				g.name = "PrologueGuard_%d" % (idx + 1)
+				g.global_position = guard_data[idx]["pos"]
+				g.patrol_points.clear()
+				g.facing_direction = "e" if "e" in guard_data[idx]["anim"] else "w"
+				g.set_physics_process(false)
+				if g.has_node("AnimatedSprite2D"):
+					g.get_node("AnimatedSprite2D").play(guard_data[idx]["anim"])
+				add_child(g)
+				_prologue_guards.append(g)
+
+	# 3. Spawn Burung Gagak di atas pepohonan kanan atas
+	_prologue_crow = Sprite2D.new()
+	_prologue_crow.name = "PrologueCrow"
+	_prologue_crow.texture = load("res://assets/characters/animal/raven/raven.png")
+	_prologue_crow.hframes = 2
+	_prologue_crow.vframes = 1
+	_prologue_crow.frame = 0
+	_prologue_crow.scale = Vector2(2.5, 2.5)
+	_prologue_crow.z_index = 8
+	_prologue_crow.global_position = FOREST_CROW_SPAWN_POS
+	add_child(_prologue_crow)
+
+	# Animasi kepakan sayap gagak selama terbang meluncur
+	if _prologue_crow_flap_tween and _prologue_crow_flap_tween.is_valid():
+		_prologue_crow_flap_tween.kill()
+	_prologue_crow_flap_tween = create_tween().set_loops()
+	_prologue_crow_flap_tween.tween_callback(func():
+		if is_instance_valid(_prologue_crow):
+			_prologue_crow.frame = (_prologue_crow.frame + 1) % 2
+	).set_delay(0.12)
+
+	enter_location("Hutan Observasi")
+
+	await get_tree().create_timer(0.5).timeout
+
+	# 4. Arthur berjalan keluar pondok menuju titik henti (S)
+	if is_instance_valid(lead):
+		if "last_direction" in lead:
+			lead.last_direction = Vector2.DOWN
+		if lead.has_method("play_walk_animation"):
+			lead.play_walk_animation()
+
+	var arthur_tween := create_tween()
+	arthur_tween.tween_property(lead, "global_position", FOREST_CAMP_STOP_POS, 3.4).set_trans(Tween.TRANS_LINEAR)
+
+	# Gagak terbang meluncur menuju atas tiang lampu kayu di sebelah titik S
+	var crow_tween := create_tween()
+	crow_tween.tween_property(_prologue_crow, "global_position", FOREST_CROW_PERCH_POS, 3.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	await crow_tween.finished
+	if _prologue_crow_flap_tween and _prologue_crow_flap_tween.is_valid():
+		_prologue_crow_flap_tween.kill()
+	if is_instance_valid(_prologue_crow):
+		_prologue_crow.frame = 0 # Bertengger di atas tiang lampu kayu
+
+	await arthur_tween.finished
+	if is_instance_valid(lead) and lead.has_method("play_idle_animation"):
+		lead.play_idle_animation()
+
+	await get_tree().create_timer(0.4).timeout
+
+	# 5. Mulai dialog FLK-002 (Burung gagak menyampaikan ramalan buruk)
+	play_story_dialogue("FLK-002", func():
+		_transition_prologue_to_castle_gate()
+	)
 
 
-func _on_prologue_dialogue_completed() -> void:
+func _transition_prologue_to_castle_gate() -> void:
+	play_black_fade_transition(
+		func():
+			_cleanup_prologue_entities()
+
+			# Di depan gerbang kastil sisa Arthur saja (solo)
+			var mage = all_heroes.get("Mage_1")
+			if is_instance_valid(mage) and mage.is_inside_tree():
+				remove_child(mage)
+
+			party_members.clear()
+			if all_heroes.has("Knight_1"):
+				party_members.append(all_heroes["Knight_1"])
+			set_active_leader(0)
+
+			if is_instance_valid(gameplay_hud):
+				if gameplay_hud.has_method("update_party_order"):
+					gameplay_hud.update_party_order(party_members, active_leader_index)
+				elif gameplay_hud.has_method("update_party_hud"):
+					gameplay_hud.party_members = party_members
+					gameplay_hud.update_party_hud()
+
+			var lead := get_active_leader()
+			if is_instance_valid(lead):
+				lead.global_position = CASTLE_APPROACH_START_POS
+				lead.velocity = Vector2.ZERO
+				if "last_direction" in lead:
+					lead.last_direction = Vector2.UP
+				if lead.has_method("play_idle_animation"):
+					lead.play_idle_animation()
+
+			update_camera_limits_for_location("outdoor")
+			if is_instance_valid(camera):
+				camera.global_position = CASTLE_APPROACH_START_POS
+				camera.reset_smoothing()
+				if camera.has_method("force_update_scroll"):
+					camera.force_update_scroll()
+
+			enter_location("Jalan Menuju Istana"),
+		func():
+			_run_castle_gate_approach_cutscene()
+	)
+
+
+func _run_castle_gate_approach_cutscene() -> void:
+	set_party_movement_locked(true)
+	var lead := get_active_leader()
+	if is_instance_valid(lead):
+		lead.set_physics_process(false)
+		lead.set_process_unhandled_input(false)
+		_set_character_collision_active(lead, false)
+		if "last_direction" in lead:
+			lead.last_direction = Vector2.UP
+		if lead.has_method("play_walk_animation"):
+			lead.play_walk_animation()
+
+		var tw := create_tween()
+		tw.tween_property(lead, "global_position", CASTLE_APPROACH_STOP_POS, 4.2).set_trans(Tween.TRANS_LINEAR)
+		await tw.finished
+
+		if is_instance_valid(lead) and lead.has_method("play_idle_animation"):
+			lead.play_idle_animation()
+
+	set_party_movement_locked(false)
+	if is_instance_valid(lead):
+		_set_character_collision_active(lead, true)
+		lead.set_physics_process(true)
+		lead.set_process_unhandled_input(true)
+
 	is_prologue_completed = true
+
 	# Selesaikan quest main_01 dan aktifkan main_02
 	for q in quest_list:
 		if q.get("id") == "main_01":
 			q["status"] = "completed"
 		elif q.get("id") == "main_02":
 			q["status"] = "active"
+
 	tracked_quest_id = "main_02"
-	if gameplay_hud:
+	if is_instance_valid(gameplay_hud):
 		if gameplay_hud.has_method("set_quests"):
 			gameplay_hud.set_quests(quest_list, tracked_quest_id)
 		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
@@ -2993,8 +3203,25 @@ func _on_prologue_dialogue_completed() -> void:
 			gameplay_hud.set_quest_navigation(CASTLE_ENTRANCE_POS, "Aula Kastil")
 
 	var marker = get_node_or_null("CastleObjectiveMarker")
-	if marker:
+	if is_instance_valid(marker):
 		marker.visible = true
+
+	save_game_to_slot(1)
+
+
+func _cleanup_prologue_entities() -> void:
+	for g in _prologue_guards:
+		if is_instance_valid(g):
+			g.queue_free()
+	_prologue_guards.clear()
+
+	if _prologue_crow_flap_tween and _prologue_crow_flap_tween.is_valid():
+		_prologue_crow_flap_tween.kill()
+		_prologue_crow_flap_tween = null
+
+	if is_instance_valid(_prologue_crow):
+		_prologue_crow.queue_free()
+		_prologue_crow = null
 
 
 func get_story_dialogue(story_code_or_id: String) -> Array[Dictionary]:
@@ -3800,6 +4027,8 @@ func load_game_from_slot(slot_id: int) -> bool:
 	# Restore Playtime
 	total_playtime = float(data.get("playtime", 0.0))
 	is_prologue_completed = bool(data.get("is_prologue_completed", true))
+	if is_prologue_completed:
+		_cleanup_prologue_entities()
 	is_castle_meeting_completed = bool(data.get("is_castle_meeting_completed", false))
 	is_knight_room_completed = bool(data.get("is_knight_room_completed", false))
 	is_alaric_sparring_completed = bool(data.get("is_alaric_sparring_completed", false))
