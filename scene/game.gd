@@ -435,6 +435,8 @@ const STORY_DIALOGUES: Dictionary = {
 }
 
 var is_castle_meeting_completed: bool = false
+var is_knight_room_completed: bool = false
+var is_knight_room_cutscene_in_progress: bool = false
 
 
 # State Tempur Party ala Guardian Tales
@@ -2958,10 +2960,85 @@ func _on_castle_meeting_finished() -> void:
 	is_meeting_in_progress = false
 	is_castle_meeting_completed = true
 
-	# Buka kunci kontrol player sepenuhnya (gameplay normal kembali ke player)
-	set_party_movement_locked(false)
+	# Buka jeda sejenak sebelum transisi sinematik ke FLK-006 (Kamar Arthur)
+	await get_tree().create_timer(0.4).timeout
+	start_knight_room_cutscene()
 
-	# Selesaikan quest main_02 dan aktifkan main_03 (Persiapan Pasukan)
+
+func start_knight_room_cutscene() -> void:
+	if is_knight_room_cutscene_in_progress or is_knight_room_completed:
+		return
+	is_knight_room_cutscene_in_progress = true
+
+	# Kunci pergerakan party selama cutscene narasi kamar berlangsung
+	set_party_movement_locked(true)
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt()
+
+	var leader := get_active_leader()
+	if is_instance_valid(leader):
+		leader.set_physics_process(false)
+		leader.set_process_unhandled_input(false)
+		leader.velocity = Vector2.ZERO
+		if leader.has_method("play_idle_animation"):
+			leader.play_idle_animation()
+
+	# CanvasLayer untuk transisi pudar hitam sinematik & teks narasi waktu
+	var fade_canvas := CanvasLayer.new()
+	fade_canvas.layer = 120
+	var fade_rect := ColorRect.new()
+	fade_rect.color = Color(0.0, 0.0, 0.0, 0.0)
+	fade_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	fade_rect.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	fade_rect.grow_vertical = Control.GROW_DIRECTION_BOTH
+	fade_rect.mouse_filter = Control.MOUSE_FILTER_STOP
+	fade_canvas.add_child(fade_rect)
+
+	# Container teks narasi transisi (Keesokan Paginya...)
+	var label_container := VBoxContainer.new()
+	label_container.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	label_container.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	label_container.grow_vertical = Control.GROW_DIRECTION_BOTH
+	label_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	label_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label_container.modulate.a = 0.0
+
+	var title_lbl := Label.new()
+	title_lbl.text = "Keesokan Paginya..."
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_lbl.add_theme_font_size_override("font_size", 24)
+	title_lbl.add_theme_color_override("font_color", Color(0.95, 0.88, 0.65, 1.0))
+
+	var subtitle_lbl := Label.new()
+	subtitle_lbl.text = "Kamar Pangeran Arthur"
+	subtitle_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle_lbl.add_theme_font_size_override("font_size", 14)
+	subtitle_lbl.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82, 0.85))
+
+	label_container.add_child(title_lbl)
+	label_container.add_child(subtitle_lbl)
+	fade_canvas.add_child(label_container)
+	add_child(fade_canvas)
+
+	# 1. Efek Fade to Black halus (0.5 detik)
+	var tween_in := create_tween()
+	tween_in.tween_property(fade_rect, "color:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await tween_in.finished
+
+	# 2. Fade In Teks Narasi "Keesokan Paginya..."
+	var tween_txt_in := create_tween()
+	tween_txt_in.tween_property(label_container, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
+	await tween_txt_in.finished
+
+	await get_tree().create_timer(1.2).timeout
+
+	# 3. Fade Out Teks Narasi
+	var tween_txt_out := create_tween()
+	tween_txt_out.tween_property(label_container, "modulate:a", 0.0, 0.4).set_trans(Tween.TRANS_SINE)
+	await tween_txt_out.finished
+	label_container.queue_free()
+
+	# 4. Selesaikan Quest Chapter 1.1 (main_02) dan Aktifkan Quest Chapter 1.2 (main_03)
 	for q in quest_list:
 		if q.get("id") == "main_02":
 			q["status"] = "completed"
@@ -2974,6 +3051,71 @@ func _on_castle_meeting_finished() -> void:
 		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
 		if not tracked_q.is_empty() and gameplay_hud.has_method("update_hud_quest_display"):
 			gameplay_hud.update_hud_quest_display(tracked_q)
+
+	# Ubah layer canvas ke 12 (di bawah HUD layer 15) agar kotak dialog tampil di atas latar hitam
+	fade_canvas.layer = 12
+
+	# 5. Putar Dialog Narasi Batin Arthur (FLK-006)
+	play_story_dialogue("FLK-006", func():
+		_on_knight_room_dialogue_finished(fade_canvas, fade_rect)
+	)
+
+
+func _on_knight_room_dialogue_finished(fade_canvas: CanvasLayer, fade_rect: ColorRect) -> void:
+	is_knight_room_completed = true
+	is_knight_room_cutscene_in_progress = false
+
+	# 1. Pindahkan Arthur dan seluruh party ke luar aula rapat (Halaman Depan Kastil)
+	is_inside_castle_hall = false
+	for i in range(party_members.size()):
+		var member = party_members[i]
+		if is_instance_valid(member):
+			var offset := Vector2.ZERO
+			match i:
+				0: offset = Vector2(0, 0)
+				1: offset = Vector2(-40, 36)
+				2: offset = Vector2(40, 36)
+				3: offset = Vector2(0, 70)
+			member.global_position = CASTLE_OUTSIDE_SPAWN_POS + offset
+			member.velocity = Vector2.ZERO
+			if "last_direction" in member:
+				member.last_direction = Vector2.DOWN
+			if member.has_method("play_idle_animation"):
+				member.play_idle_animation()
+
+	# 2. Reset batasan kamera untuk area luar dan pusatkan langsung ke Arthur
+	update_camera_limits_for_hall(false)
+	if is_instance_valid(camera):
+		camera.global_position = CASTLE_OUTSIDE_SPAWN_POS
+		camera.reset_smoothing()
+		if camera.has_method("force_update_scroll"):
+			camera.force_update_scroll()
+
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	enter_location("Halaman Depan Kastil")
+
+	# 3. Perbarui navigasi quest menuju Camp Latihan
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("set_quest_navigation"):
+		gameplay_hud.set_quest_navigation(Vector2(2500, 1500), "Camp Latihan")
+
+	# 4. Efek Fade Out layar gelap kembali ke tampilan gameplay luar istana
+	if is_instance_valid(fade_rect):
+		var tween_out := create_tween()
+		tween_out.tween_property(fade_rect, "color:a", 0.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+		await tween_out.finished
+
+	if is_instance_valid(fade_canvas):
+		fade_canvas.queue_free()
+
+	# Kembalikan kontrol kepada player sepenuhnya
+	set_party_movement_locked(false)
+	var leader := get_active_leader()
+	if is_instance_valid(leader):
+		_set_character_collision_active(leader, true)
+		leader.set_physics_process(true)
+		leader.set_process_unhandled_input(true)
 
 	# Simpan autosave progress
 	save_game_to_slot(1)
@@ -3178,6 +3320,7 @@ func load_game_from_slot(slot_id: int) -> bool:
 	total_playtime = float(data.get("playtime", 0.0))
 	is_prologue_completed = bool(data.get("is_prologue_completed", true))
 	is_castle_meeting_completed = bool(data.get("is_castle_meeting_completed", false))
+	is_knight_room_completed = bool(data.get("is_knight_room_completed", false))
 
 	# Restore Party Order, Positions, Health
 	var restored_party: Array[CharacterBody2D] = []
@@ -3362,6 +3505,7 @@ func _collect_save_data(slot_id: int) -> Dictionary:
 		"game_mode": raw_mode,
 		"is_prologue_completed": is_prologue_completed,
 		"is_castle_meeting_completed": is_castle_meeting_completed,
+		"is_knight_room_completed": is_knight_room_completed,
 		"arena_state": int(arena_state),
 		"location": current_location,
 		"current_location_name": current_location_name,
