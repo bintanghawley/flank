@@ -454,18 +454,42 @@ const COMBAT_WINDDOWN_DELAY: float = 0.4
 # =========================================================
 enum ArenaState { INACTIVE, COMBAT, CLEARED }
 var arena_state: ArenaState = ArenaState.INACTIVE
-var arena_bounds: Rect2 = Rect2(Vector2(5780.0, 4960.0), Vector2(1920.0, 1080.0))
-var arena_trigger_bounds: Rect2 = Rect2(Vector2(6290.0, 5150.0), Vector2(900.0, 700.0))
-var arena_center: Vector2 = Vector2(6740.0, 5500.0)
+var arena_bounds: Rect2 = Rect2(Vector2(3020.0, 4160.0), Vector2(1920.0, 1080.0))
+var arena_trigger_bounds: Rect2 = Rect2(Vector2(3400.0, 4200.0), Vector2(1150.0, 1000.0))
+var arena_center: Vector2 = Vector2(3980.0, 4700.0)
 var arena_enemies: Array[CharacterBody2D] = []
 var arena_barrier_body: StaticBody2D = null
+
+var arena_zones: Array[Dictionary] = [
+	{
+		"id": 1,
+		"name": "Arena_1_Courtyard",
+		"center": Vector2(3980.0, 4700.0),
+		"trigger_bounds": Rect2(Vector2(3400.0, 4200.0), Vector2(1150.0, 1000.0)),
+		"bounds": Rect2(Vector2(3020.0, 4160.0), Vector2(1920.0, 1080.0)),
+		"enemies": [] as Array[CharacterBody2D],
+		"is_cleared": false,
+		"respawn_timer": 0.0,
+	},
+	{
+		"id": 2,
+		"name": "Arena_2_Forest",
+		"center": Vector2(6740.0, 5500.0),
+		"trigger_bounds": Rect2(Vector2(6290.0, 5150.0), Vector2(900.0, 700.0)),
+		"bounds": Rect2(Vector2(5780.0, 4960.0), Vector2(1920.0, 1080.0)),
+		"enemies": [] as Array[CharacterBody2D],
+		"is_cleared": false,
+		"respawn_timer": 0.0,
+	}
+]
+var active_arena_idx: int = -1
 const CAMERA_ZOOM_EXPLORE: Vector2 = Vector2(0.8, 0.8)
 const CAMERA_ZOOM_ARENA: Vector2 = Vector2(0.6, 0.6)
 var target_camera_zoom: Vector2 = CAMERA_ZOOM_EXPLORE
 var is_camera_locked_to_arena: bool = false
 var arena_clear_delay_timer: float = 0.0
 var arena_group_respawn_timer: float = 0.0
-const ARENA_GROUP_RESPAWN_DELAY: float = 5.0
+const ARENA_GROUP_RESPAWN_DELAY: float = 7.0
 var is_party_fading_out: bool = false
 var _party_fade_tweens: Array[Tween] = []
 var is_transitioning: bool = false
@@ -1636,16 +1660,21 @@ func _process(delta: float) -> void:
 	update_party_skill_cooldowns(delta)
 	check_training_arena()
 	_update_bgm_loop()
+	handle_arena_group_respawn(delta)
 	if arena_state == ArenaState.INACTIVE:
 		check_arena_trigger()
 		var cur_lead := get_active_leader()
-		if is_instance_valid(cur_lead) and not arena_trigger_bounds.grow(40.0).has_point(cur_lead.global_position):
-			last_pre_arena_leader_pos = cur_lead.global_position
+		if is_instance_valid(cur_lead):
+			var outside_all: bool = true
+			for zone in arena_zones:
+				if not zone["is_cleared"] and (zone["trigger_bounds"] as Rect2).grow(40.0).has_point(cur_lead.global_position):
+					outside_all = false
+					break
+			if outside_all:
+				last_pre_arena_leader_pos = cur_lead.global_position
 	elif arena_state == ArenaState.COMBAT:
 		check_arena_completion(delta)
 		check_arena_defeat(delta)
-	elif arena_state == ArenaState.CLEARED:
-		handle_arena_group_respawn(delta)
 
 	if is_arena_defeat_active and defeat_prompt_lbl and is_instance_valid(defeat_prompt_lbl):
 		defeat_anim_time += delta
@@ -1888,14 +1917,27 @@ func _init_arena_barrier() -> void:
 	arena_barrier_body.name = "ArenaInvisibleBarrier"
 	arena_barrier_body.collision_layer = 1
 	arena_barrier_body.collision_mask = 0
+	add_child(arena_barrier_body)
+
+	_rebuild_arena_barrier_for_bounds(arena_bounds)
+	_set_arena_barrier_enabled(false)
+
+
+func _rebuild_arena_barrier_for_bounds(bounds: Rect2) -> void:
+	if not arena_barrier_body or not is_instance_valid(arena_barrier_body):
+		return
+
+	for child in arena_barrier_body.get_children():
+		arena_barrier_body.remove_child(child)
+		child.queue_free()
 
 	var thickness := 60.0
-	var west_x := arena_bounds.position.x
-	var east_x := arena_bounds.end.x
-	var north_y := arena_bounds.position.y
-	var south_y := arena_bounds.end.y
-	var width := arena_bounds.size.x
-	var height := arena_bounds.size.y
+	var west_x := bounds.position.x
+	var east_x := bounds.end.x
+	var north_y := bounds.position.y
+	var south_y := bounds.end.y
+	var width := bounds.size.x
+	var height := bounds.size.y
 
 	# 4 Dinding pembatas arena tanpa visual (barrier invisible) tepat di 4 batas tepi layar kamera
 	# Dinding barat (tepat di luar tepi layar kiri)
@@ -1906,9 +1948,6 @@ func _init_arena_barrier() -> void:
 	_create_barrier_shape(arena_barrier_body, Vector2(west_x + width * 0.5, north_y - thickness * 0.5), Vector2(width + thickness * 2.0, thickness))
 	# Dinding selatan (tepat di luar tepi layar bawah)
 	_create_barrier_shape(arena_barrier_body, Vector2(west_x + width * 0.5, south_y + thickness * 0.5), Vector2(width + thickness * 2.0, thickness))
-
-	add_child(arena_barrier_body)
-	_set_arena_barrier_enabled(false)
 
 
 func _create_barrier_shape(parent: StaticBody2D, pos: Vector2, size: Vector2) -> void:
@@ -1931,16 +1970,50 @@ func _set_arena_barrier_enabled(enabled: bool) -> void:
 
 func _init_arena_enemies() -> void:
 	arena_enemies.clear()
-	update_arena_bounds_from_camera()
+	for zone in arena_zones:
+		(zone["enemies"] as Array[CharacterBody2D]).clear()
+
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	for e in enemies:
-		if is_instance_valid(e) and e is CharacterBody2D:
-			if arena_bounds.has_point(e.global_position):
-				arena_enemies.append(e)
+		if not is_instance_valid(e) or not (e is CharacterBody2D):
+			continue
+		if "is_training_dummy" in e and e.is_training_dummy:
+			continue
+		if "is_alaric" in e and e.is_alaric:
+			continue
+		if "Alaric" in e.name:
+			continue
+
+		var assigned: bool = false
+		for zone in arena_zones:
+			var zone_bounds: Rect2 = zone["bounds"]
+			if zone_bounds.grow(150.0).has_point(e.global_position):
+				(zone["enemies"] as Array[CharacterBody2D]).append(e)
+				assigned = true
 				if "wait_for_arena" in e:
 					e.wait_for_arena = true
 				if "can_respawn" in e:
 					e.can_respawn = false
+				break
+
+		# Fallback penempatan berdasarkan nama jika ada pergeseran posisi editor
+		if not assigned:
+			if "Archer" in e.name:
+				(arena_zones[0]["enemies"] as Array[CharacterBody2D]).append(e)
+				if "wait_for_arena" in e:
+					e.wait_for_arena = true
+				if "can_respawn" in e:
+					e.can_respawn = false
+			elif "Knight" in e.name:
+				(arena_zones[1]["enemies"] as Array[CharacterBody2D]).append(e)
+				if "wait_for_arena" in e:
+					e.wait_for_arena = true
+				if "can_respawn" in e:
+					e.can_respawn = false
+
+	print("[Arena] Inisialisasi Arena Zones:")
+	for zone in arena_zones:
+		print(" - ", zone["name"], " (ID: ", zone["id"], ") terdaftar ", (zone["enemies"] as Array).size(), " musuh.")
 
 
 func _init_training_dummy() -> void:
@@ -2000,26 +2073,55 @@ func exit_training_arena() -> void:
 func check_arena_trigger() -> void:
 	if arena_state != ArenaState.INACTIVE:
 		return
-	if arena_enemies.is_empty():
-		return
 	var leader := get_active_leader()
 	if not leader or not is_instance_valid(leader):
 		return
-	if arena_trigger_bounds.has_point(leader.global_position):
-		start_arena_battle()
+	for i in range(arena_zones.size()):
+		var zone: Dictionary = arena_zones[i]
+		if zone["is_cleared"]:
+			continue
+		var enemies_list: Array = zone.get("enemies", [])
+		if enemies_list.is_empty():
+			continue
+
+		# Cek apakah masih ada musuh hidup di zona ini
+		var has_alive_enemy: bool = false
+		for e in enemies_list:
+			if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
+				has_alive_enemy = true
+				break
+		if not has_alive_enemy:
+			zone["is_cleared"] = true
+			continue
+
+		var trig: Rect2 = zone["trigger_bounds"]
+		if trig.has_point(leader.global_position):
+			start_arena_battle(i)
+			break
 
 
-func start_arena_battle() -> void:
+func start_arena_battle(zone_idx: int = 0) -> void:
 	if arena_state != ArenaState.INACTIVE:
 		return
+	if zone_idx < 0 or zone_idx >= arena_zones.size():
+		return
+
+	active_arena_idx = zone_idx
+	var zone: Dictionary = arena_zones[active_arena_idx]
+	arena_center = zone["center"]
+	arena_trigger_bounds = zone["trigger_bounds"]
+	arena_enemies = zone["enemies"]
+
+	update_arena_bounds_from_camera()
+	zone["bounds"] = arena_bounds
+
 	_take_pre_arena_snapshot()
 	arena_state = ArenaState.COMBAT
 	current_combat_state = PartyCombatState.COMBAT
 	arena_clear_delay_timer = 0.0
 
-	update_arena_bounds_from_camera()
-
-	# 1. Aktifkan invisible barrier penutup arena
+	# 1. Update & aktifkan invisible barrier penutup arena untuk zona aktif
+	_rebuild_arena_barrier_for_bounds(arena_bounds)
 	_set_arena_barrier_enabled(true)
 
 	# 2. Pindahkan target kamera ke tengah arena dan perbesar sudut pandang (zoom out)
@@ -2031,7 +2133,7 @@ func start_arena_battle() -> void:
 	update_party_visibility()
 	notify_party_combat_state(true)
 
-	# 4. Bangunkan seluruh musuh di arena untuk langsung mengejar party
+	# 4. Bangunkan seluruh musuh di arena aktif untuk langsung mengejar party
 	var leader := get_active_leader()
 	for enemy in arena_enemies:
 		if is_instance_valid(enemy):
@@ -2046,7 +2148,7 @@ func start_arena_battle() -> void:
 	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
 		gameplay_hud.set_combat_hud_visible(true, true)
 
-	print("Arena Battle Dimulai! Kamera fokus ke tengah arena (", arena_center, "), party 4 karakter aktif.")
+	print("Arena Battle Dimulai! Zona: ", zone["name"], ", Kamera fokus ke (", arena_center, "), musuh aktif: ", arena_enemies.size())
 
 
 func get_hero_type_index(char_node: CharacterBody2D) -> int:
@@ -2283,7 +2385,24 @@ func _start_party_combat_fade_out() -> void:
 func end_arena_battle() -> void:
 	if arena_state != ArenaState.COMBAT:
 		return
-	arena_state = ArenaState.CLEARED
+
+	if active_arena_idx >= 0 and active_arena_idx < arena_zones.size():
+		arena_zones[active_arena_idx]["is_cleared"] = true
+		arena_zones[active_arena_idx]["respawn_timer"] = ARENA_GROUP_RESPAWN_DELAY
+		print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Musuh akan spawn lagi dalam ", ARENA_GROUP_RESPAWN_DELAY, " detik.")
+
+	# Cek apakah seluruh zona arena cerita telah diselesaikan
+	var has_remaining_arena: bool = false
+	for zone in arena_zones:
+		if not zone["is_cleared"]:
+			has_remaining_arena = true
+			break
+
+	if has_remaining_arena:
+		arena_state = ArenaState.INACTIVE
+	else:
+		arena_state = ArenaState.CLEARED
+
 	is_party_fading_out = false
 	current_combat_state = PartyCombatState.EXPLORING
 	arena_group_respawn_timer = ARENA_GROUP_RESPAWN_DELAY
@@ -2329,19 +2448,23 @@ func end_arena_battle() -> void:
 		if is_instance_valid(e) and "in_arena_combat" in e:
 			e.in_arena_combat = false
 
-	print("Arena Cleared! Seluruh musuh kalah. Kamera kembali ke Leader, party kembali 1 karakter. Grup musuh akan muncul lagi dalam 5 detik.")
+	active_arena_idx = -1
+	print("Arena Battle Selesai! Kamera kembali ke Leader, party kembali ke mode eksplorasi.")
 
 
 func handle_arena_group_respawn(delta: float) -> void:
-	if arena_state != ArenaState.CLEARED:
-		return
-	arena_group_respawn_timer -= delta
-	if arena_group_respawn_timer <= 0.0:
-		_respawn_arena_enemy_group()
+	for zone in arena_zones:
+		if zone.get("is_cleared", false):
+			zone["respawn_timer"] -= delta
+			if zone["respawn_timer"] <= 0.0:
+				_respawn_zone_enemies(zone)
 
 
-func _respawn_arena_enemy_group() -> void:
-	for e in arena_enemies:
+func _respawn_zone_enemies(zone: Dictionary) -> void:
+	zone["is_cleared"] = false
+	zone["respawn_timer"] = 0.0
+	var z_enemies: Array = zone.get("enemies", [])
+	for e in z_enemies:
 		if is_instance_valid(e):
 			if "wait_for_arena" in e:
 				e.wait_for_arena = true
@@ -2350,9 +2473,15 @@ func _respawn_arena_enemy_group() -> void:
 			if e.has_method("respawn"):
 				e.respawn()
 
-	arena_state = ArenaState.INACTIVE
-	arena_clear_delay_timer = 0.0
-	print("Grup musuh arena (2 Knight, 1 Archer) telah muncul kembali di posisinya! Siap untuk pertempuran berikutnya.")
+	if arena_state == ArenaState.CLEARED:
+		arena_state = ArenaState.INACTIVE
+
+	print("[Arena] Musuh di zona ", zone["name"], " telah spawn kembali setelah 7 detik!")
+
+
+func _respawn_arena_enemy_group() -> void:
+	for zone in arena_zones:
+		_respawn_zone_enemies(zone)
 
 
 # =========================================================
@@ -2455,10 +2584,11 @@ func _take_pre_arena_snapshot() -> void:
 	pre_arena_snapshot.clear()
 	var leader := get_active_leader()
 	var fallback_pos: Vector2 = Vector2(arena_trigger_bounds.position.x - 60.0, arena_center.y)
-	var snap_pos: Vector2 = last_pre_arena_leader_pos if last_pre_arena_leader_pos != Vector2.ZERO else fallback_pos
-	if is_instance_valid(leader):
-		if leader.global_position.x < arena_trigger_bounds.position.x:
-			snap_pos = leader.global_position
+	var snap_pos: Vector2 = fallback_pos
+	if last_pre_arena_leader_pos != Vector2.ZERO and not arena_trigger_bounds.grow(10.0).has_point(last_pre_arena_leader_pos):
+		snap_pos = last_pre_arena_leader_pos
+	elif is_instance_valid(leader) and leader.global_position.x < arena_trigger_bounds.position.x:
+		snap_pos = leader.global_position
 
 	var party_data: Array[Dictionary] = []
 	for member in party_members:
@@ -2598,6 +2728,10 @@ func execute_arena_rewind() -> void:
 				e.in_arena_combat = false
 			if e.has_method("respawn"):
 				e.respawn()
+
+	if active_arena_idx >= 0 and active_arena_idx < arena_zones.size():
+		arena_zones[active_arena_idx]["is_cleared"] = false
+	active_arena_idx = -1
 
 	# 4. Kembalikan urutan party dari snapshot
 	if pre_arena_snapshot.has("roster_order"):

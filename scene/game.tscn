@@ -95,7 +95,7 @@ position = Vector2(6804, 5595)
 can_respawn = false
 
 [node name="Enemy_Archer_1" parent="." unique_id=110304382 instance=ExtResource("2_xwcet")]
-position = Vector2(6647, 5553)
+position = Vector2(3980, 4700)
 can_respawn = false
 
 [node name="Npc_Guard_Left" parent="." unique_id=1290897880 instance=ExtResource("9_npc_guard")]
