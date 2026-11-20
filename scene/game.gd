@@ -66,42 +66,17 @@ const PROLOGUE_DIALOGUE: Array[Dictionary] = [
 	{
 		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
-		"text": "Hmm.. aku pikir hari ini cukup sampai sini aja, tempat ini menarik untuk menjadi pusat pertambangan kita. Menurutmu bagaimana?"
+		"text": "Hah... pegal juga seharian memeriksa kayu. Sebelum pulang, aku mau lemaskan badan sebentar ke arah tebing."
 	},
 	{
 		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
-		"text": "Perintahmu kan kewajiban bagi kita. Sebagai kawan lamamu, aku sudah cukup yakin dengan segala yang kau pilih."
+		"text": "Hati-hati, Arthur. Pengawal bilang ada beberapa monster berkeliaran di dekat sana."
 	},
 	{
 		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
-		"text": "Hahaha, semenjak aku diutus memimpin kerajaan ini, aku benci dengan bahasa mereka yang terlalu sopan, padahal dulunya kita duduk di bangku yang sama."
-	},
-	{
-		"speaker": "Burung Gagak",
-		"portrait": "raven",
-		"text": "krok - krokk KROKK! KROK!!"
-	},
-	{
-		"speaker": "Pensatore Magnus",
-		"portrait": "magnus",
-		"text": "Yang benar saja?"
-	},
-	{
-		"speaker": "Forzato Arthur",
-		"portrait": "arthur",
-		"text": "Apa yang burung itu katakan? ia membentak seperti sedang ada banyak masalah dikeluarganya."
-	},
-	{
-		"speaker": "Pensatore Magnus",
-		"portrait": "magnus",
-		"text": "Tidak! INI LEBIH DARI ITU. Dunia kita terancam, Para penyihir itu mendapat ramalan kiamat."
-	},
-	{
-		"speaker": "Pensatore Magnus",
-		"portrait": "magnus",
-		"text": "Ayo segera kembali ke kerajaan dan melakukan rapat dengan para petinggi lainya."
+		"text": "Tenang saja, hitung-hitung pemanasan. Tunggu sebentar di sini."
 	}
 ]
 
@@ -3090,6 +3065,21 @@ func _show_story_prologue_intro_crawl(on_completed: Callable) -> void:
 	hint_lbl.modulate.a = 0.0
 	vbox.add_child(hint_lbl)
 
+	# Tombol transparan penangkap klik layar penuh (menjamin klik mouse di mana saja selalu terdeteksi)
+	var click_btn := Button.new()
+	click_btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	click_btn.flat = true
+	click_btn.focus_mode = Control.FOCUS_ALL
+	click_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	click_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	var empty_sb := StyleBoxEmpty.new()
+	click_btn.add_theme_stylebox_override("normal", empty_sb)
+	click_btn.add_theme_stylebox_override("hover", empty_sb)
+	click_btn.add_theme_stylebox_override("pressed", empty_sb)
+	click_btn.add_theme_stylebox_override("focus", empty_sb)
+	click_btn.add_theme_stylebox_override("disabled", empty_sb)
+	crawl_canvas.add_child(click_btn)
+
 	add_child(crawl_canvas)
 
 	# Fade in pembuka latar belakang
@@ -3102,43 +3092,47 @@ func _show_story_prologue_intro_crawl(on_completed: Callable) -> void:
 	await in_tween.finished
 
 	# Sistem deteksi input pemain (Klik mouse / Spasi / Enter)
-	var click_requested: Array[bool] = [false]
-	bg.gui_input.connect(func(event: InputEvent):
+	var advance_pressed: Array[bool] = [false]
+	click_btn.pressed.connect(func():
+		advance_pressed[0] = true
+	)
+	click_btn.gui_input.connect(func(event: InputEvent):
 		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			click_requested[0] = true
+			advance_pressed[0] = true
 	)
 
 	var last_key_state: Array[bool] = [true]
 	var last_mouse_state: Array[bool] = [true]
-	await get_tree().create_timer(0.08).timeout
+	await get_tree().create_timer(0.05).timeout
 	last_key_state[0] = false
 	last_mouse_state[0] = false
 
 	var check_advance_pressed = func() -> bool:
-		var pressed := false
+		if advance_pressed[0]:
+			advance_pressed[0] = false
+			return true
 
 		# 1. Deteksi klik mouse langsung via Input
-		var mouse_down: bool = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
-		if mouse_down and not last_mouse_state[0]:
-			pressed = true
-		last_mouse_state[0] = mouse_down
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			if not last_mouse_state[0]:
+				last_mouse_state[0] = true
+				return true
+		else:
+			last_mouse_state[0] = false
 
-		# 2. Deteksi klik mouse via gui_input bg
-		if click_requested[0]:
-			click_requested[0] = false
-			pressed = true
-
-		# 3. Deteksi tombol keyboard (Spasi / Enter / Action)
+		# 2. Deteksi tombol keyboard (Spasi / Enter / Action)
 		if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("interact"):
-			pressed = true
-		var space_down: bool = Input.is_physical_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_ENTER)
-		if space_down and not last_key_state[0]:
-			pressed = true
-		last_key_state[0] = space_down
+			return true
+		if Input.is_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_ENTER):
+			if not last_key_state[0]:
+				last_key_state[0] = true
+				return true
+		else:
+			last_key_state[0] = false
 
-		return pressed
+		return false
 
-	# Tampilkan kalimat satu per satu secara manual (tanpa timer otomatis)
+	# Tampilkan kalimat satu per satu (teks muncul perlahan, spasi/klik mempercepat)
 	for p_idx in range(labels.size()):
 		var lbl: Label = labels[p_idx]
 		var total_chars: int = lbl.text.length()
@@ -3152,7 +3146,7 @@ func _show_story_prologue_intro_crawl(on_completed: Callable) -> void:
 			lbl.visible_characters = int(current_chars)
 
 			if check_advance_pressed.call():
-				# Jika diklik/spasi saat sedang mengetik -> langsung tampilkan penuh kalimat ini
+				# Jika ditekan saat sedang mengetik -> langsung percepat dan tampilkan penuh kalimat ini
 				lbl.visible_characters = -1
 				break
 
@@ -3160,11 +3154,15 @@ func _show_story_prologue_intro_crawl(on_completed: Callable) -> void:
 
 		lbl.visible_characters = -1
 
-		# Jika ini bukan kalimat terakhir, tunggu klik/spasi pemain secara manual untuk lanjut ke kalimat berikutnya
+		# Jeda membaca natural (1.6 detik) atau langsung lanjut jika pemain menekan Spasi/Klik
 		if p_idx < labels.size() - 1:
-			while true:
+			var read_timer: float = 0.0
+			var max_read_delay: float = 1.6
+			while read_timer < max_read_delay:
 				if check_advance_pressed.call():
 					break
+				var dt: float = get_process_delta_time()
+				read_timer += dt
 				await get_tree().process_frame
 
 	# Semua kalimat selesai muncul -> aktifkan petunjuk lanjut berkedip
@@ -3173,7 +3171,7 @@ func _show_story_prologue_intro_crawl(on_completed: Callable) -> void:
 	pulse_tween.tween_property(hint_lbl, "modulate:a", 0.35, 0.8).set_trans(Tween.TRANS_SINE)
 	pulse_tween.tween_property(hint_lbl, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
 
-	# Tunggu konfirmasi akhir klik/spasi dari pemain (tanpa batas waktu timer)
+	# Tunggu konfirmasi akhir klik/spasi dari pemain untuk mulai masuk ke gameplay
 	while true:
 		if check_advance_pressed.call():
 			break
@@ -3307,9 +3305,17 @@ func _start_story_prologue_sequence() -> void:
 
 	await get_tree().create_timer(0.4).timeout
 
-	# 5. Mulai dialog FLK-002 (Burung gagak menyampaikan ramalan buruk)
+	# 5. Mulai dialog pembuka pemanasan Arthur & Magnus (Naskah Dialog 1A)
 	play_story_dialogue("FLK-002", func():
-		_transition_prologue_to_castle_gate()
+		set_party_movement_locked(false)
+		var lead_char := get_active_leader()
+		if is_instance_valid(lead_char):
+			lead_char.set_physics_process(true)
+			lead_char.set_process_unhandled_input(true)
+			_set_character_collision_active(lead_char, true)
+		if is_instance_valid(gameplay_hud):
+			gameplay_hud.visible = true
+			gameplay_hud.is_hud_input_blocked = false
 	)
 
 
