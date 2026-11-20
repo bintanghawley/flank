@@ -38,14 +38,14 @@ const ARENA_KAMP_ARTHUR_POS: Vector2 = Vector2(7950.0, -1210.0)
 const ARENA_KAMP_ALARIC_POS: Vector2 = Vector2(8350.0, -1210.0)
 const ARENA_KAMP_CENTER_POS: Vector2 = Vector2(8155.0, -1210.0)
 const GRAVEYARD_POS: Vector2 = Vector2(4400.0, 2900.0)
-const FOREST_CABIN_DOOR_POS: Vector2 = Vector2(8600.0, 3840.0)
-const FOREST_CAMP_STOP_POS: Vector2 = Vector2(8600.0, 4350.0)
+const FOREST_CABIN_DOOR_POS: Vector2 = Vector2(8650.0, 3840.0)
+const FOREST_CAMP_STOP_POS: Vector2 = Vector2(8650.0, 4350.0)
 const FOREST_CROW_SPAWN_POS: Vector2 = Vector2(9800.0, 3600.0)
-const FOREST_CROW_PERCH_POS: Vector2 = Vector2(8820.0, 4158.0)
+const FOREST_CROW_PERCH_POS: Vector2 = Vector2(8820.0, 4171.0)
 const FOREST_MAGNUS_POS: Vector2 = Vector2(8510.0, 4320.0)
 
-const CASTLE_APPROACH_START_POS: Vector2 = Vector2(2533.0, 2000.0)
-const CASTLE_APPROACH_STOP_POS: Vector2 = Vector2(2533.0, 1350.0)
+const CASTLE_APPROACH_START_POS: Vector2 = Vector2(2533.0, 3500.0)
+const CASTLE_APPROACH_STOP_POS: Vector2 = Vector2(2533.0, 2400.0)
 
 var _prologue_guards: Array[Node2D] = []
 var _prologue_crow: Sprite2D = null
@@ -121,18 +121,18 @@ const CASTLE_MEETING_DIALOGUE: Array[Dictionary] = [
 		"text": "Setidaknya, kami menyimpulkan bahwa akan ada bencana besar yang terjadi."
 	},
 	{
-		"speaker": "Peramal Morvyn",
-		"portrait": "peramal_1",
+		"speaker": "Wizandy",
+		"portrait": "wizandy",
 		"text": "7 hari ke depan, akan terjadi seven deadly day. Hari kebangkitan 7 bangsa iblis secara berurutan melalui 7 tempat berbeda. Aku tidak tahu rupa iblis yang akan datang dan seperti apa mereka."
 	},
 	{
-		"speaker": "Peramal Vaelin",
-		"portrait": "peramal_2",
+		"speaker": "Wizashley",
+		"portrait": "wizashley",
 		"text": "Hanya saja, aku mengetahui 7 bangsa ini dari ingatan leluhur kami:\n- Superbia (Pride) - Sombong\n- Avarizia (Greed) - Serakah\n- Lussuria (Lust) - Nafsu"
 	},
 	{
-		"speaker": "Peramal Vaelin",
-		"portrait": "peramal_2",
+		"speaker": "Wizashley",
+		"portrait": "wizashley",
 		"text": "Dan bangsa iblis berikutnya:\n- Invidia (Envy) - Iri\n- Gola (Gluttony) - Rakus\n- Ira (Wrath) - Marah\n- Accidia (Sloth) - Malas"
 	},
 	{
@@ -3037,39 +3037,46 @@ func _show_story_prologue_intro_crawl(on_completed: Callable) -> void:
 	# Container konten
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 80)
-	margin.add_theme_constant_override("margin_right", 80)
-	margin.add_theme_constant_override("margin_top", 60)
-	margin.add_theme_constant_override("margin_bottom", 50)
+	margin.add_theme_constant_override("margin_left", 70)
+	margin.add_theme_constant_override("margin_right", 70)
+	margin.add_theme_constant_override("margin_top", 45)
+	margin.add_theme_constant_override("margin_bottom", 35)
+	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	crawl_canvas.add_child(margin)
 
 	var vbox := VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_theme_constant_override("separation", 24)
+	vbox.add_theme_constant_override("separation", 18)
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	margin.add_child(vbox)
 
 	var font: Font = load("res://assets/ui/fonts/beholden-bold.ttf")
 
 	var paragraphs: Array[String] = [
-		"Tepat siang hari pada abad ke 7 sebelum \"satu minggu kebangkitan adanya yang tiada\", terjadi.",
-		"Hari dimana kematian terganggu dan kehidupan mulai diusik.",
-		"mereka yang sudah pergi kembali untuk menghukum mereka yang masih hidup.",
-		"tepat di hari itu, sang pangeran bernama \"Arthur\" mendapat sebuah panggilan saat sedang melakukan observasi lumbung pengelolaan kayu."
+		"Tepat siang hari pada abad ke-7, sebelum \"satu minggu kebangkitan adanya yang tiada\" terjadi.",
+		"Hari di mana kematian terganggu dan kehidupan mulai diusik.",
+		"Mereka yang telah pergi, kembali untuk menghukum mereka yang masih hidup.",
+		"Menjalankan titah dari sang Raja, Pangeran \"Arthur\" sedang melakukan observasi di lumbung pengolahan kayu bersama kawan lamanya.",
+		"Tepat di hari itu, sebuah panggilan tak terduga datang... membawa kabar buruk yang akan mengguncang seluruh kerajaan."
 	]
 
+	var labels: Array[Label] = []
 	for p_text in paragraphs:
 		var lbl := Label.new()
 		lbl.text = p_text
 		if font:
 			lbl.add_theme_font_override("font", font)
-		lbl.add_theme_font_size_override("font_size", 18)
+		lbl.add_theme_font_size_override("font_size", 17)
 		lbl.add_theme_color_override("font_color", Color(0.92, 0.86, 0.72))
 		lbl.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.8))
 		lbl.add_theme_constant_override("shadow_offset_x", 1)
 		lbl.add_theme_constant_override("shadow_offset_y", 2)
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		lbl.visible_characters = 0
 		vbox.add_child(lbl)
+		labels.append(lbl)
 
 	# Indikator petunjuk lanjut di bagian bawah
 	var hint_lbl := Label.new()
@@ -3079,45 +3086,98 @@ func _show_story_prologue_intro_crawl(on_completed: Callable) -> void:
 	hint_lbl.add_theme_font_size_override("font_size", 14)
 	hint_lbl.add_theme_color_override("font_color", Color(0.72, 0.67, 0.55, 0.75))
 	hint_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint_lbl.modulate.a = 0.0
 	vbox.add_child(hint_lbl)
 
 	add_child(crawl_canvas)
 
-	# Efek kedip halus untuk petunjuk
-	var pulse_tween := create_tween().set_loops()
-	pulse_tween.tween_property(hint_lbl, "modulate:a", 0.35, 0.8).set_trans(Tween.TRANS_SINE)
-	pulse_tween.tween_property(hint_lbl, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
-
-	# Fade in pembuka teks
+	# Fade in pembuka latar belakang
 	bg.modulate.a = 0.0
 	margin.modulate.a = 0.0
 	var in_tween := create_tween()
 	in_tween.set_parallel(true)
-	in_tween.tween_property(bg, "modulate:a", 1.0, 0.6).set_trans(Tween.TRANS_SINE)
-	in_tween.tween_property(margin, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
+	in_tween.tween_property(bg, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
+	in_tween.tween_property(margin, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
 	await in_tween.finished
 
-	# Menunggu input pemain (Klik mouse / Spasi / Enter / E) atau timeout 14 detik
-	var has_advanced: Array[bool] = [false]
-	var advance_callable = func():
-		if has_advanced[0]:
-			return
-		has_advanced[0] = true
-
-	# Input listener via Callable connection to gui_input on bg
+	# Sistem deteksi input pemain (Klik mouse / Spasi / Enter)
+	var click_requested: Array[bool] = [false]
 	bg.gui_input.connect(func(event: InputEvent):
 		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			advance_callable.call()
+			click_requested[0] = true
 	)
 
-	# Polling loop yang responsif terhadap input tombol
-	var elapsed: float = 0.0
-	while not has_advanced[0] and elapsed < 14.0:
-		if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("interact") or Input.is_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_ENTER):
-			advance_callable.call()
+	var last_key_state: Array[bool] = [true]
+	var last_mouse_state: Array[bool] = [true]
+	await get_tree().create_timer(0.08).timeout
+	last_key_state[0] = false
+	last_mouse_state[0] = false
+
+	var check_advance_pressed = func() -> bool:
+		var pressed := false
+
+		# 1. Deteksi klik mouse langsung via Input
+		var mouse_down: bool = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+		if mouse_down and not last_mouse_state[0]:
+			pressed = true
+		last_mouse_state[0] = mouse_down
+
+		# 2. Deteksi klik mouse via gui_input bg
+		if click_requested[0]:
+			click_requested[0] = false
+			pressed = true
+
+		# 3. Deteksi tombol keyboard (Spasi / Enter / Action)
+		if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("interact"):
+			pressed = true
+		var space_down: bool = Input.is_physical_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_ENTER)
+		if space_down and not last_key_state[0]:
+			pressed = true
+		last_key_state[0] = space_down
+
+		return pressed
+
+	# Tampilkan kalimat satu per satu secara manual (tanpa timer otomatis)
+	for p_idx in range(labels.size()):
+		var lbl: Label = labels[p_idx]
+		var total_chars: int = lbl.text.length()
+		var current_chars: float = 0.0
+		var chars_per_sec: float = 40.0
+
+		# Efek ketik berjalan
+		while current_chars < total_chars:
+			var delta: float = get_process_delta_time()
+			current_chars += chars_per_sec * delta
+			lbl.visible_characters = int(current_chars)
+
+			if check_advance_pressed.call():
+				# Jika diklik/spasi saat sedang mengetik -> langsung tampilkan penuh kalimat ini
+				lbl.visible_characters = -1
+				break
+
+			await get_tree().process_frame
+
+		lbl.visible_characters = -1
+
+		# Jika ini bukan kalimat terakhir, tunggu klik/spasi pemain secara manual untuk lanjut ke kalimat berikutnya
+		if p_idx < labels.size() - 1:
+			while true:
+				if check_advance_pressed.call():
+					break
+				await get_tree().process_frame
+
+	# Semua kalimat selesai muncul -> aktifkan petunjuk lanjut berkedip
+	hint_lbl.modulate.a = 1.0
+	var pulse_tween := create_tween().set_loops()
+	pulse_tween.tween_property(hint_lbl, "modulate:a", 0.35, 0.8).set_trans(Tween.TRANS_SINE)
+	pulse_tween.tween_property(hint_lbl, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
+
+	# Tunggu konfirmasi akhir klik/spasi dari pemain (tanpa batas waktu timer)
+	while true:
+		if check_advance_pressed.call():
 			break
 		await get_tree().process_frame
-		elapsed += get_process_delta_time()
 
 	if pulse_tween and pulse_tween.is_valid():
 		pulse_tween.kill()
@@ -3188,9 +3248,9 @@ func _start_story_prologue_sequence() -> void:
 	var guard_scene: PackedScene = load("res://scene/npc/npc_guard.tscn")
 	if guard_scene:
 		var guard_data: Array[Dictionary] = [
-			{"pos": Vector2(8420.0, 4320.0), "anim": "idle_e"},
-			{"pos": Vector2(8720.0, 4220.0), "anim": "idle_w"},
-			{"pos": Vector2(8780.0, 4360.0), "anim": "idle_w"}
+			{"pos": Vector2(8420.0, 4240.0), "dir": "e"},
+			{"pos": Vector2(8720.0, 4220.0), "dir": "w"},
+			{"pos": Vector2(8780.0, 4360.0), "dir": "w"}
 		]
 		for idx in range(guard_data.size()):
 			var g = guard_scene.instantiate() as CharacterBody2D
@@ -3198,14 +3258,15 @@ func _start_story_prologue_sequence() -> void:
 				g.name = "PrologueGuard_%d" % (idx + 1)
 				g.global_position = guard_data[idx]["pos"]
 				g.patrol_points.clear()
-				g.facing_direction = "e" if "e" in guard_data[idx]["anim"] else "w"
+				g.facing_direction = guard_data[idx].get("dir", "w")
 				g.set_physics_process(false)
-				if g.has_node("AnimatedSprite2D"):
-					g.get_node("AnimatedSprite2D").play(guard_data[idx]["anim"])
 				add_child(g)
+				var spr = g.get_node_or_null("AnimatedSprite2D")
+				if spr:
+					spr.play("idle_" + g.facing_direction)
 				_prologue_guards.append(g)
 
-	# 3. Spawn Burung Gagak di atas pepohonan kanan atas
+	# 3. Spawn Burung Gagak bertengger di atas tiang lampu kayu sejak awal
 	_prologue_crow = Sprite2D.new()
 	_prologue_crow.name = "PrologueCrow"
 	_prologue_crow.texture = load("res://assets/characters/animal/raven/raven.png")
@@ -3214,17 +3275,17 @@ func _start_story_prologue_sequence() -> void:
 	_prologue_crow.frame = 0
 	_prologue_crow.scale = Vector2(2.5, 2.5)
 	_prologue_crow.z_index = 8
-	_prologue_crow.global_position = FOREST_CROW_SPAWN_POS
+	_prologue_crow.global_position = FOREST_CROW_PERCH_POS
 	add_child(_prologue_crow)
 
-	# Animasi kepakan sayap gagak selama terbang meluncur
+	# Animasi idle bertengger gagak (gerakan menoleh / bobbing frame 0 dan 1)
 	if _prologue_crow_flap_tween and _prologue_crow_flap_tween.is_valid():
 		_prologue_crow_flap_tween.kill()
 	_prologue_crow_flap_tween = create_tween().set_loops()
 	_prologue_crow_flap_tween.tween_callback(func():
 		if is_instance_valid(_prologue_crow):
 			_prologue_crow.frame = (_prologue_crow.frame + 1) % 2
-	).set_delay(0.12)
+	).set_delay(0.4)
 
 	enter_location("Hutan Observasi")
 
@@ -3239,16 +3300,6 @@ func _start_story_prologue_sequence() -> void:
 
 	var arthur_tween := create_tween()
 	arthur_tween.tween_property(lead, "global_position", FOREST_CAMP_STOP_POS, 3.4).set_trans(Tween.TRANS_LINEAR)
-
-	# Gagak terbang meluncur menuju atas tiang lampu kayu di sebelah titik S
-	var crow_tween := create_tween()
-	crow_tween.tween_property(_prologue_crow, "global_position", FOREST_CROW_PERCH_POS, 3.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-
-	await crow_tween.finished
-	if _prologue_crow_flap_tween and _prologue_crow_flap_tween.is_valid():
-		_prologue_crow_flap_tween.kill()
-	if is_instance_valid(_prologue_crow):
-		_prologue_crow.frame = 0 # Bertengger di atas tiang lampu kayu
 
 	await arthur_tween.finished
 	if is_instance_valid(lead) and lead.has_method("play_idle_animation"):
@@ -3319,7 +3370,7 @@ func _run_castle_gate_approach_cutscene() -> void:
 			lead.play_walk_animation()
 
 		var tw := create_tween()
-		tw.tween_property(lead, "global_position", CASTLE_APPROACH_STOP_POS, 4.2).set_trans(Tween.TRANS_LINEAR)
+		tw.tween_property(lead, "global_position", CASTLE_APPROACH_STOP_POS, 5.0).set_trans(Tween.TRANS_LINEAR)
 		await tw.finished
 
 		if is_instance_valid(lead) and lead.has_method("play_idle_animation"):
@@ -4507,7 +4558,6 @@ func _setup_meeting_participants() -> void:
 	# Tekstur sprite karakter
 	var tex_king: Texture2D = load("res://assets/characters/npc/king/idle-s.png")
 	var tex_queen: Texture2D = load("res://assets/characters/npc/queen/idle-s.png")
-	var tex_mage_s: Texture2D = load("res://assets/characters/mage/idle/idle-s.png")
 	var tex_mage_e: Texture2D = load("res://assets/characters/mage/idle/idle-e.png")
 	var tex_archer_w: Texture2D = load("res://assets/characters/archer/idle/idle-w.png")
 
@@ -4525,9 +4575,14 @@ func _setup_meeting_participants() -> void:
 		queen.name = "Participant_Queen"
 		hall.add_child(queen)
 
-	# 3. Peramal 1 (Di sebelah kanan pilar besar kiri)
-	if tex_mage_s:
-		var seer1 := _create_meeting_npc(tex_mage_s, 96, 64, 4, Vector2(-360.0, -180.0), "idle_s", Color(0.88, 0.78, 1.05), Vector2(-0.5, 0.0))
+	# 3. Peramal 1 - Wizandy (Di sebelah kanan pilar besar kiri)
+	var tex_wizandy: Texture2D = load("res://assets/characters/npc/seer/Wizandy.png")
+	if tex_wizandy:
+		var seer1 := Sprite2D.new()
+		seer1.texture = tex_wizandy
+		seer1.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		seer1.scale = Vector2(5.0, 5.0)
+		seer1.position = Vector2(-360.0, -180.0)
 		seer1.name = "Participant_Peramal1"
 		seer1.z_index = 5
 		hall.add_child(seer1)
@@ -4559,9 +4614,14 @@ func _setup_meeting_participants() -> void:
 		if is_instance_valid(chair):
 			chair.z_index = 5
 
-	# 6. Peramal 2 (Di sebelah kiri pilar besar kanan)
-	if tex_mage_s:
-		var seer2 := _create_meeting_npc(tex_mage_s, 96, 64, 4, Vector2(360.0, -180.0), "idle_s", Color(0.78, 0.95, 1.1), Vector2(-0.5, 0.0))
+	# 6. Peramal 2 - Wizashley (Di sebelah kiri pilar besar kanan)
+	var tex_wizashley: Texture2D = load("res://assets/characters/npc/seer/Wizashley.png")
+	if tex_wizashley:
+		var seer2 := Sprite2D.new()
+		seer2.texture = tex_wizashley
+		seer2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		seer2.scale = Vector2(5.0, 5.0)
+		seer2.position = Vector2(360.0, -180.0)
 		seer2.name = "Participant_Peramal2"
 		seer2.z_index = 5
 		hall.add_child(seer2)
