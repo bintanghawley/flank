@@ -64,17 +64,17 @@ var _nav_compass = null
 # =========================================================
 const PROLOGUE_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Hmm.. aku pikir hari ini cukup sampai sini aja, tempat ini menarik untuk menjadi pusat pertambangan kita. Menurutmu bagaimana?"
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Perintahmu kan kewajiban bagi kita. Sebagai kawan lamamu, aku sudah cukup yakin dengan segala yang kau pilih."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Hahaha, semenjak aku diutus memimpin kerajaan ini, aku benci dengan bahasa mereka yang terlalu sopan, padahal dulunya kita duduk di bangku yang sama."
 	},
@@ -84,22 +84,22 @@ const PROLOGUE_DIALOGUE: Array[Dictionary] = [
 		"text": "krok - krokk KROKK! KROK!!"
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Yang benar saja?"
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Apa yang burung itu katakan? ia membentak seperti sedang ada banyak masalah dikeluarganya."
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Tidak! INI LEBIH DARI ITU. Dunia kita terancam, Para penyihir itu mendapat ramalan kiamat."
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Ayo segera kembali ke kerajaan dan melakukan rapat dengan para petinggi lainya."
 	}
@@ -111,37 +111,37 @@ const PROLOGUE_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CASTLE_MEETING_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Mungkin para peramal bisa menjelaskan, apa yang terjadi akhir-akhir ini."
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Setidaknya, kami menyimpulkan bahwa akan ada bencana besar yang terjadi."
 	},
 	{
-		"speaker": "NPC Peramal 1",
+		"speaker": "Peramal Morvyn",
 		"portrait": "peramal_1",
 		"text": "7 hari ke depan, akan terjadi seven deadly day. Hari kebangkitan 7 bangsa iblis secara berurutan melalui 7 tempat berbeda. Aku tidak tahu rupa iblis yang akan datang dan seperti apa mereka."
 	},
 	{
-		"speaker": "NPC Peramal 2",
+		"speaker": "Peramal Vaelin",
 		"portrait": "peramal_2",
 		"text": "Hanya saja, aku mengetahui 7 bangsa ini dari ingatan leluhur kami:\n- Superbia (Pride) - Sombong\n- Avarizia (Greed) - Serakah\n- Lussuria (Lust) - Nafsu"
 	},
 	{
-		"speaker": "NPC Peramal 2",
+		"speaker": "Peramal Vaelin",
 		"portrait": "peramal_2",
 		"text": "Dan bangsa iblis berikutnya:\n- Invidia (Envy) - Iri\n- Gola (Gluttony) - Rakus\n- Ira (Wrath) - Marah\n- Accidia (Sloth) - Malas"
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Beberapa dari mereka bersatu, beberapa dari mereka saling melahap satu sama lain. Pada intinya, jika kita tidak bertindak cepat, bumi ini akan menjadi sarang mereka berkembang biak."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Aku sudah menyimpulkan apa yang akan kita lakukan. Besok pagi kita akan melakukan pelatihan ketat, sekarang semuanya beristirahat dan tunggu perintah dariku untuk esok pagi."
 	}
@@ -153,12 +153,12 @@ const CASTLE_MEETING_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_KNIGHT_ROOM_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Aku harus segera pergi berlatih, \"pelatih\" pasti sudah menungguku di sana."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Huft, semoga semua ini berjalan seperti semestinya."
 	}
@@ -170,17 +170,17 @@ const CH1_KNIGHT_ROOM_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_CAMP_TRAINING_PRE_FIGHT_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Alaric, aku cukup siap untuk ini. Aku akan melawanmu, kan?"
 	},
 	{
-		"speaker": "Alaric (Pelatih)",
+		"speaker": "Pelatih Alaric",
 		"portrait": "alaric",
 		"text": "Iya Yang Mulia, setidaknya cukup bertahan saja dariku ha-ha-ha."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Sedari dulu kau memang kesatria yang arogan, ayo kita lihat siapa yang lebih kuat!"
 	}
@@ -192,27 +192,27 @@ const CH1_CAMP_TRAINING_PRE_FIGHT_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_CAMP_TRAINING_POST_FIGHT_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Alaric (Pelatih)",
+		"speaker": "Pelatih Alaric",
 		"portrait": "alaric",
 		"text": "Kau memang cukup tangguh Yang Mulia, sayangnya aku cukup lihai untuk melawanmu haha."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Astaga, kurasa kita cukup imbang..."
 	},
 	{
-		"speaker": "Alaric (Pelatih)",
+		"speaker": "Pelatih Alaric",
 		"portrait": "alaric",
 		"text": "Menurut saya, kau sudah cukup tangguh untuk perjalanan ini."
 	},
 	{
-		"speaker": "Alaric (Pelatih)",
+		"speaker": "Pelatih Alaric",
 		"portrait": "alaric",
 		"text": "Pergi ke daerah pemakaman, di situ terdapat makam prajurit terhebat yang pernah kulatih dahulu, Lancelot. Terdapat pedang yang pernah ditempa oleh penempa legendaris di sana."
 	},
 	{
-		"speaker": "Alaric (Pelatih)",
+		"speaker": "Pelatih Alaric",
 		"portrait": "alaric",
 		"text": "Gali saja makam itu dan ambil pedangnya, dia sudah mewariskan padaku sejak masa kritisnya, hanya saja aku menunggu saat yang tepat."
 	}
@@ -224,12 +224,12 @@ const CH1_CAMP_TRAINING_POST_FIGHT_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_GRAVEYARD_SWORD_FOUND_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Pedang ini terasa sangat kokoh. Hanya saja mungkin sedikit termakan oleh umur..."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Aku akan pergi untuk memperbaikinya."
 	}
@@ -241,37 +241,37 @@ const CH1_GRAVEYARD_SWORD_FOUND_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_FORGE_MAGNUS_REQUEST_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Arthur, bisa bantu aku sebentar?"
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Memangnya ada apa sampai kamu perlu bantuanku?"
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Ibuku pernah bercerita kalau ada artefak kuno dari keturunan darah keluargaku."
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Artefak itu sengaja disegel dan hanya boleh digunakan ketika ada hal genting seperti kondisi kita sekarang."
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Katanya sih ada di dalam perpustakaan, dan ada ruang rahasia di sana."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Dengan senang hati! Lagipula kamu yang akan melindungiku dengan sihir-sihir kuatmu itu."
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Dasar..., baiklah ikuti aku."
 	}
@@ -283,12 +283,12 @@ const CH1_FORGE_MAGNUS_REQUEST_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_LIBRARY_ENTER_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Magnus, lihatlah sekelilingmu, penuh dengan buku ya!"
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Ya karena ini perpustakaan..."
 	}
@@ -300,7 +300,7 @@ const CH1_LIBRARY_ENTER_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_LIBRARY_PUZZLE_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Buku-buku ini merangkai suatu kata..."
 	}
@@ -317,7 +317,7 @@ const CH1_LIBRARY_BOSS_PRE_FIGHT_DIALOGUE: Array[Dictionary] = [
 		"text": "Berani-beraninya kalian menapakkan kaki di sini. Pergi sebelum aku mengubah kalian menjadi salah satu dari buku yang tersusun di rak-rak itu!"
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Sebentar! Kami hanya ingin mencari artefak yang tersegel di tempat ini, bukankah itu diperbolehkan!?"
 	},
@@ -334,7 +334,7 @@ const CH1_LIBRARY_BOSS_PRE_FIGHT_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_LIBRARY_GOLDEN_BOOK_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Buku ini bercahaya saat kusentuh..."
 	}
@@ -346,7 +346,7 @@ const CH1_LIBRARY_GOLDEN_BOOK_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_GATE_INVASION_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "SERANGG!!!"
 	}
@@ -358,7 +358,7 @@ const CH1_GATE_INVASION_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_ASSASSIN_APPEARANCE_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Hellene (Assassin)",
+		"speaker": "Carina Hellene",
 		"portrait": "assassin",
 		"text": "Akan kujelaskan nanti setelah mengalahkan raksasa ini bersama!"
 	}
@@ -370,27 +370,27 @@ const CH1_ASSASSIN_APPEARANCE_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_ASSASSIN_UNMASK_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Hellene (Assassin)",
+		"speaker": "Carina Hellene",
 		"portrait": "assassin",
 		"text": "Aku adalah assassin dari kerajaan seberang. Aku bisa sampai ke sini karena menyamar saat aku dan pengawalku sedang berada di hutan."
 	},
 	{
-		"speaker": "Hellene (Assassin)",
+		"speaker": "Carina Hellene",
 		"portrait": "assassin",
 		"text": "Pengawalku habis pada malam itu. Aku berhasil membunuh satu dari mereka dan menggunakan sebagian dari tubuhnya sebagai penyamaran ini."
 	},
 	{
-		"speaker": "Hellene (Assassin)",
+		"speaker": "Carina Hellene",
 		"portrait": "assassin",
 		"text": "Saat ini aku yakin, tidak hanya kastilmu yang diserang, kastilku sedang dalam bahaya, esok hari akan ada iblis yang menyerang kastilku."
 	},
 	{
-		"speaker": "Hellene (Assassin)",
+		"speaker": "Carina Hellene",
 		"portrait": "assassin",
 		"text": "Tolong bantu aku menyelesaikan masalah ini, kita perlu bersatu untuk menyelamatkan kehidupan manusia."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Aku tidak akan ikut denganmu, kau yang akan ikut dengan kita. Tunjukkan aku jalannya!"
 	}
@@ -848,17 +848,25 @@ func _ready() -> void:
 	_init_defeat_overlay.call_deferred()
 
 	# 6. Jalankan efek pembukaan Circular Mask (Iris Open) saat masuk arena game
-	play_iris_opening_transition()
 	_init_and_play_bgm()
 
 	# Jika masuk melalui menu 'Lanjutkan' di Start Menu, muat save slot tertunda
 	if pending_load_slot_id > 0:
+		play_iris_opening_transition()
 		var slot_to_load := pending_load_slot_id
 		pending_load_slot_id = -1
 		call_deferred("load_game_from_slot", slot_to_load)
 	elif selected_game_mode == "open_world":
+		play_iris_opening_transition()
 		_setup_open_world_mode.call_deferred()
+	elif not is_prologue_completed:
+		# Mode Cerita baru: tampilkan narasi abad ke-7 di layar hitam sebelum masuk gameplay
+		_show_story_prologue_intro_crawl(func():
+			play_iris_opening_transition()
+			_start_story_prologue_sequence.call_deferred()
+		)
 	else:
+		play_iris_opening_transition()
 		_start_story_prologue_sequence.call_deferred()
 
 
@@ -2989,6 +2997,131 @@ func _on_hud_dialogue_started(_dialogue_id: String) -> void:
 
 func _on_hud_dialogue_finished(_dialogue_id: String) -> void:
 	set_party_movement_locked(false)
+
+
+func _show_story_prologue_intro_crawl(on_completed: Callable) -> void:
+	is_transitioning = true
+	set_party_movement_locked(true)
+	if is_instance_valid(gameplay_hud):
+		gameplay_hud.is_hud_input_blocked = true
+		gameplay_hud.visible = false
+
+	var crawl_canvas := CanvasLayer.new()
+	crawl_canvas.name = "PrologueIntroCrawl"
+	crawl_canvas.layer = 125
+
+	# Latar belakang hitam pekat
+	var bg := ColorRect.new()
+	bg.color = Color(0.04, 0.04, 0.05, 1.0)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	bg.grow_vertical = Control.GROW_DIRECTION_BOTH
+	bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	crawl_canvas.add_child(bg)
+
+	# Container konten
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 80)
+	margin.add_theme_constant_override("margin_right", 80)
+	margin.add_theme_constant_override("margin_top", 60)
+	margin.add_theme_constant_override("margin_bottom", 50)
+	crawl_canvas.add_child(margin)
+
+	var vbox := VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 24)
+	margin.add_child(vbox)
+
+	var font: Font = load("res://assets/ui/fonts/beholden-bold.ttf")
+
+	var paragraphs: Array[String] = [
+		"Tepat siang hari pada abad ke 7 sebelum \"satu minggu kebangkitan adanya yang tiada\", terjadi.",
+		"Hari dimana kematian terganggu dan kehidupan mulai diusik.",
+		"mereka yang sudah pergi kembali untuk menghukum mereka yang masih hidup.",
+		"tepat di hari itu, sang pangeran bernama \"Arthur\" mendapat sebuah panggilan saat sedang melakukan observasi lumbung pengelolaan kayu."
+	]
+
+	for p_text in paragraphs:
+		var lbl := Label.new()
+		lbl.text = p_text
+		if font:
+			lbl.add_theme_font_override("font", font)
+		lbl.add_theme_font_size_override("font_size", 18)
+		lbl.add_theme_color_override("font_color", Color(0.92, 0.86, 0.72))
+		lbl.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.8))
+		lbl.add_theme_constant_override("shadow_offset_x", 1)
+		lbl.add_theme_constant_override("shadow_offset_y", 2)
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vbox.add_child(lbl)
+
+	# Indikator petunjuk lanjut di bagian bawah
+	var hint_lbl := Label.new()
+	hint_lbl.text = "[ Tekan Spasi / Klik untuk Lanjut ]"
+	if font:
+		hint_lbl.add_theme_font_override("font", font)
+	hint_lbl.add_theme_font_size_override("font_size", 14)
+	hint_lbl.add_theme_color_override("font_color", Color(0.72, 0.67, 0.55, 0.75))
+	hint_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(hint_lbl)
+
+	add_child(crawl_canvas)
+
+	# Efek kedip halus untuk petunjuk
+	var pulse_tween := create_tween().set_loops()
+	pulse_tween.tween_property(hint_lbl, "modulate:a", 0.35, 0.8).set_trans(Tween.TRANS_SINE)
+	pulse_tween.tween_property(hint_lbl, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
+
+	# Fade in pembuka teks
+	bg.modulate.a = 0.0
+	margin.modulate.a = 0.0
+	var in_tween := create_tween()
+	in_tween.set_parallel(true)
+	in_tween.tween_property(bg, "modulate:a", 1.0, 0.6).set_trans(Tween.TRANS_SINE)
+	in_tween.tween_property(margin, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
+	await in_tween.finished
+
+	# Menunggu input pemain (Klik mouse / Spasi / Enter / E) atau timeout 14 detik
+	var has_advanced: Array[bool] = [false]
+	var advance_callable = func():
+		if has_advanced[0]:
+			return
+		has_advanced[0] = true
+
+	# Input listener via Callable connection to gui_input on bg
+	bg.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			advance_callable.call()
+	)
+
+	# Polling loop yang responsif terhadap input tombol
+	var elapsed: float = 0.0
+	while not has_advanced[0] and elapsed < 14.0:
+		if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("interact") or Input.is_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_ENTER):
+			advance_callable.call()
+			break
+		await get_tree().process_frame
+		elapsed += get_process_delta_time()
+
+	if pulse_tween and pulse_tween.is_valid():
+		pulse_tween.kill()
+
+	# Fade out penutup teks
+	var out_tween := create_tween()
+	out_tween.set_parallel(true)
+	out_tween.tween_property(bg, "modulate:a", 0.0, 0.6).set_trans(Tween.TRANS_SINE)
+	out_tween.tween_property(margin, "modulate:a", 0.0, 0.6).set_trans(Tween.TRANS_SINE)
+	await out_tween.finished
+
+	crawl_canvas.queue_free()
+
+	if is_instance_valid(gameplay_hud):
+		gameplay_hud.visible = true
+		gameplay_hud.is_hud_input_blocked = false
+
+	if on_completed.is_valid():
+		on_completed.call()
 
 
 func _trigger_prologue_cutscene() -> void:
