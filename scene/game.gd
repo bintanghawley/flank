@@ -662,15 +662,37 @@ func setup_party_enemy_collision_exceptions() -> void:
 					e.add_collision_exception_with(p)
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	# Penanganan input saat seluruh party gugur di arena (layar merah defeat)
+func _input(event: InputEvent) -> void:
+	# Intersepsi input saat seluruh party gugur di arena (layar merah defeat)
+	# Seluruh tombol keyboard, klik mouse, controller, dan sentuhan otomatis
+	# menekan layar kematian (memicu rewind waktu) dan tidak tembus ke UI manapun.
 	if is_arena_defeat_active:
 		if is_awaiting_defeat_rewind_input:
-			if (event is InputEventKey and event.pressed and not event.echo) or (event is InputEventMouseButton and event.pressed):
+			var is_trigger: bool = false
+			if event is InputEventKey and event.pressed and not event.echo:
+				is_trigger = true
+			elif event is InputEventMouseButton and event.pressed:
+				is_trigger = true
+			elif event is InputEventJoypadButton and event.pressed:
+				is_trigger = true
+			elif event is InputEventScreenTouch and event.pressed:
+				is_trigger = true
+
+			if is_trigger:
 				is_awaiting_defeat_rewind_input = false
 				execute_arena_rewind()
 				get_viewport().set_input_as_handled()
 				return
+
+		# Selama layar defeat aktif, telan seluruh input agar tombol UI / kontrol lain tidak terpencet
+		if (event is InputEventKey) or (event is InputEventMouseButton) or (event is InputEventJoypadButton) or (event is InputEventScreenTouch):
+			get_viewport().set_input_as_handled()
+		return
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	# Pengaman input saat seluruh party gugur di arena (layar merah defeat)
+	if is_arena_defeat_active:
 		get_viewport().set_input_as_handled()
 		return
 
@@ -1026,12 +1048,15 @@ func execute_hero_skill(hero: CharacterBody2D) -> void:
 		if hero.has_method("can_activate_skill") and hero.can_activate_skill():
 			hero.activate_skill_mode()
 	elif hero.has_method("start_skill_aiming"):
-		var cd_m: float = hero.get("skill_cooldown_timer") if "skill_cooldown_timer" in hero else 0.0
-		var is_aim: bool = hero.get("is_aiming_skill") if "is_aiming_skill" in hero else false
-		var is_rel: bool = hero.get("is_skill_releasing") if "is_skill_releasing" in hero else false
-		var is_att_m: bool = hero.get("is_attacking") if "is_attacking" in hero else false
-		if not is_aim and not is_rel and not is_att_m and cd_m <= 0.0:
-			hero.start_skill_aiming()
+		if hero.has_method("can_activate_skill"):
+			if hero.can_activate_skill():
+				hero.start_skill_aiming()
+		else:
+			var cd_m: float = hero.get("skill_cooldown_timer") if "skill_cooldown_timer" in hero else 0.0
+			var is_aim: bool = hero.get("is_aiming_skill") if "is_aiming_skill" in hero else false
+			var is_rel: bool = hero.get("is_skill_releasing") if "is_skill_releasing" in hero else false
+			if not is_aim and not is_rel and cd_m <= 0.0:
+				hero.start_skill_aiming()
 
 
 func _on_hud_skill_activated(slot_idx: int) -> void:
@@ -2219,7 +2244,8 @@ func _init_defeat_overlay() -> void:
 
 	defeat_canvas = CanvasLayer.new()
 	defeat_canvas.name = "ArenaDefeatCanvas"
-	defeat_canvas.layer = 95
+	defeat_canvas.layer = 120
+	defeat_canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 	defeat_canvas.visible = false
 
 	# 1. Overlay merah transparan yang menyelimuti seluruh layar
@@ -2227,7 +2253,8 @@ func _init_defeat_overlay() -> void:
 	defeat_rect.name = "DefeatOverlay"
 	defeat_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	defeat_rect.color = Color(0.65, 0.05, 0.05, 0.42)
-	defeat_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	defeat_rect.mouse_filter = Control.MOUSE_FILTER_STOP
+	defeat_rect.gui_input.connect(_on_defeat_overlay_gui_input)
 	defeat_canvas.add_child(defeat_rect)
 
 	# 2. Kontainer teks persis di tengah layar
@@ -2289,6 +2316,18 @@ func _init_defeat_overlay() -> void:
 	center_box.add_child(defeat_prompt_lbl)
 
 	add_child(defeat_canvas)
+
+
+func _on_defeat_overlay_gui_input(event: InputEvent) -> void:
+	if not is_arena_defeat_active:
+		return
+	if is_awaiting_defeat_rewind_input:
+		if (event is InputEventMouseButton and event.pressed) or (event is InputEventScreenTouch and event.pressed):
+			is_awaiting_defeat_rewind_input = false
+			execute_arena_rewind()
+			get_viewport().set_input_as_handled()
+			return
+	get_viewport().set_input_as_handled()
 
 
 func _take_pre_arena_snapshot() -> void:
@@ -2360,7 +2399,22 @@ func trigger_arena_defeat() -> void:
 			if e.has_method("play_idle_animation"):
 				e.play_idle_animation()
 
-	# 2. Tunda sejenak 0.6 detik agar animasi kekalahan karakter selesai
+	# 2. Tutup modal/menu pause jika terbuka dan blokir interaksi UI
+	if gameplay_hud and is_instance_valid(gameplay_hud):
+		if gameplay_hud.has_method("_close_confirm_modal"):
+			gameplay_hud._close_confirm_modal()
+		if "pause_overlay" in gameplay_hud and is_instance_valid(gameplay_hud.pause_overlay) and gameplay_hud.pause_overlay.visible:
+			if gameplay_hud.has_method("_close_pause_book"):
+				gameplay_hud._close_pause_book()
+			elif gameplay_hud.has_method("toggle_pause_menu"):
+				gameplay_hud.toggle_pause_menu()
+			if is_instance_valid(gameplay_hud.pause_overlay):
+				gameplay_hud.pause_overlay.visible = false
+		if get_tree().paused:
+			get_tree().paused = false
+		gameplay_hud.is_hud_input_blocked = true
+
+	# 3. Tunda sejenak 0.6 detik agar animasi kekalahan karakter selesai
 	get_tree().create_timer(0.6).timeout.connect(func():
 		if not is_arena_defeat_active or arena_state != ArenaState.COMBAT:
 			return
@@ -2385,8 +2439,8 @@ func trigger_arena_defeat() -> void:
 			if defeat_prompt_lbl:
 				tw.parallel().tween_property(defeat_prompt_lbl, "modulate:a", 1.0, 0.45)
 
-			# Berikan jeda toleransi 0.35 detik sebelum menerima input rewind agar tidak terpicu klik tak sengaja
-			get_tree().create_timer(0.35).timeout.connect(func():
+			# Berikan jeda toleransi 0.2 detik sebelum menerima input rewind agar tidak terpicu klik tak sengaja
+			get_tree().create_timer(0.2).timeout.connect(func():
 				if is_arena_defeat_active:
 					is_awaiting_defeat_rewind_input = true
 			, CONNECT_ONE_SHOT)
@@ -2396,6 +2450,8 @@ func trigger_arena_defeat() -> void:
 func execute_arena_rewind() -> void:
 	if pre_arena_snapshot.is_empty():
 		is_arena_defeat_active = false
+		if gameplay_hud and is_instance_valid(gameplay_hud):
+			gameplay_hud.is_hud_input_blocked = false
 		return
 
 	# Mainkan audio respawn / rewind waktu
@@ -2536,9 +2592,13 @@ func execute_arena_rewind() -> void:
 			if defeat_canvas and is_instance_valid(defeat_canvas):
 				defeat_canvas.visible = false
 			is_arena_defeat_active = false
+			if gameplay_hud and is_instance_valid(gameplay_hud):
+				gameplay_hud.is_hud_input_blocked = false
 		)
 	else:
 		is_arena_defeat_active = false
+		if gameplay_hud and is_instance_valid(gameplay_hud):
+			gameplay_hud.is_hud_input_blocked = false
 
 
 # =========================================================

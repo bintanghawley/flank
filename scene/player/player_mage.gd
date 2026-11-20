@@ -437,7 +437,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			is_skill_key = true
 
 	if is_skill_key:
-		if is_in_combat_mode() and not is_aiming_skill and not is_skill_releasing and not is_attacking and skill_cooldown_timer <= 0.0:
+		if is_aiming_skill:
+			cancel_skill()
+			if get_viewport():
+				get_viewport().set_input_as_handled()
+			return
+		elif is_in_combat_mode() and not is_skill_releasing and skill_cooldown_timer <= 0.0:
 			start_skill_aiming()
 			if get_viewport():
 				get_viewport().set_input_as_handled()
@@ -448,13 +453,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		if not is_in_combat_mode():
 			reset_combat_skills()
 			return
-		if event is InputEventMouseButton and event.pressed:
+		if event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_LEFT:
-				execute_meteor_strike()
-				if get_viewport():
-					get_viewport().set_input_as_handled()
-				return
-			elif event.button_index == MOUSE_BUTTON_RIGHT:
+				if event.pressed:
+					if not require_mouse_release:
+						execute_meteor_strike()
+						if get_viewport():
+							get_viewport().set_input_as_handled()
+						return
+				else:
+					require_mouse_release = false
+			elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 				cancel_skill()
 				if get_viewport():
 					get_viewport().set_input_as_handled()
@@ -1388,7 +1397,7 @@ func spawn_run_dust(move_dir: Vector2) -> void:
 	if is_leader:
 		_footstep_toggle = not _footstep_toggle
 		if _footstep_toggle:
-			play_sfx(SFX_FOOTSTEP, -14.0)
+			play_sfx(SFX_FOOTSTEP, 5.0)
 
 
 func apply_camera_shake(intensity: float = -1.0) -> void:
@@ -1698,11 +1707,28 @@ func update_shield_visual() -> void:
 # SPECIAL SKILL LOGIC (METEOR STRIKE)
 # =========================================================
 
+func can_activate_skill() -> bool:
+	return (not is_dead and 
+			is_leader and 
+			skill_cooldown_timer <= 0.0 and 
+			not is_aiming_skill and 
+			not is_skill_releasing and 
+			is_in_combat_mode())
+
+
 func start_skill_aiming() -> void:
-	if not is_in_combat_mode() or not is_leader or is_dead or is_aiming_skill or is_skill_releasing or is_attacking:
+	if not is_in_combat_mode() or not is_leader or is_dead or is_aiming_skill or is_skill_releasing:
 		return
 	if skill_cooldown_timer > 0.0:
 		return
+
+	# Jika sedang melancarkan basic attack, batalkan seketika agar skill langsung siap dipakai
+	if is_attacking:
+		attack_token += 1
+		is_attacking = false
+		attack_stuck_timer = 0.0
+		if not is_moving:
+			play_idle_animation()
 
 	is_aiming_skill = true
 	is_moving = false
