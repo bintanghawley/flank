@@ -44,8 +44,8 @@ const FOREST_CROW_SPAWN_POS: Vector2 = Vector2(9800.0, 3600.0)
 const FOREST_CROW_PERCH_POS: Vector2 = Vector2(8820.0, 4171.0)
 const FOREST_MAGNUS_POS: Vector2 = Vector2(8510.0, 4320.0)
 
-const CASTLE_APPROACH_START_POS: Vector2 = Vector2(2533.0, 2000.0)
-const CASTLE_APPROACH_STOP_POS: Vector2 = Vector2(2533.0, 1350.0)
+const CASTLE_APPROACH_START_POS: Vector2 = Vector2(2533.0, 3500.0)
+const CASTLE_APPROACH_STOP_POS: Vector2 = Vector2(2533.0, 2400.0)
 
 var _prologue_guards: Array[Node2D] = []
 var _prologue_crow: Sprite2D = null
@@ -3294,7 +3294,7 @@ func _run_castle_gate_approach_cutscene() -> void:
 			lead.play_walk_animation()
 
 		var tw := create_tween()
-		tw.tween_property(lead, "global_position", CASTLE_APPROACH_STOP_POS, 4.2).set_trans(Tween.TRANS_LINEAR)
+		tw.tween_property(lead, "global_position", CASTLE_APPROACH_STOP_POS, 5.0).set_trans(Tween.TRANS_LINEAR)
 		await tw.finished
 
 		if is_instance_valid(lead) and lead.has_method("play_idle_animation"):
