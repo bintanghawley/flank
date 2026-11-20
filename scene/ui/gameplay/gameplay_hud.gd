@@ -1478,8 +1478,8 @@ const INVENTORY_CONSUMABLES_SHEET_TEX: Texture2D = preload("res://assets/ui/menu
 ## Default icon definitions for all recognized items (fallback jika item tidak memiliki icon_rect/icon_path spesifik)
 const DEFAULT_ITEM_ICON_MAPPING: Dictionary = {
 	"potion_hp": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(16, 496, 16, 16)},
-	"apple": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(48, 560, 16, 16)},
-	"bread": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(192, 528, 16, 16)},
+	"apple": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(32, 432, 16, 16)},
+	"bread": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(16, 512, 16, 16)},
 	"meat": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 512, 16, 16)},
 	"holy_water": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(48, 496, 16, 16)},
 	"carrot": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 560, 16, 16)},
@@ -4270,33 +4270,26 @@ func _update_journal_rewards(rewards_data: Variant) -> void:
 	if not is_instance_valid(reward_section):
 		reward_section = _create_journal_reward_section(vbox)
 
-	# Evaluasi apakah quest memiliki hadiah nyata
+	# Evaluasi apakah quest memiliki hadiah nyata (hanya makanan consumable atau item)
 	var has_rewards: bool = false
-	var exp_val: int = 0
-	var gold_val: int = 0
 	var item_list: Array = []
 
 	if rewards_data is Dictionary and not rewards_data.is_empty():
-		exp_val = int(rewards_data.get("exp", 0))
-		gold_val = int(rewards_data.get("gold", rewards_data.get("coins", 0)))
 		var raw_items = rewards_data.get("items", [])
 		if raw_items is Array:
 			item_list = raw_items
-		if exp_val > 0 or gold_val > 0 or not item_list.is_empty():
+		if not item_list.is_empty():
 			has_rewards = true
 	elif rewards_data is Array and not rewards_data.is_empty():
-		has_rewards = true
 		for entry in rewards_data:
 			if entry is Dictionary:
 				var t: String = str(entry.get("type", "")).to_lower()
-				if t == "exp":
-					exp_val += int(entry.get("amount", 0))
-				elif t == "gold" or t == "coins":
-					gold_val += int(entry.get("amount", 0))
-				elif t == "item":
+				if t == "item" or (t != "exp" and t != "gold" and t != "coins"):
 					item_list.append(entry)
 			elif entry is String and entry.strip_edges() != "":
 				item_list.append({"name": entry})
+		if not item_list.is_empty():
+			has_rewards = true
 
 	# Jika tidak ada hadiah, sembunyikan section sepenuhnya (tapi kalo emang ga ada rewardnya gausah)
 	if not has_rewards:
@@ -4315,17 +4308,7 @@ func _update_journal_rewards(rewards_data: Variant) -> void:
 	var serif_font: Font = preload("res://assets/ui/fonts/beholden-bold.ttf")
 	var ink_color := Color(0.24, 0.15, 0.16, 1.0)
 
-	# 1. EXP Reward Card
-	if exp_val > 0:
-		var exp_card := _create_reward_badge_card("exp", "+%d EXP" % exp_val, serif_font, ink_color)
-		list_container.add_child(exp_card)
-
-	# 2. Gold / Koin Reward Card
-	if gold_val > 0:
-		var gold_card := _create_reward_badge_card("gold", "+%d Koin Emas" % gold_val, serif_font, ink_color)
-		list_container.add_child(gold_card)
-
-	# 3. Item Rewards Cards
+	# Item Rewards Cards (consumables / items)
 	for itm in item_list:
 		var item_card := _create_reward_item_card(itm, serif_font, ink_color)
 		if is_instance_valid(item_card):
@@ -4484,7 +4467,7 @@ func _create_reward_item_card(item_info: Variant, font: Font, text_color: Color)
 	if not item_tex:
 		var atlas := AtlasTexture.new()
 		atlas.atlas = INVENTORY_ITEMS_SHEET_TEX
-		atlas.region = Rect2(48, 560, 16, 16) # Fallback ke icon apel
+		atlas.region = Rect2(32, 432, 16, 16) # Fallback ke icon apel
 		item_tex = atlas
 
 	ico.texture = item_tex

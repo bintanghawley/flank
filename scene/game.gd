@@ -1369,7 +1369,7 @@ func _init_starter_inventory() -> void:
 			"name": "Apel Merah Hutan",
 			"category": 0,
 			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(48, 560, 16, 16),
+			"icon_rect": Rect2(32, 432, 16, 16),
 			"description": "Buah apel merah manis dan segar dari perkebunan, memulihkan 150 HP karakter.",
 			"quantity": 2,
 			"max_stack": 99,
@@ -1381,7 +1381,7 @@ func _init_starter_inventory() -> void:
 			"name": "Roti Gandum",
 			"category": 0,
 			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(192, 528, 16, 16),
+			"icon_rect": Rect2(16, 512, 16, 16),
 			"description": "Roti gandum berkah yang dapat membangkitkan (revive) anggota party yang gugur serta memulihkan 200 HP.",
 			"quantity": 2,
 			"max_stack": 99,
@@ -1458,15 +1458,13 @@ func _init_starter_quests() -> void:
 			"status": "completed" if is_alaric_sparring_completed else ("active" if is_knight_room_completed else "inactive"),
 			"target_position": ALARIC_CAMP_POS,
 			"rewards": {
-				"exp": 150,
-				"gold": 100,
 				"items": [
 					{
 						"id": "apple",
 						"name": "Apel Merah Hutan",
 						"quantity": 2,
 						"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-						"icon_rect": Rect2(48, 560, 16, 16)
+						"icon_rect": Rect2(32, 432, 16, 16)
 					}
 				]
 			}
@@ -1481,14 +1479,13 @@ func _init_starter_quests() -> void:
 			"status": "active" if is_alaric_sparring_completed else "inactive",
 			"target_position": GRAVEYARD_POS,
 			"rewards": {
-				"exp": 200,
 				"items": [
 					{
-						"id": "ancient_coin",
-						"name": "Koin Makam Kuno",
+						"id": "dungeon_key",
+						"name": "Kunci Makam Kuno",
 						"quantity": 1,
 						"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-						"icon_rect": Rect2(16, 128, 16, 16)
+						"icon_rect": Rect2(0, 176, 16, 16)
 					}
 				]
 			}
@@ -1553,15 +1550,13 @@ func _init_starter_quests() -> void:
 			"status": "active",
 			"target_position": Vector2(1500, 3000),
 			"rewards": {
-				"exp": 100,
-				"gold": 50,
 				"items": [
 					{
 						"id": "bread",
 						"name": "Roti Gandum",
 						"quantity": 3,
 						"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-						"icon_rect": Rect2(192, 528, 16, 16)
+						"icon_rect": Rect2(16, 512, 16, 16)
 					}
 				]
 			}
@@ -1576,8 +1571,15 @@ func _init_starter_quests() -> void:
 			"status": "active",
 			"target_position": Vector2(5000, 1800),
 			"rewards": {
-				"exp": 250,
-				"gold": 150
+				"items": [
+					{
+						"id": "meat",
+						"name": "Daging Panggang Gurih",
+						"quantity": 2,
+						"icon_path": "res://assets/ui/icons/items/items_sheets.png",
+						"icon_rect": Rect2(0, 512, 16, 16)
+					}
+				]
 			}
 		}
 	]
