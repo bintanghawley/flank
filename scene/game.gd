@@ -1082,30 +1082,17 @@ func _on_hud_party_reordered(new_party: Array[CharacterBody2D]) -> void:
 
 func _init_starter_inventory() -> void:
 	inventory_items = [
-		# Kategori 0: Consumable (13 item untuk menguji scrollbar > 12 slot)
-		{
-			"id": "potion_hp",
-			"name": "Ramuan Pemulihan",
-			"category": 0,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(16, 496, 16, 16),
-			"description": "Ramuan ajaib merah yang dapat memulihkan 5 HP karakter saat digunakan.",
-			"quantity": 5,
-			"max_stack": 99,
-			"usable": true,
-			"heal_amount": 5
-		},
 		{
 			"id": "apple",
-			"name": "Apel Hutan",
+			"name": "Apel Merah Hutan",
 			"category": 0,
 			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(16, 560, 16, 16),
-			"description": "Buah apel segar manis dari perkebunan, memulihkan 2 HP karakter.",
-			"quantity": 8,
+			"icon_rect": Rect2(48, 560, 16, 16),
+			"description": "Buah apel merah manis dan segar dari perkebunan, memulihkan 150 HP karakter.",
+			"quantity": 2,
 			"max_stack": 99,
 			"usable": true,
-			"heal_amount": 2
+			"heal_amount": 150
 		},
 		{
 			"id": "bread",
@@ -1113,221 +1100,48 @@ func _init_starter_inventory() -> void:
 			"category": 0,
 			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
 			"icon_rect": Rect2(192, 528, 16, 16),
-			"description": "Roti gandum padat yang mengenyangkan, memulihkan 3 HP karakter.",
-			"quantity": 4,
-			"max_stack": 99,
-			"usable": true,
-			"heal_amount": 3
-		},
-		{
-			"id": "meat",
-			"name": "Daging Panggang",
-			"category": 0,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(0, 512, 16, 16),
-			"description": "Daging panggang lezat kaya protein, memulihkan 6 HP karakter.",
-			"quantity": 3,
-			"max_stack": 99,
-			"usable": true,
-			"heal_amount": 6
-		},
-		{
-			"id": "holy_water",
-			"name": "Air Suci",
-			"category": 0,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(48, 496, 16, 16),
-			"description": "Air berkah dari kuil agung, memulihkan 4 HP dan menyegarkan raga.",
+			"description": "Roti gandum berkah yang dapat membangkitkan (revive) anggota party yang gugur serta memulihkan 200 HP.",
 			"quantity": 2,
 			"max_stack": 99,
 			"usable": true,
-			"heal_amount": 4
-		},
-		{
-			"id": "herb",
-			"name": "Herba Hijau",
-			"category": 0,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(0, 560, 16, 16),
-			"description": "Tanaman obat liar berkhasiat herbal, memulihkan 1 HP karakter.",
-			"quantity": 10,
-			"max_stack": 99,
-			"usable": true,
-			"heal_amount": 1
-		},
-		{
-			"id": "honey",
-			"name": "Madu Hutan",
-			"category": 0,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(0, 496, 16, 16),
-			"description": "Madu murni dari lebah liar hutan, memulihkan 3 HP karakter.",
-			"quantity": 5,
-			"max_stack": 99,
-			"usable": true,
-			"heal_amount": 3
-		},
-		{
-			"id": "cheese",
-			"name": "Keju Tua",
-			"category": 0,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(0, 544, 16, 16),
-			"description": "Keju asin yang diawetkan cukup lama, memulihkan 2 HP karakter.",
-			"quantity": 6,
-			"max_stack": 99,
-			"usable": true,
-			"heal_amount": 2
-		},
-		{
-			"id": "soup",
-			"name": "Sup Jamur",
-			"category": 0,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(144, 576, 16, 16),
-			"description": "Semangkuk sup hangat lezat beraroma jamur, memulihkan 4 HP karakter.",
-			"quantity": 3,
-			"max_stack": 99,
-			"usable": true,
-			"heal_amount": 4
-		},
-		{
-			"id": "big_potion",
-			"name": "Ramuan Besar",
-			"category": 0,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(128, 496, 16, 16),
-			"description": "Konsentrat ramuan pemulih tingkat tinggi, memulihkan 10 HP karakter.",
-			"quantity": 2,
-			"max_stack": 99,
-			"usable": true,
-			"heal_amount": 10
-		},
-		{
-			"id": "berry",
-			"name": "Buah Beri",
-			"category": 0,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(112, 560, 16, 16),
-			"description": "Segenggam buah beri merah manis, memulihkan 1 HP karakter.",
-			"quantity": 12,
-			"max_stack": 99,
-			"usable": true,
-			"heal_amount": 1
-		},
-		{
-			"id": "soul_elixir",
-			"name": "Eliksir Jiwa",
-			"category": 0,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(144, 496, 16, 16),
-			"description": "Eliksir langka pemurni energi spiritual, memulihkan 8 HP karakter.",
-			"quantity": 1,
-			"max_stack": 99,
-			"usable": true,
-			"heal_amount": 8
-		},
-		{
-			"id": "pumpkin_pie",
-			"name": "Pai Labu",
-			"category": 0,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(208, 528, 16, 16),
-			"description": "Pai labu manis hangat buatan koki istana, memulihkan 5 HP karakter.",
-			"quantity": 3,
-			"max_stack": 99,
-			"usable": true,
-			"heal_amount": 5
-		},
-
-		# Kategori 1: Kunci
-		{
-			"id": "palace_key",
-			"name": "Kunci Istana",
-			"category": 1,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(0, 336, 16, 16),
-			"description": "Kunci kuno berkarat yang dapat membuka gerbang utama istana kerajaan.",
-			"quantity": 1,
-			"max_stack": 1,
-			"usable": false
-		},
-		{
-			"id": "dungeon_key",
-			"name": "Kunci Bawah Tanah",
-			"category": 1,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(16, 336, 16, 16),
-			"description": "Kunci besi berat untuk membuka pintu sel tahanan di bawah tanah.",
-			"quantity": 1,
-			"max_stack": 1,
-			"usable": false
-		},
-
-		# Kategori 2: Collectible
-		{
-			"id": "ancient_coin",
-			"name": "Koin Kuno Emas",
-			"category": 2,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(0, 320, 16, 16),
-			"description": "Mata uang kuno era kerajaan masa lalu yang bernilai sangat tinggi.",
-			"quantity": 15,
-			"max_stack": 999,
-			"usable": false
-		},
-		{
-			"id": "honor_chalice",
-			"name": "Piala Kehormatan",
-			"category": 2,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(64, 352, 16, 16),
-			"description": "Piala perak bertatahkan permata yang dihadiahkan untuk pahlawan kerajaan.",
-			"quantity": 1,
-			"max_stack": 1,
-			"usable": false
-		},
-
-		# Kategori 3: Notes
-		{
-			"id": "intel_report",
-			"name": "Laporan Intelijen",
-			"category": 3,
-			"icon_path": "res://assets/ui/icons/items/items_sheets.png",
-			"icon_rect": Rect2(0, 304, 16, 16),
-			"description": "Gulungan dokumen rahasia mengenai pergerakan bandit di sekitar perbatasan.",
-			"quantity": 1,
-			"max_stack": 1,
-			"usable": false
-		},
-		{
-			"id": "soldier_diary",
-			"name": "Catatan Harian Prajurit",
-			"category": 3,
-			"icon_path": "res://assets/ui/menus/inventory/books.png",
-			"icon_rect": Rect2(0, 0, 16, 16),
-			"description": "Catatan usang yang menceritakan pertempuran sengit di benteng utara.",
-			"quantity": 1,
-			"max_stack": 1,
-			"usable": false
+			"heal_amount": 200,
+			"is_revive": true
 		}
 	]
 
 
 func _on_hud_item_used(item_data: Dictionary) -> void:
-	if item_data.has("heal_amount"):
-		var heal_val: int = item_data.get("heal_amount", 5)
-		var target_idx: int = int(item_data.get("target_index", active_leader_index))
-		if target_idx >= 0 and target_idx < party_members.size():
-			var target_hero = party_members[target_idx]
-			if is_instance_valid(target_hero) and "current_health" in target_hero and "max_health" in target_hero:
-				if "is_dead" in target_hero and target_hero.is_dead:
-					print("Karakter sedang gugur, tidak dapat dipulihkan dengan makanan/ramuan biasa.")
-					return
-				var old_hp: int = target_hero.current_health
-				target_hero.current_health = mini(target_hero.max_health, target_hero.current_health + heal_val)
-				var healed: int = target_hero.current_health - old_hp
-				print("ITEM DIGUNAKAN: %s pada %s | +%d HP | Sisa HP: %d/%d" % [item_data.get("name", "Item"), target_hero.name, healed, target_hero.current_health, target_hero.max_health])
+	var target_idx: int = int(item_data.get("target_index", active_leader_index))
+	if target_idx < 0 or target_idx >= party_members.size():
+		return
+	var target_hero = party_members[target_idx]
+	if not is_instance_valid(target_hero) or not ("current_health" in target_hero and "max_health" in target_hero):
+		return
+
+	var is_revive_item: bool = item_data.get("is_revive", false) or item_data.get("id") == "bread"
+	var is_dead_char: bool = target_hero.get("is_dead") if "is_dead" in target_hero else false
+	if "current_health" in target_hero and target_hero.current_health <= 0:
+		is_dead_char = true
+
+	var heal_val: int = item_data.get("heal_amount", 150)
+
+	if is_dead_char:
+		if is_revive_item:
+			if target_hero.has_method("respawn"):
+				target_hero.respawn()
+				target_hero.current_health = mini(target_hero.max_health, heal_val)
+			else:
+				target_hero.is_dead = false
+				target_hero.current_health = mini(target_hero.max_health, heal_val)
+			print("ITEM REVIVE DIGUNAKAN: %s membangkitkan %s | HP: %d/%d" % [item_data.get("name", "Item"), target_hero.name, target_hero.current_health, target_hero.max_health])
+		else:
+			print("Karakter sedang gugur, butuh roti / item revive untuk membangkitkan.")
+			return
+	else:
+		var old_hp: int = target_hero.current_health
+		target_hero.current_health = mini(target_hero.max_health, target_hero.current_health + heal_val)
+		var healed: int = target_hero.current_health - old_hp
+		print("ITEM DIGUNAKAN: %s pada %s | +%d HP | Sisa HP: %d/%d" % [item_data.get("name", "Item"), target_hero.name, healed, target_hero.current_health, target_hero.max_health])
 
 
 func _init_starter_quests() -> void:
