@@ -60,6 +60,7 @@ const FOREST_CAMP_STOP_POS: Vector2 = Vector2(8650.0, 4350.0)
 const FOREST_CROW_SPAWN_POS: Vector2 = Vector2(9800.0, 3600.0)
 const FOREST_CROW_PERCH_POS: Vector2 = Vector2(8820.0, 4171.0)
 const FOREST_MAGNUS_POS: Vector2 = Vector2(8510.0, 4320.0)
+const FOREST_MONSTER_ARENA_POS: Vector2 = Vector2(6740.0, 5500.0)
 
 const CASTLE_APPROACH_START_POS: Vector2 = Vector2(2533.0, 3500.0)
 const CASTLE_APPROACH_STOP_POS: Vector2 = Vector2(2533.0, 2400.0)
@@ -94,6 +95,60 @@ const PROLOGUE_DIALOGUE: Array[Dictionary] = [
 		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Tenang saja, hitung-hitung pemanasan. Tunggu sebentar di sini."
+	}
+]
+
+# Sesuai Naskah Dialog 1B (Setelah Fight & Burung Gagak Tiba)
+const PROLOGUE_POST_FIGHT_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Forzato Arthur",
+		"portrait": "arthur",
+		"text": "Hah... sejuk juga di sini. Menurutku observasi kayu hari ini cukup sampai di sini saja. Tebing batu tadi kelihatannya cocok kalau kita jadikan pusat pertambangan. Menurutmu bagaimana, Magnus?"
+	},
+	{
+		"speaker": "Pensatore Magnus",
+		"portrait": "magnus",
+		"text": "Perintahmu kan kewajiban bagi kami. Tapi sebagai kawan lamamu, dari dulu pilihan instingmu memang jarang meleset."
+	},
+	{
+		"speaker": "Forzato Arthur",
+		"portrait": "arthur",
+		"text": "Hahaha! Ayolah Magnus, jangan kaku begitu. Mentang-mentang ayah dan ibu menyuruhku memimpin proyek ini, kalian jadi bicara formal sekali. Padahal dulu kita duduk di bangku yang sama waktu di akademi."
+	},
+	{
+		"speaker": "Pensatore Magnus",
+		"portrait": "magnus",
+		"text": "Ya mau bagaimana lagi, bagaimanapun kau itu pangeran. Tapi kalau kau maunya santai, ya baguslah. Soal tambang tadi aku setuju, tanahnya memang padat."
+	},
+	{
+		"speaker": "Burung Gagak",
+		"portrait": "raven",
+		"text": "KROKK! KROK-KROKK!! KROKKK! KROK!!"
+	},
+	{
+		"speaker": "Forzato Arthur",
+		"portrait": "arthur",
+		"text": "Apa yang burung itu katakan? Dari tadi diam saja, sekarang malah membentak seperti sedang banyak masalah keluarga."
+	},
+	{
+		"speaker": "Pensatore Magnus",
+		"portrait": "magnus",
+		"text": "Tunggu sebentar, Arthur... Ini bukan gagak liar. Burung ini bawa pesan sihir dari dewan istana."
+	},
+	{
+		"speaker": "Forzato Arthur",
+		"portrait": "arthur",
+		"text": "Pesan apa?"
+	},
+	{
+		"speaker": "Pensatore Magnus",
+		"portrait": "magnus",
+		"text": "Ini gawat. Dunia kita terancam. Para peramal di istana baru saja mendapat ramalan buruk soal kiamat."
+	},
+	{
+		"speaker": "Pensatore Magnus",
+		"portrait": "magnus",
+		"text": "Ayo cepat kembali ke istana. Kita harus kumpulkan para petinggi dan laporkan ini ke Yang Mulia Raja dan Ratu!"
 	}
 ]
 
@@ -435,6 +490,8 @@ const CH1_ASSASSIN_UNMASK_DIALOGUE: Array[Dictionary] = [
 const STORY_DIALOGUES: Dictionary = {
 	"FLK-001": PROLOGUE_DIALOGUE,
 	"FLK-002": PROLOGUE_DIALOGUE,
+	"FLK-002-B": PROLOGUE_POST_FIGHT_DIALOGUE,
+	"prologue_post_fight": PROLOGUE_POST_FIGHT_DIALOGUE,
 	"CH0-SC02": PROLOGUE_DIALOGUE,
 	"prologue_intro": PROLOGUE_DIALOGUE,
 	"prologue": PROLOGUE_DIALOGUE,
@@ -1533,12 +1590,12 @@ func _init_starter_quests() -> void:
 		{
 			"id": "main_01",
 			"category": "main",
-			"title": "Peringatan Dari Langit",
-			"location": "Hutan Depan Istana",
-			"objective": "Dengarkan ramalan buruk dari burung gagak pengintai.",
-			"description": "Burung gagak sihir menyampaikan kabar gawat ramalan kiamat kebangkitan bangsa iblis kepada Arthur dan Magnus.",
+			"title": "Pemanasan Sang Pangeran",
+			"location": "Tebing Hutan Observasi",
+			"objective": "Kalahkan monster liar di dekat tebing pondok kayu.",
+			"description": "Sebelum kembali ke ibu kota, Arthur memutuskan untuk melakukan pemanasan dengan mengalahkan monster liar di dekat tebing.",
 			"status": "completed" if is_prologue_completed else "active",
-			"target_position": Vector2(3000, 1000)
+			"target_position": FOREST_MONSTER_ARENA_POS
 		},
 		{
 			"id": "main_02",
@@ -1683,6 +1740,10 @@ func _init_starter_quests() -> void:
 			}
 		}
 	]
+
+
+func get_quest_by_id(q_id: String) -> Dictionary:
+	return _get_quest_by_id(q_id)
 
 
 func _get_quest_by_id(q_id: String) -> Dictionary:
@@ -3547,6 +3608,87 @@ func _start_story_prologue_sequence() -> void:
 		if is_instance_valid(gameplay_hud):
 			gameplay_hud.visible = true
 			gameplay_hud.is_hud_input_blocked = false
+			var quest_main1 := _get_quest_by_id("main_01")
+			if not quest_main1.is_empty():
+				gameplay_hud.update_hud_quest_display(quest_main1)
+				if gameplay_hud.has_method("set_quest_navigation"):
+					gameplay_hud.set_quest_navigation(FOREST_MONSTER_ARENA_POS, "Tebing Hutan Observasi")
+		_start_monitoring_prologue_fight()
+	)
+
+
+var _is_prologue_fight_active: bool = false
+var _is_prologue_fight_done: bool = false
+var _is_waiting_prologue_return: bool = false
+
+
+func _start_monitoring_prologue_fight() -> void:
+	_is_prologue_fight_active = true
+	_is_prologue_fight_done = false
+	_is_waiting_prologue_return = false
+
+	# Pastikan ketiga monster di tebing aktif dan siap dilawan
+	for e_name in ["Enemy_Knight_1", "Enemy_Knight_2", "Enemy_Archer_1"]:
+		var e = get_node_or_null(e_name)
+		if is_instance_valid(e):
+			e.visible = true
+			e.set_physics_process(true)
+			if "is_dead" in e:
+				e.is_dead = false
+
+	# Pantau sampai ketiga monster dilumpuhkan oleh Arthur
+	while _is_prologue_fight_active and not _is_prologue_fight_done and not is_prologue_completed:
+		await get_tree().create_timer(0.4).timeout
+		var alive_count := 0
+		for e_name in ["Enemy_Knight_1", "Enemy_Knight_2", "Enemy_Archer_1"]:
+			var e = get_node_or_null(e_name)
+			if is_instance_valid(e) and not bool(e.get("is_dead")):
+				alive_count += 1
+		if alive_count == 0:
+			_is_prologue_fight_done = true
+			_on_prologue_monsters_cleared()
+			break
+
+
+func _on_prologue_monsters_cleared() -> void:
+	if _is_waiting_prologue_return:
+		return
+	_is_waiting_prologue_return = true
+
+	# Perbarui quest & arah navigasi kompas untuk kembali ke Magnus di lumbung kayu
+	for q in quest_list:
+		if q.get("id") == "main_01":
+			q["objective"] = "Kembali ke Magnus di lumbung pengolahan kayu."
+			q["target_position"] = FOREST_CAMP_STOP_POS
+			if is_instance_valid(gameplay_hud):
+				gameplay_hud.update_hud_quest_display(q)
+				if gameplay_hud.has_method("set_quest_navigation"):
+					gameplay_hud.set_quest_navigation(FOREST_CAMP_STOP_POS, "Lumbung Kayu")
+			break
+
+	# Pantau saat Arthur berjalan kembali mendekati Magnus
+	while _is_waiting_prologue_return and not is_prologue_completed:
+		await get_tree().create_timer(0.3).timeout
+		var lead := get_active_leader()
+		if is_instance_valid(lead):
+			var dist: float = lead.global_position.distance_to(FOREST_CAMP_STOP_POS)
+			if dist < 200.0:
+				_is_waiting_prologue_return = false
+				_start_prologue_crow_dialogue_sequence()
+				break
+
+
+func _start_prologue_crow_dialogue_sequence() -> void:
+	set_party_movement_locked(true)
+	var lead := get_active_leader()
+	if is_instance_valid(lead):
+		lead.velocity = Vector2.ZERO
+		if lead.has_method("play_idle_animation"):
+			lead.play_idle_animation()
+
+	# Mainkan Naskah Dialog 1B (Setelah Fight & Burung Gagak Tiba)
+	play_story_dialogue("FLK-002-B", func():
+		_transition_prologue_to_castle_gate()
 	)
 
 
