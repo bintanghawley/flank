@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://b5k8vyg6w3xqm" path="res://scene/ui/gameplay/gameplay_hud.tscn" id="8_hud"]
 [ext_resource type="PackedScene" uid="uid://df7k2nguard1t" path="res://scene/npc/npc_guard.tscn" id="9_npc_guard"]
 [ext_resource type="PackedScene" uid="uid://df7lam2e3p4q1" path="res://scene/world/castle_meeting_hall.tscn" id="10_hall"]
+[ext_resource type="PackedScene" uid="uid://bbewmvu1ukiy0" path="res://scene/world/secret_library.tscn" id="11_library"]
 [ext_resource type="FontFile" uid="uid://c74m8bvtvqkpw" path="res://assets/ui/fonts/beholden-bold.ttf" id="14_font"]
 [ext_resource type="Texture2D" uid="uid://cgyctt7vwk5d7" path="res://assets/environment/outdoor/arena-kamp-ground.png" id="15_arena_ground"]
 [ext_resource type="Texture2D" uid="uid://clu5fh5jgwjpv" path="res://assets/environment/outdoor/arena-kamp-structure.png" id="16_arena_structure"]
@@ -146,6 +147,9 @@ vertical_alignment = 1
 
 [node name="CastleMeetingHall" parent="." unique_id=25331500 instance=ExtResource("10_hall")]
 position = Vector2(2533, -1500)
+
+[node name="SecretLibrary" parent="." unique_id=25331501 instance=ExtResource("11_library")]
+position = Vector2(4300, -1500)
 
 [node name="ArenaKamp" type="Node2D" parent="." unique_id=70002000]
 position = Vector2(7000, -2000)

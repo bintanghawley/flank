@@ -32,6 +32,23 @@ const CASTLE_OUTSIDE_SPAWN_POS: Vector2 = Vector2(2533.0, 1090.0)
 const CASTLE_MEETING_SEAT_GLOBAL_POS: Vector2 = Vector2(2457.0, -1375.0)
 const CASTLE_MEETING_SIT_POS: Vector2 = Vector2(2457.0, -1385.0)
 const CASTLE_MEETING_TABLE_CENTER: Vector2 = Vector2(2533.0, -1490.0)
+const CASTLE_LIBRARY_POS: Vector2 = Vector2(2533.0, -1720.0) # deprecated, diganti konstanta library baru
+# === SECRET LIBRARY ===
+const LIBRARY_ENTRANCE_POS: Vector2 = Vector2(690.0, 1380.0)        # Pintu luar perpustakaan (toko ramuan sisi barat kota)
+const SECRET_LIBRARY_EXIT_L1_POS: Vector2 = Vector2(4300.0, -1140.0) # Pintu keluar Lantai 1 perpustakaan
+const SECRET_LIBRARY_WORLD_POS: Vector2 = Vector2(4300.0, -1500.0)
+const SECRET_LIBRARY_L1_SPAWN: Vector2 = Vector2(4300.0, -1340.0)   # tengah lantai 1 (spawn masuk)
+const SECRET_LIBRARY_L2_SPAWN: Vector2 = Vector2(4235.0, -1610.0)   # tengah karpet merah lantai 2 (menghadap rak buku utama)
+const SECRET_LIBRARY_STAIR_POS: Vector2 = Vector2(3870.0, -1360.0)  # posisi tangga (kiri bawah L1)
+var is_scene_4_in_progress: bool = false
+var is_scene_4_completed: bool = false
+var is_inside_secret_library: bool = false
+var is_on_library_floor_2: bool = false
+
+func _is_near_library_entrance(pos: Vector2) -> bool:
+	if pos.distance_to(LIBRARY_ENTRANCE_POS) <= 130.0:
+		return true
+	return pos.x >= 600.0 and pos.x <= 800.0 and pos.y >= 1340.0 and pos.y <= 1490.0
 const ALARIC_CAMP_POS: Vector2 = Vector2(6780.0, 1700.0)
 const ARTHUR_CAMP_RETURN_POS: Vector2 = Vector2(6650.0, 1700.0)
 const ARENA_KAMP_ARTHUR_POS: Vector2 = Vector2(7950.0, -1210.0)
@@ -256,18 +273,59 @@ const CH1_FORGE_MAGNUS_REQUEST_DIALOGUE: Array[Dictionary] = [
 # NASKAH DIALOG MEMASUKI PERPUSTAKAAN (CHAPTER 1.2)
 # Sesuai Storyboard FLK-012
 # =========================================================
-const CH1_LIBRARY_ENTER_DIALOGUE: Array[Dictionary] = [
+# =========================================================
+# NASKAH DIALOG SCENE 4: PERPUSTAKAAN ISTANA & MANTRA TERSEGEL
+# =========================================================
+const CH1_SCENE_04A_LIBRARY_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Forzato Arthur",
+		"speaker": "Arthur",
 		"portrait": "arthur",
-		"text": "Magnus, lihatlah sekelilingmu, penuh dengan buku ya!"
+		"text": "Magnus, lihat sekelilingmu... penuh dengan buku ya!"
 	},
 	{
-		"speaker": "Pensatore Magnus",
+		"speaker": "Magnus",
 		"portrait": "magnus",
-		"text": "Ya karena ini perpustakaan..."
+		"text": "Ya karena ini perpustakaan, Arthur..."
+	},
+	{
+		"speaker": "Anastasya",
+		"portrait": "anastasya",
+		"text": "Tempat ini luas sekali. Di mana peninggalan ibumu itu disimpan, Tuan Magnus?"
+	},
+	{
+		"speaker": "Magnus",
+		"portrait": "magnus",
+		"text": "Lihat deretan rak di tengah itu. Ada susunan buku kuno yang tidak beraturan. Buku-buku itu membentuk suatu kode sandi mantra keluarga kami."
 	}
 ]
+
+const CH1_SCENE_04B_GOLDEN_BOOK_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Magnus",
+		"portrait": "magnus",
+		"text": "Buku ini... langsung menyatu ke ingatanku. Sekarang aku menguasai sihir serang area berskala besar."
+	},
+	{
+		"speaker": "Arthur",
+		"portrait": "arthur",
+		"text": "Mantap. Sekarang kita punya senjata sihir cadangan."
+	}
+]
+
+const CH1_SCENE_04C_ALARM_BELL_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Anastasya",
+		"portrait": "anastasya",
+		"text": "Lonceng peringatan! Ada keributan di gerbang depan istana!"
+	},
+	{
+		"speaker": "Arthur",
+		"portrait": "arthur",
+		"text": "Ayo cepat ke sana!"
+	}
+]
+
+const CH1_LIBRARY_ENTER_DIALOGUE: Array[Dictionary] = CH1_SCENE_04A_LIBRARY_DIALOGUE
 
 # =========================================================
 # NASKAH DIALOG PUZZLE PERPUSTAKAAN BAWAH TANAH (CHAPTER 1.2)
@@ -403,8 +461,9 @@ const STORY_DIALOGUES: Dictionary = {
 	"FLK-011": CH1_FORGE_MAGNUS_REQUEST_DIALOGUE,
 	"ch1_forge_magnus": CH1_FORGE_MAGNUS_REQUEST_DIALOGUE,
 
-	"FLK-012": CH1_LIBRARY_ENTER_DIALOGUE,
-	"ch1_library_enter": CH1_LIBRARY_ENTER_DIALOGUE,
+	"FLK-012": CH1_SCENE_04A_LIBRARY_DIALOGUE,
+	"ch1_library_enter": CH1_SCENE_04A_LIBRARY_DIALOGUE,
+	"scene_04a": CH1_SCENE_04A_LIBRARY_DIALOGUE,
 
 	"FLK-013": CH1_LIBRARY_PUZZLE_DIALOGUE,
 	"ch1_library_puzzle": CH1_LIBRARY_PUZZLE_DIALOGUE,
@@ -412,8 +471,10 @@ const STORY_DIALOGUES: Dictionary = {
 	"FLK-014": CH1_LIBRARY_BOSS_PRE_FIGHT_DIALOGUE,
 	"ch1_library_boss": CH1_LIBRARY_BOSS_PRE_FIGHT_DIALOGUE,
 
-	"FLK-015": CH1_LIBRARY_GOLDEN_BOOK_DIALOGUE,
-	"ch1_library_golden_book": CH1_LIBRARY_GOLDEN_BOOK_DIALOGUE,
+	"FLK-015": CH1_SCENE_04B_GOLDEN_BOOK_DIALOGUE,
+	"ch1_library_golden_book": CH1_SCENE_04B_GOLDEN_BOOK_DIALOGUE,
+	"scene_04b": CH1_SCENE_04B_GOLDEN_BOOK_DIALOGUE,
+	"scene_04c": CH1_SCENE_04C_ALARM_BELL_DIALOGUE,
 
 	"FLK-017_GATE": CH1_GATE_INVASION_DIALOGUE,
 	"CH1-SC07": CH1_GATE_INVASION_DIALOGUE,
@@ -939,6 +1000,13 @@ func _unhandled_input(event: InputEvent) -> void:
 					get_viewport().set_input_as_handled()
 				return
 
+		# Shortcut debug testing: F7 untuk langsung menguji Cutscene Scene 4 (Perpustakaan)
+		if key_code == KEY_F7:
+			enter_secret_library()
+			if get_viewport():
+				get_viewport().set_input_as_handled()
+			return
+
 		if (arena_state == ArenaState.COMBAT or is_in_training_arena or is_in_arena_kamp or is_alaric_sparring_in_progress) and not is_party_fading_out:
 			if key_code == KEY_1 or (InputMap.has_action("skill_1") and event.is_action_pressed("skill_1")):
 				switch_to_character(0)
@@ -970,14 +1038,25 @@ func _unhandled_input(event: InputEvent) -> void:
 					return
 				var leader = get_active_leader()
 				if leader:
-					if not is_inside_castle_hall and not is_in_arena_kamp:
+					if not is_inside_castle_hall and not is_in_arena_kamp and not is_inside_secret_library:
 						if leader.global_position.distance_to(CASTLE_ENTRANCE_POS) <= 120.0:
 							enter_castle_hall()
 							get_viewport().set_input_as_handled()
 						elif leader.global_position.distance_to(ALARIC_CAMP_POS) <= 120.0 and not is_alaric_sparring_in_progress:
 							_start_alaric_pre_fight_dialogue()
 							get_viewport().set_input_as_handled()
-					else:
+						elif _is_near_library_entrance(leader.global_position):
+							enter_secret_library()
+							get_viewport().set_input_as_handled()
+					elif is_inside_secret_library:
+						if not is_on_library_floor_2:
+							if leader.global_position.distance_to(SECRET_LIBRARY_STAIR_POS) <= 120.0:
+								_go_to_library_floor_2()
+								get_viewport().set_input_as_handled()
+							elif leader.global_position.distance_to(SECRET_LIBRARY_EXIT_L1_POS) <= 120.0:
+								exit_secret_library()
+								get_viewport().set_input_as_handled()
+					elif is_inside_castle_hall:
 						if leader.global_position.distance_to(CASTLE_HALL_EXIT_POS) <= 100.0:
 							exit_castle_hall()
 							get_viewport().set_input_as_handled()
@@ -1213,6 +1292,7 @@ func _set_character_collision_active(char_node: CharacterBody2D, active: bool) -
 
 func update_party_visibility() -> void:
 	var in_arena_combat: bool = (arena_state == ArenaState.COMBAT or is_in_training_arena or is_in_arena_kamp or is_alaric_sparring_in_progress)
+	var show_all_library_cutscene: bool = (is_scene_4_in_progress and is_on_library_floor_2)
 	for i in range(party_members.size()):
 		var member = party_members[i]
 		if not is_instance_valid(member):
@@ -1223,7 +1303,7 @@ func update_party_visibility() -> void:
 		if not is_dead_char:
 			if i == active_leader_index:
 				is_active = true
-			elif in_arena_combat:
+			elif in_arena_combat or show_all_library_cutscene:
 				is_active = true
 
 		if is_active:
@@ -3120,6 +3200,9 @@ func _on_hud_dialogue_started(_dialogue_id: String) -> void:
 
 
 func _on_hud_dialogue_finished(_dialogue_id: String) -> void:
+	if is_scene_4_in_progress and is_on_library_floor_2:
+		set_party_movement_locked(true)
+		return
 	set_party_movement_locked(false)
 
 
@@ -3169,13 +3252,16 @@ func _show_story_prologue_intro_crawl(on_completed: Callable) -> void:
 		"Tepat di hari itu, sebuah panggilan tak terduga datang... membawa kabar buruk yang akan mengguncang seluruh kerajaan."
 	]
 
+	var sfx_click: AudioStream = preload("res://assets/audio/sfx/ui/book_tab_select.wav")
+	var sfx_finish: AudioStream = preload("res://assets/audio/sfx/ui/book_page_flip.wav")
+
 	var labels: Array[Label] = []
 	for p_text in paragraphs:
 		var lbl := Label.new()
 		lbl.text = p_text
 		if font:
 			lbl.add_theme_font_override("font", font)
-		lbl.add_theme_font_size_override("font_size", 17)
+		lbl.add_theme_font_size_override("font_size", 16)
 		lbl.add_theme_color_override("font_color", Color(0.92, 0.86, 0.72))
 		lbl.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.8))
 		lbl.add_theme_constant_override("shadow_offset_x", 1)
@@ -3192,8 +3278,8 @@ func _show_story_prologue_intro_crawl(on_completed: Callable) -> void:
 	hint_lbl.text = "[ Tekan Spasi / Klik untuk Lanjut ]"
 	if font:
 		hint_lbl.add_theme_font_override("font", font)
-	hint_lbl.add_theme_font_size_override("font_size", 14)
-	hint_lbl.add_theme_color_override("font_color", Color(0.72, 0.67, 0.55, 0.75))
+	hint_lbl.add_theme_font_size_override("font_size", 13)
+	hint_lbl.add_theme_color_override("font_color", Color(0.75, 0.70, 0.58, 0.8))
 	hint_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hint_lbl.modulate.a = 0.0
@@ -3266,48 +3352,59 @@ func _show_story_prologue_intro_crawl(on_completed: Callable) -> void:
 
 		return false
 
-	# Tampilkan kalimat satu per satu (teks muncul perlahan, spasi/klik mempercepat)
+	# Tampilkan kalimat bertumpuk satu per satu (tekan klik/spasi untuk langsung menyelesaikan 1 baris aktif)
 	for p_idx in range(labels.size()):
 		var lbl: Label = labels[p_idx]
 		var total_chars: int = lbl.text.length()
 		var current_chars: float = 0.0
 		var chars_per_sec: float = 40.0
+		var instant_cleared: bool = false
 
-		# Efek ketik berjalan
+		# Efek ketik berjalan pada baris aktif
 		while current_chars < total_chars:
 			var delta: float = get_process_delta_time()
 			current_chars += chars_per_sec * delta
 			lbl.visible_characters = int(current_chars)
 
 			if check_advance_pressed.call():
-				# Jika ditekan saat sedang mengetik -> langsung percepat dan tampilkan penuh kalimat ini
+				# Jika ditekan saat sedang mengetik -> langsung selesaikan 1 baris ini seketika
 				lbl.visible_characters = -1
+				instant_cleared = true
+				play_sfx(sfx_click, -3.5)
 				break
 
 			await get_tree().process_frame
 
 		lbl.visible_characters = -1
 
-		# Jeda membaca natural (1.6 detik) atau langsung lanjut jika pemain menekan Spasi/Klik
-		if p_idx < labels.size() - 1:
+		# Debounce input agar klik yang menyelesaikan baris aktif tidak sengaja melewati baris berikutnya
+		if instant_cleared:
+			await get_tree().create_timer(0.16).timeout
+			advance_pressed[0] = false
+			last_mouse_state[0] = true
+			last_key_state[0] = true
+		elif p_idx < labels.size() - 1:
+			# Jeda membaca natural jika tidak di-skip pemain (1.2s)
 			var read_timer: float = 0.0
-			var max_read_delay: float = 1.6
+			var max_read_delay: float = 1.2
 			while read_timer < max_read_delay:
 				if check_advance_pressed.call():
+					play_sfx(sfx_click, -3.5)
 					break
 				var dt: float = get_process_delta_time()
 				read_timer += dt
 				await get_tree().process_frame
 
-	# Semua kalimat selesai muncul -> aktifkan petunjuk lanjut berkedip
+	# Semua kalimat selesai muncul penuh di layar -> aktifkan petunjuk lanjut berkedip di bawah
 	hint_lbl.modulate.a = 1.0
 	var pulse_tween := create_tween().set_loops()
 	pulse_tween.tween_property(hint_lbl, "modulate:a", 0.35, 0.8).set_trans(Tween.TRANS_SINE)
 	pulse_tween.tween_property(hint_lbl, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
 
-	# Tunggu konfirmasi akhir klik/spasi dari pemain untuk mulai masuk ke gameplay
+	# Tunggu konfirmasi klik / spasi terakhir dari pemain untuk lanjut ke gameplay
 	while true:
 		if check_advance_pressed.call():
+			play_sfx(sfx_finish, -3.0)
 			break
 		await get_tree().process_frame
 
@@ -3851,6 +3948,359 @@ func _on_knight_room_dialogue_finished(fade_canvas: CanvasLayer, fade_rect: Colo
 
 
 # =========================================================
+# CHAPTER 1 - SCENE 4: PERPUSTAKAAN ISTANA & MANTRA TERSEGEL
+# =========================================================
+
+func setup_party_for_scene_4() -> void:
+	party_members.clear()
+	var needed: Array[String] = ["Knight_1", "Mage_1", "Archer_1"]
+	for n in needed:
+		var hero: CharacterBody2D = all_heroes.get(n)
+		if is_instance_valid(hero):
+			if not hero.is_inside_tree():
+				add_child(hero)
+			hero.visible = true
+			hero.modulate.a = 1.0
+			hero.is_dead = false
+			hero.current_health = hero.max_health if "max_health" in hero else 100
+			hero.set_physics_process(true)
+			hero.set_process_unhandled_input(true)
+			_set_character_collision_active(hero, true)
+			party_members.append(hero)
+
+	# Pastikan Bandit (Assassin) belum muncul sampai Scene 5
+	var bandit: CharacterBody2D = all_heroes.get("Bandit_1")
+	if is_instance_valid(bandit):
+		bandit.visible = false
+		bandit.set_physics_process(false)
+		bandit.set_process_unhandled_input(false)
+		_set_character_collision_active(bandit, false)
+		if bandit.is_inside_tree():
+			remove_child(bandit)
+
+	set_active_leader(0)
+	setup_party_enemy_collision_exceptions()
+	if gameplay_hud and gameplay_hud.has_method("update_party_order"):
+		gameplay_hud.update_party_order(party_members, active_leader_index)
+
+
+func start_story_scene_4() -> void:
+	if is_scene_4_in_progress:
+		return
+	is_scene_4_in_progress = true
+	is_inside_castle_hall = false
+	is_inside_secret_library = true
+	is_on_library_floor_2 = false
+	set_party_movement_locked(true)
+
+	if gameplay_hud and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt()
+
+	# 1. Konfigurasi 3 Hero: Arthur, Magnus, Anastasya
+	setup_party_for_scene_4()
+
+	# 2. Aktifkan Lantai 1 library, sembunyikan Lantai 2
+	var lib_node := get_node_or_null("SecretLibrary")
+	if is_instance_valid(lib_node):
+		var floor1 := lib_node.get_node_or_null("LibraryFloor1")
+		var floor2 := lib_node.get_node_or_null("LibraryFloor2")
+		if floor1: floor1.visible = true
+		if floor2: floor2.visible = false
+
+	# 3. Update camera limits ke perpustakaan SEBELUM teleport
+	update_camera_limits_for_location("library")
+
+	# 4. Posisikan hero di Lantai 1 (dekat pintu masuk)
+	var arthur: CharacterBody2D = all_heroes.get("Knight_1")
+	var magnus: CharacterBody2D = all_heroes.get("Mage_1")
+	var anastasya: CharacterBody2D = all_heroes.get("Archer_1")
+
+	if is_instance_valid(arthur):
+		arthur.global_position = SECRET_LIBRARY_L1_SPAWN
+		if "last_direction" in arthur:
+			arthur.last_direction = Vector2.UP
+		if arthur.has_method("play_idle_animation"):
+			arthur.play_idle_animation()
+
+	if is_instance_valid(magnus):
+		magnus.global_position = Vector2(SECRET_LIBRARY_L1_SPAWN.x - 70.0, SECRET_LIBRARY_L1_SPAWN.y + 15.0)
+		if "last_direction" in magnus:
+			magnus.last_direction = Vector2.UP
+		if magnus.has_method("play_idle_animation"):
+			magnus.play_idle_animation()
+
+	if is_instance_valid(anastasya):
+		anastasya.global_position = Vector2(SECRET_LIBRARY_L1_SPAWN.x + 70.0, SECRET_LIBRARY_L1_SPAWN.y + 15.0)
+		if "last_direction" in anastasya:
+			anastasya.last_direction = Vector2.UP
+		if anastasya.has_method("play_idle_animation"):
+			anastasya.play_idle_animation()
+
+	# 5. Kunci kamera ke Lantai 1 (force teleport)
+	if is_instance_valid(camera):
+		camera.global_position = SECRET_LIBRARY_L1_SPAWN
+		if camera.has_method("reset_smoothing"):
+			camera.reset_smoothing()
+		if camera.has_method("force_update_scroll"):
+			camera.force_update_scroll()
+
+	print("[Story] Scene 4: Memasuki Perpustakaan Lantai 1 — menuju tangga.")
+
+	# 6. Buka kontrol agar pemain berjalan ke tangga lalu interact [E]
+	_show_library_stair_prompt()
+
+
+func _show_library_stair_prompt() -> void:
+	# Buka gerakan agar pemain bisa jalan ke tangga dan tekan [E]
+	set_party_movement_locked(false)
+	print("[Story] Scene 4: Silakan berjalan ke tangga kiri dan tekan [E].")
+
+
+func _pose_scene_4_heroes_looking_at_bookshelf() -> void:
+	var arthur: CharacterBody2D = all_heroes.get("Knight_1")
+	var magnus: CharacterBody2D = all_heroes.get("Mage_1")
+	var anastasya: CharacterBody2D = all_heroes.get("Archer_1")
+
+	var hero_poses: Array[Dictionary] = [
+		{"node": magnus, "pos": Vector2(SECRET_LIBRARY_L2_SPAWN.x - 65.0, SECRET_LIBRARY_L2_SPAWN.y + 10.0)},
+		{"node": arthur, "pos": SECRET_LIBRARY_L2_SPAWN},
+		{"node": anastasya, "pos": Vector2(SECRET_LIBRARY_L2_SPAWN.x + 65.0, SECRET_LIBRARY_L2_SPAWN.y + 10.0)},
+	]
+
+	for entry in hero_poses:
+		var hero: CharacterBody2D = entry["node"]
+		if not is_instance_valid(hero):
+			continue
+		if not hero.is_inside_tree():
+			add_child(hero)
+		hero.visible = true
+		hero.modulate = Color.WHITE
+		hero.global_position = entry["pos"]
+		if "velocity" in hero:
+			hero.velocity = Vector2.ZERO
+		if "last_direction" in hero:
+			hero.last_direction = Vector2.UP
+		hero.set("is_movement_locked", true)
+		if hero.has_method("play_idle_animation"):
+			hero.play_idle_animation()
+
+
+func _go_to_library_floor_2() -> void:
+	if is_on_library_floor_2 or is_transitioning:
+		return
+	set_party_movement_locked(true)
+
+	if gameplay_hud and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
+
+	var on_midpoint := func() -> void:
+		is_on_library_floor_2 = true
+
+		# Tukar lantai: sembunyikan L1, tampilkan L2
+		var lib_node := get_node_or_null("SecretLibrary")
+		if is_instance_valid(lib_node):
+			var floor1 := lib_node.get_node_or_null("LibraryFloor1")
+			var floor2 := lib_node.get_node_or_null("LibraryFloor2")
+			if floor1: floor1.visible = false
+			if floor2: floor2.visible = true
+
+		# Pastikan ketiga hero muncul & berdiri menghadap utara (melihat rak buku)
+		update_party_visibility()
+		_pose_scene_4_heroes_looking_at_bookshelf()
+
+		# Fokuskan kamera ke Lantai 2
+		update_camera_limits_for_location("library")
+		if is_instance_valid(camera):
+			camera.global_position = SECRET_LIBRARY_L2_SPAWN
+			if camera.has_method("reset_smoothing"):
+				camera.reset_smoothing()
+			if camera.has_method("force_update_scroll"):
+				camera.force_update_scroll()
+
+	var on_completed := func() -> void:
+		# Kunci gerak dan pastikan ketiga karakter tetap berdiri menghadap utara
+		set_party_movement_locked(true)
+		_pose_scene_4_heroes_looking_at_bookshelf()
+		print("[Story] Scene 4: Tiba di Lantai 2 — 3 karakter melihat rak buku, mulai Dialog 4A.")
+
+		# Mulai dialog 4A -> Puzzle layar hitam -> Klaim Skill + Dialog 4B -> Lonceng + Dialog 4C
+		play_story_dialogue("scene_04a", func():
+			_play_scene_4_puzzle_black_screen(func():
+				_play_scene_4_claim_skill_and_bell()
+			)
+		)
+
+	# Transisi fade hitam dari tangga Lantai 1 ke cutscene Lantai 2
+	play_black_fade_transition(on_midpoint, on_completed)
+
+
+func _play_scene_4_puzzle_black_screen(on_done: Callable) -> void:
+	var canvas := CanvasLayer.new()
+	canvas.name = "Scene4PuzzleCrawl"
+	canvas.layer = 125
+
+	var bg := ColorRect.new()
+	bg.color = Color(0.04, 0.04, 0.05, 0.0)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	canvas.add_child(bg)
+
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	canvas.add_child(center)
+
+	var vbox := VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 18)
+	vbox.modulate.a = 0.0
+	center.add_child(vbox)
+
+	var title_lbl := Label.new()
+	title_lbl.text = "— MANTRA WARISAN KELUARGA —"
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_lbl.add_theme_font_size_override("font_size", 18)
+	title_lbl.add_theme_color_override("font_color", Color(0.95, 0.85, 0.45))
+	vbox.add_child(title_lbl)
+
+	var desc_lbl := Label.new()
+	desc_lbl.text = "Arthur, Magnus, dan Anastasya menelusuri deretan rak buku kuno...\nBuku-buku bergeser ke susunan yang tepat.\n\nSegel mantra keluarga Magnus berhasil dipecahkan!"
+	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc_lbl.add_theme_font_size_override("font_size", 15)
+	desc_lbl.add_theme_color_override("font_color", Color(0.92, 0.92, 0.95))
+	vbox.add_child(desc_lbl)
+
+	var prompt_lbl := Label.new()
+	prompt_lbl.text = "[ Tekan Spasi / Klik untuk Lanjut ]"
+	prompt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	prompt_lbl.add_theme_font_size_override("font_size", 12)
+	prompt_lbl.add_theme_color_override("font_color", Color(0.65, 0.65, 0.70))
+	vbox.add_child(prompt_lbl)
+
+	add_child(canvas)
+
+	var tw_in := create_tween()
+	tw_in.tween_property(bg, "color:a", 1.0, 0.45)
+	tw_in.parallel().tween_property(vbox, "modulate:a", 1.0, 0.55)
+
+	var is_closed: Array[bool] = [false]
+	var advance_crawl: Callable
+	advance_crawl = func():
+		if is_closed[0]:
+			return
+		is_closed[0] = true
+		play_sfx(preload("res://assets/audio/sfx/ui/ui_click.wav"), -3.0)
+		var tw_out := create_tween()
+		tw_out.tween_property(bg, "color:a", 0.0, 0.4)
+		tw_out.parallel().tween_property(vbox, "modulate:a", 0.0, 0.3)
+		tw_out.tween_callback(func():
+			if is_instance_valid(canvas):
+				canvas.queue_free()
+			if on_done.is_valid():
+				on_done.call()
+		)
+
+	bg.gui_input.connect(func(ev: InputEvent):
+		if (ev is InputEventMouseButton and ev.pressed) or (ev is InputEventScreenTouch and ev.pressed):
+			advance_crawl.call()
+	)
+
+	var auto_timer := Timer.new()
+	auto_timer.wait_time = 3.5
+	auto_timer.one_shot = true
+	auto_timer.autostart = true
+	canvas.add_child(auto_timer)
+	auto_timer.timeout.connect(func():
+		advance_crawl.call()
+	)
+
+
+func _play_scene_4_claim_skill_and_bell() -> void:
+	var magnus: CharacterBody2D = all_heroes.get("Mage_1")
+	# Efek visual pendar emas saat Magnus menyerap ilmu Kitab Emas
+	if is_instance_valid(magnus):
+		var anim_sprite = magnus.get_node_or_null("AnimatedSprite2D")
+		if is_instance_valid(anim_sprite):
+			var tw_glow := create_tween()
+			tw_glow.tween_property(anim_sprite, "modulate", Color(2.5, 2.2, 0.5, 1.0), 0.3)
+			tw_glow.tween_property(anim_sprite, "modulate", Color.WHITE, 0.4)
+
+	# Buka skill Meteor Strike pada Magnus
+	if is_instance_valid(magnus) and "is_skill_unlocked" in magnus:
+		magnus.is_skill_unlocked = true
+
+	# Tampilkan notifikasi pencapaian / unlock skill
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_quest_banner"):
+		gameplay_hud.show_quest_banner("SKILL BARU DIBUKA!", "Magnus menyerap Kitab Emas: Meteor Strike!")
+
+	# Dialog 4B: Magnus & Arthur
+	play_story_dialogue("scene_04b", func():
+		# Mainkan dentang lonceng darurat 3 kali
+		_play_emergency_bell_sequence(func():
+			# Dialog 4C: Anastasya & Arthur
+			play_story_dialogue("scene_04c", func():
+				_complete_story_scene_4()
+			)
+		)
+	)
+
+
+func _play_emergency_bell_sequence(on_finished: Callable) -> void:
+	var sfx_bell: AudioStream = preload("res://assets/audio/sfx/ui/start_sword_raise.wav")
+	var sfx_alert: AudioStream = preload("res://assets/audio/sfx/enemy/enemy_alert.wav")
+
+	apply_camera_shake(5.0)
+	play_sfx(sfx_bell, 2.0)
+	play_sfx(sfx_alert, -1.0)
+
+	get_tree().create_timer(0.65).timeout.connect(func():
+		apply_camera_shake(6.0)
+		play_sfx(sfx_bell, 3.0)
+		get_tree().create_timer(0.65).timeout.connect(func():
+			apply_camera_shake(7.0)
+			play_sfx(sfx_bell, 4.0)
+			if on_finished.is_valid():
+				on_finished.call()
+		, CONNECT_ONE_SHOT)
+	, CONNECT_ONE_SHOT)
+
+
+func _complete_story_scene_4() -> void:
+	var on_midpoint := func() -> void:
+		is_scene_4_in_progress = false
+		is_scene_4_completed = true
+		is_inside_secret_library = false
+		is_on_library_floor_2 = false
+		is_inside_castle_hall = false
+		var spawn_pos := LIBRARY_ENTRANCE_POS + Vector2(0.0, 30.0)
+		for i in range(party_members.size()):
+			var member = party_members[i]
+			if is_instance_valid(member):
+				member.global_position = spawn_pos + Vector2(i * 30.0 - 30.0, 0.0)
+				member.velocity = Vector2.ZERO
+				if "last_direction" in member:
+					member.last_direction = Vector2.DOWN
+				if member.has_method("play_idle_animation"):
+					member.play_idle_animation()
+		update_party_visibility()
+		update_camera_limits_for_location("outdoor")
+		if is_instance_valid(camera):
+			camera.global_position = spawn_pos
+			camera.reset_smoothing()
+			if camera.has_method("force_update_scroll"):
+				camera.force_update_scroll()
+
+	var on_completed := func() -> void:
+		set_party_movement_locked(false)
+		print("[Story] Scene 4: Perpustakaan Istana selesai! Lonceng berbunyi, bersiap menuju Scene 5 (Gerbang).")
+		tracked_quest_id = "main_08"
+		if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("set_quest_navigation"):
+			gameplay_hud.set_quest_navigation(CASTLE_ENTRANCE_POS, "Gerbang Depan Istana")
+
+	play_black_fade_transition(on_midpoint, on_completed)
+
+
+# =========================================================
 # PELATIH ALARIC & SISTEM SPARRING CAMP LATIHAN (FLK-007 & FLK-008)
 # =========================================================
 
@@ -4371,80 +4821,51 @@ func _teleport_to_arena_kamp_and_fight() -> void:
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 		gameplay_hud.hide_interact_prompt(true)
 
-	if selected_game_mode != "open_world":
-		# Mode Cerita: Hanya Knight_1 (Arthur) yang berduel melawan Pelatih Alaric di arena!
-		var knight_hero: CharacterBody2D = all_heroes.get("Knight_1")
-		party_members.clear()
-		if is_instance_valid(knight_hero):
-			if not knight_hero.is_inside_tree():
-				add_child(knight_hero)
-			party_members.append(knight_hero)
-			knight_hero.visible = true
-			knight_hero.modulate.a = 1.0
-			knight_hero.is_dead = false
-			if "current_health" in knight_hero and "max_health" in knight_hero and knight_hero.current_health <= 0:
-				knight_hero.current_health = knight_hero.max_health
-			knight_hero.set_physics_process(true)
-			knight_hero.set_process_unhandled_input(true)
-			_set_character_collision_active(knight_hero, true)
-			if knight_hero.has_method("set_as_leader"):
-				knight_hero.set_as_leader(true, null, 0)
-		active_leader_index = 0
+	# Mode Cerita & Mode Jelajah: Hanya Knight_1 (Arthur) yang berduel melawan Pelatih Alaric di arena!
+	var knight_hero: CharacterBody2D = all_heroes.get("Knight_1")
+	party_members.clear()
+	if is_instance_valid(knight_hero):
+		if not knight_hero.is_inside_tree():
+			add_child(knight_hero)
+		party_members.append(knight_hero)
+		knight_hero.visible = true
+		knight_hero.modulate.a = 1.0
+		knight_hero.is_dead = false
+		if "current_health" in knight_hero and "max_health" in knight_hero and knight_hero.current_health <= 0:
+			knight_hero.current_health = knight_hero.max_health
+		knight_hero.set_physics_process(true)
+		knight_hero.set_process_unhandled_input(true)
+		_set_character_collision_active(knight_hero, true)
+		if knight_hero.has_method("set_as_leader"):
+			knight_hero.set_as_leader(true, null, 0)
+	active_leader_index = 0
 
-		# Keluarkan karakter lain dari arena dan scene tree
-		var other_hero_names: Array[String] = ["Bandit_1", "Archer_1", "Mage_1"]
-		for oh_name in other_hero_names:
-			var oh: CharacterBody2D = all_heroes.get(oh_name)
-			if is_instance_valid(oh):
-				oh.visible = false
-				oh.set_physics_process(false)
-				oh.set_process_unhandled_input(false)
-				_set_character_collision_active(oh, false)
-				if oh.is_inside_tree():
-					remove_child(oh)
+	# Keluarkan karakter lain dari arena dan scene tree agar tidak ikut bertarung
+	var other_hero_names: Array[String] = ["Bandit_1", "Archer_1", "Mage_1"]
+	for oh_name in other_hero_names:
+		var oh: CharacterBody2D = all_heroes.get(oh_name)
+		if is_instance_valid(oh):
+			if oh.has_method("set_as_leader"):
+				oh.set_as_leader(false, knight_hero, 1)
+			if oh.has_method("set_party_combat_mode"):
+				oh.set_party_combat_mode(false)
+			oh.visible = false
+			oh.set_physics_process(false)
+			oh.set_process_unhandled_input(false)
+			_set_character_collision_active(oh, false)
+			if oh.is_inside_tree():
+				remove_child(oh)
 
-		if is_instance_valid(gameplay_hud):
-			if gameplay_hud.has_method("update_party_order"):
-				gameplay_hud.update_party_order(party_members, 0)
-			elif gameplay_hud.has_method("update_party_hud"):
-				gameplay_hud.party_members = party_members
-				gameplay_hud.update_party_hud()
-				if gameplay_hud.has_method("update_leader_indicator"):
-					gameplay_hud.update_leader_indicator()
-	else:
-		# Mode Jelajah: Pastikan seluruh 4 hero siap di SceneTree dan terdaftar di party
-		var hero_names: Array[String] = ["Knight_1", "Bandit_1", "Archer_1", "Mage_1"]
-		for h_name in hero_names:
-			var hero: CharacterBody2D = all_heroes.get(h_name)
-			if is_instance_valid(hero):
-				if not hero.is_inside_tree():
-					add_child(hero)
-				if hero not in party_members:
-					party_members.append(hero)
-				hero.visible = true
-				hero.modulate.a = 1.0
-				hero.is_dead = false
-				if "current_health" in hero and "max_health" in hero and hero.current_health <= 0:
-					hero.current_health = hero.max_health
-				hero.set_physics_process(true)
-				hero.set_process_unhandled_input(true)
-				_set_character_collision_active(hero, true)
+	setup_party_enemy_collision_exceptions.call_deferred()
 
-		for i in range(party_members.size()):
-			for j in range(i + 1, party_members.size()):
-				party_members[i].add_collision_exception_with(party_members[j])
-				party_members[j].add_collision_exception_with(party_members[i])
-
-		setup_party_enemy_collision_exceptions.call_deferred()
-
-		if is_instance_valid(gameplay_hud):
-			if gameplay_hud.has_method("update_party_order"):
-				gameplay_hud.update_party_order(party_members, active_leader_index)
-			elif gameplay_hud.has_method("update_party_hud"):
-				gameplay_hud.party_members = party_members
-				gameplay_hud.update_party_hud()
-				if gameplay_hud.has_method("update_leader_indicator"):
-					gameplay_hud.update_leader_indicator()
+	if is_instance_valid(gameplay_hud):
+		if gameplay_hud.has_method("update_party_order"):
+			gameplay_hud.update_party_order(party_members, 0)
+		elif gameplay_hud.has_method("update_party_hud"):
+			gameplay_hud.party_members = party_members
+			gameplay_hud.update_party_hud()
+			if gameplay_hud.has_method("update_leader_indicator"):
+				gameplay_hud.update_leader_indicator()
 
 	play_black_fade_transition(
 		func():
@@ -4607,6 +5028,34 @@ func _teleport_back_to_training_camp() -> void:
 	play_black_fade_transition(
 		func():
 			is_in_arena_kamp = false
+			if selected_game_mode == "open_world":
+				# Mode Jelajah: Kembalikan seluruh 4 anggota party setelah duel solo Knight selesai
+				var all_hero_names: Array[String] = ["Knight_1", "Bandit_1", "Archer_1", "Mage_1"]
+				for h_name in all_hero_names:
+					var hero: CharacterBody2D = all_heroes.get(h_name)
+					if is_instance_valid(hero):
+						if hero not in party_members:
+							party_members.append(hero)
+						hero.modulate.a = 1.0
+						hero.is_dead = false
+						if "current_health" in hero and "max_health" in hero and hero.current_health <= 0:
+							hero.current_health = hero.max_health
+						if hero.has_method("reset_combat_skills"):
+							hero.reset_combat_skills()
+				for i in range(party_members.size()):
+					for j in range(i + 1, party_members.size()):
+						party_members[i].add_collision_exception_with(party_members[j])
+						party_members[j].add_collision_exception_with(party_members[i])
+				setup_party_enemy_collision_exceptions.call_deferred()
+				if is_instance_valid(gameplay_hud):
+					if gameplay_hud.has_method("update_party_order"):
+						gameplay_hud.update_party_order(party_members, active_leader_index)
+					elif gameplay_hud.has_method("update_party_hud"):
+						gameplay_hud.party_members = party_members
+						gameplay_hud.update_party_hud()
+						if gameplay_hud.has_method("update_leader_indicator"):
+							gameplay_hud.update_leader_indicator()
+
 			for i in range(party_members.size()):
 				var member: CharacterBody2D = party_members[i]
 				if is_instance_valid(member):
@@ -4646,6 +5095,7 @@ func _teleport_back_to_training_camp() -> void:
 					_set_character_collision_active(leader, true)
 					leader.set_physics_process(true)
 					leader.set_process_unhandled_input(true)
+				update_party_visibility()
 			else:
 				set_party_movement_locked(true)
 				play_story_dialogue("FLK-008", func():
@@ -5314,7 +5764,7 @@ func check_castle_interactions(delta: float) -> void:
 	update_nav_compass(delta)
 
 	# Cek kedekatan interaksi pintu masuk / keluar & NPC Pelatih Alaric
-	if not is_inside_castle_hall and not is_in_arena_kamp:
+	if not is_inside_castle_hall and not is_in_arena_kamp and not is_inside_secret_library:
 		if get_tree().paused or (is_instance_valid(gameplay_hud) and gameplay_hud.has_method("is_any_menu_open") and gameplay_hud.is_any_menu_open()) or is_instance_valid(_alaric_boss_prompt_layer):
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 				gameplay_hud.hide_interact_prompt(true)
@@ -5329,10 +5779,34 @@ func check_castle_interactions(delta: float) -> void:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
 				var prompt_title := "Tantang Pelatih Alaric" if selected_game_mode == "open_world" else "Bicara dengan Pelatih Alaric"
 				gameplay_hud.show_interact_prompt(prompt_title, "E", "talk_alaric")
+		elif _is_near_library_entrance(leader.global_position):
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
+				gameplay_hud.show_interact_prompt("Masuk ke Perpustakaan", "E", "enter_library")
 		else:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 				gameplay_hud.hide_interact_prompt()
-	else:
+	elif is_inside_secret_library:
+		if get_tree().paused or (is_instance_valid(gameplay_hud) and gameplay_hud.has_method("is_any_menu_open") and gameplay_hud.is_any_menu_open()):
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+				gameplay_hud.hide_interact_prompt(true)
+			return
+
+		if not is_on_library_floor_2:
+			var dist_stair := leader.global_position.distance_to(SECRET_LIBRARY_STAIR_POS)
+			var dist_exit := leader.global_position.distance_to(SECRET_LIBRARY_EXIT_L1_POS)
+			if dist_stair <= 110.0:
+				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
+					gameplay_hud.show_interact_prompt("Naik ke Lantai 2", "E", "go_library_floor2")
+			elif dist_exit <= 110.0:
+				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
+					gameplay_hud.show_interact_prompt("Keluar ke Kota", "E", "exit_library")
+			else:
+				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+					gameplay_hud.hide_interact_prompt()
+		else:
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+				gameplay_hud.hide_interact_prompt()
+	elif is_inside_castle_hall:
 		if get_tree().paused or (is_instance_valid(gameplay_hud) and gameplay_hud.has_method("is_any_menu_open") and gameplay_hud.is_any_menu_open()) or is_instance_valid(_alaric_boss_prompt_layer):
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 				gameplay_hud.hide_interact_prompt(true)
@@ -5356,6 +5830,12 @@ func update_camera_limits_for_location(location: String) -> void:
 		camera.limit_right = 2533 + 520
 		camera.limit_top = -1500 - 520
 		camera.limit_bottom = -1500 + 520
+	elif location == "library":
+		# Perpustakaan Rahasia (Center Vector2(4300, -1500), ukuran 1045x880)
+		camera.limit_left = 4300 - 560
+		camera.limit_right = 4300 + 560
+		camera.limit_top = -1500 - 480
+		camera.limit_bottom = -1500 + 480
 	elif location == "arena_kamp":
 		# Arena Kamp Pelatihan (Node Vector2(7000, -2000), ukuran 2530x1180)
 		camera.limit_left = 7000
@@ -5387,6 +5867,82 @@ func _on_hud_interaction_pressed(action_type: String) -> void:
 		start_castle_meeting_cutscene()
 	elif action_type == "talk_alaric" or action_type == "Bicara dengan Pelatih Alaric":
 		_start_alaric_pre_fight_dialogue()
+	elif action_type == "go_library_floor2" or action_type == "Naik ke Lantai 2":
+		_go_to_library_floor_2()
+	elif action_type == "enter_library" or action_type == "Masuk ke Perpustakaan":
+		enter_secret_library()
+	elif action_type == "exit_library" or action_type == "Keluar ke Kota":
+		exit_secret_library()
+
+
+func enter_secret_library() -> void:
+	if is_transitioning:
+		return
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
+
+	var on_midpoint := func() -> void:
+		if not is_scene_4_in_progress and not is_scene_4_completed:
+			start_story_scene_4()
+		else:
+			is_inside_secret_library = true
+			is_inside_castle_hall = false
+			is_on_library_floor_2 = false
+			var lib_node := get_node_or_null("SecretLibrary")
+			if is_instance_valid(lib_node):
+				var floor1 := lib_node.get_node_or_null("LibraryFloor1")
+				var floor2 := lib_node.get_node_or_null("LibraryFloor2")
+				if floor1: floor1.visible = true
+				if floor2: floor2.visible = false
+			update_camera_limits_for_location("library")
+			for i in range(party_members.size()):
+				var p = party_members[i]
+				if is_instance_valid(p):
+					p.global_position = SECRET_LIBRARY_L1_SPAWN + Vector2(i * 35.0 - 35.0, 0.0)
+					p.velocity = Vector2.ZERO
+					if "last_direction" in p:
+						p.last_direction = Vector2.UP
+					if p.has_method("play_idle_animation"):
+						p.play_idle_animation()
+			if is_instance_valid(camera):
+				camera.global_position = SECRET_LIBRARY_L1_SPAWN
+				camera.reset_smoothing()
+				if camera.has_method("force_update_scroll"):
+					camera.force_update_scroll()
+
+	play_black_fade_transition(on_midpoint)
+
+
+func exit_secret_library() -> void:
+	if is_transitioning:
+		return
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
+
+	var on_midpoint := func() -> void:
+		is_inside_secret_library = false
+		is_on_library_floor_2 = false
+		is_inside_castle_hall = false
+
+		var spawn_pos := LIBRARY_ENTRANCE_POS + Vector2(0.0, 30.0)
+		for i in range(party_members.size()):
+			var member = party_members[i]
+			if is_instance_valid(member):
+				member.global_position = spawn_pos + Vector2(i * 30.0 - 30.0, 0.0)
+				member.velocity = Vector2.ZERO
+				if "last_direction" in member:
+					member.last_direction = Vector2.DOWN
+				if member.has_method("play_idle_animation"):
+					member.play_idle_animation()
+
+		update_camera_limits_for_location("outdoor")
+		if is_instance_valid(camera):
+			camera.global_position = spawn_pos
+			camera.reset_smoothing()
+			if camera.has_method("force_update_scroll"):
+				camera.force_update_scroll()
+
+	play_black_fade_transition(on_midpoint)
 
 
 func enter_castle_hall() -> void:
