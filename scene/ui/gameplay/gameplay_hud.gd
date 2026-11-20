@@ -1439,394 +1439,83 @@ func _build_trash_icon_texture(color: Color) -> ImageTexture:
 	return _build_pixel_texture(13, 13, pattern, {"#": color})
 
 
-const INVENTORY_ITEM_PALETTE: Dictionary = {
-	"k": Color8(32, 18, 22, 255),
-	"w": Color8(255, 250, 238, 255),
-	"c": Color8(244, 219, 176, 255),
-	"C": Color8(212, 174, 126, 255),
-	"b": Color8(176, 108, 62, 255),
-	"B": Color8(122, 68, 42, 255),
-	"r": Color8(235, 58, 68, 255),
-	"R": Color8(166, 28, 44, 255),
-	"p": Color8(255, 148, 166, 255),
-	"o": Color8(242, 142, 48, 255),
-	"O": Color8(196, 86, 28, 255),
-	"y": Color8(252, 218, 68, 255),
-	"Y": Color8(214, 152, 34, 255),
-	"g": Color8(96, 210, 82, 255),
-	"G": Color8(46, 142, 62, 255),
-	"a": Color8(102, 220, 245, 255),
-	"A": Color8(46, 146, 206, 255),
-	"v": Color8(184, 92, 242, 255),
-	"V": Color8(118, 46, 172, 255),
-	"s": Color8(210, 222, 232, 255),
-	"S": Color8(132, 146, 164, 255),
-	"D": Color8(82, 92, 108, 255),
-	"t": Color8(186, 198, 210, 255)
-}
+const INVENTORY_ITEMS_SHEET_TEX: Texture2D = preload("res://assets/ui/icons/items/items_sheets.png")
+const INVENTORY_BOOKS_SHEET_TEX: Texture2D = preload("res://assets/ui/menus/inventory/books.png")
+const INVENTORY_CONSUMABLES_SHEET_TEX: Texture2D = preload("res://assets/ui/menus/inventory/consumables.png")
 
-const INVENTORY_ITEM_PATTERNS: Dictionary = {
-	"potion_hp": [
-		"......kkkk......",
-		"......kbbk......",
-		"......kBBk......",
-		".....kssssk.....",
-		"......kssk......",
-		".....ksttsk.....",
-		"....kskrrksk....",
-		"...ksprrrrksk...",
-		"...kprrrrrrrk...",
-		"..kskrrrrrrrrk..",
-		"..ksrRRRRRRRRk..",
-		"..krrrrrrrrRRk..",
-		"...krRRRRRRRk...",
-		"....kRRRRRRk....",
-		".....kkkkkk.....",
-		"................"
-	],
-	"apple": [
-		"........kkk.....",
-		".......kggk.....",
-		"......kbkGk.....",
-		".....k.k.k......",
-		"...kkkbbkkk.....",
-		"..krrrkrrrrk....",
-		".krwwrrrrrrrrk..",
-		".krwrrrrrrrrrk..",
-		".krrrrrrrrrrRk..",
-		".krrrrrrrrrRRk..",
-		".krRRRRRRRRRRk..",
-		"..kRRRRRRRRRk...",
-		"..kRRRRRRRRRk...",
-		"...kRRRkkRRk....",
-		"....kkk..kkk....",
-		"................"
-	],
-	"bread": [
-		"................",
-		".....kkkkkk.....",
-		"...kkyyyyyykk...",
-		"..kyyOyyyyOyyk..",
-		".kyyOyOyyOyOyyk.",
-		".kyyOyyyyyyyyyk.",
-		"kyyCyyyyOyyyyyOk",
-		"kyyCCCCyyOyyyOOk",
-		"kOCCCCCCCCCCCCOk",
-		"kOOOOOOOOOOOOOOk",
-		".kBBBBBBBBBBBBk.",
-		"..kkkkkkkkkkkk..",
-		"................",
-		"................",
-		"................",
-		"................"
-	],
-	"meat": [
-		"...........kkk..",
-		"..........kcwck.",
-		"....kkkk..kccck.",
-		"..kkbOOOk.kcck..",
-		".kbbwOOOOkkkck..",
-		"kbbOOrOOOOOOk...",
-		"kbOOrccrrOOOk...",
-		"kBOOrcrrROOOOk..",
-		"kBBOOrRRRROOBk..",
-		"kBBBOOOOOOBBBk..",
-		".kBBBBBBBBBBk...",
-		"..kkkkkkkkkk....",
-		"................",
-		"................",
-		"................",
-		"................"
-	],
-	"holy_water": [
-		"......kkkk......",
-		"......kyyk......",
-		".....kyYYyk.....",
-		"......kssk......",
-		".....ksttsk.....",
-		"....kswaaask....",
-		"...kssaaaaask...",
-		"..kssaawwaaaak..",
-		"..ksaaayyaaaAk..",
-		"..ksaaywwyaAAk..",
-		"..ksaaayyaAAAk..",
-		"..ksaAAAAAAaAk..",
-		"...kAAAAAAAAk...",
-		"....kAAAAAAk....",
-		".....kkkkkk.....",
-		"................"
-	],
-	"herb": [
-		"......kkk.......",
-		".....kgggk......",
-		"....kgwgwgk.....",
-		"....kggGggk.kkk.",
-		".kkk.kggGk.kgggk",
-		"kgggk.kGk.kgwggk",
-		"kgwgGk.kk.kgGggk",
-		".kgGGgkGkkgGGgk.",
-		"..kGGkgggkGGGk..",
-		"...kkkGGgkkkk...",
-		".....kGGk.......",
-		".....kGgk.......",
-		"......kGk.......",
-		"......kbk.......",
-		".......kk.......",
-		"................"
-	],
-	"honey": [
-		".....kkkkkk.....",
-		"....kbbbbbBk....",
-		"....kkkkkkkk....",
-		"...kyyyyyyyyk...",
-		"..kywyyyyyyyyk..",
-		"..kyyykyyykyyk..",
-		"..kyykkbbbkyyk..",
-		"..kbbboooobbbk..",
-		"..kbbowwwoBBbk..",
-		"..kbbbooooBBbk..",
-		"..kBBbBBBBBBbk..",
-		"...kBBBBBBBBk...",
-		"....kBBBBBBk....",
-		".....kkkkkk.....",
-		"................",
-		"................"
-	],
-	"cheese": [
-		"........kkk.....",
-		"......kkyyykk...",
-		"....kkywyyyyyk..",
-		"..kkyyyYYyyyyyk.",
-		".kyyyyyYYyyyyYYk",
-		"kyyyYYyyyyyyyyYk",
-		"kYYYYYYYYYYYYYYk",
-		"kyyyyYYyyyyYYyyk",
-		"kyyYYyyyyyyyyyyk",
-		"kyyyyyYYyyyYYyyk",
-		"kyyyYYYYyyyyyyyk",
-		"kYYYYYYYYYYYYYYk",
-		".kkkkkkkkkkkkkk.",
-		"................",
-		"................",
-		"................"
-	],
-	"soup": [
-		"....t......w....",
-		".....w....t.....",
-		"....w......w....",
-		"..kkkkkkkkkkkk..",
-		".ksooooorrroosk.",
-		"ksoowyyrrrrroyok",
-		"ksoyoyyrrwryoYYk",
-		".ksoooooooooook.",
-		"kbbbbbbbbbbbbbbk",
-		"kbCCCCCCCCCCCCBk",
-		".kbBBBBBBBBBBBk.",
-		"..kBBBBBBBBBBk..",
-		"...kkkkkkkkkk...",
-		"................",
-		"................",
-		"................"
-	],
-	"big_potion": [
-		".....kkkkkk.....",
-		".....kbbbbk.....",
-		".....kyYYyk.....",
-		"....kssssssk....",
-		".....kssssk.....",
-		"....ksttttsk....",
-		"...kssppppppk...",
-		"..kskprrrrrrrk..",
-		".ksprrrrrrprrrk.",
-		".kswrrrrrrrrRRk.",
-		".ksprrrrrrrrrRk.",
-		".krrRRRRRRRRRRk.",
-		"..krRRRRRRRRRk..",
-		"...kRRRRRRRRk...",
-		"....kkkkkkkk....",
-		"................"
-	],
-	"berry": [
-		".......kkk......",
-		".....kkgggkk....",
-		"....kgwgkggGk...",
-		"...kkkGkkkGGk...",
-		"..kvvvk.kvvvkk..",
-		".kvwvvk.kvwvvvk.",
-		".kvvvvkvvwvvvvvk",
-		".kvVVVvvvvVVVvk.",
-		"..kVkkvvvvvVVk..",
-		"...kvvwvvvvVVk..",
-		"...kvvvvvvvVk...",
-		"....kVVVVVVVk...",
-		".....kVVVVVk....",
-		"......kkkkk.....",
-		"................",
-		"................"
-	],
-	"soul_elixir": [
-		"......kkkk......",
-		".....kssssk.....",
-		"......kSSk......",
-		".....ksttsk.....",
-		"....ksvvvvsk....",
-		"...ksvwvvvVsk...",
-		"..ksvvaaavvvVk..",
-		"..ksvawwwavvVk..",
-		"..ksvaawaaVvVk..",
-		"...ksvaaavVVk...",
-		"....ksvvvVVk....",
-		".....ksvVVk.....",
-		"......kvVk......",
-		".......kk.......",
-		"................",
-		"................"
-	],
-	"pumpkin_pie": [
-		"................",
-		"......kkkk......",
-		".....kwwwwk.....",
-		"....kccwwcck....",
-		"..kkYYccccYYkk..",
-		".kyyOOOOOOOOyyk.",
-		"kyyOooooooooOyyk",
-		"kyOoowoooooooOyk",
-		"kYOOooooooooOOYk",
-		"kYYYYOOOOOOYYYYk",
-		".kBBBBBBBBBBBBk.",
-		"..kkkkkkkkkkkk..",
-		"................",
-		"................",
-		"................",
-		"................"
-	],
-	"palace_key": [
-		"....kkkkkk......",
-		"..kkyyyyyykk....",
-		".kyywkrrkyyyk...",
-		".kyykrrrrkyyk...",
-		".kyyykrrkyyyk...",
-		"..kkyyyyyykk....",
-		"....kkyykk......",
-		"......kyyk......",
-		"......kyykkk....",
-		"......kyyyyyk...",
-		"......kyykkk....",
-		"......kyyk......",
-		"......kyykkk....",
-		"......kyyyyyk...",
-		"......kkkkkkk...",
-		"................"
-	],
-	"dungeon_key": [
-		"....kkkkkk......",
-		"..kksssssskk....",
-		".ksswSSSSSSsk...",
-		".ksskkDDkkSSk...",
-		".ksSDDDDDDSSk...",
-		"..kkSSSSSSkk....",
-		"....kkSSkk......",
-		"......kSSk......",
-		"......kSSkkk....",
-		"......kSSDSSk...",
-		"......kSSDDDk...",
-		"......kSSk......",
-		"......kSSDkkk...",
-		"......kSSDDDk...",
-		"......kkkkkkk...",
-		"................"
-	],
-	"ancient_coin": [
-		"....kkkkkk......",
-		"..kkyyyyyykk....",
-		".kywwyyyyyyYk...",
-		".kywyyYYYYyYk...",
-		"kyyyYYyyyyYYyk..",
-		"kyyYYywyyyyYYk..",
-		"kyyYYyyyyyyYYk..",
-		"kyyYYyyyyyyYYk..",
-		"kyyyYYyyyyYYyk..",
-		".kyyyYYYYYYyk...",
-		".kyyyyyyYYYyk...",
-		"..kkyyyyyYkk....",
-		"....kkkkkkk.....",
-		"................",
-		"................",
-		"................"
-	],
-	"honor_chalice": [
-		"..kkkkkkkkkkkk..",
-		".kswsssssssswsk.",
-		".kssyyyyyyyySSk.",
-		"..kssyywwyySSk..",
-		"..ksyyrrrrrySk..",
-		"...ksyrrrrrSk...",
-		"....kssrrSSk....",
-		".....kkSSkk.....",
-		"......kyyk......",
-		"......kyYk......",
-		".....kyYYyk.....",
-		"....kssYYssk....",
-		"...kssssssssk...",
-		"..kkkkkkkkkkkk..",
-		"................",
-		"................"
-	],
-	"intel_report": [
-		"...kkkkkkkkkk...",
-		"..kccCccccCCck..",
-		"..kckkkkkkkkck..",
-		"...kccBBBcccCk..",
-		"...kccccccccCk..",
-		"...kccBBBBccCk..",
-		"...kccccrrrCCk..",
-		"...kcccrwrrCCk..",
-		"...kccccrrrCCk..",
-		"...kccBBBrCCCk..",
-		"..kccccccrCCck..",
-		"..kcCCCCCCccck..",
-		"..kckkkkkkkkck..",
-		"...kkkkkkkkkk...",
-		"................",
-		"................"
-	],
-	"soldier_diary": [
-		"...kkkkkkkkkk...",
-		"..kbbbbbbbbbBk..",
-		".kbwbbbbbbbbBk..",
-		".kbbkkkkkkkkBk..",
-		".kbbkcccccckBk..",
-		".kbbkcccccckBk..",
-		".kbbkkkkkkkkBk..",
-		".kbbbbbbbbyyk...",
-		".kbbbbbbbbyYk...",
-		".kbbbbbbbbBBk...",
-		".kbBBBBBBBBBkk..",
-		".kbBccccccccck..",
-		".kBBrBBBBBBBBk..",
-		"..kkRkkkkkkkk...",
-		"....k...........",
-		"................"
-	]
+## Default icon definitions for all recognized items (fallback jika item tidak memiliki icon_rect/icon_path spesifik)
+const DEFAULT_ITEM_ICON_MAPPING: Dictionary = {
+	"potion_hp": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(16, 496, 16, 16)},
+	"apple": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(16, 560, 16, 16)},
+	"bread": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(192, 528, 16, 16)},
+	"meat": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 512, 16, 16)},
+	"holy_water": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(48, 496, 16, 16)},
+	"herb": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 560, 16, 16)},
+	"honey": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 496, 16, 16)},
+	"cheese": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 544, 16, 16)},
+	"soup": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(144, 576, 16, 16)},
+	"big_potion": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(128, 496, 16, 16)},
+	"berry": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(112, 560, 16, 16)},
+	"soul_elixir": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(144, 496, 16, 16)},
+	"pumpkin_pie": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(208, 528, 16, 16)},
+	"palace_key": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 336, 16, 16)},
+	"dungeon_key": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(16, 336, 16, 16)},
+	"ancient_coin": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 320, 16, 16)},
+	"honor_chalice": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(64, 352, 16, 16)},
+	"intel_report": {"tex": INVENTORY_ITEMS_SHEET_TEX, "rect": Rect2(0, 304, 16, 16)},
+	"soldier_diary": {"tex": INVENTORY_BOOKS_SHEET_TEX, "rect": Rect2(0, 0, 16, 16)},
 }
 
 
-## Membangun seluruh ikon piksel 16x16 untuk tiap item inventori agar tampil kontras di slot gelap maupun detail.
+## Membangun cache ikon atlas item inventori dari asset asli (items_sheets.png, books.png, consumables.png).
 func _init_inventory_item_textures() -> void:
 	_inventory_item_textures.clear()
-	for item_id in INVENTORY_ITEM_PATTERNS.keys():
-		_inventory_item_textures[item_id] = _build_pixel_texture(16, 16, INVENTORY_ITEM_PATTERNS[item_id], INVENTORY_ITEM_PALETTE)
+	for item_id in DEFAULT_ITEM_ICON_MAPPING.keys():
+		var def: Dictionary = DEFAULT_ITEM_ICON_MAPPING[item_id]
+		_inventory_item_textures[item_id] = _create_atlas(def["tex"], def["rect"])
 
 
-## Mengambil tekstur ikon terbaik untuk item inventori (prioritas tekstur custom, ikon 16x16 per ID, lalu fallback atlas).
+## Mengambil tekstur ikon terbaik untuk item inventori dari asset asli (prioritas tekstur custom, icon_path + icon_rect, fallback atlas default).
 func _resolve_inventory_item_texture(item: Dictionary) -> Texture2D:
 	if item.has("icon_texture") and item["icon_texture"] != null:
 		return item["icon_texture"]
+
 	var item_id: String = str(item.get("id", ""))
+
+	# Jika item memiliki rect daerah atlas spesifik
+	if item.has("icon_rect") and item["icon_rect"] is Rect2:
+		var rect: Rect2 = item["icon_rect"]
+		var path_str: String = str(item.get("icon_path", ""))
+		var cache_key: String = "%s_%d_%d_%d_%d" % [path_str, int(rect.position.x), int(rect.position.y), int(rect.size.x), int(rect.size.y)]
+		if _inventory_item_textures.has(cache_key):
+			return _inventory_item_textures[cache_key]
+
+		var base_tex: Texture2D = null
+		if path_str == "res://assets/ui/menus/inventory/books.png":
+			base_tex = INVENTORY_BOOKS_SHEET_TEX
+		elif path_str == "res://assets/ui/menus/inventory/consumables.png":
+			base_tex = INVENTORY_CONSUMABLES_SHEET_TEX
+		elif path_str == "res://assets/ui/icons/items/items_sheets.png" or path_str.is_empty():
+			base_tex = INVENTORY_ITEMS_SHEET_TEX
+		elif ResourceLoader.exists(path_str):
+			base_tex = load(path_str) as Texture2D
+		else:
+			base_tex = INVENTORY_ITEMS_SHEET_TEX
+
+		if base_tex:
+			var atlas := _create_atlas(base_tex, rect)
+			_inventory_item_textures[cache_key] = atlas
+			return atlas
+
 	if _inventory_item_textures.has(item_id):
 		return _inventory_item_textures[item_id]
-	if item.has("icon_rect"):
-		return _create_atlas(preload("res://assets/ui/menus/common/ui_menu_sheet.png"), item["icon_rect"])
+
+	if DEFAULT_ITEM_ICON_MAPPING.has(item_id):
+		var def: Dictionary = DEFAULT_ITEM_ICON_MAPPING[item_id]
+		var atlas := _create_atlas(def["tex"], def["rect"])
+		_inventory_item_textures[item_id] = atlas
+		return atlas
+
 	return null
 
 
