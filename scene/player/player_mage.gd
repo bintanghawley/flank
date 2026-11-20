@@ -1397,7 +1397,7 @@ func spawn_run_dust(move_dir: Vector2) -> void:
 	if is_leader:
 		_footstep_toggle = not _footstep_toggle
 		if _footstep_toggle:
-			play_sfx(SFX_FOOTSTEP, -4.0)
+			play_sfx(SFX_FOOTSTEP, 3.5)
 
 
 func apply_camera_shake(intensity: float = -1.0) -> void:

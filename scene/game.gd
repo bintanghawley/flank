@@ -510,6 +510,17 @@ var training_dummy_enemy: CharacterBody2D = null
 const SFX_PARTY_SWITCH_LEADER = preload("res://assets/audio/sfx/party/party_switch_leader.wav")
 var _is_party_initialized: bool = false
 
+# Sistem Musik Latar (BGM) Gameplay - Dual-Deck Equal-Power Seamless Crossfade
+const BGM_GAMEPLAY = preload("res://assets/audio/bgm/game.ogg")
+var _bgm_player_a: AudioStreamPlayer = null
+var _bgm_player_b: AudioStreamPlayer = null
+var _active_bgm_player: AudioStreamPlayer = null
+var _next_bgm_player: AudioStreamPlayer = null
+var _bgm_tween: Tween = null
+var _is_crossfading: bool = false
+const BGM_CROSSFADE_DURATION: float = 2.5
+const BGM_BASE_VOLUME_DB: float = -4.0 # Dikalibrasi seimbang saat volume UI 100%
+
 func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 	if not stream:
 		return
@@ -520,6 +531,136 @@ func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 	add_child(sfx_player)
 	sfx_player.finished.connect(sfx_player.queue_free)
 	sfx_player.play()
+
+
+# ==========================================
+# BGM AUTO-FADE NATURAL LOOPING SYSTEM
+# ==========================================
+
+func _ensure_music_bus() -> void:
+	if AudioServer.get_bus_index("Music") == -1:
+		var idx = AudioServer.bus_count
+		AudioServer.add_bus(idx)
+		AudioServer.set_bus_name(idx, "Music")
+		AudioServer.set_bus_send(idx, &"Master")
+
+
+func _init_and_play_bgm(fade_in_at_start: bool = true) -> void:
+	if not BGM_GAMEPLAY:
+		return
+	_ensure_music_bus()
+	
+	if not is_instance_valid(_bgm_player_a):
+		_bgm_player_a = AudioStreamPlayer.new()
+		_bgm_player_a.name = "BgmPlayerA"
+		_bgm_player_a.stream = BGM_GAMEPLAY
+		_bgm_player_a.bus = &"Music"
+		_bgm_player_a.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_child(_bgm_player_a)
+	
+	if not is_instance_valid(_bgm_player_b):
+		_bgm_player_b = AudioStreamPlayer.new()
+		_bgm_player_b.name = "BgmPlayerB"
+		_bgm_player_b.stream = BGM_GAMEPLAY
+		_bgm_player_b.bus = &"Music"
+		_bgm_player_b.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_child(_bgm_player_b)
+	
+	if _bgm_player_a.stream is AudioStreamOggVorbis:
+		(_bgm_player_a.stream as AudioStreamOggVorbis).loop = false
+	if _bgm_player_b.stream is AudioStreamOggVorbis:
+		(_bgm_player_b.stream as AudioStreamOggVorbis).loop = false
+	
+	_active_bgm_player = _bgm_player_a
+	_next_bgm_player = _bgm_player_b
+	_next_bgm_player.stop()
+	_next_bgm_player.volume_db = -80.0
+	_is_crossfading = false
+	
+	if _bgm_tween and _bgm_tween.is_valid():
+		_bgm_tween.kill()
+	
+	if fade_in_at_start:
+		_active_bgm_player.volume_db = -80.0
+		_active_bgm_player.play(0.0)
+		var base_linear := db_to_linear(BGM_BASE_VOLUME_DB)
+		_bgm_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		_bgm_tween.tween_method(func(val: float):
+			if is_instance_valid(_active_bgm_player) and _active_bgm_player.playing:
+				_active_bgm_player.volume_db = linear_to_db(maxf(val, 0.0001) * base_linear) if val > 0.001 else -80.0
+		, 0.0, 1.0, 1.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	else:
+		_active_bgm_player.volume_db = BGM_BASE_VOLUME_DB
+		_active_bgm_player.play(0.0)
+
+
+func _update_bgm_loop() -> void:
+	if _is_crossfading or not is_instance_valid(_active_bgm_player) or not _active_bgm_player.playing:
+		return
+	if not _active_bgm_player.stream:
+		return
+	
+	var total_len: float = _active_bgm_player.stream.get_length()
+	if total_len <= BGM_CROSSFADE_DURATION + 0.5:
+		return
+	
+	var pos: float = _active_bgm_player.get_playback_position()
+	# Hanya picu crossfade di paruh kedua lagu ketika tepat mendekati akhir lagu
+	if pos > total_len * 0.5:
+		var time_left: float = total_len - pos
+		if time_left <= BGM_CROSSFADE_DURATION:
+			_start_bgm_crossfade(time_left)
+
+
+func _start_bgm_crossfade(time_left: float) -> void:
+	if _is_crossfading or not is_instance_valid(_active_bgm_player) or not is_instance_valid(_next_bgm_player):
+		return
+	_is_crossfading = true
+	
+	var outgoing := _active_bgm_player
+	var incoming := _next_bgm_player
+	var fade_time := clampf(time_left, 1.0, BGM_CROSSFADE_DURATION)
+	var base_linear := db_to_linear(BGM_BASE_VOLUME_DB)
+	
+	incoming.volume_db = -80.0
+	incoming.play(0.0)
+	
+	if _bgm_tween and _bgm_tween.is_valid():
+		_bgm_tween.kill()
+	_bgm_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	
+	# Equal-power crossfade (cosinus/sinus) menjaga amplitudo perseptual tetap konstan (bebas dip/jeda)
+	_bgm_tween.tween_method(func(progress: float):
+		if is_instance_valid(outgoing) and outgoing.playing:
+			var out_factor: float = cos(progress * 0.5 * PI)
+			outgoing.volume_db = linear_to_db(maxf(out_factor * base_linear, 0.0001)) if out_factor > 0.001 else -80.0
+		if is_instance_valid(incoming) and incoming.playing:
+			var in_factor: float = sin(progress * 0.5 * PI)
+			incoming.volume_db = linear_to_db(maxf(in_factor * base_linear, 0.0001)) if in_factor > 0.001 else -80.0
+	, 0.0, 1.0, fade_time)
+	
+	_bgm_tween.tween_callback(func():
+		if is_instance_valid(outgoing):
+			outgoing.stop()
+			outgoing.volume_db = -80.0
+		if is_instance_valid(incoming):
+			incoming.volume_db = BGM_BASE_VOLUME_DB
+		_active_bgm_player = incoming
+		_next_bgm_player = outgoing
+		_is_crossfading = false
+	)
+
+
+func _stop_all_bgm() -> void:
+	_is_crossfading = false
+	if _bgm_tween and _bgm_tween.is_valid():
+		_bgm_tween.kill()
+	if is_instance_valid(_bgm_player_a):
+		_bgm_player_a.stop()
+		_bgm_player_a.volume_db = -80.0
+	if is_instance_valid(_bgm_player_b):
+		_bgm_player_b.stop()
+		_bgm_player_b.volume_db = -80.0
 
 # Pengaturan Camera Shake
 var shake_intensity: float = 0.0
@@ -683,6 +824,7 @@ func _ready() -> void:
 
 	# 6. Jalankan efek pembukaan Circular Mask (Iris Open) saat masuk arena game
 	play_iris_opening_transition()
+	_init_and_play_bgm()
 
 	# Jika masuk melalui menu 'Lanjutkan' di Start Menu, muat save slot tertunda
 	if pending_load_slot_id > 0:
@@ -1421,6 +1563,7 @@ func _process(delta: float) -> void:
 	update_camera_target(delta)
 	update_party_skill_cooldowns(delta)
 	check_training_arena()
+	_update_bgm_loop()
 	if arena_state == ArenaState.INACTIVE:
 		check_arena_trigger()
 		var cur_lead := get_active_leader()
@@ -2760,6 +2903,7 @@ func _on_hud_return_to_title_requested() -> void:
 	get_tree().paused = false
 	if gameplay_hud and is_instance_valid(gameplay_hud.pause_overlay):
 		gameplay_hud.pause_overlay.visible = false
+	_stop_all_bgm()
 	get_tree().change_scene_to_file("res://scene/ui/menus/start_menu.tscn")
 
 
