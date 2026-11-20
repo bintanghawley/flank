@@ -35,7 +35,6 @@ shader_parameter/center = Vector2(0.5, 0.5)
 shader_parameter/radius = 0.0
 shader_parameter/softness = 0.015
 
-
 [node name="Game" type="Node2D" unique_id=1512194323]
 y_sort_enabled = true
 script = ExtResource("1_game_script")
@@ -47,7 +46,6 @@ position_smoothing_enabled = true
 position_smoothing_speed = 7.0
 
 [node name="map_region1" parent="." unique_id=1420594985 instance=ExtResource("3_map")]
-position = Vector2(0, 0)
 
 [node name="Knight_1" parent="." unique_id=1280897880 instance=ExtResource("5_knight")]
 y_sort_enabled = true
@@ -66,49 +64,46 @@ y_sort_enabled = true
 position = Vector2(2560, 2900)
 
 [node name="Enemy_Knight_1" parent="." unique_id=110304380 instance=ExtResource("7_enemy_knight")]
-position = Vector2(6130, 3350)
+position = Vector2(5908, 3350)
 can_respawn = false
+melee_attack_range = 120.0
+melee_damage = 50
 
 [node name="Enemy_Knight_2" parent="." unique_id=110304381 instance=ExtResource("7_enemy_knight")]
-position = Vector2(6430, 3350)
+position = Vector2(5731, 3139)
 can_respawn = false
+melee_attack_range = 120.0
+melee_damage = 50
 
 [node name="Enemy_Archer_1" parent="." unique_id=110304382 instance=ExtResource("2_xwcet")]
-position = Vector2(6280, 3230)
+position = Vector2(6003, 3138)
 can_respawn = false
 
 [node name="Npc_Guard_Left" parent="." unique_id=1290897880 instance=ExtResource("9_npc_guard")]
-y_sort_enabled = true
 position = Vector2(2400, 1035)
 
 [node name="Npc_Guard_Right" parent="." unique_id=1290897881 instance=ExtResource("9_npc_guard")]
-y_sort_enabled = true
 position = Vector2(2666, 1035)
 
 [node name="Guard_Patrol_01" parent="." unique_id=1290897882 instance=ExtResource("9_npc_guard")]
-y_sort_enabled = true
 position = Vector2(860, 2200)
-patrol_points = [Vector2(860, 2200), Vector2(860, 1450), Vector2(860, 2200), Vector2(2000, 2200), Vector2(860, 2200), Vector2(860, 2650)]
+patrol_points = Array[Vector2]([Vector2(860, 2200), Vector2(860, 1450), Vector2(860, 2200), Vector2(2000, 2200), Vector2(860, 2200), Vector2(860, 2650)])
 
 [node name="Guard_Patrol_02" parent="." unique_id=1290897883 instance=ExtResource("9_npc_guard")]
-y_sort_enabled = true
 position = Vector2(860, 2850)
-patrol_points = [Vector2(860, 2850), Vector2(1880, 2850), Vector2(1880, 3400), Vector2(860, 3400)]
+patrol_points = Array[Vector2]([Vector2(860, 2850), Vector2(1880, 2850), Vector2(1880, 3400), Vector2(860, 3400)])
 
 [node name="Guard_Patrol_03" parent="." unique_id=1290897884 instance=ExtResource("9_npc_guard")]
-y_sort_enabled = true
 position = Vector2(2620, 1180)
-patrol_points = [Vector2(2620, 1180), Vector2(2620, 3290)]
+patrol_points = Array[Vector2]([Vector2(2620, 1180), Vector2(2620, 3290)])
 
 [node name="Guard_Patrol_04" parent="." unique_id=1290897885 instance=ExtResource("9_npc_guard")]
-y_sort_enabled = true
 position = Vector2(4400, 2250)
-patrol_points = [Vector2(4400, 2250), Vector2(3320, 2250), Vector2(3320, 3550), Vector2(4150, 3550), Vector2(3320, 3550), Vector2(3320, 2250)]
+patrol_points = Array[Vector2]([Vector2(4400, 2250), Vector2(3320, 2250), Vector2(3320, 3550), Vector2(4150, 3550), Vector2(3320, 3550), Vector2(3320, 2250)])
 
 [node name="Guard_Patrol_05" parent="." unique_id=1290897886 instance=ExtResource("9_npc_guard")]
-y_sort_enabled = true
 position = Vector2(5200, 1980)
-patrol_points = [Vector2(5200, 1980), Vector2(6350, 1980), Vector2(6350, 1480), Vector2(6350, 1980)]
+patrol_points = Array[Vector2]([Vector2(5200, 1980), Vector2(6350, 1980), Vector2(6350, 1480), Vector2(6350, 1980)])
 
 [node name="GameplayHud" parent="." unique_id=161884810 instance=ExtResource("8_hud")]
 
@@ -116,7 +111,7 @@ patrol_points = [Vector2(5200, 1980), Vector2(6350, 1980), Vector2(6350, 1480), 
 visible = false
 position = Vector2(2533, 940)
 
-[node name="MarkerLabel" type="Label" parent="CastleObjectiveMarker"]
+[node name="MarkerLabel" type="Label" parent="CastleObjectiveMarker" unique_id=606839623]
 offset_left = -80.0
 offset_top = -24.0
 offset_right = 80.0
@@ -131,7 +126,6 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="CastleMeetingHall" parent="." unique_id=25331500 instance=ExtResource("10_hall")]
-y_sort_enabled = true
 position = Vector2(2533, -1500)
 
 [node name="TransitionLayer" type="CanvasLayer" parent="." unique_id=98127341]

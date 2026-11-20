@@ -2850,7 +2850,7 @@ func _update_pause_party_display() -> void:
 
 			if leader_lbl:
 				leader_lbl.visible = true
-				leader_lbl.modulate.a = 1.0 if (slot_idx == active_leader_index and not is_dead_char) else 0.0
+				leader_lbl.modulate.a = 1.0 if (slot_idx == 0 and not is_dead_char) else 0.0
 
 			if key_hint:
 				key_hint.texture = _get_control_keycap_tex(KEY_1 + slot_idx)
@@ -2895,7 +2895,7 @@ func _update_pause_party_hp_bars() -> void:
 			var leader_lbl := slot_node.get_node_or_null("Leader") as Label
 			if leader_lbl:
 				leader_lbl.visible = true
-				leader_lbl.modulate.a = 1.0 if (slot_idx == active_leader_index and not is_dead_char) else 0.0
+				leader_lbl.modulate.a = 1.0 if (slot_idx == 0 and not is_dead_char) else 0.0
 
 
 # =========================================================
@@ -3831,7 +3831,7 @@ func _update_inventory_target_slots() -> void:
 
 			if leader_lbl:
 				leader_lbl.visible = true
-				leader_lbl.modulate.a = 1.0 if (slot_idx == active_leader_index and not is_dead_char) else 0.0
+				leader_lbl.modulate.a = 1.0 if (slot_idx == 0 and not is_dead_char) else 0.0
 
 			var max_hp: int = hero.get("max_health") if "max_health" in hero else 10
 			var cur_hp: int = hero.get("current_health") if "current_health" in hero else max_hp

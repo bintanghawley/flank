@@ -262,6 +262,8 @@ func is_in_combat_mode() -> bool:
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	for e in enemies:
 		if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
+			if "wait_for_arena" in e and e.wait_for_arena:
+				continue
 			if global_position.distance_to(e.global_position) <= 650.0:
 				return true
 	return false
@@ -488,14 +490,27 @@ func process_leader_movement(delta: float) -> void:
 				tangent = -tangent
 			velocity = tangent * (current_speed * 0.8) + knockback_velocity
 			move_and_slide()
-		if not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and get_real_velocity().length() < 10.0:
-			is_moving = false
-			has_pending_click_move = false
+		var is_colliding_with_enemy := false
+		for c_idx in range(get_slide_collision_count()):
+			var c := get_slide_collision(c_idx)
+			var collider := c.get_collider()
+			if collider and (collider.is_in_group("enemy") or (collider is CharacterBody2D and collider != self)):
+				is_colliding_with_enemy = true
+				break
+
+		# Jangan batalkan jalan jika diserang atau bersenggolan dengan musuh; hanya batalkan jika mentok dinding statis > 0.5 detik
+		if not is_colliding_with_enemy and not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) and get_real_velocity().length() < 10.0:
+			click_move_stuck_timer += delta
+			if click_move_stuck_timer >= 0.5:
+				is_moving = false
+				has_pending_click_move = false
+				click_move_stuck_timer = 0.0
+				if CursorManager.has_method("hide_ground_move_indicator"):
+					CursorManager.hide_ground_move_indicator()
+				if animated_sprite.animation.begins_with("walk_"):
+					play_idle_animation()
+		else:
 			click_move_stuck_timer = 0.0
-			if CursorManager.has_method("hide_ground_move_indicator"):
-				CursorManager.hide_ground_move_indicator()
-			if animated_sprite.animation.begins_with("walk_"):
-				play_idle_animation()
 
 
 func process_pending_click_move(delta: float) -> bool:
@@ -1298,7 +1313,8 @@ func apply_knockback(force: Vector2) -> void:
 	if force == Vector2.ZERO:
 		return
 	knockback_velocity = force
-	is_moving = false
+	if not has_pending_click_move:
+		is_moving = false
 
 
 func die() -> void:

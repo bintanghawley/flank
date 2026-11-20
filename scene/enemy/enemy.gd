@@ -5,19 +5,19 @@ extends CharacterBody2D
 # =========================
 enum EnemyType { ARCHER, KNIGHT }
 @export var enemy_type: EnemyType = EnemyType.ARCHER
-@export var max_health: int = 5
-@export var wander_speed: float = 40.0
-@export var chase_speed: float = 75.0
+@export var max_health: int = 550
+@export var wander_speed: float = 60.0
+@export var chase_speed: float = 135.0
 @export var patrol_radius: float = 140.0
-@export var contact_damage: int = 1
+@export var contact_damage: int = 25
 @export var attack_cooldown: float = 1.0  # Jeda memberi damage saat menyentuh player
 @export var respawn_time: float = 5.0     # Waktu tunggu respawn setelah mati (detik)
 @export var can_respawn: bool = true
 @export var wait_for_arena: bool = false
 @export var in_arena_combat: bool = false
 @export var is_training_dummy: bool = false
-@export var melee_attack_range: float = 80.0
-@export var melee_damage: int = 1
+@export var melee_attack_range: float = 120.0
+@export var melee_damage: int = 50
 
 # =========================
 # RANGED ATTACK / TEMBAKAN MUSUH
@@ -51,9 +51,9 @@ func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 	player_sfx.finished.connect(player_sfx.queue_free)
 	player_sfx.play()
 
-@export var shoot_range: float = 320.0       # Jarak tembak musuh (pixel)
-@export var shoot_cooldown: float = 1.4     # Cooldown tembakan musuh (disamakan 1.4s dengan basic attack fire rate Archer pemain)
-@export var projectile_damage: int = 1      # Damage panah musuh
+@export var shoot_range: float = 500.0       # Jarak tembak musuh (pixel, setara dengan 520px archer pemain)
+@export var shoot_cooldown: float = 1.2     # Cooldown tembakan musuh (1.2s, sedikit lebih gesit dari 1.25s archer pemain)
+@export var projectile_damage: int = 110      # Damage panah musuh (110 damage, sedikit di atas 95 damage archer pemain)
 @export var projectile_speed: float = 580.0 # Kecepatan panah musuh (disamakan 580.0 px/s dengan archer player)
 @export var enemy_projectile_ratio: float = 1.0 # Rasio kecepatan panah musuh relatif terhadap speed karakter yang dikendalikan (1.0 = sama persis)
 
@@ -111,7 +111,7 @@ func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("enemy")
 	if is_training_dummy:
-		max_health = 100
+		max_health = 2500
 		can_respawn = false
 		contact_damage = 0
 		melee_damage = 0
@@ -708,11 +708,11 @@ func get_dynamic_projectile_speed() -> float:
 
 
 func get_dynamic_shoot_cooldown() -> float:
-	# Musuh menggunakan model Archer, diselaraskan cooldown tembakannya dengan Archer pemain
+	# Musuh menggunakan model Archer, diselaraskan cooldown tembakannya dengan Archer pemain (sedikit lebih gesit)
 	var party = get_tree().get_nodes_in_group("player")
 	for p in party:
 		if is_instance_valid(p) and p.name.begins_with("Archer") and "attack_cooldown" in p:
-			return p.attack_cooldown
+			return minf(shoot_cooldown, p.attack_cooldown * 0.96)
 	return shoot_cooldown
 
 
@@ -1017,7 +1017,7 @@ func take_damage(amount: int, attacker: CharacterBody2D = null) -> void:
 			velocity = Vector2.ZERO
 
 		# Pulihkan darah kembali secara halus jika menipis agar tidak pernah mati
-		if current_health <= 20:
+		if current_health <= 100:
 			current_health = max_health
 			var reset_tween := create_tween()
 			reset_tween.tween_interval(0.8)

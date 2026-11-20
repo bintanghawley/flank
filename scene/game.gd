@@ -468,6 +468,22 @@ var _party_fade_tweens: Array[Tween] = []
 var is_transitioning: bool = false
 
 # =========================================================
+# SISTEM KEKALAHAN ARENA & PUTAR MUNDUR WAKTU (TIME REWIND)
+# =========================================================
+var defeat_canvas: CanvasLayer = null
+var defeat_rect: ColorRect = null
+var defeat_title_lbl: Label = null
+var defeat_subtitle_lbl: Label = null
+var defeat_prompt_lbl: Label = null
+var is_arena_defeat_active: bool = false
+var is_awaiting_defeat_rewind_input: bool = false
+var defeat_anim_time: float = 0.0
+var pre_arena_snapshot: Dictionary = {}
+var last_pre_arena_leader_pos: Vector2 = Vector2.ZERO
+const SFX_HERO_RESPAWN = preload("res://assets/audio/sfx/characters/universal/hero_respawn.wav")
+const UI_FONT_BEHOLDEN = preload("res://assets/ui/fonts/beholden-bold.ttf")
+
+# =========================================================
 # ARENA LATIHAN SEMENTARA (TRAINING DUMMY GROUND)
 # =========================================================
 const TRAINING_ARENA_BOUNDS: Rect2 = Rect2(Vector2(2360.0, 1740.0), Vector2(520.0, 640.0))
@@ -618,9 +634,9 @@ func _ready() -> void:
 	setup_camera_and_boundaries.call_deferred()
 	_init_arena_barrier.call_deferred()
 	_init_arena_enemies.call_deferred()
-	_init_training_dummy.call_deferred()
 	_init_nav_compass.call_deferred()
 	_setup_meeting_participants.call_deferred()
+	_init_defeat_overlay.call_deferred()
 
 	# 6. Jalankan efek pembukaan Circular Mask (Iris Open) saat masuk arena game
 	play_iris_opening_transition()
@@ -647,6 +663,17 @@ func setup_party_enemy_collision_exceptions() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Penanganan input saat seluruh party gugur di arena (layar merah defeat)
+	if is_arena_defeat_active:
+		if is_awaiting_defeat_rewind_input:
+			if (event is InputEventKey and event.pressed and not event.echo) or (event is InputEventMouseButton and event.pressed):
+				is_awaiting_defeat_rewind_input = false
+				execute_arena_rewind()
+				get_viewport().set_input_as_handled()
+				return
+		get_viewport().set_input_as_handled()
+		return
+
 	if is_transitioning:
 		return
 	# Tombol pintasan pergantian karakter di arena combat (1, 2, 3, 4)
@@ -805,7 +832,7 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 	if not is_instance_valid(leader):
 		return
 	leader.visible = true
-	leader.modulate.a = 1.0
+	leader.modulate = Color.WHITE
 
 	# Jika berganti karakter saat eksplorasi 1 karakter, posisikan karakter baru tepat di posisi karakter sebelumnya
 	if arena_state != ArenaState.COMBAT and not is_in_training_arena:
@@ -906,7 +933,7 @@ func update_party_visibility() -> void:
 			if not member.visible:
 				member.visible = true
 			if not is_party_fading_out or i == active_leader_index:
-				member.modulate.a = 1.0
+				member.modulate = Color.WHITE
 				if not member.is_physics_processing() and not is_transitioning:
 					member.set_physics_process(true)
 				if not member.is_processing() and not is_transitioning:
@@ -950,9 +977,12 @@ func trigger_hero_skill_by_slot(slot_idx: int) -> void:
 		var leader := get_active_leader()
 		if is_instance_valid(leader):
 			for e in get_tree().get_nodes_in_group("enemy"):
-				if is_instance_valid(e) and not ("is_dead" in e and e.is_dead) and leader.global_position.distance_to(e.global_position) <= 650.0:
-					has_nearby_enemy = true
-					break
+				if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
+					if "wait_for_arena" in e and e.wait_for_arena:
+						continue
+					if leader.global_position.distance_to(e.global_position) <= 650.0:
+						has_nearby_enemy = true
+						break
 		if not has_nearby_enemy:
 			return
 	if slot_idx < 0 or slot_idx >= party_members.size():
@@ -972,9 +1002,12 @@ func execute_hero_skill(hero: CharacterBody2D) -> void:
 	if arena_state != ArenaState.COMBAT and not is_in_training_arena and current_combat_state != PartyCombatState.COMBAT:
 		var has_nearby_enemy: bool = false
 		for e in get_tree().get_nodes_in_group("enemy"):
-			if is_instance_valid(e) and not ("is_dead" in e and e.is_dead) and hero.global_position.distance_to(e.global_position) <= 650.0:
-				has_nearby_enemy = true
-				break
+			if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
+				if "wait_for_arena" in e and e.wait_for_arena:
+					continue
+				if hero.global_position.distance_to(e.global_position) <= 650.0:
+					has_nearby_enemy = true
+					break
 		if not has_nearby_enemy:
 			return
 	if not is_instance_valid(hero) or not is_character_alive(hero):
@@ -1449,10 +1482,18 @@ func _process(delta: float) -> void:
 	check_training_arena()
 	if arena_state == ArenaState.INACTIVE:
 		check_arena_trigger()
+		var cur_lead := get_active_leader()
+		if is_instance_valid(cur_lead) and not arena_bounds.grow(40.0).has_point(cur_lead.global_position):
+			last_pre_arena_leader_pos = cur_lead.global_position
 	elif arena_state == ArenaState.COMBAT:
 		check_arena_completion(delta)
+		check_arena_defeat(delta)
 	elif arena_state == ArenaState.CLEARED:
 		handle_arena_group_respawn(delta)
+
+	if is_arena_defeat_active and defeat_prompt_lbl and is_instance_valid(defeat_prompt_lbl):
+		defeat_anim_time += delta
+		defeat_prompt_lbl.modulate.a = 0.55 + 0.45 * sin(defeat_anim_time * 5.0)
 	handle_viewport_aggro_detection(delta)
 	update_breadcrumbs()
 	check_active_leader_status()
@@ -1738,32 +1779,13 @@ func _init_arena_enemies() -> void:
 
 
 func _init_training_dummy() -> void:
-	var enemy_scene: PackedScene = preload("res://scene/enemy/enemy_knight.tscn")
-	var dummy := enemy_scene.instantiate() as CharacterBody2D
-	dummy.name = "TrainingDummy"
-	dummy.y_sort_enabled = true
-	dummy.position = TRAINING_DUMMY_SPAWN_POS
-	dummy.global_position = TRAINING_DUMMY_SPAWN_POS
-	if "is_training_dummy" in dummy:
-		dummy.is_training_dummy = true
-	add_child(dummy)
-	training_dummy_enemy = dummy
-	setup_party_enemy_collision_exceptions.call_deferred()
+	# Dummy arena sementara di tengah kota dinonaktifkan / dihapus sesuai permintaan
+	pass
 
 
 func check_training_arena() -> void:
-	if arena_state != ArenaState.INACTIVE:
-		return
-
-	var leader := get_active_leader()
-	if not leader or not is_instance_valid(leader):
-		return
-
-	var is_inside := TRAINING_ARENA_BOUNDS.has_point(leader.global_position)
-	if is_inside and not is_in_training_arena:
-		enter_training_arena()
-	elif not is_inside and is_in_training_arena:
-		exit_training_arena()
+	# Area latihan dummy dinonaktifkan
+	return
 
 
 func enter_training_arena() -> void:
@@ -1825,6 +1847,7 @@ func check_arena_trigger() -> void:
 func start_arena_battle() -> void:
 	if arena_state != ArenaState.INACTIVE:
 		return
+	_take_pre_arena_snapshot()
 	arena_state = ArenaState.COMBAT
 	current_combat_state = PartyCombatState.COMBAT
 	arena_clear_delay_timer = 0.0
@@ -2005,7 +2028,7 @@ func check_arena_completion(_delta: float) -> void:
 	if arena_state != ArenaState.COMBAT:
 		return
 
-	if is_party_fading_out:
+	if is_party_fading_out or is_arena_defeat_active:
 		return
 
 	var all_dead: bool = true
@@ -2027,7 +2050,7 @@ func check_arena_completion(_delta: float) -> void:
 
 
 func _start_party_combat_fade_out() -> void:
-	if is_party_fading_out:
+	if is_party_fading_out or is_arena_defeat_active:
 		return
 	is_party_fading_out = true
 
@@ -2165,6 +2188,338 @@ func _respawn_arena_enemy_group() -> void:
 	arena_state = ArenaState.INACTIVE
 	arena_clear_delay_timer = 0.0
 	print("Grup musuh arena (2 Knight, 1 Archer) telah muncul kembali di posisinya! Siap untuk pertempuran berikutnya.")
+
+
+# =========================================================
+# HELPER KEKALAHAN ARENA & PUTAR MUNDUR WAKTU (TIME REWIND)
+# =========================================================
+
+func _init_defeat_overlay() -> void:
+	if defeat_canvas != null and is_instance_valid(defeat_canvas):
+		return
+
+	defeat_canvas = CanvasLayer.new()
+	defeat_canvas.name = "ArenaDefeatCanvas"
+	defeat_canvas.layer = 95
+	defeat_canvas.visible = false
+
+	# 1. Overlay merah transparan yang menyelimuti seluruh layar
+	defeat_rect = ColorRect.new()
+	defeat_rect.name = "DefeatOverlay"
+	defeat_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	defeat_rect.color = Color(0.65, 0.05, 0.05, 0.42)
+	defeat_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	defeat_canvas.add_child(defeat_rect)
+
+	# 2. Kontainer teks persis di tengah layar
+	var center_container := CenterContainer.new()
+	center_container.name = "CenterContainer"
+	center_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	defeat_canvas.add_child(center_container)
+
+	var center_box := VBoxContainer.new()
+	center_box.name = "CenterBox"
+	center_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	center_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	center_box.add_theme_constant_override("separation", 14)
+	center_container.add_child(center_box)
+
+	# 3. Label Judul
+	defeat_title_lbl = Label.new()
+	defeat_title_lbl.name = "TitleLabel"
+	defeat_title_lbl.text = "SELURUH ANGGOTA TELAH GUGUR"
+	defeat_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	defeat_title_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	defeat_title_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	defeat_title_lbl.add_theme_font_size_override("font_size", 28)
+	defeat_title_lbl.add_theme_color_override("font_color", Color(1.0, 0.92, 0.85, 1.0))
+	defeat_title_lbl.add_theme_color_override("font_shadow_color", Color(0.35, 0.02, 0.02, 0.9))
+	defeat_title_lbl.add_theme_constant_override("shadow_offset_x", 2)
+	defeat_title_lbl.add_theme_constant_override("shadow_offset_y", 2)
+	center_box.add_child(defeat_title_lbl)
+
+	# 4. Label Subjudul
+	defeat_subtitle_lbl = Label.new()
+	defeat_subtitle_lbl.name = "SubtitleLabel"
+	defeat_subtitle_lbl.text = "Waktu terhenti di ambang batas arena..."
+	defeat_subtitle_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	defeat_subtitle_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	defeat_subtitle_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	defeat_subtitle_lbl.add_theme_font_size_override("font_size", 14)
+	defeat_subtitle_lbl.add_theme_color_override("font_color", Color(0.9, 0.8, 0.8, 0.85))
+	center_box.add_child(defeat_subtitle_lbl)
+
+	# 5. Spacer kecil
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0, 16)
+	center_box.add_child(spacer)
+
+	# 6. Label Prompt Berdenyut
+	defeat_prompt_lbl = Label.new()
+	defeat_prompt_lbl.name = "PromptLabel"
+	defeat_prompt_lbl.text = "[ TEKAN TOMBOL APA SAJA ]"
+	defeat_prompt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	defeat_prompt_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	defeat_prompt_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	defeat_prompt_lbl.add_theme_font_size_override("font_size", 16)
+	defeat_prompt_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4, 1.0))
+	defeat_prompt_lbl.add_theme_color_override("font_shadow_color", Color(0.1, 0.0, 0.0, 0.8))
+	defeat_prompt_lbl.add_theme_constant_override("shadow_offset_x", 1)
+	defeat_prompt_lbl.add_theme_constant_override("shadow_offset_y", 1)
+	center_box.add_child(defeat_prompt_lbl)
+
+	add_child(defeat_canvas)
+
+
+func _take_pre_arena_snapshot() -> void:
+	pre_arena_snapshot.clear()
+	var leader := get_active_leader()
+	var fallback_pos: Vector2 = Vector2(arena_bounds.position.x - 90.0, arena_center.y)
+	var snap_pos: Vector2 = last_pre_arena_leader_pos if last_pre_arena_leader_pos != Vector2.ZERO else fallback_pos
+	if is_instance_valid(leader):
+		if leader.global_position.x < arena_bounds.position.x - 20.0:
+			snap_pos = leader.global_position
+
+	var party_data: Array[Dictionary] = []
+	for member in party_members:
+		if is_instance_valid(member):
+			var cur_hp: int = member.current_health if "current_health" in member else 100
+			var is_d: bool = ("is_dead" in member and member.is_dead) or (cur_hp <= 0)
+			var slot: int = member.queue_slot_index if "queue_slot_index" in member else 0
+			party_data.append({
+				"node": member,
+				"name": member.name,
+				"hp": cur_hp,
+				"is_dead": is_d,
+				"slot_idx": slot
+			})
+
+	pre_arena_snapshot = {
+		"restore_pos": snap_pos,
+		"active_leader_index": active_leader_index,
+		"roster_order": party_members.duplicate(),
+		"party_state": party_data
+	}
+	print("Pre-Arena Snapshot Disimpan: Titik kembali ", snap_pos, ", Leader index: ", active_leader_index)
+
+
+func are_all_party_members_dead() -> bool:
+	if party_members.is_empty():
+		return false
+	for m in party_members:
+		if is_instance_valid(m):
+			var is_d: bool = ("is_dead" in m and m.is_dead) or ("current_health" in m and m.current_health <= 0)
+			if not is_d:
+				return false
+	return true
+
+
+func check_arena_defeat(_delta: float) -> void:
+	if arena_state != ArenaState.COMBAT:
+		return
+	if is_arena_defeat_active or is_party_fading_out:
+		return
+	if are_all_party_members_dead():
+		trigger_arena_defeat()
+
+
+func trigger_arena_defeat() -> void:
+	if is_arena_defeat_active:
+		return
+	is_arena_defeat_active = true
+	is_awaiting_defeat_rewind_input = false
+	defeat_anim_time = 0.0
+
+	# 1. Hentikan aksi seluruh musuh arena
+	for e in arena_enemies:
+		if is_instance_valid(e):
+			if "velocity" in e:
+				e.velocity = Vector2.ZERO
+			if "is_moving" in e:
+				e.is_moving = false
+			if e.has_method("play_idle_animation"):
+				e.play_idle_animation()
+
+	# 2. Tunda sejenak 0.6 detik agar animasi kekalahan karakter selesai
+	get_tree().create_timer(0.6).timeout.connect(func():
+		if not is_arena_defeat_active or arena_state != ArenaState.COMBAT:
+			return
+		if defeat_canvas and is_instance_valid(defeat_canvas):
+			defeat_canvas.visible = true
+			if defeat_rect:
+				defeat_rect.modulate.a = 0.0
+			if defeat_title_lbl:
+				defeat_title_lbl.modulate.a = 0.0
+			if defeat_subtitle_lbl:
+				defeat_subtitle_lbl.modulate.a = 0.0
+			if defeat_prompt_lbl:
+				defeat_prompt_lbl.modulate.a = 0.0
+
+			var tw := create_tween()
+			if defeat_rect:
+				tw.tween_property(defeat_rect, "modulate:a", 1.0, 0.45)
+			if defeat_title_lbl:
+				tw.parallel().tween_property(defeat_title_lbl, "modulate:a", 1.0, 0.45)
+			if defeat_subtitle_lbl:
+				tw.parallel().tween_property(defeat_subtitle_lbl, "modulate:a", 1.0, 0.45)
+			if defeat_prompt_lbl:
+				tw.parallel().tween_property(defeat_prompt_lbl, "modulate:a", 1.0, 0.45)
+
+			# Berikan jeda toleransi 0.35 detik sebelum menerima input rewind agar tidak terpicu klik tak sengaja
+			get_tree().create_timer(0.35).timeout.connect(func():
+				if is_arena_defeat_active:
+					is_awaiting_defeat_rewind_input = true
+			, CONNECT_ONE_SHOT)
+	, CONNECT_ONE_SHOT)
+
+
+func execute_arena_rewind() -> void:
+	if pre_arena_snapshot.is_empty():
+		is_arena_defeat_active = false
+		return
+
+	# Mainkan audio respawn / rewind waktu
+	play_sfx(SFX_HERO_RESPAWN, 0.0)
+
+	# 1. Nonaktifkan barrier arena seketika
+	_set_arena_barrier_enabled(false)
+
+	# 2. Reset status arena dan kamera
+	arena_state = ArenaState.INACTIVE
+	current_combat_state = PartyCombatState.EXPLORING
+	is_party_fading_out = false
+	arena_clear_delay_timer = 0.0
+	target_camera_zoom = CAMERA_ZOOM_EXPLORE
+	is_camera_locked_to_arena = false
+
+	# 3. Pulihkan dan hidupkan kembali seluruh musuh arena di posisi awal
+	for e in arena_enemies:
+		if is_instance_valid(e):
+			if "wait_for_arena" in e:
+				e.wait_for_arena = true
+			if "in_arena_combat" in e:
+				e.in_arena_combat = false
+			if e.has_method("respawn"):
+				e.respawn()
+
+	# 4. Kembalikan urutan party dari snapshot
+	if pre_arena_snapshot.has("roster_order"):
+		var saved_roster: Array = pre_arena_snapshot["roster_order"]
+		var restored_party: Array[CharacterBody2D] = []
+		for m in saved_roster:
+			if is_instance_valid(m) and m is CharacterBody2D:
+				restored_party.append(m)
+		if not restored_party.is_empty():
+			party_members = restored_party
+
+	var restore_pos: Vector2 = pre_arena_snapshot.get("restore_pos", Vector2(arena_bounds.position.x - 90.0, arena_center.y))
+
+	# 5. Pulihkan kondisi hero dari snapshot
+	var party_data: Array = pre_arena_snapshot.get("party_state", [])
+	for m_data in party_data:
+		var hero: CharacterBody2D = m_data.get("node")
+		if not is_instance_valid(hero):
+			continue
+		var hp: int = m_data.get("hp", 100)
+		var was_dead: bool = m_data.get("is_dead", false)
+
+		hero.global_position = restore_pos
+		if "target_position" in hero:
+			hero.target_position = restore_pos
+		if "velocity" in hero:
+			hero.velocity = Vector2.ZERO
+		if "knockback_velocity" in hero:
+			hero.knockback_velocity = Vector2.ZERO
+
+		if was_dead or hp <= 0:
+			hero.is_dead = true
+			hero.current_health = 0
+			hero.visible = false
+			hero.modulate = Color(1.0, 1.0, 1.0, 0.0)
+			if hero.is_in_group("player"):
+				hero.remove_from_group("player")
+			if hero.has_node("CollisionShape2D"):
+				hero.get_node("CollisionShape2D").set_deferred("disabled", true)
+			if hero.has_node("Hurtbox/CollisionShape2D"):
+				hero.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", true)
+		else:
+			hero.is_dead = false
+			hero.current_health = hp
+			hero.visible = true
+			hero.modulate = Color.WHITE
+			if not hero.is_in_group("player"):
+				hero.add_to_group("player")
+			if not hero.is_inside_tree():
+				add_child(hero)
+			if hero.has_node("CollisionShape2D"):
+				hero.get_node("CollisionShape2D").set_deferred("disabled", false)
+			if hero.has_node("Hurtbox/CollisionShape2D"):
+				hero.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", false)
+			if hero.has_method("play_idle_animation"):
+				hero.play_idle_animation()
+
+		if hero.has_method("reset_combat_skills"):
+			hero.reset_combat_skills()
+
+	# 6. Tentukan Leader aktif yang hidup
+	var saved_leader_idx: int = pre_arena_snapshot.get("active_leader_index", 0)
+	if saved_leader_idx < 0 or saved_leader_idx >= party_members.size() or not is_character_alive(party_members[saved_leader_idx]):
+		saved_leader_idx = 0
+		for i in range(party_members.size()):
+			if is_character_alive(party_members[i]):
+				saved_leader_idx = i
+				break
+
+	set_active_leader(saved_leader_idx)
+	var active_hero := get_active_leader()
+	if active_hero:
+		active_hero.global_position = restore_pos
+		if "target_position" in active_hero:
+			active_hero.target_position = restore_pos
+		if camera:
+			camera.global_position = active_hero.global_position
+			if camera.has_method("reset_smoothing"):
+				camera.reset_smoothing()
+			if camera.has_method("force_update_scroll"):
+				camera.force_update_scroll()
+
+	notify_party_combat_state(false)
+	update_party_visibility()
+	breadcrumbs.clear()
+
+	# 7. Sembunyikan combat HUD
+	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
+		gameplay_hud.set_combat_hud_visible(false, false)
+
+	# 8. Sinkronkan urutan dan status ke HUD
+	if gameplay_hud:
+		if gameplay_hud.has_method("update_party_order"):
+			gameplay_hud.update_party_order(party_members, active_leader_index)
+		else:
+			gameplay_hud.party_members = party_members
+			gameplay_hud.active_leader_index = active_leader_index
+			gameplay_hud.update_party_hud()
+			gameplay_hud.update_leader_indicator()
+
+	# 9. Fade out layar defeat secara halus
+	if defeat_canvas and is_instance_valid(defeat_canvas):
+		var tw := create_tween()
+		if defeat_rect:
+			tw.tween_property(defeat_rect, "modulate:a", 0.0, 0.35)
+		if defeat_title_lbl:
+			tw.parallel().tween_property(defeat_title_lbl, "modulate:a", 0.0, 0.35)
+		if defeat_subtitle_lbl:
+			tw.parallel().tween_property(defeat_subtitle_lbl, "modulate:a", 0.0, 0.35)
+		if defeat_prompt_lbl:
+			tw.parallel().tween_property(defeat_prompt_lbl, "modulate:a", 0.0, 0.35)
+		tw.tween_callback(func():
+			if defeat_canvas and is_instance_valid(defeat_canvas):
+				defeat_canvas.visible = false
+			is_arena_defeat_active = false
+		)
+	else:
+		is_arena_defeat_active = false
 
 
 # =========================================================
