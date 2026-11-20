@@ -498,7 +498,6 @@ tile_map_data = PackedByteArray("AAAiABwAAAAEAAkAAAAbACgAAAAEAAkAAAATAA0AAAAAAAQ
 tile_set = SubResource("TileSet_l7hw2")
 
 [node name="Nature-Tree1" type="TileMapLayer" parent="." unique_id=1406301119]
-visible = false
 z_index = 4
 y_sort_enabled = true
 texture_filter = 1
@@ -508,7 +507,6 @@ tile_map_data = PackedByteArray("AAAiABwAAAAEAAkAAAAbACgAAAAEAAkAAAATAA0AAAAAAAQ
 tile_set = SubResource("TileSet_l7hw2")
 
 [node name="Nature-Tree2" type="TileMapLayer" parent="." unique_id=1252039916]
-visible = false
 z_index = 4
 y_sort_enabled = true
 texture_filter = 1
@@ -518,7 +516,6 @@ tile_map_data = PackedByteArray("AAAiABwAAAAEAAkAAAAbACgAAAAEAAkAAAATAA0AAAAAAAQ
 tile_set = SubResource("TileSet_l7hw2")
 
 [node name="Nature-Tree3" type="TileMapLayer" parent="." unique_id=1749325433]
-visible = false
 z_index = 4
 y_sort_enabled = true
 texture_filter = 1
@@ -528,7 +525,6 @@ tile_map_data = PackedByteArray("AAAiABwAAAAEAAkAAAAbACgAAAAEAAkAAAATAA0AAAAAAAQ
 tile_set = SubResource("TileSet_l7hw2")
 
 [node name="Nature-Bush1" type="TileMapLayer" parent="." unique_id=177402518]
-visible = false
 z_index = 4
 y_sort_enabled = true
 texture_filter = 1
@@ -539,7 +535,6 @@ tile_map_data = PackedByteArray("AAAiABwAAAAEAAkAAAAbACgAAAAEAAkAAAATAA0AAAAAAAQ
 tile_set = SubResource("TileSet_l7hw2")
 
 [node name="Nature-Bush2" type="TileMapLayer" parent="." unique_id=1809690155]
-visible = false
 z_index = 4
 y_sort_enabled = true
 texture_filter = 1
@@ -567,7 +562,6 @@ tile_map_data = PackedByteArray("AAAiABwAAAAEAAkAAAAbACgAAAAEAAkAAAATAA0AAAAAAAQ
 tile_set = SubResource("TileSet_l7hw2")
 
 [node name="Nature-ground" type="TileMapLayer" parent="." unique_id=983763280]
-visible = false
 z_index = 4
 y_sort_enabled = true
 texture_filter = 1
