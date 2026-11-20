@@ -38,14 +38,15 @@ const ARENA_KAMP_ARTHUR_POS: Vector2 = Vector2(7950.0, -1210.0)
 const ARENA_KAMP_ALARIC_POS: Vector2 = Vector2(8350.0, -1210.0)
 const ARENA_KAMP_CENTER_POS: Vector2 = Vector2(8155.0, -1210.0)
 const GRAVEYARD_POS: Vector2 = Vector2(4400.0, 2900.0)
-const FOREST_CABIN_DOOR_POS: Vector2 = Vector2(8600.0, 3840.0)
-const FOREST_CAMP_STOP_POS: Vector2 = Vector2(8600.0, 4350.0)
+const FOREST_CABIN_DOOR_POS: Vector2 = Vector2(8650.0, 3840.0)
+const FOREST_CAMP_STOP_POS: Vector2 = Vector2(8650.0, 4350.0)
 const FOREST_CROW_SPAWN_POS: Vector2 = Vector2(9800.0, 3600.0)
-const FOREST_CROW_PERCH_POS: Vector2 = Vector2(8820.0, 4158.0)
+const FOREST_CROW_PERCH_POS: Vector2 = Vector2(8820.0, 4171.0)
 const FOREST_MAGNUS_POS: Vector2 = Vector2(8510.0, 4320.0)
+const FOREST_MONSTER_ARENA_POS: Vector2 = Vector2(6740.0, 5500.0)
 
-const CASTLE_APPROACH_START_POS: Vector2 = Vector2(2533.0, 2000.0)
-const CASTLE_APPROACH_STOP_POS: Vector2 = Vector2(2533.0, 1350.0)
+const CASTLE_APPROACH_START_POS: Vector2 = Vector2(2533.0, 3500.0)
+const CASTLE_APPROACH_STOP_POS: Vector2 = Vector2(2533.0, 2400.0)
 
 var _prologue_guards: Array[Node2D] = []
 var _prologue_crow: Sprite2D = null
@@ -64,44 +65,73 @@ var _nav_compass = null
 # =========================================================
 const PROLOGUE_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
-		"text": "Hmm.. aku pikir hari ini cukup sampai sini aja, tempat ini menarik untuk menjadi pusat pertambangan kita. Menurutmu bagaimana?"
+		"text": "Hah... pegal juga seharian memeriksa kayu. Sebelum pulang, aku mau lemaskan badan sebentar ke arah tebing."
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
-		"text": "Perintahmu kan kewajiban bagi kita. Sebagai kawan lamamu, aku sudah cukup yakin dengan segala yang kau pilih."
+		"text": "Hati-hati, Arthur. Pengawal bilang ada beberapa monster berkeliaran di dekat sana."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
-		"text": "Hahaha, semenjak aku diutus memimpin kerajaan ini, aku benci dengan bahasa mereka yang terlalu sopan, padahal dulunya kita duduk di bangku yang sama."
+		"text": "Tenang saja, hitung-hitung pemanasan. Tunggu sebentar di sini."
+	}
+]
+
+# Sesuai Naskah Dialog 1B (Setelah Fight & Burung Gagak Tiba)
+const PROLOGUE_POST_FIGHT_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Forzato Arthur",
+		"portrait": "arthur",
+		"text": "Hah... sejuk juga di sini. Menurutku observasi kayu hari ini cukup sampai di sini saja. Tebing batu tadi kelihatannya cocok kalau kita jadikan pusat pertambangan. Menurutmu bagaimana, Magnus?"
+	},
+	{
+		"speaker": "Pensatore Magnus",
+		"portrait": "magnus",
+		"text": "Perintahmu kan kewajiban bagi kami. Tapi sebagai kawan lamamu, dari dulu pilihan instingmu memang jarang meleset."
+	},
+	{
+		"speaker": "Forzato Arthur",
+		"portrait": "arthur",
+		"text": "Hahaha! Ayolah Magnus, jangan kaku begitu. Mentang-mentang ayah dan ibu menyuruhku memimpin proyek ini, kalian jadi bicara formal sekali. Padahal dulu kita duduk di bangku yang sama waktu di akademi."
+	},
+	{
+		"speaker": "Pensatore Magnus",
+		"portrait": "magnus",
+		"text": "Ya mau bagaimana lagi, bagaimanapun kau itu pangeran. Tapi kalau kau maunya santai, ya baguslah. Soal tambang tadi aku setuju, tanahnya memang padat."
 	},
 	{
 		"speaker": "Burung Gagak",
 		"portrait": "raven",
-		"text": "krok - krokk KROKK! KROK!!"
+		"text": "KROKK! KROK-KROKK!! KROKKK! KROK!!"
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
-		"portrait": "magnus",
-		"text": "Yang benar saja?"
-	},
-	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
-		"text": "Apa yang burung itu katakan? ia membentak seperti sedang ada banyak masalah dikeluarganya."
+		"text": "Apa yang burung itu katakan? Dari tadi diam saja, sekarang malah membentak seperti sedang banyak masalah keluarga."
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
-		"text": "Tidak! INI LEBIH DARI ITU. Dunia kita terancam, Para penyihir itu mendapat ramalan kiamat."
+		"text": "Tunggu sebentar, Arthur... Ini bukan gagak liar. Burung ini bawa pesan sihir dari dewan istana."
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Forzato Arthur",
+		"portrait": "arthur",
+		"text": "Pesan apa?"
+	},
+	{
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
-		"text": "Ayo segera kembali ke kerajaan dan melakukan rapat dengan para petinggi lainya."
+		"text": "Ini gawat. Dunia kita terancam. Para peramal di istana baru saja mendapat ramalan buruk soal kiamat."
+	},
+	{
+		"speaker": "Pensatore Magnus",
+		"portrait": "magnus",
+		"text": "Ayo cepat kembali ke istana. Kita harus kumpulkan para petinggi dan laporkan ini ke Yang Mulia Raja dan Ratu!"
 	}
 ]
 
@@ -111,37 +141,37 @@ const PROLOGUE_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CASTLE_MEETING_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Mungkin para peramal bisa menjelaskan, apa yang terjadi akhir-akhir ini."
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Setidaknya, kami menyimpulkan bahwa akan ada bencana besar yang terjadi."
 	},
 	{
-		"speaker": "NPC Peramal 1",
-		"portrait": "peramal_1",
+		"speaker": "Wizandy",
+		"portrait": "wizandy",
 		"text": "7 hari ke depan, akan terjadi seven deadly day. Hari kebangkitan 7 bangsa iblis secara berurutan melalui 7 tempat berbeda. Aku tidak tahu rupa iblis yang akan datang dan seperti apa mereka."
 	},
 	{
-		"speaker": "NPC Peramal 2",
-		"portrait": "peramal_2",
+		"speaker": "Wizashley",
+		"portrait": "wizashley",
 		"text": "Hanya saja, aku mengetahui 7 bangsa ini dari ingatan leluhur kami:\n- Superbia (Pride) - Sombong\n- Avarizia (Greed) - Serakah\n- Lussuria (Lust) - Nafsu"
 	},
 	{
-		"speaker": "NPC Peramal 2",
-		"portrait": "peramal_2",
+		"speaker": "Wizashley",
+		"portrait": "wizashley",
 		"text": "Dan bangsa iblis berikutnya:\n- Invidia (Envy) - Iri\n- Gola (Gluttony) - Rakus\n- Ira (Wrath) - Marah\n- Accidia (Sloth) - Malas"
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Beberapa dari mereka bersatu, beberapa dari mereka saling melahap satu sama lain. Pada intinya, jika kita tidak bertindak cepat, bumi ini akan menjadi sarang mereka berkembang biak."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Aku sudah menyimpulkan apa yang akan kita lakukan. Besok pagi kita akan melakukan pelatihan ketat, sekarang semuanya beristirahat dan tunggu perintah dariku untuk esok pagi."
 	}
@@ -153,12 +183,12 @@ const CASTLE_MEETING_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_KNIGHT_ROOM_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Aku harus segera pergi berlatih, \"pelatih\" pasti sudah menungguku di sana."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Huft, semoga semua ini berjalan seperti semestinya."
 	}
@@ -170,17 +200,17 @@ const CH1_KNIGHT_ROOM_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_CAMP_TRAINING_PRE_FIGHT_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Alaric, aku cukup siap untuk ini. Aku akan melawanmu, kan?"
 	},
 	{
-		"speaker": "Alaric (Pelatih)",
+		"speaker": "Pelatih Alaric",
 		"portrait": "alaric",
 		"text": "Iya Yang Mulia, setidaknya cukup bertahan saja dariku ha-ha-ha."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Sedari dulu kau memang kesatria yang arogan, ayo kita lihat siapa yang lebih kuat!"
 	}
@@ -192,27 +222,27 @@ const CH1_CAMP_TRAINING_PRE_FIGHT_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_CAMP_TRAINING_POST_FIGHT_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Alaric (Pelatih)",
+		"speaker": "Pelatih Alaric",
 		"portrait": "alaric",
 		"text": "Kau memang cukup tangguh Yang Mulia, sayangnya aku cukup lihai untuk melawanmu haha."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Astaga, kurasa kita cukup imbang..."
 	},
 	{
-		"speaker": "Alaric (Pelatih)",
+		"speaker": "Pelatih Alaric",
 		"portrait": "alaric",
 		"text": "Menurut saya, kau sudah cukup tangguh untuk perjalanan ini."
 	},
 	{
-		"speaker": "Alaric (Pelatih)",
+		"speaker": "Pelatih Alaric",
 		"portrait": "alaric",
 		"text": "Pergi ke daerah pemakaman, di situ terdapat makam prajurit terhebat yang pernah kulatih dahulu, Lancelot. Terdapat pedang yang pernah ditempa oleh penempa legendaris di sana."
 	},
 	{
-		"speaker": "Alaric (Pelatih)",
+		"speaker": "Pelatih Alaric",
 		"portrait": "alaric",
 		"text": "Gali saja makam itu dan ambil pedangnya, dia sudah mewariskan padaku sejak masa kritisnya, hanya saja aku menunggu saat yang tepat."
 	}
@@ -224,12 +254,12 @@ const CH1_CAMP_TRAINING_POST_FIGHT_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_GRAVEYARD_SWORD_FOUND_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Pedang ini terasa sangat kokoh. Hanya saja mungkin sedikit termakan oleh umur..."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Aku akan pergi untuk memperbaikinya."
 	}
@@ -241,37 +271,37 @@ const CH1_GRAVEYARD_SWORD_FOUND_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_FORGE_MAGNUS_REQUEST_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Arthur, bisa bantu aku sebentar?"
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Memangnya ada apa sampai kamu perlu bantuanku?"
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Ibuku pernah bercerita kalau ada artefak kuno dari keturunan darah keluargaku."
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Artefak itu sengaja disegel dan hanya boleh digunakan ketika ada hal genting seperti kondisi kita sekarang."
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Katanya sih ada di dalam perpustakaan, dan ada ruang rahasia di sana."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Dengan senang hati! Lagipula kamu yang akan melindungiku dengan sihir-sihir kuatmu itu."
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Dasar..., baiklah ikuti aku."
 	}
@@ -283,12 +313,12 @@ const CH1_FORGE_MAGNUS_REQUEST_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_LIBRARY_ENTER_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Magnus, lihatlah sekelilingmu, penuh dengan buku ya!"
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Ya karena ini perpustakaan..."
 	}
@@ -300,7 +330,7 @@ const CH1_LIBRARY_ENTER_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_LIBRARY_PUZZLE_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Buku-buku ini merangkai suatu kata..."
 	}
@@ -317,7 +347,7 @@ const CH1_LIBRARY_BOSS_PRE_FIGHT_DIALOGUE: Array[Dictionary] = [
 		"text": "Berani-beraninya kalian menapakkan kaki di sini. Pergi sebelum aku mengubah kalian menjadi salah satu dari buku yang tersusun di rak-rak itu!"
 	},
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Sebentar! Kami hanya ingin mencari artefak yang tersegel di tempat ini, bukankah itu diperbolehkan!?"
 	},
@@ -334,7 +364,7 @@ const CH1_LIBRARY_BOSS_PRE_FIGHT_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_LIBRARY_GOLDEN_BOOK_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Magnus (Penyihir)",
+		"speaker": "Pensatore Magnus",
 		"portrait": "magnus",
 		"text": "Buku ini bercahaya saat kusentuh..."
 	}
@@ -346,7 +376,7 @@ const CH1_LIBRARY_GOLDEN_BOOK_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_GATE_INVASION_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "SERANGG!!!"
 	}
@@ -358,7 +388,7 @@ const CH1_GATE_INVASION_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_ASSASSIN_APPEARANCE_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Hellene (Assassin)",
+		"speaker": "Carina Hellene",
 		"portrait": "assassin",
 		"text": "Akan kujelaskan nanti setelah mengalahkan raksasa ini bersama!"
 	}
@@ -370,27 +400,27 @@ const CH1_ASSASSIN_APPEARANCE_DIALOGUE: Array[Dictionary] = [
 # =========================================================
 const CH1_ASSASSIN_UNMASK_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Hellene (Assassin)",
+		"speaker": "Carina Hellene",
 		"portrait": "assassin",
 		"text": "Aku adalah assassin dari kerajaan seberang. Aku bisa sampai ke sini karena menyamar saat aku dan pengawalku sedang berada di hutan."
 	},
 	{
-		"speaker": "Hellene (Assassin)",
+		"speaker": "Carina Hellene",
 		"portrait": "assassin",
 		"text": "Pengawalku habis pada malam itu. Aku berhasil membunuh satu dari mereka dan menggunakan sebagian dari tubuhnya sebagai penyamaran ini."
 	},
 	{
-		"speaker": "Hellene (Assassin)",
+		"speaker": "Carina Hellene",
 		"portrait": "assassin",
 		"text": "Saat ini aku yakin, tidak hanya kastilmu yang diserang, kastilku sedang dalam bahaya, esok hari akan ada iblis yang menyerang kastilku."
 	},
 	{
-		"speaker": "Hellene (Assassin)",
+		"speaker": "Carina Hellene",
 		"portrait": "assassin",
 		"text": "Tolong bantu aku menyelesaikan masalah ini, kita perlu bersatu untuk menyelamatkan kehidupan manusia."
 	},
 	{
-		"speaker": "Arthur (Pangeran)",
+		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
 		"text": "Aku tidak akan ikut denganmu, kau yang akan ikut dengan kita. Tunjukkan aku jalannya!"
 	}
@@ -402,6 +432,8 @@ const CH1_ASSASSIN_UNMASK_DIALOGUE: Array[Dictionary] = [
 const STORY_DIALOGUES: Dictionary = {
 	"FLK-001": PROLOGUE_DIALOGUE,
 	"FLK-002": PROLOGUE_DIALOGUE,
+	"FLK-002-B": PROLOGUE_POST_FIGHT_DIALOGUE,
+	"prologue_post_fight": PROLOGUE_POST_FIGHT_DIALOGUE,
 	"CH0-SC02": PROLOGUE_DIALOGUE,
 	"prologue_intro": PROLOGUE_DIALOGUE,
 	"prologue": PROLOGUE_DIALOGUE,
@@ -460,6 +492,9 @@ var is_knight_room_cutscene_in_progress: bool = false
 var is_alaric_sparring_in_progress: bool = false
 var is_alaric_sparring_completed: bool = false
 var alaric_node: CharacterBody2D = null
+var _alaric_sprite_frames_cache: SpriteFrames = null
+var _alaric_boss_prompt_layer: CanvasLayer = null
+var _alaric_boss_modal_input_cb: Callable = Callable()
 
 
 # State Tempur Party ala Guardian Tales
@@ -476,18 +511,42 @@ const COMBAT_WINDDOWN_DELAY: float = 0.4
 # =========================================================
 enum ArenaState { INACTIVE, COMBAT, CLEARED }
 var arena_state: ArenaState = ArenaState.INACTIVE
-var arena_bounds: Rect2 = Rect2(Vector2(5320.0, 2810.0), Vector2(1920.0, 1080.0))
-var arena_trigger_bounds: Rect2 = Rect2(Vector2(5500.0, 2700.0), Vector2(1500.0, 1200.0))
-var arena_center: Vector2 = Vector2(6280.0, 3350.0)
+var arena_bounds: Rect2 = Rect2(Vector2(3020.0, 4160.0), Vector2(1920.0, 1080.0))
+var arena_trigger_bounds: Rect2 = Rect2(Vector2(3400.0, 4200.0), Vector2(1150.0, 1000.0))
+var arena_center: Vector2 = Vector2(3980.0, 4700.0)
 var arena_enemies: Array[CharacterBody2D] = []
 var arena_barrier_body: StaticBody2D = null
+
+var arena_zones: Array[Dictionary] = [
+	{
+		"id": 1,
+		"name": "Arena_1_Courtyard",
+		"center": Vector2(3980.0, 4700.0),
+		"trigger_bounds": Rect2(Vector2(3400.0, 4200.0), Vector2(1150.0, 1000.0)),
+		"bounds": Rect2(Vector2(3020.0, 4160.0), Vector2(1920.0, 1080.0)),
+		"enemies": [] as Array[CharacterBody2D],
+		"is_cleared": false,
+		"respawn_timer": 0.0,
+	},
+	{
+		"id": 2,
+		"name": "Arena_2_Forest",
+		"center": Vector2(6740.0, 5500.0),
+		"trigger_bounds": Rect2(Vector2(6290.0, 5150.0), Vector2(900.0, 700.0)),
+		"bounds": Rect2(Vector2(5780.0, 4960.0), Vector2(1920.0, 1080.0)),
+		"enemies": [] as Array[CharacterBody2D],
+		"is_cleared": false,
+		"respawn_timer": 0.0,
+	}
+]
+var active_arena_idx: int = -1
 const CAMERA_ZOOM_EXPLORE: Vector2 = Vector2(0.8, 0.8)
 const CAMERA_ZOOM_ARENA: Vector2 = Vector2(0.6, 0.6)
 var target_camera_zoom: Vector2 = CAMERA_ZOOM_EXPLORE
 var is_camera_locked_to_arena: bool = false
 var arena_clear_delay_timer: float = 0.0
 var arena_group_respawn_timer: float = 0.0
-const ARENA_GROUP_RESPAWN_DELAY: float = 5.0
+const ARENA_GROUP_RESPAWN_DELAY: float = 7.0
 var is_party_fading_out: bool = false
 var _party_fade_tweens: Array[Tween] = []
 var is_transitioning: bool = false
@@ -848,17 +907,25 @@ func _ready() -> void:
 	_init_defeat_overlay.call_deferred()
 
 	# 6. Jalankan efek pembukaan Circular Mask (Iris Open) saat masuk arena game
-	play_iris_opening_transition()
 	_init_and_play_bgm()
 
 	# Jika masuk melalui menu 'Lanjutkan' di Start Menu, muat save slot tertunda
 	if pending_load_slot_id > 0:
+		play_iris_opening_transition()
 		var slot_to_load := pending_load_slot_id
 		pending_load_slot_id = -1
 		call_deferred("load_game_from_slot", slot_to_load)
 	elif selected_game_mode == "open_world":
+		play_iris_opening_transition()
 		_setup_open_world_mode.call_deferred()
+	elif not is_prologue_completed:
+		# Mode Cerita baru: tampilkan narasi abad ke-7 di layar hitam sebelum masuk gameplay
+		_show_story_prologue_intro_crawl(func():
+			play_iris_opening_transition()
+			_start_story_prologue_sequence.call_deferred()
+		)
 	else:
+		play_iris_opening_transition()
 		_start_story_prologue_sequence.call_deferred()
 
 
@@ -906,6 +973,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
+	# Tangani navigasi input keyboard ketika popup konfirmasi Boss Alaric sedang aktif
+	if is_instance_valid(_alaric_boss_prompt_layer):
+		if _alaric_boss_modal_input_cb.is_valid() and _alaric_boss_modal_input_cb.call(event):
+			get_viewport().set_input_as_handled()
+		return
+
 	if is_transitioning:
 		return
 	# Tombol pintasan pergantian karakter di arena combat (1, 2, 3, 4) dan pause (ESC)
@@ -923,7 +996,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					get_viewport().set_input_as_handled()
 				return
 
-		if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
+		if (arena_state == ArenaState.COMBAT or is_in_training_arena or is_in_arena_kamp or is_alaric_sparring_in_progress) and not is_party_fading_out:
 			if key_code == KEY_1 or (InputMap.has_action("skill_1") and event.is_action_pressed("skill_1")):
 				switch_to_character(0)
 				get_viewport().set_input_as_handled()
@@ -947,6 +1020,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif key_code == KEY_E or (InputMap.has_action("interact") and event.is_action_pressed("interact")):
 			if not is_transitioning:
 				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("is_dialogue_active") and gameplay_hud.is_dialogue_active():
+					return
+				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("is_any_menu_open") and gameplay_hud.is_any_menu_open():
+					return
+				if is_instance_valid(_alaric_boss_prompt_layer):
 					return
 				var leader = get_active_leader()
 				if leader:
@@ -978,7 +1055,7 @@ func is_character_alive(character: CharacterBody2D) -> bool:
 
 
 func switch_to_next_character(force: bool = false) -> void:
-	if not force and arena_state != ArenaState.COMBAT and not is_in_training_arena:
+	if not force and arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress:
 		return
 	if party_members.is_empty():
 		return
@@ -998,7 +1075,7 @@ func switch_to_next_character(force: bool = false) -> void:
 
 
 func switch_to_character(idx: int, force: bool = false) -> void:
-	if not force and arena_state != ArenaState.COMBAT and not is_in_training_arena:
+	if not force and arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress:
 		return
 	if idx < 0 or idx >= party_members.size() or idx == active_leader_index:
 		return
@@ -1098,7 +1175,7 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 
 	# Fallback eksplorasi: jika prev_leader tidak valid atau sama dengan target,
 	# cari karakter lain yang saat ini masih aktif berada di dalam SceneTree
-	if _is_party_initialized and arena_state != ArenaState.COMBAT and not is_in_training_arena:
+	if _is_party_initialized and arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress:
 		var target_candidate := party_members[idx]
 		if not prev_leader or prev_leader == target_candidate or not prev_leader.is_inside_tree():
 			for member in party_members:
@@ -1114,7 +1191,7 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 	leader.modulate = Color.WHITE
 
 	# Jika berganti karakter saat eksplorasi 1 karakter, posisikan karakter baru tepat di posisi karakter sebelumnya
-	if arena_state != ArenaState.COMBAT and not is_in_training_arena:
+	if arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress:
 		if prev_leader and is_instance_valid(prev_leader) and prev_leader != leader:
 			var prev_pos: Vector2 = prev_leader.global_position
 			var prev_last_dir: Vector2 = prev_leader.last_direction if "last_direction" in prev_leader else Vector2.DOWN
@@ -1144,7 +1221,8 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 
 	# Berikan status Leader langsung ke karakter terpilih
 	breadcrumbs.clear()
-	leader.set_as_leader(true, null, 0)
+	if leader.has_method("set_as_leader"):
+		leader.set_as_leader(true, null, 0)
 
 	# Berikan referensi langsung ke Leader dan nomor urutan slot tetap (1, 2, 3)
 	var slot_order: int = 1
@@ -1152,8 +1230,9 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 		var follower_idx := (active_leader_index + step) % party_members.size()
 		var follower := party_members[follower_idx]
 		if is_instance_valid(follower):
-			follower.set_as_leader(false, leader, slot_order)
-			if arena_state != ArenaState.COMBAT and not is_in_training_arena and follower.is_inside_tree() and not ("is_dead" in follower and follower.is_dead):
+			if follower.has_method("set_as_leader"):
+				follower.set_as_leader(false, leader, slot_order)
+			if arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress and follower.is_inside_tree() and not ("is_dead" in follower and follower.is_dead):
 				remove_child(follower)
 		slot_order += 1
 
@@ -1190,7 +1269,7 @@ func _set_character_collision_active(char_node: CharacterBody2D, active: bool) -
 
 
 func update_party_visibility() -> void:
-	var in_arena_combat: bool = (arena_state == ArenaState.COMBAT or is_in_training_arena)
+	var in_arena_combat: bool = (arena_state == ArenaState.COMBAT or is_in_training_arena or is_in_arena_kamp or is_alaric_sparring_in_progress)
 	for i in range(party_members.size()):
 		var member = party_members[i]
 		if not is_instance_valid(member):
@@ -1251,7 +1330,7 @@ func update_party_visibility() -> void:
 
 
 func trigger_hero_skill_by_slot(slot_idx: int) -> void:
-	if arena_state != ArenaState.COMBAT and not is_in_training_arena and current_combat_state != PartyCombatState.COMBAT:
+	if arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress and current_combat_state != PartyCombatState.COMBAT:
 		var has_nearby_enemy: bool = false
 		var leader := get_active_leader()
 		if is_instance_valid(leader):
@@ -1278,7 +1357,7 @@ func trigger_hero_skill_by_slot(slot_idx: int) -> void:
 
 
 func execute_hero_skill(hero: CharacterBody2D) -> void:
-	if arena_state != ArenaState.COMBAT and not is_in_training_arena and current_combat_state != PartyCombatState.COMBAT:
+	if arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress and current_combat_state != PartyCombatState.COMBAT:
 		var has_nearby_enemy: bool = false
 		for e in get_tree().get_nodes_in_group("enemy"):
 			if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
@@ -1431,12 +1510,12 @@ func _init_starter_quests() -> void:
 		{
 			"id": "main_01",
 			"category": "main",
-			"title": "Peringatan Dari Langit",
-			"location": "Hutan Depan Istana",
-			"objective": "Dengarkan ramalan buruk dari burung gagak pengintai.",
-			"description": "Burung gagak sihir menyampaikan kabar gawat ramalan kiamat kebangkitan bangsa iblis kepada Arthur dan Magnus.",
+			"title": "Pemanasan Sang Pangeran",
+			"location": "Tebing Hutan Observasi",
+			"objective": "Kalahkan monster liar di dekat tebing pondok kayu.",
+			"description": "Sebelum kembali ke ibu kota, Arthur memutuskan untuk melakukan pemanasan dengan mengalahkan monster liar di dekat tebing.",
 			"status": "completed" if is_prologue_completed else "active",
-			"target_position": Vector2(3000, 1000)
+			"target_position": FOREST_MONSTER_ARENA_POS
 		},
 		{
 			"id": "main_02",
@@ -1585,6 +1664,10 @@ func _init_starter_quests() -> void:
 	]
 
 
+func get_quest_by_id(q_id: String) -> Dictionary:
+	return _get_quest_by_id(q_id)
+
+
 func _get_quest_by_id(q_id: String) -> Dictionary:
 	for q in quest_list:
 		if q.get("id", "") == q_id:
@@ -1640,16 +1723,21 @@ func _process(delta: float) -> void:
 	update_party_skill_cooldowns(delta)
 	check_training_arena()
 	_update_bgm_loop()
+	handle_arena_group_respawn(delta)
 	if arena_state == ArenaState.INACTIVE:
 		check_arena_trigger()
 		var cur_lead := get_active_leader()
-		if is_instance_valid(cur_lead) and not arena_bounds.grow(40.0).has_point(cur_lead.global_position):
-			last_pre_arena_leader_pos = cur_lead.global_position
+		if is_instance_valid(cur_lead):
+			var outside_all: bool = true
+			for zone in arena_zones:
+				if not zone["is_cleared"] and (zone["trigger_bounds"] as Rect2).grow(40.0).has_point(cur_lead.global_position):
+					outside_all = false
+					break
+			if outside_all:
+				last_pre_arena_leader_pos = cur_lead.global_position
 	elif arena_state == ArenaState.COMBAT:
 		check_arena_completion(delta)
 		check_arena_defeat(delta)
-	elif arena_state == ArenaState.CLEARED:
-		handle_arena_group_respawn(delta)
 
 	if is_arena_defeat_active and defeat_prompt_lbl and is_instance_valid(defeat_prompt_lbl):
 		defeat_anim_time += delta
@@ -1892,14 +1980,27 @@ func _init_arena_barrier() -> void:
 	arena_barrier_body.name = "ArenaInvisibleBarrier"
 	arena_barrier_body.collision_layer = 1
 	arena_barrier_body.collision_mask = 0
+	add_child(arena_barrier_body)
+
+	_rebuild_arena_barrier_for_bounds(arena_bounds)
+	_set_arena_barrier_enabled(false)
+
+
+func _rebuild_arena_barrier_for_bounds(bounds: Rect2) -> void:
+	if not arena_barrier_body or not is_instance_valid(arena_barrier_body):
+		return
+
+	for child in arena_barrier_body.get_children():
+		arena_barrier_body.remove_child(child)
+		child.queue_free()
 
 	var thickness := 60.0
-	var west_x := arena_bounds.position.x
-	var east_x := arena_bounds.end.x
-	var north_y := arena_bounds.position.y
-	var south_y := arena_bounds.end.y
-	var width := arena_bounds.size.x
-	var height := arena_bounds.size.y
+	var west_x := bounds.position.x
+	var east_x := bounds.end.x
+	var north_y := bounds.position.y
+	var south_y := bounds.end.y
+	var width := bounds.size.x
+	var height := bounds.size.y
 
 	# 4 Dinding pembatas arena tanpa visual (barrier invisible) tepat di 4 batas tepi layar kamera
 	# Dinding barat (tepat di luar tepi layar kiri)
@@ -1910,9 +2011,6 @@ func _init_arena_barrier() -> void:
 	_create_barrier_shape(arena_barrier_body, Vector2(west_x + width * 0.5, north_y - thickness * 0.5), Vector2(width + thickness * 2.0, thickness))
 	# Dinding selatan (tepat di luar tepi layar bawah)
 	_create_barrier_shape(arena_barrier_body, Vector2(west_x + width * 0.5, south_y + thickness * 0.5), Vector2(width + thickness * 2.0, thickness))
-
-	add_child(arena_barrier_body)
-	_set_arena_barrier_enabled(false)
 
 
 func _create_barrier_shape(parent: StaticBody2D, pos: Vector2, size: Vector2) -> void:
@@ -1935,16 +2033,50 @@ func _set_arena_barrier_enabled(enabled: bool) -> void:
 
 func _init_arena_enemies() -> void:
 	arena_enemies.clear()
-	update_arena_bounds_from_camera()
+	for zone in arena_zones:
+		(zone["enemies"] as Array[CharacterBody2D]).clear()
+
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	for e in enemies:
-		if is_instance_valid(e) and e is CharacterBody2D:
-			if arena_bounds.has_point(e.global_position):
-				arena_enemies.append(e)
+		if not is_instance_valid(e) or not (e is CharacterBody2D):
+			continue
+		if "is_training_dummy" in e and e.is_training_dummy:
+			continue
+		if "is_alaric" in e and e.is_alaric:
+			continue
+		if "Alaric" in e.name:
+			continue
+
+		var assigned: bool = false
+		for zone in arena_zones:
+			var zone_bounds: Rect2 = zone["bounds"]
+			if zone_bounds.grow(150.0).has_point(e.global_position):
+				(zone["enemies"] as Array[CharacterBody2D]).append(e)
+				assigned = true
 				if "wait_for_arena" in e:
 					e.wait_for_arena = true
 				if "can_respawn" in e:
 					e.can_respawn = false
+				break
+
+		# Fallback penempatan berdasarkan nama jika ada pergeseran posisi editor
+		if not assigned:
+			if "Archer" in e.name:
+				(arena_zones[0]["enemies"] as Array[CharacterBody2D]).append(e)
+				if "wait_for_arena" in e:
+					e.wait_for_arena = true
+				if "can_respawn" in e:
+					e.can_respawn = false
+			elif "Knight" in e.name:
+				(arena_zones[1]["enemies"] as Array[CharacterBody2D]).append(e)
+				if "wait_for_arena" in e:
+					e.wait_for_arena = true
+				if "can_respawn" in e:
+					e.can_respawn = false
+
+	print("[Arena] Inisialisasi Arena Zones:")
+	for zone in arena_zones:
+		print(" - ", zone["name"], " (ID: ", zone["id"], ") terdaftar ", (zone["enemies"] as Array).size(), " musuh.")
 
 
 func _init_training_dummy() -> void:
@@ -2004,26 +2136,55 @@ func exit_training_arena() -> void:
 func check_arena_trigger() -> void:
 	if arena_state != ArenaState.INACTIVE:
 		return
-	if arena_enemies.is_empty():
-		return
 	var leader := get_active_leader()
 	if not leader or not is_instance_valid(leader):
 		return
-	if arena_trigger_bounds.has_point(leader.global_position):
-		start_arena_battle()
+	for i in range(arena_zones.size()):
+		var zone: Dictionary = arena_zones[i]
+		if zone["is_cleared"]:
+			continue
+		var enemies_list: Array = zone.get("enemies", [])
+		if enemies_list.is_empty():
+			continue
+
+		# Cek apakah masih ada musuh hidup di zona ini
+		var has_alive_enemy: bool = false
+		for e in enemies_list:
+			if is_instance_valid(e) and not ("is_dead" in e and e.is_dead):
+				has_alive_enemy = true
+				break
+		if not has_alive_enemy:
+			zone["is_cleared"] = true
+			continue
+
+		var trig: Rect2 = zone["trigger_bounds"]
+		if trig.has_point(leader.global_position):
+			start_arena_battle(i)
+			break
 
 
-func start_arena_battle() -> void:
+func start_arena_battle(zone_idx: int = 0) -> void:
 	if arena_state != ArenaState.INACTIVE:
 		return
+	if zone_idx < 0 or zone_idx >= arena_zones.size():
+		return
+
+	active_arena_idx = zone_idx
+	var zone: Dictionary = arena_zones[active_arena_idx]
+	arena_center = zone["center"]
+	arena_trigger_bounds = zone["trigger_bounds"]
+	arena_enemies = zone["enemies"]
+
+	update_arena_bounds_from_camera()
+	zone["bounds"] = arena_bounds
+
 	_take_pre_arena_snapshot()
 	arena_state = ArenaState.COMBAT
 	current_combat_state = PartyCombatState.COMBAT
 	arena_clear_delay_timer = 0.0
 
-	update_arena_bounds_from_camera()
-
-	# 1. Aktifkan invisible barrier penutup arena
+	# 1. Update & aktifkan invisible barrier penutup arena untuk zona aktif
+	_rebuild_arena_barrier_for_bounds(arena_bounds)
 	_set_arena_barrier_enabled(true)
 
 	# 2. Pindahkan target kamera ke tengah arena dan perbesar sudut pandang (zoom out)
@@ -2035,7 +2196,7 @@ func start_arena_battle() -> void:
 	update_party_visibility()
 	notify_party_combat_state(true)
 
-	# 4. Bangunkan seluruh musuh di arena untuk langsung mengejar party
+	# 4. Bangunkan seluruh musuh di arena aktif untuk langsung mengejar party
 	var leader := get_active_leader()
 	for enemy in arena_enemies:
 		if is_instance_valid(enemy):
@@ -2050,7 +2211,7 @@ func start_arena_battle() -> void:
 	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
 		gameplay_hud.set_combat_hud_visible(true, true)
 
-	print("Arena Battle Dimulai! Kamera fokus ke tengah arena (", arena_center, "), party 4 karakter aktif.")
+	print("Arena Battle Dimulai! Zona: ", zone["name"], ", Kamera fokus ke (", arena_center, "), musuh aktif: ", arena_enemies.size())
 
 
 func get_hero_type_index(char_node: CharacterBody2D) -> int:
@@ -2287,7 +2448,24 @@ func _start_party_combat_fade_out() -> void:
 func end_arena_battle() -> void:
 	if arena_state != ArenaState.COMBAT:
 		return
-	arena_state = ArenaState.CLEARED
+
+	if active_arena_idx >= 0 and active_arena_idx < arena_zones.size():
+		arena_zones[active_arena_idx]["is_cleared"] = true
+		arena_zones[active_arena_idx]["respawn_timer"] = ARENA_GROUP_RESPAWN_DELAY
+		print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Musuh akan spawn lagi dalam ", ARENA_GROUP_RESPAWN_DELAY, " detik.")
+
+	# Cek apakah seluruh zona arena cerita telah diselesaikan
+	var has_remaining_arena: bool = false
+	for zone in arena_zones:
+		if not zone["is_cleared"]:
+			has_remaining_arena = true
+			break
+
+	if has_remaining_arena:
+		arena_state = ArenaState.INACTIVE
+	else:
+		arena_state = ArenaState.CLEARED
+
 	is_party_fading_out = false
 	current_combat_state = PartyCombatState.EXPLORING
 	arena_group_respawn_timer = ARENA_GROUP_RESPAWN_DELAY
@@ -2333,19 +2511,23 @@ func end_arena_battle() -> void:
 		if is_instance_valid(e) and "in_arena_combat" in e:
 			e.in_arena_combat = false
 
-	print("Arena Cleared! Seluruh musuh kalah. Kamera kembali ke Leader, party kembali 1 karakter. Grup musuh akan muncul lagi dalam 5 detik.")
+	active_arena_idx = -1
+	print("Arena Battle Selesai! Kamera kembali ke Leader, party kembali ke mode eksplorasi.")
 
 
 func handle_arena_group_respawn(delta: float) -> void:
-	if arena_state != ArenaState.CLEARED:
-		return
-	arena_group_respawn_timer -= delta
-	if arena_group_respawn_timer <= 0.0:
-		_respawn_arena_enemy_group()
+	for zone in arena_zones:
+		if zone.get("is_cleared", false):
+			zone["respawn_timer"] -= delta
+			if zone["respawn_timer"] <= 0.0:
+				_respawn_zone_enemies(zone)
 
 
-func _respawn_arena_enemy_group() -> void:
-	for e in arena_enemies:
+func _respawn_zone_enemies(zone: Dictionary) -> void:
+	zone["is_cleared"] = false
+	zone["respawn_timer"] = 0.0
+	var z_enemies: Array = zone.get("enemies", [])
+	for e in z_enemies:
 		if is_instance_valid(e):
 			if "wait_for_arena" in e:
 				e.wait_for_arena = true
@@ -2354,9 +2536,15 @@ func _respawn_arena_enemy_group() -> void:
 			if e.has_method("respawn"):
 				e.respawn()
 
-	arena_state = ArenaState.INACTIVE
-	arena_clear_delay_timer = 0.0
-	print("Grup musuh arena (2 Knight, 1 Archer) telah muncul kembali di posisinya! Siap untuk pertempuran berikutnya.")
+	if arena_state == ArenaState.CLEARED:
+		arena_state = ArenaState.INACTIVE
+
+	print("[Arena] Musuh di zona ", zone["name"], " telah spawn kembali setelah 7 detik!")
+
+
+func _respawn_arena_enemy_group() -> void:
+	for zone in arena_zones:
+		_respawn_zone_enemies(zone)
 
 
 # =========================================================
@@ -2458,11 +2646,12 @@ func _on_defeat_overlay_gui_input(event: InputEvent) -> void:
 func _take_pre_arena_snapshot() -> void:
 	pre_arena_snapshot.clear()
 	var leader := get_active_leader()
-	var fallback_pos: Vector2 = Vector2(arena_bounds.position.x - 90.0, arena_center.y)
-	var snap_pos: Vector2 = last_pre_arena_leader_pos if last_pre_arena_leader_pos != Vector2.ZERO else fallback_pos
-	if is_instance_valid(leader):
-		if leader.global_position.x < arena_bounds.position.x - 20.0:
-			snap_pos = leader.global_position
+	var fallback_pos: Vector2 = Vector2(arena_trigger_bounds.position.x - 60.0, arena_center.y)
+	var snap_pos: Vector2 = fallback_pos
+	if last_pre_arena_leader_pos != Vector2.ZERO and not arena_trigger_bounds.grow(10.0).has_point(last_pre_arena_leader_pos):
+		snap_pos = last_pre_arena_leader_pos
+	elif is_instance_valid(leader) and leader.global_position.x < arena_trigger_bounds.position.x:
+		snap_pos = leader.global_position
 
 	var party_data: Array[Dictionary] = []
 	for member in party_members:
@@ -2603,6 +2792,10 @@ func execute_arena_rewind() -> void:
 			if e.has_method("respawn"):
 				e.respawn()
 
+	if active_arena_idx >= 0 and active_arena_idx < arena_zones.size():
+		arena_zones[active_arena_idx]["is_cleared"] = false
+	active_arena_idx = -1
+
 	# 4. Kembalikan urutan party dari snapshot
 	if pre_arena_snapshot.has("roster_order"):
 		var saved_roster: Array = pre_arena_snapshot["roster_order"]
@@ -2613,7 +2806,7 @@ func execute_arena_rewind() -> void:
 		if not restored_party.is_empty():
 			party_members = restored_party
 
-	var restore_pos: Vector2 = pre_arena_snapshot.get("restore_pos", Vector2(arena_bounds.position.x - 90.0, arena_center.y))
+	var restore_pos: Vector2 = pre_arena_snapshot.get("restore_pos", Vector2(arena_trigger_bounds.position.x - 60.0, arena_center.y))
 
 	# 5. Pulihkan kondisi hero dari snapshot
 	var party_data: Array = pre_arena_snapshot.get("party_state", [])
@@ -2993,6 +3186,214 @@ func _on_hud_dialogue_finished(_dialogue_id: String) -> void:
 	set_party_movement_locked(false)
 
 
+func _show_story_prologue_intro_crawl(on_completed: Callable) -> void:
+	is_transitioning = true
+	set_party_movement_locked(true)
+	if is_instance_valid(gameplay_hud):
+		gameplay_hud.is_hud_input_blocked = true
+		gameplay_hud.visible = false
+
+	var crawl_canvas := CanvasLayer.new()
+	crawl_canvas.name = "PrologueIntroCrawl"
+	crawl_canvas.layer = 125
+
+	# Latar belakang hitam pekat
+	var bg := ColorRect.new()
+	bg.color = Color(0.04, 0.04, 0.05, 1.0)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	bg.grow_vertical = Control.GROW_DIRECTION_BOTH
+	bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	crawl_canvas.add_child(bg)
+
+	# Container konten
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 70)
+	margin.add_theme_constant_override("margin_right", 70)
+	margin.add_theme_constant_override("margin_top", 45)
+	margin.add_theme_constant_override("margin_bottom", 35)
+	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	crawl_canvas.add_child(margin)
+
+	var vbox := VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 18)
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	margin.add_child(vbox)
+
+	var font: Font = load("res://assets/ui/fonts/beholden-bold.ttf")
+
+	var paragraphs: Array[String] = [
+		"Tepat siang hari pada abad ke-7, sebelum \"satu minggu kebangkitan adanya yang tiada\" terjadi.",
+		"Hari di mana kematian terganggu dan kehidupan mulai diusik.",
+		"Mereka yang telah pergi, kembali untuk menghukum mereka yang masih hidup.",
+		"Menjalankan titah dari sang Raja, Pangeran \"Arthur\" sedang melakukan observasi di lumbung pengolahan kayu bersama kawan lamanya.",
+		"Tepat di hari itu, sebuah panggilan tak terduga datang... membawa kabar buruk yang akan mengguncang seluruh kerajaan."
+	]
+
+	var labels: Array[Label] = []
+	for p_text in paragraphs:
+		var lbl := Label.new()
+		lbl.text = p_text
+		if font:
+			lbl.add_theme_font_override("font", font)
+		lbl.add_theme_font_size_override("font_size", 17)
+		lbl.add_theme_color_override("font_color", Color(0.92, 0.86, 0.72))
+		lbl.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.8))
+		lbl.add_theme_constant_override("shadow_offset_x", 1)
+		lbl.add_theme_constant_override("shadow_offset_y", 2)
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		lbl.visible_characters = 0
+		vbox.add_child(lbl)
+		labels.append(lbl)
+
+	# Indikator petunjuk lanjut di bagian bawah
+	var hint_lbl := Label.new()
+	hint_lbl.text = "[ Tekan Spasi / Klik untuk Lanjut ]"
+	if font:
+		hint_lbl.add_theme_font_override("font", font)
+	hint_lbl.add_theme_font_size_override("font_size", 14)
+	hint_lbl.add_theme_color_override("font_color", Color(0.72, 0.67, 0.55, 0.75))
+	hint_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint_lbl.modulate.a = 0.0
+	vbox.add_child(hint_lbl)
+
+	# Tombol transparan penangkap klik layar penuh (menjamin klik mouse di mana saja selalu terdeteksi)
+	var click_btn := Button.new()
+	click_btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	click_btn.flat = true
+	click_btn.focus_mode = Control.FOCUS_ALL
+	click_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	click_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	var empty_sb := StyleBoxEmpty.new()
+	click_btn.add_theme_stylebox_override("normal", empty_sb)
+	click_btn.add_theme_stylebox_override("hover", empty_sb)
+	click_btn.add_theme_stylebox_override("pressed", empty_sb)
+	click_btn.add_theme_stylebox_override("focus", empty_sb)
+	click_btn.add_theme_stylebox_override("disabled", empty_sb)
+	crawl_canvas.add_child(click_btn)
+
+	add_child(crawl_canvas)
+
+	# Fade in pembuka latar belakang
+	bg.modulate.a = 0.0
+	margin.modulate.a = 0.0
+	var in_tween := create_tween()
+	in_tween.set_parallel(true)
+	in_tween.tween_property(bg, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
+	in_tween.tween_property(margin, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
+	await in_tween.finished
+
+	# Sistem deteksi input pemain (Klik mouse / Spasi / Enter)
+	var advance_pressed: Array[bool] = [false]
+	click_btn.pressed.connect(func():
+		advance_pressed[0] = true
+	)
+	click_btn.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			advance_pressed[0] = true
+	)
+
+	var last_key_state: Array[bool] = [true]
+	var last_mouse_state: Array[bool] = [true]
+	await get_tree().create_timer(0.05).timeout
+	last_key_state[0] = false
+	last_mouse_state[0] = false
+
+	var check_advance_pressed = func() -> bool:
+		if advance_pressed[0]:
+			advance_pressed[0] = false
+			return true
+
+		# 1. Deteksi klik mouse langsung via Input
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			if not last_mouse_state[0]:
+				last_mouse_state[0] = true
+				return true
+		else:
+			last_mouse_state[0] = false
+
+		# 2. Deteksi tombol keyboard (Spasi / Enter / Action)
+		if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("interact"):
+			return true
+		if Input.is_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_ENTER):
+			if not last_key_state[0]:
+				last_key_state[0] = true
+				return true
+		else:
+			last_key_state[0] = false
+
+		return false
+
+	# Tampilkan kalimat satu per satu (teks muncul perlahan, spasi/klik mempercepat)
+	for p_idx in range(labels.size()):
+		var lbl: Label = labels[p_idx]
+		var total_chars: int = lbl.text.length()
+		var current_chars: float = 0.0
+		var chars_per_sec: float = 40.0
+
+		# Efek ketik berjalan
+		while current_chars < total_chars:
+			var delta: float = get_process_delta_time()
+			current_chars += chars_per_sec * delta
+			lbl.visible_characters = int(current_chars)
+
+			if check_advance_pressed.call():
+				# Jika ditekan saat sedang mengetik -> langsung percepat dan tampilkan penuh kalimat ini
+				lbl.visible_characters = -1
+				break
+
+			await get_tree().process_frame
+
+		lbl.visible_characters = -1
+
+		# Jeda membaca natural (1.6 detik) atau langsung lanjut jika pemain menekan Spasi/Klik
+		if p_idx < labels.size() - 1:
+			var read_timer: float = 0.0
+			var max_read_delay: float = 1.6
+			while read_timer < max_read_delay:
+				if check_advance_pressed.call():
+					break
+				var dt: float = get_process_delta_time()
+				read_timer += dt
+				await get_tree().process_frame
+
+	# Semua kalimat selesai muncul -> aktifkan petunjuk lanjut berkedip
+	hint_lbl.modulate.a = 1.0
+	var pulse_tween := create_tween().set_loops()
+	pulse_tween.tween_property(hint_lbl, "modulate:a", 0.35, 0.8).set_trans(Tween.TRANS_SINE)
+	pulse_tween.tween_property(hint_lbl, "modulate:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
+
+	# Tunggu konfirmasi akhir klik/spasi dari pemain untuk mulai masuk ke gameplay
+	while true:
+		if check_advance_pressed.call():
+			break
+		await get_tree().process_frame
+
+	if pulse_tween and pulse_tween.is_valid():
+		pulse_tween.kill()
+
+	# Fade out penutup teks
+	var out_tween := create_tween()
+	out_tween.set_parallel(true)
+	out_tween.tween_property(bg, "modulate:a", 0.0, 0.6).set_trans(Tween.TRANS_SINE)
+	out_tween.tween_property(margin, "modulate:a", 0.0, 0.6).set_trans(Tween.TRANS_SINE)
+	await out_tween.finished
+
+	crawl_canvas.queue_free()
+
+	if is_instance_valid(gameplay_hud):
+		gameplay_hud.visible = true
+		gameplay_hud.is_hud_input_blocked = false
+
+	if on_completed.is_valid():
+		on_completed.call()
+
+
 func _trigger_prologue_cutscene() -> void:
 	_start_story_prologue_sequence()
 
@@ -3042,9 +3443,9 @@ func _start_story_prologue_sequence() -> void:
 	var guard_scene: PackedScene = load("res://scene/npc/npc_guard.tscn")
 	if guard_scene:
 		var guard_data: Array[Dictionary] = [
-			{"pos": Vector2(8420.0, 4320.0), "anim": "idle_e"},
-			{"pos": Vector2(8720.0, 4220.0), "anim": "idle_w"},
-			{"pos": Vector2(8780.0, 4360.0), "anim": "idle_w"}
+			{"pos": Vector2(8420.0, 4240.0), "dir": "e"},
+			{"pos": Vector2(8720.0, 4220.0), "dir": "w"},
+			{"pos": Vector2(8780.0, 4360.0), "dir": "w"}
 		]
 		for idx in range(guard_data.size()):
 			var g = guard_scene.instantiate() as CharacterBody2D
@@ -3052,14 +3453,15 @@ func _start_story_prologue_sequence() -> void:
 				g.name = "PrologueGuard_%d" % (idx + 1)
 				g.global_position = guard_data[idx]["pos"]
 				g.patrol_points.clear()
-				g.facing_direction = "e" if "e" in guard_data[idx]["anim"] else "w"
+				g.facing_direction = guard_data[idx].get("dir", "w")
 				g.set_physics_process(false)
-				if g.has_node("AnimatedSprite2D"):
-					g.get_node("AnimatedSprite2D").play(guard_data[idx]["anim"])
 				add_child(g)
+				var spr = g.get_node_or_null("AnimatedSprite2D")
+				if spr:
+					spr.play("idle_" + g.facing_direction)
 				_prologue_guards.append(g)
 
-	# 3. Spawn Burung Gagak di atas pepohonan kanan atas
+	# 3. Spawn Burung Gagak bertengger di atas tiang lampu kayu sejak awal
 	_prologue_crow = Sprite2D.new()
 	_prologue_crow.name = "PrologueCrow"
 	_prologue_crow.texture = load("res://assets/characters/animal/raven/raven.png")
@@ -3068,17 +3470,17 @@ func _start_story_prologue_sequence() -> void:
 	_prologue_crow.frame = 0
 	_prologue_crow.scale = Vector2(2.5, 2.5)
 	_prologue_crow.z_index = 8
-	_prologue_crow.global_position = FOREST_CROW_SPAWN_POS
+	_prologue_crow.global_position = FOREST_CROW_PERCH_POS
 	add_child(_prologue_crow)
 
-	# Animasi kepakan sayap gagak selama terbang meluncur
+	# Animasi idle bertengger gagak (gerakan menoleh / bobbing frame 0 dan 1)
 	if _prologue_crow_flap_tween and _prologue_crow_flap_tween.is_valid():
 		_prologue_crow_flap_tween.kill()
 	_prologue_crow_flap_tween = create_tween().set_loops()
 	_prologue_crow_flap_tween.tween_callback(func():
 		if is_instance_valid(_prologue_crow):
 			_prologue_crow.frame = (_prologue_crow.frame + 1) % 2
-	).set_delay(0.12)
+	).set_delay(0.4)
 
 	enter_location("Hutan Observasi")
 
@@ -3094,24 +3496,103 @@ func _start_story_prologue_sequence() -> void:
 	var arthur_tween := create_tween()
 	arthur_tween.tween_property(lead, "global_position", FOREST_CAMP_STOP_POS, 3.4).set_trans(Tween.TRANS_LINEAR)
 
-	# Gagak terbang meluncur menuju atas tiang lampu kayu di sebelah titik S
-	var crow_tween := create_tween()
-	crow_tween.tween_property(_prologue_crow, "global_position", FOREST_CROW_PERCH_POS, 3.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-
-	await crow_tween.finished
-	if _prologue_crow_flap_tween and _prologue_crow_flap_tween.is_valid():
-		_prologue_crow_flap_tween.kill()
-	if is_instance_valid(_prologue_crow):
-		_prologue_crow.frame = 0 # Bertengger di atas tiang lampu kayu
-
 	await arthur_tween.finished
 	if is_instance_valid(lead) and lead.has_method("play_idle_animation"):
 		lead.play_idle_animation()
 
 	await get_tree().create_timer(0.4).timeout
 
-	# 5. Mulai dialog FLK-002 (Burung gagak menyampaikan ramalan buruk)
+	# 5. Mulai dialog pembuka pemanasan Arthur & Magnus (Naskah Dialog 1A)
 	play_story_dialogue("FLK-002", func():
+		set_party_movement_locked(false)
+		var lead_char := get_active_leader()
+		if is_instance_valid(lead_char):
+			lead_char.set_physics_process(true)
+			lead_char.set_process_unhandled_input(true)
+			_set_character_collision_active(lead_char, true)
+		if is_instance_valid(gameplay_hud):
+			gameplay_hud.visible = true
+			gameplay_hud.is_hud_input_blocked = false
+			var quest_main1 := _get_quest_by_id("main_01")
+			if not quest_main1.is_empty():
+				gameplay_hud.update_hud_quest_display(quest_main1)
+				if gameplay_hud.has_method("set_quest_navigation"):
+					gameplay_hud.set_quest_navigation(FOREST_MONSTER_ARENA_POS, "Tebing Hutan Observasi")
+		_start_monitoring_prologue_fight()
+	)
+
+
+var _is_prologue_fight_active: bool = false
+var _is_prologue_fight_done: bool = false
+var _is_waiting_prologue_return: bool = false
+
+
+func _start_monitoring_prologue_fight() -> void:
+	_is_prologue_fight_active = true
+	_is_prologue_fight_done = false
+	_is_waiting_prologue_return = false
+
+	# Pastikan ketiga monster di tebing aktif dan siap dilawan
+	for e_name in ["Enemy_Knight_1", "Enemy_Knight_2", "Enemy_Archer_1"]:
+		var e = get_node_or_null(e_name)
+		if is_instance_valid(e):
+			e.visible = true
+			e.set_physics_process(true)
+			if "is_dead" in e:
+				e.is_dead = false
+
+	# Pantau sampai ketiga monster dilumpuhkan oleh Arthur
+	while _is_prologue_fight_active and not _is_prologue_fight_done and not is_prologue_completed:
+		await get_tree().create_timer(0.4).timeout
+		var alive_count := 0
+		for e_name in ["Enemy_Knight_1", "Enemy_Knight_2", "Enemy_Archer_1"]:
+			var e = get_node_or_null(e_name)
+			if is_instance_valid(e) and not bool(e.get("is_dead")):
+				alive_count += 1
+		if alive_count == 0:
+			_is_prologue_fight_done = true
+			_on_prologue_monsters_cleared()
+			break
+
+
+func _on_prologue_monsters_cleared() -> void:
+	if _is_waiting_prologue_return:
+		return
+	_is_waiting_prologue_return = true
+
+	# Perbarui quest & arah navigasi kompas untuk kembali ke Magnus di lumbung kayu
+	for q in quest_list:
+		if q.get("id") == "main_01":
+			q["objective"] = "Kembali ke Magnus di lumbung pengolahan kayu."
+			q["target_position"] = FOREST_CAMP_STOP_POS
+			if is_instance_valid(gameplay_hud):
+				gameplay_hud.update_hud_quest_display(q)
+				if gameplay_hud.has_method("set_quest_navigation"):
+					gameplay_hud.set_quest_navigation(FOREST_CAMP_STOP_POS, "Lumbung Kayu")
+			break
+
+	# Pantau saat Arthur berjalan kembali mendekati Magnus
+	while _is_waiting_prologue_return and not is_prologue_completed:
+		await get_tree().create_timer(0.3).timeout
+		var lead := get_active_leader()
+		if is_instance_valid(lead):
+			var dist: float = lead.global_position.distance_to(FOREST_CAMP_STOP_POS)
+			if dist < 200.0:
+				_is_waiting_prologue_return = false
+				_start_prologue_crow_dialogue_sequence()
+				break
+
+
+func _start_prologue_crow_dialogue_sequence() -> void:
+	set_party_movement_locked(true)
+	var lead := get_active_leader()
+	if is_instance_valid(lead):
+		lead.velocity = Vector2.ZERO
+		if lead.has_method("play_idle_animation"):
+			lead.play_idle_animation()
+
+	# Mainkan Naskah Dialog 1B (Setelah Fight & Burung Gagak Tiba)
+	play_story_dialogue("FLK-002-B", func():
 		_transition_prologue_to_castle_gate()
 	)
 
@@ -3173,7 +3654,7 @@ func _run_castle_gate_approach_cutscene() -> void:
 			lead.play_walk_animation()
 
 		var tw := create_tween()
-		tw.tween_property(lead, "global_position", CASTLE_APPROACH_STOP_POS, 4.2).set_trans(Tween.TRANS_LINEAR)
+		tw.tween_property(lead, "global_position", CASTLE_APPROACH_STOP_POS, 5.0).set_trans(Tween.TRANS_LINEAR)
 		await tw.finished
 
 		if is_instance_valid(lead) and lead.has_method("play_idle_animation"):
@@ -3517,13 +3998,95 @@ func _on_knight_room_dialogue_finished(fade_canvas: CanvasLayer, fade_rect: Colo
 # PELATIH ALARIC & SISTEM SPARRING CAMP LATIHAN (FLK-007 & FLK-008)
 # =========================================================
 
+func _get_or_create_alaric_sprite_frames() -> SpriteFrames:
+	if _alaric_sprite_frames_cache != null:
+		return _alaric_sprite_frames_cache
+
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.remove_animation(&"default")
+
+	var anim_configs: Array[Dictionary] = [
+		{"name": &"idle_s", "path": "res://assets/characters/npc/alaric/idle-s.png", "count": 4, "speed": 6.0, "loop": true},
+		{"name": &"idle_n", "path": "res://assets/characters/npc/alaric/idle-n.png", "count": 4, "speed": 6.0, "loop": true},
+		{"name": &"idle_w", "path": "res://assets/characters/npc/alaric/idle-w.png", "count": 4, "speed": 6.0, "loop": true},
+		{"name": &"idle_e", "path": "res://assets/characters/npc/alaric/idle-e.png", "count": 4, "speed": 6.0, "loop": true},
+		{"name": &"walk_s", "path": "res://assets/characters/npc/alaric/walk-s.png", "count": 8, "speed": 10.0, "loop": true},
+		{"name": &"walk_n", "path": "res://assets/characters/npc/alaric/walk-n.png", "count": 8, "speed": 10.0, "loop": true},
+		{"name": &"walk_w", "path": "res://assets/characters/npc/alaric/walk-w.png", "count": 8, "speed": 10.0, "loop": true},
+		{"name": &"walk_e", "path": "res://assets/characters/npc/alaric/walk-e.png", "count": 8, "speed": 10.0, "loop": true},
+		# Serangan Combo 1 (Tebasan Pertama)
+		{"name": &"atk_s", "path": "res://assets/characters/npc/alaric/atk-s-1.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_s_1", "path": "res://assets/characters/npc/alaric/atk-s-1.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_n", "path": "res://assets/characters/npc/alaric/atk-n-1.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_n_1", "path": "res://assets/characters/npc/alaric/atk-n-1.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_w", "path": "res://assets/characters/npc/alaric/atk-w-1.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_w_1", "path": "res://assets/characters/npc/alaric/atk-w-1.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_e", "path": "res://assets/characters/npc/alaric/atk-e-1.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_e_1", "path": "res://assets/characters/npc/alaric/atk-e-1.png", "count": 8, "speed": 14.0, "loop": false},
+		# Serangan Combo 2 (Tebasan Lanjutan)
+		{"name": &"atk_s_2", "path": "res://assets/characters/npc/alaric/atk-s-2.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_n_2", "path": "res://assets/characters/npc/alaric/atk-n-2.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_w_2", "path": "res://assets/characters/npc/alaric/atk-w-2.png", "count": 8, "speed": 14.0, "loop": false},
+		{"name": &"atk_e_2", "path": "res://assets/characters/npc/alaric/atk-e-2.png", "count": 8, "speed": 14.0, "loop": false},
+		# Skill Khusus Pelatih Tempur
+		{"name": &"skill_s", "path": "res://assets/characters/npc/alaric/skill-s.png", "count": 9, "speed": 12.0, "loop": false},
+		{"name": &"skill_n", "path": "res://assets/characters/npc/alaric/skill-n.png", "count": 9, "speed": 12.0, "loop": false},
+		{"name": &"skill_w", "path": "res://assets/characters/npc/alaric/skill-w.png", "count": 9, "speed": 12.0, "loop": false},
+		{"name": &"skill_e", "path": "res://assets/characters/npc/alaric/skill-e.png", "count": 9, "speed": 12.0, "loop": false},
+	]
+
+	for cfg in anim_configs:
+		var tex := load(cfg["path"]) as Texture2D
+		if tex:
+			var anim_name: StringName = cfg["name"]
+			if not frames.has_animation(anim_name):
+				frames.add_animation(anim_name)
+			frames.set_animation_speed(anim_name, cfg["speed"])
+			frames.set_animation_loop(anim_name, cfg["loop"])
+			var count: int = cfg["count"]
+			for i in range(count):
+				var atlas_tex := AtlasTexture.new()
+				atlas_tex.atlas = tex
+				atlas_tex.region = Rect2(i * 96, 0, 96, 64)
+				frames.add_frame(anim_name, atlas_tex)
+
+	_alaric_sprite_frames_cache = frames
+	return _alaric_sprite_frames_cache
+
+
+func _clear_alaric_player_collision_exceptions() -> void:
+	if not is_instance_valid(alaric_node):
+		return
+	var party := get_tree().get_nodes_in_group("player")
+	for p in party:
+		if is_instance_valid(p) and p is CollisionObject2D:
+			alaric_node.remove_collision_exception_with(p)
+			p.remove_collision_exception_with(alaric_node)
+
+
 func _setup_alaric_npc() -> void:
 	if is_instance_valid(alaric_node):
+		for child in alaric_node.get_children():
+			if child is Label or child.name == "AlaricNameplate":
+				child.queue_free()
 		if not is_alaric_sparring_in_progress:
 			alaric_node.global_position = ALARIC_CAMP_POS
 			alaric_node.velocity = Vector2.ZERO
 			alaric_node.set_physics_process(false)
 			alaric_node.last_direction = Vector2.DOWN
+			alaric_node.scale = Vector2(5.0, 5.0)
+			alaric_node.modulate = Color.WHITE
+			alaric_node.y_sort_enabled = true
+			alaric_node.z_index = 4
+			alaric_node.collision_layer = 1
+			alaric_node.collision_mask = 1
+			_clear_alaric_player_collision_exceptions.call_deferred()
+			var spr = alaric_node.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+			if is_instance_valid(spr):
+				spr.modulate = Color.WHITE
+				spr.sprite_frames = _get_or_create_alaric_sprite_frames()
+				spr.offset = Vector2(0, 5)
 			if alaric_node.has_method("play_idle_animation"):
 				alaric_node.play_idle_animation()
 		return
@@ -3539,8 +4102,12 @@ func _setup_alaric_npc() -> void:
 	alaric_node = inst
 	alaric_node.name = "AlaricTrainerNPC"
 	alaric_node.global_position = ALARIC_CAMP_POS
-	alaric_node.scale = Vector2(1.1, 1.1)
-	alaric_node.modulate = Color(0.88, 0.75, 0.55) # Rona veteran perunggu ksatria
+	alaric_node.scale = Vector2(5.0, 5.0)
+	alaric_node.modulate = Color.WHITE
+	alaric_node.y_sort_enabled = true
+	alaric_node.z_index = 4
+	alaric_node.collision_layer = 1
+	alaric_node.collision_mask = 1
 	alaric_node.can_respawn = false
 	alaric_node.wait_for_arena = false
 	alaric_node.max_health = 600
@@ -3548,18 +4115,11 @@ func _setup_alaric_npc() -> void:
 	alaric_node.melee_damage = 25
 	alaric_node.melee_attack_range = 100.0
 
-	var nameplate := Label.new()
-	nameplate.name = "AlaricNameplate"
-	nameplate.text = "Alaric (Pelatih Tempur)"
-	nameplate.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	nameplate.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	nameplate.position = Vector2(-75.0, -42.0)
-	nameplate.size = Vector2(150.0, 18.0)
-	nameplate.add_theme_font_size_override("font_size", 9)
-	nameplate.add_theme_color_override("font_color", Color(1.0, 0.88, 0.45, 1.0))
-	nameplate.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
-	nameplate.add_theme_constant_override("outline_size", 2)
-	alaric_node.add_child(nameplate)
+	var anim_spr = alaric_node.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if is_instance_valid(anim_spr):
+		anim_spr.modulate = Color.WHITE
+		anim_spr.sprite_frames = _get_or_create_alaric_sprite_frames()
+		anim_spr.offset = Vector2(0, 5)
 
 	add_child(alaric_node)
 
@@ -3569,6 +4129,7 @@ func _setup_alaric_npc() -> void:
 		alaric_node.set_physics_process(false)
 		alaric_node.velocity = Vector2.ZERO
 		alaric_node.last_direction = Vector2.DOWN
+		_clear_alaric_player_collision_exceptions.call_deferred()
 		if alaric_node.has_method("play_idle_animation"):
 			alaric_node.play_idle_animation()
 		if "health_bar" in alaric_node and is_instance_valid(alaric_node.health_bar):
@@ -3577,12 +4138,350 @@ func _setup_alaric_npc() -> void:
 			alaric_node.damage_bar.visible = false
 
 
+func _show_alaric_boss_challenge_prompt() -> void:
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
+
+	if is_instance_valid(_alaric_boss_prompt_layer):
+		_alaric_boss_prompt_layer.queue_free()
+		_alaric_boss_prompt_layer = null
+
+	set_party_movement_locked(true)
+
+	var cl := CanvasLayer.new()
+	cl.layer = 120
+	cl.name = "AlaricBossPromptLayer"
+	_alaric_boss_prompt_layer = cl
+	add_child(cl)
+
+	var root := Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_PASS
+	cl.add_child(root)
+
+	# 1. Dimmer background transparan gelap (Color(0, 0, 0, 0.45) identik SaveConfirmModal)
+	var dimmer := ColorRect.new()
+	dimmer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dimmer.color = Color(0.0, 0.0, 0.0, 0.45)
+	dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(dimmer)
+
+	# 2. Control container center untuk menampung shadow dan kotak dialog
+	var center := Control.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(center)
+
+	# 3. Shadow Panel (StyleBoxFlat_modal_shadow)
+	var shadow := Panel.new()
+	shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shadow.anchor_left = 0.5
+	shadow.anchor_top = 0.5
+	shadow.anchor_right = 0.5
+	shadow.anchor_bottom = 0.5
+	shadow.offset_left = -242.0
+	shadow.offset_top = -108.0
+	shadow.offset_right = 242.0
+	shadow.offset_bottom = 114.0
+	var shadow_sb := StyleBoxFlat.new()
+	shadow_sb.bg_color = Color(0, 0, 0, 0)
+	shadow_sb.shadow_color = Color(0, 0, 0, 0.45)
+	shadow_sb.shadow_size = 14
+	shadow_sb.shadow_offset = Vector2(0, 6)
+	shadow_sb.set_corner_radius_all(6)
+	shadow.add_theme_stylebox_override("panel", shadow_sb)
+	center.add_child(shadow)
+
+	# 4. DialogBox (NinePatchRect persis Atlas_modal_dialog_frame Rect2(0, 500, 32, 32))
+	var ui_sheet: Texture2D = load("res://assets/ui/menus/common/ui_menu_sheet.png")
+	var arrow_tex: Texture2D = load("res://assets/ui/menus/common/ui_arrow_indicator.png")
+
+	var dialog_box := NinePatchRect.new()
+	dialog_box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	dialog_box.mouse_filter = Control.MOUSE_FILTER_STOP
+	dialog_box.anchor_left = 0.5
+	dialog_box.anchor_top = 0.5
+	dialog_box.anchor_right = 0.5
+	dialog_box.anchor_bottom = 0.5
+	dialog_box.offset_left = -240.0
+	dialog_box.offset_top = -110.0
+	dialog_box.offset_right = 240.0
+	dialog_box.offset_bottom = 110.0
+	dialog_box.patch_margin_left = 10
+	dialog_box.patch_margin_top = 10
+	dialog_box.patch_margin_right = 10
+	dialog_box.patch_margin_bottom = 10
+	if ui_sheet:
+		var frame_atlas := AtlasTexture.new()
+		frame_atlas.atlas = ui_sheet
+		frame_atlas.region = Rect2(0, 500, 32, 32)
+		dialog_box.texture = frame_atlas
+	center.add_child(dialog_box)
+
+	# 5. DialogTitle ("Konfirmasi" persis SaveConfirmModal)
+	var title_lbl := Label.new()
+	title_lbl.anchor_left = 0.0
+	title_lbl.anchor_right = 1.0
+	title_lbl.offset_top = 18.0
+	title_lbl.offset_bottom = 46.0
+	title_lbl.text = "Konfirmasi"
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_lbl.add_theme_font_size_override("font_size", 22)
+	title_lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+	if UI_FONT_BEHOLDEN:
+		title_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	dialog_box.add_child(title_lbl)
+
+	# 6. HeaderDivider (Dots Divider ala SaveConfirmModal)
+	var div_row := HBoxContainer.new()
+	div_row.anchor_left = 0.0
+	div_row.anchor_right = 1.0
+	div_row.offset_top = 47.0
+	div_row.offset_bottom = 56.0
+	div_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	div_row.set("theme_override_constants/separation", 8)
+	div_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if ui_sheet:
+		var dots_atlas := AtlasTexture.new()
+		dots_atlas.atlas = ui_sheet
+		dots_atlas.region = Rect2(65, 263, 30, 3)
+
+		var dots_l := TextureRect.new()
+		dots_l.texture = dots_atlas
+		dots_l.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		dots_l.custom_minimum_size = Vector2(48, 9)
+		dots_l.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dots_l.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		dots_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		div_row.add_child(dots_l)
+
+		var dots_r := TextureRect.new()
+		dots_r.texture = dots_atlas
+		dots_r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		dots_r.custom_minimum_size = Vector2(48, 9)
+		dots_r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dots_r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		dots_r.flip_h = true
+		dots_r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		div_row.add_child(dots_r)
+	dialog_box.add_child(div_row)
+
+	# 7. DialogMessage (Dinaikkan agar berjarak proporsional dengan tombol Ya & Tidak)
+	var desc_lbl := Label.new()
+	desc_lbl.anchor_left = 0.0
+	desc_lbl.anchor_right = 1.0
+	desc_lbl.anchor_top = 0.5
+	desc_lbl.anchor_bottom = 0.5
+	desc_lbl.offset_left = 20.0
+	desc_lbl.offset_top = -52.0
+	desc_lbl.offset_right = -20.0
+	desc_lbl.offset_bottom = 10.0
+	desc_lbl.text = "Pelatih Alaric adalah ksatria veteran berilmu tinggi (Boss)!\nApakah kau siap menantangnya bertarung di arena tempur?"
+	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_lbl.add_theme_constant_override("line_spacing", 2)
+	desc_lbl.add_theme_font_size_override("font_size", 15)
+	desc_lbl.add_theme_color_override("font_color", Color(0.35, 0.25, 0.26, 1.0))
+	if UI_FONT_BEHOLDEN:
+		desc_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	dialog_box.add_child(desc_lbl)
+
+	# 8. ButtonsRow (HBoxContainer)
+	var btn_row := HBoxContainer.new()
+	btn_row.anchor_left = 0.0
+	btn_row.anchor_right = 1.0
+	btn_row.anchor_top = 1.0
+	btn_row.anchor_bottom = 1.0
+	btn_row.offset_top = -64.0
+	btn_row.offset_bottom = -24.0
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_row.set("theme_override_constants/separation", 32)
+	dialog_box.add_child(btn_row)
+
+	var btn_normal_atlas: AtlasTexture = null
+	var btn_hover_atlas: AtlasTexture = null
+	if ui_sheet:
+		btn_normal_atlas = AtlasTexture.new()
+		btn_normal_atlas.atlas = ui_sheet
+		btn_normal_atlas.region = Rect2(145, 433, 62, 14)
+
+		btn_hover_atlas = AtlasTexture.new()
+		btn_hover_atlas.atlas = ui_sheet
+		btn_hover_atlas.region = Rect2(65, 449, 62, 14)
+
+	var create_modal_btn = func(text_label: String) -> Dictionary:
+		var btn_box := NinePatchRect.new()
+		btn_box.custom_minimum_size = Vector2(104, 38)
+		btn_box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		btn_box.texture = btn_normal_atlas
+		btn_box.patch_margin_left = 5
+		btn_box.patch_margin_top = 4
+		btn_box.patch_margin_right = 5
+		btn_box.patch_margin_bottom = 4
+
+		var lbl := Label.new()
+		lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		lbl.text = text_label
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl.add_theme_font_size_override("font_size", 16)
+		lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+		if UI_FONT_BEHOLDEN:
+			lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+		btn_box.add_child(lbl)
+
+		var arrow := TextureRect.new()
+		arrow.texture = arrow_tex
+		arrow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		arrow.position = Vector2(-18.0, 13.5)
+		arrow.size = Vector2(9.0, 11.0)
+		arrow.stretch_mode = TextureRect.STRETCH_KEEP
+		arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		arrow.visible = false
+		btn_box.add_child(arrow)
+
+		var click_btn := TextureButton.new()
+		click_btn.set_anchors_preset(Control.PRESET_FULL_RECT)
+		click_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		btn_box.add_child(click_btn)
+
+		return {
+			"box": btn_box,
+			"label": lbl,
+			"arrow": arrow,
+			"click": click_btn
+		}
+
+	var btn_yes_data: Dictionary = create_modal_btn.call("Ya")
+	var btn_no_data: Dictionary = create_modal_btn.call("Tidak")
+
+	btn_row.add_child(btn_yes_data["box"])
+	btn_row.add_child(btn_no_data["box"])
+
+	var buttons: Array = [btn_yes_data, btn_no_data]
+	var selected_idx: Array = [0]
+
+	var update_btn_visuals = func():
+		for i in range(buttons.size()):
+			var b_data: Dictionary = buttons[i]
+			var is_sel: bool = (i == selected_idx[0])
+			var box: NinePatchRect = b_data["box"]
+			var lbl: Label = b_data["label"]
+			var arrow: TextureRect = b_data["arrow"]
+			if is_sel:
+				box.texture = btn_hover_atlas if btn_hover_atlas else btn_normal_atlas
+				box.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+				arrow.visible = true
+			else:
+				box.texture = btn_normal_atlas
+				box.modulate = Color(0.85, 0.82, 0.78, 1.0)
+				lbl.add_theme_color_override("font_color", Color(0.48, 0.38, 0.38, 1.0))
+				arrow.visible = false
+
+	update_btn_visuals.call()
+
+	var sfx_hover: AudioStream = load("res://assets/audio/sfx/ui/ui_hover.wav")
+	var sfx_click: AudioStream = load("res://assets/audio/sfx/ui/ui_click.wav")
+	var sfx_book_select: AudioStream = load("res://assets/audio/sfx/ui/book_tab_select.wav")
+
+	var close_popup = func():
+		_alaric_boss_modal_input_cb = Callable()
+		if is_instance_valid(_alaric_boss_prompt_layer):
+			_alaric_boss_prompt_layer.queue_free()
+			_alaric_boss_prompt_layer = null
+		set_party_movement_locked(false)
+		var lead := get_active_leader()
+		if is_instance_valid(lead):
+			_set_character_collision_active(lead, true)
+			lead.set_physics_process(true)
+			lead.set_process_unhandled_input(true)
+
+	var confirm_action = func():
+		if sfx_click and has_method("play_sfx"):
+			play_sfx(sfx_click, -2.0)
+		close_popup.call()
+		_teleport_to_arena_kamp_and_fight()
+
+	var cancel_action = func():
+		if sfx_book_select and has_method("play_sfx"):
+			play_sfx(sfx_book_select, -3.5)
+		elif sfx_click and has_method("play_sfx"):
+			play_sfx(sfx_click, -2.0)
+		close_popup.call()
+
+	(btn_yes_data["click"] as TextureButton).pressed.connect(confirm_action)
+	(btn_no_data["click"] as TextureButton).pressed.connect(cancel_action)
+
+	(btn_yes_data["click"] as TextureButton).mouse_entered.connect(func():
+		if selected_idx[0] != 0:
+			selected_idx[0] = 0
+			update_btn_visuals.call()
+			if sfx_hover and has_method("play_sfx"):
+				play_sfx(sfx_hover, -4.0)
+	)
+	(btn_no_data["click"] as TextureButton).mouse_entered.connect(func():
+		if selected_idx[0] != 1:
+			selected_idx[0] = 1
+			update_btn_visuals.call()
+			if sfx_hover and has_method("play_sfx"):
+				play_sfx(sfx_hover, -4.0)
+	)
+
+	dimmer.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+			var mb := event as InputEventMouseButton
+			if is_instance_valid(dialog_box) and not dialog_box.get_global_rect().has_point(mb.global_position):
+				cancel_action.call()
+	)
+
+	_alaric_boss_modal_input_cb = func(event: InputEvent) -> bool:
+		if not (event is InputEventKey):
+			return false
+		var ke := event as InputEventKey
+		if not ke.pressed or ke.echo:
+			return false
+		var kc: int = ke.keycode
+		if kc == 0:
+			kc = ke.physical_keycode
+		if kc == KEY_LEFT or kc == KEY_A:
+			if selected_idx[0] != 0:
+				selected_idx[0] = 0
+				update_btn_visuals.call()
+				if sfx_hover and has_method("play_sfx"):
+					play_sfx(sfx_hover, -4.0)
+			return true
+		elif kc == KEY_RIGHT or kc == KEY_D:
+			if selected_idx[0] != 1:
+				selected_idx[0] = 1
+				update_btn_visuals.call()
+				if sfx_hover and has_method("play_sfx"):
+					play_sfx(sfx_hover, -4.0)
+			return true
+		elif kc == KEY_ENTER or kc == KEY_KP_ENTER or kc == KEY_SPACE or kc == KEY_E:
+			if selected_idx[0] == 0:
+				confirm_action.call()
+			else:
+				cancel_action.call()
+			return true
+		elif kc == KEY_ESCAPE:
+			cancel_action.call()
+			return true
+		return true
+
+
 func _start_alaric_pre_fight_dialogue() -> void:
 	if is_alaric_sparring_in_progress or is_transitioning:
 		return
 
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 		gameplay_hud.hide_interact_prompt(true)
+
+	if selected_game_mode == "open_world":
+		_show_alaric_boss_challenge_prompt()
+		return
 
 	set_party_movement_locked(true)
 	var leader := get_active_leader()
@@ -3613,17 +4512,108 @@ func _start_alaric_pre_fight_dialogue() -> void:
 
 
 func _teleport_to_arena_kamp_and_fight() -> void:
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
+
+	if selected_game_mode != "open_world":
+		# Mode Cerita: Hanya Knight_1 (Arthur) yang berduel melawan Pelatih Alaric di arena!
+		var knight_hero: CharacterBody2D = all_heroes.get("Knight_1")
+		party_members.clear()
+		if is_instance_valid(knight_hero):
+			if not knight_hero.is_inside_tree():
+				add_child(knight_hero)
+			party_members.append(knight_hero)
+			knight_hero.visible = true
+			knight_hero.modulate.a = 1.0
+			knight_hero.is_dead = false
+			if "current_health" in knight_hero and "max_health" in knight_hero and knight_hero.current_health <= 0:
+				knight_hero.current_health = knight_hero.max_health
+			knight_hero.set_physics_process(true)
+			knight_hero.set_process_unhandled_input(true)
+			_set_character_collision_active(knight_hero, true)
+			if knight_hero.has_method("set_as_leader"):
+				knight_hero.set_as_leader(true, null, 0)
+		active_leader_index = 0
+
+		# Keluarkan karakter lain dari arena dan scene tree
+		var other_hero_names: Array[String] = ["Bandit_1", "Archer_1", "Mage_1"]
+		for oh_name in other_hero_names:
+			var oh: CharacterBody2D = all_heroes.get(oh_name)
+			if is_instance_valid(oh):
+				oh.visible = false
+				oh.set_physics_process(false)
+				oh.set_process_unhandled_input(false)
+				_set_character_collision_active(oh, false)
+				if oh.is_inside_tree():
+					remove_child(oh)
+
+		if is_instance_valid(gameplay_hud):
+			if gameplay_hud.has_method("update_party_order"):
+				gameplay_hud.update_party_order(party_members, 0)
+			elif gameplay_hud.has_method("update_party_hud"):
+				gameplay_hud.party_members = party_members
+				gameplay_hud.update_party_hud()
+				if gameplay_hud.has_method("update_leader_indicator"):
+					gameplay_hud.update_leader_indicator()
+	else:
+		# Mode Jelajah: Pastikan seluruh 4 hero siap di SceneTree dan terdaftar di party
+		var hero_names: Array[String] = ["Knight_1", "Bandit_1", "Archer_1", "Mage_1"]
+		for h_name in hero_names:
+			var hero: CharacterBody2D = all_heroes.get(h_name)
+			if is_instance_valid(hero):
+				if not hero.is_inside_tree():
+					add_child(hero)
+				if hero not in party_members:
+					party_members.append(hero)
+				hero.visible = true
+				hero.modulate.a = 1.0
+				hero.is_dead = false
+				if "current_health" in hero and "max_health" in hero and hero.current_health <= 0:
+					hero.current_health = hero.max_health
+				hero.set_physics_process(true)
+				hero.set_process_unhandled_input(true)
+				_set_character_collision_active(hero, true)
+
+		for i in range(party_members.size()):
+			for j in range(i + 1, party_members.size()):
+				party_members[i].add_collision_exception_with(party_members[j])
+				party_members[j].add_collision_exception_with(party_members[i])
+
+		setup_party_enemy_collision_exceptions.call_deferred()
+
+		if is_instance_valid(gameplay_hud):
+			if gameplay_hud.has_method("update_party_order"):
+				gameplay_hud.update_party_order(party_members, active_leader_index)
+			elif gameplay_hud.has_method("update_party_hud"):
+				gameplay_hud.party_members = party_members
+				gameplay_hud.update_party_hud()
+				if gameplay_hud.has_method("update_leader_indicator"):
+					gameplay_hud.update_leader_indicator()
+
 	play_black_fade_transition(
 		func():
 			is_in_arena_kamp = true
-			var leader := get_active_leader()
-			if is_instance_valid(leader):
-				leader.global_position = ARENA_KAMP_ARTHUR_POS
-				leader.velocity = Vector2.ZERO
-				if "last_direction" in leader:
-					leader.last_direction = Vector2.RIGHT
-				if leader.has_method("play_idle_animation"):
-					leader.play_idle_animation()
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+				gameplay_hud.hide_interact_prompt(true)
+
+			for i in range(party_members.size()):
+				var member: CharacterBody2D = party_members[i]
+				if is_instance_valid(member):
+					if not member.is_inside_tree():
+						add_child(member)
+					member.visible = true
+					member.modulate.a = 1.0
+					var offset_pos := Vector2(-70.0 * i, 30.0 * (1 if i % 2 == 1 else -1)) if i > 0 else Vector2.ZERO
+					member.global_position = ARENA_KAMP_ARTHUR_POS + offset_pos
+					member.velocity = Vector2.ZERO
+					if "last_direction" in member:
+						member.last_direction = Vector2.RIGHT
+					if member.has_method("play_idle_animation"):
+						member.play_idle_animation()
+					_set_character_collision_active(member, true)
+					member.set_physics_process(true)
+					if member.has_method("set_party_combat_mode"):
+						member.set_party_combat_mode(true)
 
 			if is_instance_valid(alaric_node):
 				alaric_node.global_position = ARENA_KAMP_ALARIC_POS
@@ -3631,6 +4621,7 @@ func _teleport_to_arena_kamp_and_fight() -> void:
 				alaric_node.last_direction = Vector2.LEFT
 				if alaric_node.has_method("play_idle_animation"):
 					alaric_node.play_idle_animation()
+				_clear_alaric_player_collision_exceptions.call_deferred()
 
 			update_camera_limits_for_location("arena_kamp")
 			if is_instance_valid(camera):
@@ -3646,12 +4637,17 @@ func _teleport_to_arena_kamp_and_fight() -> void:
 
 
 func _start_alaric_sparring_match() -> void:
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
 	set_party_movement_locked(false)
 	var leader := get_active_leader()
-	if is_instance_valid(leader):
-		_set_character_collision_active(leader, true)
-		leader.set_physics_process(true)
-		leader.set_process_unhandled_input(true)
+	for member in party_members:
+		if is_instance_valid(member):
+			_set_character_collision_active(member, true)
+			member.set_physics_process(true)
+			member.set_process_unhandled_input(true)
+			if member.has_method("set_party_combat_mode"):
+				member.set_party_combat_mode(true)
 
 	is_alaric_sparring_in_progress = true
 
@@ -3710,9 +4706,16 @@ func _end_alaric_sparring_match() -> void:
 		alaric_node.add_to_group("npc")
 		alaric_node.is_dead = false
 		alaric_node.visible = true
+		alaric_node.modulate = Color.WHITE
+		var anim_spr := alaric_node.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+		if is_instance_valid(anim_spr):
+			anim_spr.modulate = Color.WHITE
 		alaric_node.current_health = alaric_node.max_health
 		alaric_node.velocity = Vector2.ZERO
 		alaric_node.set_physics_process(false)
+		alaric_node.collision_layer = 1
+		alaric_node.collision_mask = 1
+		_clear_alaric_player_collision_exceptions.call_deferred()
 		if "collision_shape" in alaric_node and is_instance_valid(alaric_node.collision_shape):
 			alaric_node.collision_shape.set_deferred("disabled", false)
 		if "health_bar" in alaric_node and is_instance_valid(alaric_node.health_bar):
@@ -3748,21 +4751,28 @@ func _teleport_back_to_training_camp() -> void:
 	play_black_fade_transition(
 		func():
 			is_in_arena_kamp = false
-			var leader := get_active_leader()
-			if is_instance_valid(leader):
-				leader.global_position = ARTHUR_CAMP_RETURN_POS
-				leader.velocity = Vector2.ZERO
-				if "last_direction" in leader:
-					leader.last_direction = Vector2.RIGHT
-				if leader.has_method("play_idle_animation"):
-					leader.play_idle_animation()
+			for i in range(party_members.size()):
+				var member: CharacterBody2D = party_members[i]
+				if is_instance_valid(member):
+					var offset_pos := Vector2(-70.0 * i, 0.0) if i > 0 else Vector2.ZERO
+					member.global_position = ARTHUR_CAMP_RETURN_POS + offset_pos
+					member.velocity = Vector2.ZERO
+					if "last_direction" in member:
+						member.last_direction = Vector2.RIGHT
+					if member.has_method("play_idle_animation"):
+						member.play_idle_animation()
 
 			if is_instance_valid(alaric_node):
 				alaric_node.global_position = ALARIC_CAMP_POS
 				alaric_node.velocity = Vector2.ZERO
 				alaric_node.last_direction = Vector2.LEFT
+				alaric_node.modulate = Color.WHITE
+				var anim_spr := alaric_node.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+				if is_instance_valid(anim_spr):
+					anim_spr.modulate = Color.WHITE
 				if alaric_node.has_method("play_idle_animation"):
 					alaric_node.play_idle_animation()
+				_clear_alaric_player_collision_exceptions.call_deferred()
 
 			update_camera_limits_for_location("outdoor")
 			if is_instance_valid(camera):
@@ -3773,10 +4783,18 @@ func _teleport_back_to_training_camp() -> void:
 
 			enter_location("Camp Latihan Istana"),
 		func():
-			set_party_movement_locked(true)
-			play_story_dialogue("FLK-008", func():
-				_on_alaric_post_fight_dialogue_finished()
-			)
+			if selected_game_mode == "open_world":
+				set_party_movement_locked(false)
+				var leader := get_active_leader()
+				if is_instance_valid(leader):
+					_set_character_collision_active(leader, true)
+					leader.set_physics_process(true)
+					leader.set_process_unhandled_input(true)
+			else:
+				set_party_movement_locked(true)
+				play_story_dialogue("FLK-008", func():
+					_on_alaric_post_fight_dialogue_finished()
+				)
 	)
 
 
@@ -3787,6 +4805,11 @@ func _on_alaric_post_fight_dialogue_finished() -> void:
 		_set_character_collision_active(leader, true)
 		leader.set_physics_process(true)
 		leader.set_process_unhandled_input(true)
+	if is_instance_valid(alaric_node):
+		alaric_node.modulate = Color.WHITE
+		var anim_spr := alaric_node.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+		if is_instance_valid(anim_spr):
+			anim_spr.modulate = Color.WHITE
 
 	for q in quest_list:
 		if q.get("id") == "main_03":
@@ -3819,7 +4842,6 @@ func _setup_meeting_participants() -> void:
 	# Tekstur sprite karakter
 	var tex_king: Texture2D = load("res://assets/characters/npc/king/idle-s.png")
 	var tex_queen: Texture2D = load("res://assets/characters/npc/queen/idle-s.png")
-	var tex_mage_s: Texture2D = load("res://assets/characters/mage/idle/idle-s.png")
 	var tex_mage_e: Texture2D = load("res://assets/characters/mage/idle/idle-e.png")
 	var tex_archer_w: Texture2D = load("res://assets/characters/archer/idle/idle-w.png")
 
@@ -3837,9 +4859,14 @@ func _setup_meeting_participants() -> void:
 		queen.name = "Participant_Queen"
 		hall.add_child(queen)
 
-	# 3. Peramal 1 (Di sebelah kanan pilar besar kiri)
-	if tex_mage_s:
-		var seer1 := _create_meeting_npc(tex_mage_s, 96, 64, 4, Vector2(-360.0, -180.0), "idle_s", Color(0.88, 0.78, 1.05), Vector2(-0.5, 0.0))
+	# 3. Peramal 1 - Wizandy (Di sebelah kanan pilar besar kiri)
+	var tex_wizandy: Texture2D = load("res://assets/characters/npc/seer/Wizandy.png")
+	if tex_wizandy:
+		var seer1 := Sprite2D.new()
+		seer1.texture = tex_wizandy
+		seer1.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		seer1.scale = Vector2(5.0, 5.0)
+		seer1.position = Vector2(-360.0, -180.0)
 		seer1.name = "Participant_Peramal1"
 		seer1.z_index = 5
 		hall.add_child(seer1)
@@ -3871,9 +4898,14 @@ func _setup_meeting_participants() -> void:
 		if is_instance_valid(chair):
 			chair.z_index = 5
 
-	# 6. Peramal 2 (Di sebelah kiri pilar besar kanan)
-	if tex_mage_s:
-		var seer2 := _create_meeting_npc(tex_mage_s, 96, 64, 4, Vector2(360.0, -180.0), "idle_s", Color(0.78, 0.95, 1.1), Vector2(-0.5, 0.0))
+	# 6. Peramal 2 - Wizashley (Di sebelah kiri pilar besar kanan)
+	var tex_wizashley: Texture2D = load("res://assets/characters/npc/seer/Wizashley.png")
+	if tex_wizashley:
+		var seer2 := Sprite2D.new()
+		seer2.texture = tex_wizashley
+		seer2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		seer2.scale = Vector2(5.0, 5.0)
+		seer2.position = Vector2(360.0, -180.0)
 		seer2.name = "Participant_Peramal2"
 		seer2.z_index = 5
 		hall.add_child(seer2)
@@ -4394,6 +5426,9 @@ func _update_active_leader_indicator(delta: float) -> void:
 
 func check_castle_interactions(delta: float) -> void:
 	if is_transitioning or is_in_arena_kamp or is_alaric_sparring_in_progress:
+		if is_in_arena_kamp or is_alaric_sparring_in_progress:
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+				gameplay_hud.hide_interact_prompt(true)
 		return
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("is_dialogue_active") and gameplay_hud.is_dialogue_active():
 		if gameplay_hud.has_method("hide_interact_prompt"):
@@ -4424,6 +5459,11 @@ func check_castle_interactions(delta: float) -> void:
 
 	# Cek kedekatan interaksi pintu masuk / keluar & NPC Pelatih Alaric
 	if not is_inside_castle_hall and not is_in_arena_kamp:
+		if get_tree().paused or (is_instance_valid(gameplay_hud) and gameplay_hud.has_method("is_any_menu_open") and gameplay_hud.is_any_menu_open()) or is_instance_valid(_alaric_boss_prompt_layer):
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+				gameplay_hud.hide_interact_prompt(true)
+			return
+
 		var dist_castle := leader.global_position.distance_to(CASTLE_ENTRANCE_POS)
 		var dist_alaric := leader.global_position.distance_to(ALARIC_CAMP_POS)
 		if dist_castle <= 110.0:
@@ -4431,11 +5471,17 @@ func check_castle_interactions(delta: float) -> void:
 				gameplay_hud.show_interact_prompt("Masuk ke Aula Kastil", "E", "enter_castle")
 		elif dist_alaric <= 110.0 and not is_alaric_sparring_in_progress:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
-				gameplay_hud.show_interact_prompt("Bicara dengan Pelatih Alaric", "E", "talk_alaric")
+				var prompt_title := "Tantang Pelatih Alaric" if selected_game_mode == "open_world" else "Bicara dengan Pelatih Alaric"
+				gameplay_hud.show_interact_prompt(prompt_title, "E", "talk_alaric")
 		else:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 				gameplay_hud.hide_interact_prompt()
 	else:
+		if get_tree().paused or (is_instance_valid(gameplay_hud) and gameplay_hud.has_method("is_any_menu_open") and gameplay_hud.is_any_menu_open()) or is_instance_valid(_alaric_boss_prompt_layer):
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+				gameplay_hud.hide_interact_prompt(true)
+			return
+
 		var dist := leader.global_position.distance_to(CASTLE_HALL_EXIT_POS)
 		if dist <= 75.0:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):

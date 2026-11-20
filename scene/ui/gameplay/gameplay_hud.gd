@@ -263,6 +263,9 @@ const RAVEN_SHEET: Texture2D = preload("res://assets/characters/animal/raven/rav
 var portrait_raven: Texture2D = null
 var portrait_king: Texture2D = null
 var portrait_queen: Texture2D = null
+var portrait_alaric: Texture2D = null
+var portrait_wizandy: Texture2D = null
+var portrait_wizashley: Texture2D = null
 const PORTRAIT_ARTHUR: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_arthur.png")
 const PORTRAIT_MAGNUS: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_magnus.png")
 const PORTRAIT_ANASTASYA: Texture2D = preload("res://assets/ui/gameplay/party_hud/portrait_anastasya.png")
@@ -1845,6 +1848,7 @@ func toggle_pause_menu(initial_tab: int = 3) -> void:
 	var is_paused := not pause_overlay.visible
 	if is_paused:
 		_capture_gameplay_screenshot()
+		hide_interact_prompt(true)
 	pause_overlay.visible = is_paused
 	get_tree().paused = is_paused
 	_play_ui_sfx(SFX_BOOK_OPEN if is_paused else SFX_BOOK_CLOSE, -2.0)
@@ -1893,6 +1897,7 @@ func _on_btn_pause_menu_pressed() -> void:
 func _open_book_tab_from_hud(tab_idx: int) -> void:
 	if is_start_menu_mode:
 		return
+	hide_interact_prompt(true)
 	if is_instance_valid(pause_overlay) and pause_overlay.visible:
 		return
 	toggle_pause_menu(tab_idx)
@@ -1904,6 +1909,7 @@ func _toggle_or_switch_book_tab(target_tab: int) -> bool:
 		return false
 	if is_start_menu_mode:
 		return false
+	hide_interact_prompt(true)
 	if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
 		return false
 	if _is_dragging or _drag_candidate_slot_idx != -1:
@@ -5718,6 +5724,7 @@ func _format_playtime_str(seconds: float) -> String:
 
 
 func _open_confirm_modal(message: String, action: String, show_timpa: bool = false, yes_text: String = "Ya", no_text: String = "Tidak") -> void:
+	hide_interact_prompt(true)
 	_outside_modal_pressed = false
 	_outside_pause_pressed = false
 	_pending_confirm_action = action
@@ -6117,6 +6124,7 @@ func _play_dialog_sfx(stream: AudioStream, volume_db: float = 0.0, pitch_jitter:
 
 
 func show_dialogue(dialogue_id: String, entries: Array[Dictionary], on_complete: Callable = Callable()) -> void:
+	hide_interact_prompt(true)
 	if entries.is_empty():
 		if on_complete.is_valid():
 			on_complete.call()
@@ -6249,10 +6257,22 @@ func resolve_dialogue_portrait(key: String) -> Texture2D:
 			if tex:
 				portrait_queen = _create_atlas(tex, Rect2(36, 16, 24, 24))
 		return portrait_queen
+	elif "wizandy" in lower:
+		if portrait_wizandy == null:
+			portrait_wizandy = load("res://assets/characters/npc/seer/Wizandy.png")
+		return portrait_wizandy
+	elif "wizashley" in lower:
+		if portrait_wizashley == null:
+			portrait_wizashley = load("res://assets/characters/npc/seer/Wizashley.png")
+		return portrait_wizashley
 	elif "peramal" in lower or "oracle" in lower or "seer" in lower:
 		return PORTRAIT_MAGNUS
 	elif "alaric" in lower or "pelatih" in lower or "trainer" in lower:
-		return PORTRAIT_ARTHUR
+		if portrait_alaric == null:
+			var tex: Texture2D = load("res://assets/characters/npc/alaric/idle-s.png")
+			if tex:
+				portrait_alaric = _create_atlas(tex, Rect2(36, 16, 24, 24))
+		return portrait_alaric
 	elif "archon" in lower or "mindfulness" in lower or "penjaga" in lower:
 		return PORTRAIT_MAGNUS
 	return null
@@ -6423,10 +6443,27 @@ func _setup_interact_prompt_ui() -> void:
 	_interact_prompt_panel.visible = false
 	_interact_prompt_panel.modulate.a = 0.0
 	root_control.add_child(_interact_prompt_panel)
+	if is_instance_valid(dialogue_container):
+		root_control.move_child(_interact_prompt_panel, dialogue_container.get_index())
+	elif is_instance_valid(pause_overlay):
+		root_control.move_child(_interact_prompt_panel, pause_overlay.get_index())
+
+
+func is_any_menu_open() -> bool:
+	if is_instance_valid(pause_overlay) and pause_overlay.visible:
+		return true
+	if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
+		return true
+	if _is_dialogue_active:
+		return true
+	return false
 
 
 func show_interact_prompt(prompt_text: String = "Masuk ke Aula Kastil", key_str: String = "E", action_type: String = "") -> void:
-	if not is_instance_valid(_interact_prompt_panel) or _is_dialogue_active:
+	if not is_instance_valid(_interact_prompt_panel) or _is_dialogue_active or is_any_menu_open() or get_tree().paused:
+		if is_instance_valid(_interact_prompt_panel) and _interact_prompt_panel.visible:
+			_interact_prompt_panel.visible = false
+			_interact_prompt_panel.modulate.a = 0.0
 		return
 	_interact_action_type = action_type if action_type != "" else prompt_text
 	if is_instance_valid(_interact_prompt_label):
