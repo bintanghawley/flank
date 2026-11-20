@@ -33,7 +33,6 @@ extends Control
 @onready var iris_mask: ColorRect = $IrisMask
 
 const GAME_SCENE_PATH := "res://scene/game.tscn"
-const GameScript = preload("res://scene/game.gd")
 const GAMEPLAY_HUD_SCENE := preload("res://scene/ui/gameplay/gameplay_hud.tscn")
 
 const BGM_START_MENU = preload("res://assets/audio/bgm/start_menu.ogg")
@@ -469,7 +468,9 @@ func _launch_game(mode: String) -> void:
 	_play_sfx(SFX_CLICK, -2.0)
 	_play_sfx(SFX_SWORD_RAISE, 0.0)
 
-	GameScript.selected_game_mode = mode
+	var game_script = load("res://scene/game.gd")
+	if game_script and "selected_game_mode" in game_script:
+		game_script.selected_game_mode = mode
 
 	# Pastikan proses background loading game.tscn sudah dimulai
 	if ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH) != ResourceLoader.THREAD_LOAD_IN_PROGRESS and ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH) != ResourceLoader.THREAD_LOAD_LOADED:
@@ -608,7 +609,9 @@ func _on_settings_closed() -> void:
 func _on_load_game_requested(slot_id: int) -> void:
 	if _is_starting:
 		return
-	GameScript.pending_load_slot_id = slot_id
+	var game_script = load("res://scene/game.gd")
+	if game_script and "pending_load_slot_id" in game_script:
+		game_script.pending_load_slot_id = slot_id
 	if is_instance_valid(_settings_overlay_hud) and _settings_overlay_hud.has_method("close_start_menu_settings"):
 		_settings_overlay_hud.call("close_start_menu_settings")
 	_launch_game("story")

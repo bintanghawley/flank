@@ -44,7 +44,7 @@ var is_meeting_in_progress: bool = false
 var _marker_bob_time: float = 0.0
 var world_map_min: Vector2 = Vector2.ZERO
 var world_map_max: Vector2 = Vector2.ZERO
-var _nav_compass: Node2D = null
+var _nav_compass = null
 
 # =========================================================
 # NASKAH DIALOG CERITA PROLOG (CH0-SC02)
