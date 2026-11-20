@@ -4053,8 +4053,7 @@ func _create_quest_item_node(quest: Dictionary, is_selected: bool) -> Control:
 		strike.name = "StrikeLine"
 		strike.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		strike.color = Color(0.40, 0.22, 0.20, 0.90) # Tinta coretan pena buku
-		strike.layout_mode = 1
-		strike.anchors_preset = Control.PRESET_CENTER_LEFT
+		strike.set_anchors_preset(Control.PRESET_CENTER_LEFT)
 		strike.offset_left = 8.0
 		var title_text: String = quest.get("title", "Judul Misi")
 		var text_w: float = 160.0
@@ -4215,8 +4214,7 @@ func _update_journal_detail_panel(quest: Dictionary) -> void:
 				title_strike.color = Color(0.40, 0.22, 0.20, 0.90)
 				journal_detail_title.add_child(title_strike)
 			title_strike.visible = true
-			title_strike.layout_mode = 1
-			title_strike.anchors_preset = Control.PRESET_CENTER_LEFT
+			title_strike.set_anchors_preset(Control.PRESET_CENTER_LEFT)
 			title_strike.offset_left = 0.0
 			var title_font = journal_detail_title.get_theme_font("font")
 			var title_size: int = journal_detail_title.get_theme_font_size("font_size")

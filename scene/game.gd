@@ -1430,8 +1430,8 @@ func _init_starter_quests() -> void:
 			"location": "Camp Latihan Istana",
 			"objective": "Buktikan ketangguhan beradu pedang melawan Pelatih Alaric.",
 			"description": "Terbangun dari tidur yang resah, Arthur harus segera menuju camp pelatihan untuk beradu pedang dan membuktikan kesiapannya bertempur pada Pelatih Alaric.",
-			"status": "active" if is_castle_meeting_completed else "inactive",
-			"target_position": Vector2(2500, 1500),
+			"status": "completed" if is_alaric_sparring_completed else ("active" if is_knight_room_completed else "inactive"),
+			"target_position": ALARIC_CAMP_POS,
 			"rewards": {
 				"exp": 150,
 				"gold": 100,
@@ -1445,8 +1445,6 @@ func _init_starter_quests() -> void:
 					}
 				]
 			}
-			"status": "completed" if is_alaric_sparring_completed else ("active" if is_knight_room_completed else "inactive"),
-			"target_position": ALARIC_CAMP_POS
 		},
 		{
 			"id": "main_04",
@@ -1455,8 +1453,8 @@ func _init_starter_quests() -> void:
 			"location": "Pemakaman Kerajaan",
 			"objective": "Gali makam ksatria Lancelot dan ambil pedang legendaris.",
 			"description": "Pelatih Alaric mengakui ketangguhan Arthur dan menyuruhnya menggali makam Lancelot di area pemakaman untuk mengambil pedang pusaka yang pernah ditempa penempa legendaris.",
-			"status": "inactive",
-			"target_position": Vector2(3800, 1200),
+			"status": "active" if is_alaric_sparring_completed else "inactive",
+			"target_position": GRAVEYARD_POS,
 			"rewards": {
 				"exp": 200,
 				"items": [
@@ -1469,8 +1467,6 @@ func _init_starter_quests() -> void:
 					}
 				]
 			}
-			"status": "active" if is_alaric_sparring_completed else "inactive",
-			"target_position": GRAVEYARD_POS
 		},
 		{
 			"id": "main_05",
