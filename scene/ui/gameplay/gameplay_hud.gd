@@ -637,6 +637,11 @@ func _unhandled_input(event: InputEvent) -> void:
 					toggle_pause_menu()
 					_safe_set_input_handled()
 				return
+			else:
+				if not is_start_menu_mode and not is_hud_input_blocked:
+					toggle_pause_menu()
+					_safe_set_input_handled()
+					return
 
 		if (key_code == KEY_ENTER or key_code == KEY_KP_ENTER or key_code == KEY_SPACE or key_code == KEY_F) and pause_overlay.visible:
 			if is_instance_valid(save_confirm_modal) and save_confirm_modal.visible:
@@ -1690,6 +1695,20 @@ func _init_pause_menu_ui() -> void:
 
 	_setup_custom_v_scrollbar(journal_scroll_container, journal_scrollbar, _update_journal_slider_grabber_pos)
 	_setup_custom_v_scrollbar(controls_scroll_container, controls_scrollbar, _sync_controls_scrollbar)
+
+	if is_instance_valid(journal_detail_scroll):
+		var v_bar = journal_detail_scroll.get_v_scroll_bar()
+		if is_instance_valid(v_bar):
+			var grabber_style := StyleBoxFlat.new()
+			grabber_style.bg_color = Color(0.44, 0.31, 0.27, 0.7)
+			grabber_style.set_corner_radius_all(3)
+			var track_style := StyleBoxFlat.new()
+			track_style.bg_color = Color(0.24, 0.15, 0.16, 0.12)
+			track_style.set_corner_radius_all(2)
+			v_bar.add_theme_stylebox_override("grabber", grabber_style)
+			v_bar.add_theme_stylebox_override("grabber_highlight", grabber_style)
+			v_bar.add_theme_stylebox_override("grabber_pressed", grabber_style)
+			v_bar.add_theme_stylebox_override("scroll", track_style)
 
 	# Settings Submenu Buttons
 	_connect_submenu_click(settings_btn_audio, 0)
@@ -3792,7 +3811,12 @@ func set_quests(quests: Array[Dictionary], initial_tracked_id: String = "") -> v
 		if initial_tracked_id != "":
 			tracked_quest_id = initial_tracked_id
 		elif tracked_quest_id == "" and quest_list.size() > 0:
-			tracked_quest_id = quest_list[0].get("id", "")
+			for q in quest_list:
+				if str(q.get("status", "")).to_lower() == "active":
+					tracked_quest_id = q.get("id", "")
+					break
+			if tracked_quest_id == "":
+				tracked_quest_id = quest_list[0].get("id", "")
 	_refresh_journal_ui()
 
 
@@ -3833,16 +3857,20 @@ func _refresh_journal_ui() -> void:
 	if is_instance_valid(m_title):
 		m_title.text = "Misi Utama"
 
-	# Validate selection: if selected_quest_id is empty or not in quest_list, select first valid active quest
-	var found_selected: bool = false
+	# Inisialisasi seleksi awal: cari misi aktif pertama atau selesai yang valid
 	var first_active_main: String = ""
 	var first_active_world: String = ""
 	var first_any_valid: String = ""
+	var found_selected: bool = false
 
 	for q in quest_list:
 		var q_id: String = q.get("id", "")
 		var cat: String = str(q.get("category", "main")).to_lower()
 		var status: String = str(q.get("status", "active")).to_lower()
+		# Quest yang akan datang / inactive belum muncul
+		if status != "active" and status != "completed":
+			continue
+
 		if first_any_valid == "":
 			first_any_valid = q_id
 		if status == "active":
@@ -3865,8 +3893,12 @@ func _refresh_journal_ui() -> void:
 
 	var selected_quest_data: Dictionary = {}
 
-	# Populate Main Quests
+	# Populate Main Quests (hanya yang aktif atau selesai)
 	for q in quest_list:
+		var status: String = str(q.get("status", "active")).to_lower()
+		if status != "active" and status != "completed":
+			continue # Sembunyikan misi yang belum dibuka
+
 		var cat: String = str(q.get("category", "main")).to_lower()
 		if cat == "main" or cat == "story":
 			var is_sel: bool = (q.get("id", "") == selected_quest_id)
@@ -3875,8 +3907,12 @@ func _refresh_journal_ui() -> void:
 			var item_node := _create_quest_item_node(q, is_sel)
 			main_quest_container.add_child(item_node)
 
-	# Populate World Quests
+	# Populate World Quests (hanya yang aktif atau selesai)
 	for q in quest_list:
+		var status: String = str(q.get("status", "active")).to_lower()
+		if status != "active" and status != "completed":
+			continue # Sembunyikan misi yang belum dibuka
+
 		var cat: String = str(q.get("category", "main")).to_lower()
 		if cat == "world" or cat == "side":
 			var is_sel: bool = (q.get("id", "") == selected_quest_id)
@@ -3884,6 +3920,12 @@ func _refresh_journal_ui() -> void:
 				selected_quest_data = q
 			var item_node := _create_quest_item_node(q, is_sel)
 			world_quest_container.add_child(item_node)
+
+	var has_world_quests: bool = world_quest_container.get_child_count() > 0
+	if is_instance_valid(w_header):
+		w_header.visible = has_world_quests
+	if is_instance_valid(quest_spacer):
+		quest_spacer.visible = has_world_quests
 
 	# Update Detail Panel
 	_update_journal_detail_panel(selected_quest_data)
@@ -3898,6 +3940,8 @@ func _create_quest_item_node(quest: Dictionary, is_selected: bool) -> Control:
 	row.mouse_filter = Control.MOUSE_FILTER_PASS as Control.MouseFilter
 
 	var serif_font: Font = preload("res://assets/ui/fonts/beholden-bold.ttf")
+	var status: String = str(quest.get("status", "active")).to_lower()
+	var is_completed: bool = (status == "completed")
 
 	# Arrow indicator (visible if is_selected)
 	var arrow := Label.new()
@@ -3934,11 +3978,32 @@ func _create_quest_item_node(quest: Dictionary, is_selected: bool) -> Control:
 	title_lbl.clip_text = true
 	title_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS as TextServer.OverrunBehavior
 	title_lbl.text = quest.get("title", "Judul Misi")
-	title_lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+	if is_completed:
+		title_lbl.add_theme_color_override("font_color", Color(0.48, 0.38, 0.36, 0.85))
+	else:
+		title_lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
 	if serif_font:
 		title_lbl.add_theme_font_override("font", serif_font)
 	title_lbl.add_theme_font_size_override("font_size", 16)
 	box.add_child(title_lbl)
+
+	# Coretan garis horizontal jika misi sudah selesai (dicoret)
+	if is_completed:
+		var strike := ColorRect.new()
+		strike.name = "StrikeLine"
+		strike.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		strike.color = Color(0.40, 0.22, 0.20, 0.90) # Tinta coretan pena buku
+		strike.layout_mode = 1
+		strike.anchors_preset = Control.PRESET_CENTER_LEFT
+		strike.offset_left = 8.0
+		var title_text: String = quest.get("title", "Judul Misi")
+		var text_w: float = 160.0
+		if serif_font:
+			text_w = serif_font.get_string_size(title_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
+		strike.offset_right = 8.0 + minf(text_w + 4.0, 168.0)
+		strike.offset_top = -1.0
+		strike.offset_bottom = 1.0
+		box.add_child(strike)
 
 	# Click Area Button
 	var btn := TextureButton.new()
@@ -4048,6 +4113,7 @@ func _update_journal_detail_panel(quest: Dictionary) -> void:
 			journal_detail_objective.text = "Eksplorasi Bebas"
 		if journal_detail_desc:
 			journal_detail_desc.text = "Kamu sedang berada dalam Mode Jelajah. Kamu tidak memiliki tanggungan quest di mode ini.\n\nJelajahi seluruh penjuru dunia dengan bebas tanpa batasan misi cerita!"
+		_update_journal_rewards({})
 		if journal_btn_navigasi:
 			journal_btn_navigasi.disabled = true
 			journal_btn_navigasi.visible = false
@@ -4062,29 +4128,320 @@ func _update_journal_detail_panel(quest: Dictionary) -> void:
 			journal_detail_objective.text = "Tidak ada petunjuk misi aktif."
 		if journal_detail_desc:
 			journal_detail_desc.text = "Pilih misi dari daftar di sebelah kiri untuk melihat detail petunjuk."
+		_update_journal_rewards({})
 		if journal_btn_navigasi:
 			journal_btn_navigasi.visible = true
 			journal_btn_navigasi.disabled = true
 			journal_btn_navigasi.modulate = Color(0.6, 0.6, 0.6, 0.5)
 		return
 
+	var q_status: String = str(quest.get("status", "active")).to_lower()
+	var is_completed: bool = (q_status == "completed")
+
 	if journal_detail_title:
 		journal_detail_title.text = quest.get("title", "Judul Misi")
+		if is_completed:
+			journal_detail_title.add_theme_color_override("font_color", Color(0.48, 0.38, 0.36, 0.85))
+		else:
+			journal_detail_title.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+
+		# Coret judul detail jika misi selesai
+		var title_strike = journal_detail_title.get_node_or_null("StrikeLine")
+		if is_completed:
+			if not title_strike:
+				title_strike = ColorRect.new()
+				title_strike.name = "StrikeLine"
+				title_strike.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				title_strike.color = Color(0.40, 0.22, 0.20, 0.90)
+				journal_detail_title.add_child(title_strike)
+			title_strike.visible = true
+			title_strike.layout_mode = 1
+			title_strike.anchors_preset = Control.PRESET_CENTER_LEFT
+			title_strike.offset_left = 0.0
+			var title_font = journal_detail_title.get_theme_font("font")
+			var title_size: int = journal_detail_title.get_theme_font_size("font_size")
+			if title_size <= 0:
+				title_size = 22
+			var t_w: float = 240.0
+			if title_font:
+				t_w = title_font.get_string_size(journal_detail_title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
+			title_strike.offset_right = minf(t_w + 6.0, 255.0)
+			title_strike.offset_top = -1.0
+			title_strike.offset_bottom = 1.0
+		elif title_strike:
+			title_strike.visible = false
+
 	if journal_detail_location:
 		journal_detail_location.text = quest.get("location", "Lokasi")
+
 	if journal_detail_objective:
-		journal_detail_objective.text = quest.get("objective", "Petunjuk Misi")
+		if is_completed:
+			journal_detail_objective.text = "%s [Selesai]" % quest.get("objective", "Petunjuk Misi")
+			journal_detail_objective.add_theme_color_override("font_color", Color(0.48, 0.38, 0.36, 0.85))
+		else:
+			journal_detail_objective.text = quest.get("objective", "Petunjuk Misi")
+			journal_detail_objective.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+
 	if journal_detail_desc:
 		journal_detail_desc.text = quest.get("description", "Deskripsi petunjuk.")
 
+	_update_journal_rewards(quest.get("rewards", {}))
+
 	var has_valid_loc: bool = quest.get("location", "") != ""
-	var is_active: bool = str(quest.get("status", "active")).to_lower() == "active"
+	var is_active: bool = (q_status == "active")
 	var can_nav: bool = has_valid_loc and is_active
 
 	if journal_btn_navigasi:
-		journal_btn_navigasi.visible = true
-		journal_btn_navigasi.disabled = not can_nav
-		journal_btn_navigasi.modulate = Color.WHITE if can_nav else Color(0.6, 0.6, 0.6, 0.5)
+		if is_completed:
+			journal_btn_navigasi.visible = false
+			journal_btn_navigasi.disabled = true
+		else:
+			journal_btn_navigasi.visible = true
+			journal_btn_navigasi.disabled = not can_nav
+			journal_btn_navigasi.modulate = Color.WHITE if can_nav else Color(0.6, 0.6, 0.6, 0.5)
+
+
+func _update_journal_rewards(rewards_data: Variant) -> void:
+	if not is_instance_valid(journal_detail_scroll):
+		return
+	var vbox = journal_detail_scroll.get_node_or_null("DetailsVBox")
+	if not is_instance_valid(vbox):
+		return
+
+	var reward_section = vbox.get_node_or_null("RewardSection") as VBoxContainer
+	if not is_instance_valid(reward_section):
+		reward_section = _create_journal_reward_section(vbox)
+
+	# Evaluasi apakah quest memiliki hadiah nyata
+	var has_rewards: bool = false
+	var exp_val: int = 0
+	var gold_val: int = 0
+	var item_list: Array = []
+
+	if rewards_data is Dictionary and not rewards_data.is_empty():
+		exp_val = int(rewards_data.get("exp", 0))
+		gold_val = int(rewards_data.get("gold", rewards_data.get("coins", 0)))
+		var raw_items = rewards_data.get("items", [])
+		if raw_items is Array:
+			item_list = raw_items
+		if exp_val > 0 or gold_val > 0 or not item_list.is_empty():
+			has_rewards = true
+	elif rewards_data is Array and not rewards_data.is_empty():
+		has_rewards = true
+		for entry in rewards_data:
+			if entry is Dictionary:
+				var t: String = str(entry.get("type", "")).to_lower()
+				if t == "exp":
+					exp_val += int(entry.get("amount", 0))
+				elif t == "gold" or t == "coins":
+					gold_val += int(entry.get("amount", 0))
+				elif t == "item":
+					item_list.append(entry)
+			elif entry is String and entry.strip_edges() != "":
+				item_list.append({"name": entry})
+
+	# Jika tidak ada hadiah, sembunyikan section sepenuhnya (tapi kalo emang ga ada rewardnya gausah)
+	if not has_rewards:
+		reward_section.visible = false
+		return
+
+	reward_section.visible = true
+	var list_container = reward_section.get_node_or_null("RewardList") as VBoxContainer
+	if not is_instance_valid(list_container):
+		return
+
+	# Bersihkan kartu hadiah sebelumnya
+	for child in list_container.get_children():
+		child.queue_free()
+
+	var serif_font: Font = preload("res://assets/ui/fonts/beholden-bold.ttf")
+	var ink_color := Color(0.24, 0.15, 0.16, 1.0)
+
+	# 1. EXP Reward Card
+	if exp_val > 0:
+		var exp_card := _create_reward_badge_card("exp", "+%d EXP" % exp_val, serif_font, ink_color)
+		list_container.add_child(exp_card)
+
+	# 2. Gold / Koin Reward Card
+	if gold_val > 0:
+		var gold_card := _create_reward_badge_card("gold", "+%d Koin Emas" % gold_val, serif_font, ink_color)
+		list_container.add_child(gold_card)
+
+	# 3. Item Rewards Cards
+	for itm in item_list:
+		var item_card := _create_reward_item_card(itm, serif_font, ink_color)
+		if is_instance_valid(item_card):
+			list_container.add_child(item_card)
+
+
+func _create_journal_reward_section(vbox: Control) -> VBoxContainer:
+	var section := VBoxContainer.new()
+	section.name = "RewardSection"
+	section.add_theme_constant_override("separation", 6)
+	vbox.add_child(section)
+
+	# Spacer pemisah dari teks deskripsi di atasnya
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0, 8)
+	section.add_child(spacer)
+
+	# Header baris judul hadiah dengan dots divider
+	var header := HBoxContainer.new()
+	header.name = "HeaderRow"
+	header.add_theme_constant_override("separation", 8)
+	section.add_child(header)
+
+	var serif_font: Font = preload("res://assets/ui/fonts/beholden-bold.ttf")
+	var title_lbl := Label.new()
+	title_lbl.name = "Title"
+	title_lbl.text = "Hadiah Misi"
+	if serif_font:
+		title_lbl.add_theme_font_override("font", serif_font)
+	title_lbl.add_theme_font_size_override("font_size", 18)
+	title_lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+	header.add_child(title_lbl)
+
+	var dots := TextureRect.new()
+	dots.name = "Dots"
+	dots.custom_minimum_size = Vector2(40, 4)
+	dots.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	dots.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var dots_tex := AtlasTexture.new()
+	dots_tex.atlas = preload("res://assets/ui/menus/common/ui_menu_sheet.png")
+	dots_tex.region = Rect2(65, 263, 30, 3)
+	dots.texture = dots_tex
+	dots.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	dots.stretch_mode = TextureRect.STRETCH_TILE
+	header.add_child(dots)
+
+	# Container list kartu hadiah
+	var list := VBoxContainer.new()
+	list.name = "RewardList"
+	list.add_theme_constant_override("separation", 5)
+	section.add_child(list)
+
+	# Bottom padding spacer agar tidak mepet di scroll bawah
+	var b_spacer := Control.new()
+	b_spacer.custom_minimum_size = Vector2(0, 14)
+	section.add_child(b_spacer)
+
+	return section
+
+
+func _create_reward_badge_card(badge_type: String, text: String, font: Font, text_color: Color) -> Control:
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(0, 26)
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.92, 0.76, 0.56, 0.75) # Warm parchment fill
+	style.border_color = Color(0.71, 0.55, 0.37, 0.85) # Sepia border
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 3
+	style.content_margin_bottom = 3
+	panel.add_theme_stylebox_override("panel", style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
+	panel.add_child(hbox)
+
+	if badge_type == "gold":
+		var ico := TextureRect.new()
+		ico.custom_minimum_size = Vector2(16, 16)
+		ico.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		ico.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		ico.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		var coin_tex := AtlasTexture.new()
+		coin_tex.atlas = INVENTORY_ITEMS_SHEET_TEX
+		coin_tex.region = Rect2(16, 128, 16, 16) # Ancient coin
+		ico.texture = coin_tex
+		hbox.add_child(ico)
+	elif badge_type == "exp":
+		var star := Label.new()
+		star.text = "★"
+		if font:
+			star.add_theme_font_override("font", font)
+		star.add_theme_font_size_override("font_size", 14)
+		star.add_theme_color_override("font_color", Color(0.85, 0.58, 0.12, 1.0))
+		star.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		hbox.add_child(star)
+
+	var lbl := Label.new()
+	lbl.text = text
+	if font:
+		lbl.add_theme_font_override("font", font)
+	lbl.add_theme_font_size_override("font_size", 14)
+	lbl.add_theme_color_override("font_color", text_color)
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hbox.add_child(lbl)
+
+	return panel
+
+
+func _create_reward_item_card(item_info: Variant, font: Font, text_color: Color) -> Control:
+	var item_dict: Dictionary = {}
+	if item_info is Dictionary:
+		item_dict = item_info
+	elif item_info is String:
+		item_dict = {"name": item_info}
+	else:
+		return null
+
+	var item_name: String = item_dict.get("name", "Item Hadiah")
+	var qty: int = int(item_dict.get("quantity", item_dict.get("amount", 1)))
+	var display_text: String = "%s (x%d)" % [item_name, qty] if qty > 1 else item_name
+
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(0, 26)
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.92, 0.76, 0.56, 0.75)
+	style.border_color = Color(0.71, 0.55, 0.37, 0.85)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 3
+	style.content_margin_bottom = 3
+	panel.add_theme_stylebox_override("panel", style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
+	panel.add_child(hbox)
+
+	var ico := TextureRect.new()
+	ico.custom_minimum_size = Vector2(16, 16)
+	ico.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	ico.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	ico.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+
+	var item_tex: Texture2D = _resolve_inventory_item_texture(item_dict)
+	if not item_tex and item_dict.has("icon_rect") and item_dict["icon_rect"] is Rect2:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = INVENTORY_ITEMS_SHEET_TEX
+		atlas.region = item_dict["icon_rect"]
+		item_tex = atlas
+	if not item_tex:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = INVENTORY_ITEMS_SHEET_TEX
+		atlas.region = Rect2(48, 560, 16, 16) # Fallback ke icon apel
+		item_tex = atlas
+
+	ico.texture = item_tex
+	hbox.add_child(ico)
+
+	var lbl := Label.new()
+	lbl.text = display_text
+	if font:
+		lbl.add_theme_font_override("font", font)
+	lbl.add_theme_font_size_override("font_size", 14)
+	lbl.add_theme_color_override("font_color", text_color)
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hbox.add_child(lbl)
+
+	return panel
 
 
 func _on_btn_navigasi_pressed() -> void:

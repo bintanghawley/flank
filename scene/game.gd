@@ -700,36 +700,43 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if is_transitioning:
 		return
-	# Tombol pintasan pergantian karakter di arena combat (1, 2, 3, 4)
+	# Tombol pintasan pergantian karakter di arena combat (1, 2, 3, 4) dan pause (ESC)
 	if event is InputEventKey and event.pressed and not event.echo:
-		if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
-			if event.keycode == KEY_1 or event.physical_keycode == KEY_1 or (InputMap.has_action("skill_1") and event.is_action_pressed("skill_1")):
-				switch_to_character(0)
-				get_viewport().set_input_as_handled()
-				return
-			elif event.keycode == KEY_2 or event.physical_keycode == KEY_2 or (InputMap.has_action("skill_2") and event.is_action_pressed("skill_2")):
-				switch_to_character(1)
-				get_viewport().set_input_as_handled()
-				return
-			elif event.keycode == KEY_3 or event.physical_keycode == KEY_3 or (InputMap.has_action("skill_3") and event.is_action_pressed("skill_3")):
-				switch_to_character(2)
-				get_viewport().set_input_as_handled()
-				return
-			elif event.keycode == KEY_4 or event.physical_keycode == KEY_4 or (InputMap.has_action("skill_4") and event.is_action_pressed("skill_4")):
-				switch_to_character(3)
-				get_viewport().set_input_as_handled()
-				return
-			elif event.keycode == KEY_Q or event.physical_keycode == KEY_Q:
-				# Pergantian karakter di arena combat kini menggunakan tombol 1, 2, 3, 4 bukan Q
-				get_viewport().set_input_as_handled()
-				return
-		elif event.keycode == KEY_ESCAPE:
+		var key_code: int = event.keycode
+		if key_code == 0:
+			key_code = event.physical_keycode
+
+		# Menu Pause (ESC) harus selalu dapat diakses di mana pun, termasuk saat pertarungan / arena combat
+		if key_code == KEY_ESCAPE:
 			if gameplay_hud:
 				_on_hud_pause_menu_requested()
 				gameplay_hud.toggle_pause_menu()
 				if get_viewport():
 					get_viewport().set_input_as_handled()
-		elif event.keycode == KEY_E or event.physical_keycode == KEY_E or (InputMap.has_action("interact") and event.is_action_pressed("interact")):
+				return
+
+		if (arena_state == ArenaState.COMBAT or is_in_training_arena) and not is_party_fading_out:
+			if key_code == KEY_1 or (InputMap.has_action("skill_1") and event.is_action_pressed("skill_1")):
+				switch_to_character(0)
+				get_viewport().set_input_as_handled()
+				return
+			elif key_code == KEY_2 or (InputMap.has_action("skill_2") and event.is_action_pressed("skill_2")):
+				switch_to_character(1)
+				get_viewport().set_input_as_handled()
+				return
+			elif key_code == KEY_3 or (InputMap.has_action("skill_3") and event.is_action_pressed("skill_3")):
+				switch_to_character(2)
+				get_viewport().set_input_as_handled()
+				return
+			elif key_code == KEY_4 or (InputMap.has_action("skill_4") and event.is_action_pressed("skill_4")):
+				switch_to_character(3)
+				get_viewport().set_input_as_handled()
+				return
+			elif key_code == KEY_Q:
+				# Pergantian karakter di arena combat kini menggunakan tombol 1, 2, 3, 4 bukan Q
+				get_viewport().set_input_as_handled()
+				return
+		elif key_code == KEY_E or (InputMap.has_action("interact") and event.is_action_pressed("interact")):
 			if not is_transitioning:
 				var leader = get_active_leader()
 				if leader:
@@ -1201,7 +1208,20 @@ func _init_starter_quests() -> void:
 			"objective": "Buktikan ketangguhan beradu pedang melawan Pelatih Alaric.",
 			"description": "Terbangun dari tidur yang resah, Arthur harus segera menuju camp pelatihan untuk beradu pedang dan membuktikan kesiapannya bertempur pada Pelatih Alaric.",
 			"status": "active" if is_castle_meeting_completed else "inactive",
-			"target_position": Vector2(2500, 1500)
+			"target_position": Vector2(2500, 1500),
+			"rewards": {
+				"exp": 150,
+				"gold": 100,
+				"items": [
+					{
+						"id": "apple",
+						"name": "Apel Merah Hutan",
+						"quantity": 2,
+						"icon_path": "res://assets/ui/icons/items/items_sheets.png",
+						"icon_rect": Rect2(48, 560, 16, 16)
+					}
+				]
+			}
 		},
 		{
 			"id": "main_04",
@@ -1211,7 +1231,19 @@ func _init_starter_quests() -> void:
 			"objective": "Gali makam ksatria Lancelot dan ambil pedang legendaris.",
 			"description": "Pelatih Alaric mengakui ketangguhan Arthur dan menyuruhnya menggali makam Lancelot di area pemakaman untuk mengambil pedang pusaka yang pernah ditempa penempa legendaris.",
 			"status": "inactive",
-			"target_position": Vector2(3800, 1200)
+			"target_position": Vector2(3800, 1200),
+			"rewards": {
+				"exp": 200,
+				"items": [
+					{
+						"id": "ancient_coin",
+						"name": "Koin Makam Kuno",
+						"quantity": 1,
+						"icon_path": "res://assets/ui/icons/items/items_sheets.png",
+						"icon_rect": Rect2(16, 128, 16, 16)
+					}
+				]
+			}
 		},
 		{
 			"id": "main_05",
@@ -1271,7 +1303,20 @@ func _init_starter_quests() -> void:
 			"objective": "Bicara dengan tetua desa mengenai suplai gandum.",
 			"description": "Warga desa membutuhkan perlindungan dari gangguan monster liar di sekitar lumbung pangan.",
 			"status": "active",
-			"target_position": Vector2(1500, 3000)
+			"target_position": Vector2(1500, 3000),
+			"rewards": {
+				"exp": 100,
+				"gold": 50,
+				"items": [
+					{
+						"id": "bread",
+						"name": "Roti Gandum",
+						"quantity": 3,
+						"icon_path": "res://assets/ui/icons/items/items_sheets.png",
+						"icon_rect": Rect2(192, 528, 16, 16)
+					}
+				]
+			}
 		},
 		{
 			"id": "world_02",
@@ -1281,7 +1326,11 @@ func _init_starter_quests() -> void:
 			"objective": "Tumpas komplotan bandit di lembah.",
 			"description": "Kafilah dagang kerajaan dihadang bandit. Pulihkan keamanan jalur perdagangan dari ancaman penjahat.",
 			"status": "active",
-			"target_position": Vector2(5000, 1800)
+			"target_position": Vector2(5000, 1800),
+			"rewards": {
+				"exp": 250,
+				"gold": 150
+			}
 		}
 	]
 
@@ -3769,7 +3818,7 @@ func _init_nav_compass() -> void:
 		return
 	_nav_compass = NavCompassNode.new()
 	_nav_compass.name = "NavigationCompass"
-	_nav_compass.z_index = 25 # Di atas map dan karakter
+	_nav_compass.z_index = 100 # Di atas map, karakter, dan objek world
 	_nav_compass.visible = false
 	_nav_compass.modulate.a = 0.0
 	add_child(_nav_compass)
@@ -3810,16 +3859,41 @@ func update_nav_compass(delta: float) -> void:
 	_nav_compass.visible = true
 	_nav_compass.modulate.a = lerpf(_nav_compass.modulate.a, 1.0, delta * 6.0)
 
-	var target_dir: Vector2 = to_target.normalized()
+	# Ambil parameter kamera aktif untuk menghitung frame viewport layar
+	var cam_center: Vector2 = camera.get_screen_center_position() if is_instance_valid(camera) else leader.global_position
+	var cam_zoom: Vector2 = camera.zoom if is_instance_valid(camera) else Vector2(0.8, 0.8)
+	if cam_zoom.x <= 0.001 or cam_zoom.y <= 0.001:
+		cam_zoom = Vector2(0.8, 0.8)
+
+	var vp_size: Vector2 = get_viewport_rect().size
+	var half_w: float = (vp_size.x * 0.5) / cam_zoom.x
+	var half_h: float = (vp_size.y * 0.5) / cam_zoom.y
+
+	# Margin dari pinggir frame kamera (28 px di layar agar mepet rapi tanpa terpotong)
+	var margin_w: float = 28.0 / cam_zoom.x
+	var margin_h: float = 28.0 / cam_zoom.y
+	var inner_half := Vector2(maxf(half_w - margin_w, 20.0), maxf(half_h - margin_h, 20.0))
+
+	var diff_from_cam: Vector2 = target_pos - cam_center
+	var dist_from_cam: float = diff_from_cam.length()
+	var target_dir: Vector2 = diff_from_cam.normalized() if dist_from_cam > 0.001 else to_target.normalized()
 	var target_angle: float = target_dir.angle()
 
-	# Posisi mengikuti karakter dan mengorbit sejauh 65 px di depan karakter ke arah tujuan
-	var desired_pos: Vector2 = leader.global_position + target_dir * 65.0
+	# Hitung perpotongan sinar arah target dengan batas frame kamera
+	var t_x: float = (inner_half.x / absf(target_dir.x)) if absf(target_dir.x) > 0.0001 else 1e9
+	var t_y: float = (inner_half.y / absf(target_dir.y)) if absf(target_dir.y) > 0.0001 else 1e9
+	var t: float = minf(t_x, t_y)
+
+	# Jika target berada di luar jangkauan kamera, jepit di pinggir frame kamera.
+	# Jika target sudah masuk dalam frame kamera, arahkan mendekat ke titik target objektif.
+	var clamped_dist: float = minf(t, dist_from_cam)
+	var desired_pos: Vector2 = cam_center + target_dir * clamped_dist
+
 	if _nav_compass.global_position == Vector2.ZERO or _nav_compass.modulate.a < 0.1:
 		_nav_compass.global_position = desired_pos
 		_nav_compass.arrow_rotation = target_angle
 	else:
-		_nav_compass.global_position = _nav_compass.global_position.lerp(desired_pos, clampf(delta * 10.0, 0.0, 1.0))
-		_nav_compass.arrow_rotation = lerp_angle(_nav_compass.arrow_rotation, target_angle, clampf(delta * 12.0, 0.0, 1.0))
+		_nav_compass.global_position = _nav_compass.global_position.lerp(desired_pos, clampf(delta * 18.0, 0.0, 1.0))
+		_nav_compass.arrow_rotation = lerp_angle(_nav_compass.arrow_rotation, target_angle, clampf(delta * 14.0, 0.0, 1.0))
 
 	_nav_compass.queue_redraw()
