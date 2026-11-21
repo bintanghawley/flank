@@ -644,6 +644,7 @@ var _is_party_initialized: bool = false
 
 # Sistem Musik Latar (BGM) Gameplay - Dual-Deck Equal-Power Seamless Crossfade
 const BGM_GAMEPLAY = preload("res://assets/audio/bgm/game.ogg")
+const BGM_GAME_OVER = preload("res://assets/audio/bgm/game_over.ogg")
 var _bgm_player_a: AudioStreamPlayer = null
 var _bgm_player_b: AudioStreamPlayer = null
 var _active_bgm_player: AudioStreamPlayer = null
@@ -774,6 +775,71 @@ func _start_bgm_crossfade(time_left: float) -> void:
 	_bgm_tween.tween_callback(func():
 		if is_instance_valid(outgoing):
 			outgoing.stop()
+			outgoing.volume_db = -80.0
+		if is_instance_valid(incoming):
+			incoming.volume_db = BGM_BASE_VOLUME_DB
+		_active_bgm_player = incoming
+		_next_bgm_player = outgoing
+		_is_crossfading = false
+	)
+
+
+func _crossfade_to_bgm(stream: AudioStream, duration: float = BGM_CROSSFADE_DURATION) -> void:
+	if not stream:
+		return
+	_ensure_music_bus()
+
+	if not is_instance_valid(_bgm_player_a):
+		_bgm_player_a = AudioStreamPlayer.new()
+		_bgm_player_a.name = "BgmPlayerA"
+		_bgm_player_a.bus = &"Music"
+		_bgm_player_a.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_child(_bgm_player_a)
+
+	if not is_instance_valid(_bgm_player_b):
+		_bgm_player_b = AudioStreamPlayer.new()
+		_bgm_player_b.name = "BgmPlayerB"
+		_bgm_player_b.bus = &"Music"
+		_bgm_player_b.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_child(_bgm_player_b)
+
+	if not is_instance_valid(_active_bgm_player) or not is_instance_valid(_next_bgm_player):
+		_active_bgm_player = _bgm_player_a
+		_next_bgm_player = _bgm_player_b
+
+	# Jika track target sudah aktif, tidak perlu crossfade
+	if _active_bgm_player.stream == stream and _active_bgm_player.playing and not _is_crossfading:
+		return
+
+	var outgoing := _active_bgm_player
+	var incoming := _next_bgm_player
+
+	incoming.stop()
+	incoming.stream = stream
+	if stream is AudioStreamOggVorbis:
+		(stream as AudioStreamOggVorbis).loop = false
+	incoming.volume_db = -80.0
+	incoming.play(0.0)
+
+	if _bgm_tween and _bgm_tween.is_valid():
+		_bgm_tween.kill()
+	_is_crossfading = true
+
+	var base_linear := db_to_linear(BGM_BASE_VOLUME_DB)
+	_bgm_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_bgm_tween.tween_method(func(progress: float):
+		if is_instance_valid(outgoing) and outgoing.playing:
+			var out_factor: float = cos(progress * 0.5 * PI)
+			outgoing.volume_db = linear_to_db(maxf(out_factor * base_linear, 0.0001)) if out_factor > 0.001 else -80.0
+		if is_instance_valid(incoming) and incoming.playing:
+			var in_factor: float = sin(progress * 0.5 * PI)
+			incoming.volume_db = linear_to_db(maxf(in_factor * base_linear, 0.0001)) if in_factor > 0.001 else -80.0
+	, 0.0, 1.0, duration)
+
+	_bgm_tween.tween_callback(func():
+		if is_instance_valid(outgoing):
+			outgoing.stop()
+			outgoing.stream = stream
 			outgoing.volume_db = -80.0
 		if is_instance_valid(incoming):
 			incoming.volume_db = BGM_BASE_VOLUME_DB
@@ -1113,11 +1179,15 @@ func _unhandled_input(event: InputEvent) -> void:
 							elif leader.global_position.distance_to(SECRET_LIBRARY_EXIT_L1_POS) <= 120.0:
 								exit_secret_library()
 								get_viewport().set_input_as_handled()
+						else:
+							if leader.global_position.distance_to(SECRET_LIBRARY_STAIR_POS) <= 120.0:
+								_go_to_library_floor_1()
+								get_viewport().set_input_as_handled()
 					elif is_inside_castle_hall:
 						if leader.global_position.distance_to(CASTLE_HALL_EXIT_POS) <= 100.0:
 							exit_castle_hall()
 							get_viewport().set_input_as_handled()
-						elif not is_castle_meeting_completed and not is_meeting_in_progress:
+						elif selected_game_mode != "open_world" and not is_castle_meeting_completed and not is_meeting_in_progress:
 							if leader.global_position.distance_to(CASTLE_MEETING_SEAT_GLOBAL_POS) <= 100.0:
 								start_castle_meeting_cutscene()
 								get_viewport().set_input_as_handled()
@@ -2814,6 +2884,8 @@ func trigger_arena_defeat() -> void:
 			return
 		if defeat_canvas and is_instance_valid(defeat_canvas):
 			defeat_canvas.visible = true
+			# Ganti musik gameplay ke BGM layar kematian dengan crossfade yang sama
+			_crossfade_to_bgm(BGM_GAME_OVER)
 			if defeat_rect:
 				defeat_rect.modulate.a = 0.0
 			if defeat_title_lbl:
@@ -2850,6 +2922,9 @@ func execute_arena_rewind() -> void:
 
 	# Mainkan audio respawn / rewind waktu
 	play_sfx(SFX_HERO_RESPAWN, 0.0)
+
+	# Kembalikan musik gameplay dari BGM layar kematian
+	_crossfade_to_bgm(BGM_GAMEPLAY)
 
 	# 1. Nonaktifkan barrier arena seketika
 	_set_arena_barrier_enabled(false)
@@ -3823,6 +3898,11 @@ func get_story_dialogue(story_code_or_id: String) -> Array[Dictionary]:
 
 
 func play_story_dialogue(story_code_or_id: String, on_complete: Callable = Callable()) -> bool:
+	if selected_game_mode == "open_world":
+		if on_complete.is_valid():
+			on_complete.call()
+		return false
+
 	var dialogue_data: Array[Dictionary] = get_story_dialogue(story_code_or_id)
 	if dialogue_data.is_empty():
 		push_warning("play_story_dialogue: Naskah dialog '%s' tidak ditemukan dalam STORY_DIALOGUES!" % story_code_or_id)
@@ -3846,7 +3926,7 @@ func trigger_castle_meeting_dialogue(on_completed: Callable = Callable()) -> voi
 
 
 func start_castle_meeting_cutscene() -> void:
-	if is_meeting_in_progress or is_castle_meeting_completed or is_transitioning:
+	if selected_game_mode == "open_world" or is_meeting_in_progress or is_castle_meeting_completed or is_transitioning:
 		return
 	is_meeting_in_progress = true
 
@@ -3933,7 +4013,7 @@ func _on_castle_meeting_finished() -> void:
 
 
 func start_knight_room_cutscene() -> void:
-	if is_knight_room_cutscene_in_progress or is_knight_room_completed:
+	if selected_game_mode == "open_world" or is_knight_room_cutscene_in_progress or is_knight_room_completed:
 		return
 	is_knight_room_cutscene_in_progress = true
 
@@ -4129,7 +4209,7 @@ func setup_party_for_scene_4() -> void:
 
 
 func start_story_scene_4() -> void:
-	if is_scene_4_in_progress:
+	if selected_game_mode == "open_world" or is_scene_4_in_progress:
 		return
 	is_scene_4_in_progress = true
 	is_inside_castle_hall = false
@@ -4248,9 +4328,21 @@ func _go_to_library_floor_2() -> void:
 			if floor1: floor1.visible = false
 			if floor2: floor2.visible = true
 
-		# Pastikan ketiga hero muncul & berdiri menghadap utara (melihat rak buku)
-		update_party_visibility()
-		_pose_scene_4_heroes_looking_at_bookshelf()
+		if selected_game_mode == "open_world":
+			for i in range(party_members.size()):
+				var p = party_members[i]
+				if is_instance_valid(p):
+					p.global_position = SECRET_LIBRARY_L2_SPAWN + Vector2(i * 35.0 - 35.0, 0.0)
+					p.velocity = Vector2.ZERO
+					if "last_direction" in p:
+						p.last_direction = Vector2.UP
+					if p.has_method("play_idle_animation"):
+						p.play_idle_animation()
+			update_party_visibility()
+		else:
+			# Pastikan ketiga hero muncul & berdiri menghadap utara (melihat rak buku)
+			update_party_visibility()
+			_pose_scene_4_heroes_looking_at_bookshelf()
 
 		# Fokuskan kamera ke Lantai 2
 		update_camera_limits_for_location("library")
@@ -4262,6 +4354,15 @@ func _go_to_library_floor_2() -> void:
 				camera.force_update_scroll()
 
 	var on_completed := func() -> void:
+		if selected_game_mode == "open_world":
+			set_party_movement_locked(false)
+			var leader := get_active_leader()
+			if is_instance_valid(leader):
+				_set_character_collision_active(leader, true)
+				leader.set_physics_process(true)
+				leader.set_process_unhandled_input(true)
+			return
+
 		# Kunci gerak dan pastikan ketiga karakter tetap berdiri menghadap utara
 		set_party_movement_locked(true)
 		_pose_scene_4_heroes_looking_at_bookshelf()
@@ -4275,6 +4376,53 @@ func _go_to_library_floor_2() -> void:
 		)
 
 	# Transisi fade hitam dari tangga Lantai 1 ke cutscene Lantai 2
+	play_black_fade_transition(on_midpoint, on_completed)
+
+
+func _go_to_library_floor_1() -> void:
+	if not is_on_library_floor_2 or is_transitioning:
+		return
+	set_party_movement_locked(true)
+
+	if gameplay_hud and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
+
+	var on_midpoint := func() -> void:
+		is_on_library_floor_2 = false
+
+		var lib_node := get_node_or_null("SecretLibrary")
+		if is_instance_valid(lib_node):
+			var floor1 := lib_node.get_node_or_null("LibraryFloor1")
+			var floor2 := lib_node.get_node_or_null("LibraryFloor2")
+			if floor1: floor1.visible = true
+			if floor2: floor2.visible = false
+
+		for i in range(party_members.size()):
+			var p = party_members[i]
+			if is_instance_valid(p):
+				p.global_position = SECRET_LIBRARY_STAIR_POS + Vector2(60.0 + i * 35.0, 0.0)
+				p.velocity = Vector2.ZERO
+				if "last_direction" in p:
+					p.last_direction = Vector2.RIGHT
+				if p.has_method("play_idle_animation"):
+					p.play_idle_animation()
+
+		update_party_visibility()
+		update_camera_limits_for_location("library")
+		if is_instance_valid(camera):
+			camera.global_position = SECRET_LIBRARY_STAIR_POS + Vector2(60.0, 0.0)
+			camera.reset_smoothing()
+			if camera.has_method("force_update_scroll"):
+				camera.force_update_scroll()
+
+	var on_completed := func() -> void:
+		set_party_movement_locked(false)
+		var leader := get_active_leader()
+		if is_instance_valid(leader):
+			_set_character_collision_active(leader, true)
+			leader.set_physics_process(true)
+			leader.set_process_unhandled_input(true)
+
 	play_black_fade_transition(on_midpoint, on_completed)
 
 
@@ -5287,6 +5435,13 @@ func _setup_meeting_participants() -> void:
 
 	# Jangan duplikasi jika sudah diinstansiasi
 	if hall.has_node("Participant_King"):
+		if selected_game_mode == "open_world":
+			var pm := hall.get_node_or_null("Participant_Magnus")
+			if is_instance_valid(pm):
+				pm.queue_free()
+			var pa := hall.get_node_or_null("Participant_Anastasya")
+			if is_instance_valid(pa):
+				pa.queue_free()
 		return
 
 	# Tekstur sprite karakter
@@ -5324,14 +5479,16 @@ func _setup_meeting_participants() -> void:
 	# 4. Magnus / Wizard (SideChairLeft - Samping Kiri)
 	# Disortir di Y = 15 (di depan SideChair Y = -7.5)
 	# offset.y = -7.0 menggeser visual agar duduk pas di atas alas kursi
-	if tex_mage_e:
+	# Di Mode Jelajah, karakter Magnus tidak duduk di meja rapat
+	if selected_game_mode != "open_world" and tex_mage_e:
 		var magnus := _create_meeting_npc(tex_mage_e, 96, 64, 4, Vector2(-345, 15), "idle_e", Color.WHITE, Vector2(-0.5, -7.0))
 		magnus.name = "Participant_Magnus"
 		hall.add_child(magnus)
 
 	# 5. Anastasya / Archer (SideChairRight - Samping Kanan)
 	# offset.y = -7.0 menggeser visual agar duduk pas di atas alas kursi
-	if tex_archer_w:
+	# Di Mode Jelajah, karakter Anastasya tidak duduk di meja rapat
+	if selected_game_mode != "open_world" and tex_archer_w:
 		var anastasya := _create_meeting_npc(tex_archer_w, 32, 32, 4, Vector2(340, 15), "idle_w", Color.WHITE, Vector2(-1, -7.0))
 		anastasya.name = "Participant_Anastasya"
 		hall.add_child(anastasya)
@@ -5398,6 +5555,9 @@ func _create_meeting_npc(
 
 func _setup_open_world_mode() -> void:
 	is_prologue_completed = true
+	is_castle_meeting_completed = true
+	is_knight_room_completed = true
+	is_scene_4_completed = true
 	tracked_quest_id = ""
 
 	# Pastikan seluruh 4 hero terdaftar di party_members di mode jelajah
@@ -5428,6 +5588,16 @@ func _setup_open_world_mode() -> void:
 			gameplay_hud.set_open_world_mode(true)
 		if gameplay_hud.has_method("hide_quest_navigation"):
 			gameplay_hud.hide_quest_navigation()
+
+	# Pastikan char Archer dan Mage tidak muncul di meja rapat aula pada Mode Jelajah
+	var hall = get_node_or_null("CastleMeetingHall")
+	if is_instance_valid(hall):
+		var pm = hall.get_node_or_null("Participant_Magnus")
+		if is_instance_valid(pm):
+			pm.queue_free()
+		var pa = hall.get_node_or_null("Participant_Anastasya")
+		if is_instance_valid(pa):
+			pa.queue_free()
 
 	var marker = get_node_or_null("CastleObjectiveMarker")
 	if marker:
@@ -5948,8 +6118,13 @@ func check_castle_interactions(delta: float) -> void:
 				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 					gameplay_hud.hide_interact_prompt()
 		else:
-			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
-				gameplay_hud.hide_interact_prompt()
+			var dist_stair_down := leader.global_position.distance_to(SECRET_LIBRARY_STAIR_POS)
+			if dist_stair_down <= 110.0:
+				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
+					gameplay_hud.show_interact_prompt("Turun ke Lantai 1", "E", "go_library_floor1")
+			else:
+				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+					gameplay_hud.hide_interact_prompt()
 	elif is_inside_castle_hall:
 		if get_tree().paused or (is_instance_valid(gameplay_hud) and gameplay_hud.has_method("is_any_menu_open") and gameplay_hud.is_any_menu_open()) or is_instance_valid(_alaric_boss_prompt_layer):
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
@@ -5960,6 +6135,9 @@ func check_castle_interactions(delta: float) -> void:
 		if dist <= 75.0:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
 				gameplay_hud.show_interact_prompt("Keluar ke Gerbang Kastil", "E", "exit_castle")
+		elif selected_game_mode != "open_world" and not is_castle_meeting_completed and not is_meeting_in_progress and leader.global_position.distance_to(CASTLE_MEETING_SEAT_GLOBAL_POS) <= 90.0:
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
+				gameplay_hud.show_interact_prompt("Ikut Rapat", "E", "join_meeting")
 		else:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 				gameplay_hud.hide_interact_prompt()
@@ -6008,11 +6186,14 @@ func _on_hud_interaction_pressed(action_type: String) -> void:
 	elif action_type == "exit_castle" or action_type == "Keluar ke Gerbang Kastil":
 		exit_castle_hall()
 	elif action_type == "join_meeting" or action_type == "Ikut Rapat":
-		start_castle_meeting_cutscene()
+		if selected_game_mode != "open_world":
+			start_castle_meeting_cutscene()
 	elif action_type == "talk_alaric" or action_type == "Bicara dengan Pelatih Alaric":
 		_start_alaric_pre_fight_dialogue()
 	elif action_type == "go_library_floor2" or action_type == "Naik ke Lantai 2":
 		_go_to_library_floor_2()
+	elif action_type == "go_library_floor1" or action_type == "Turun ke Lantai 1":
+		_go_to_library_floor_1()
 	elif action_type == "enter_library" or action_type == "Masuk ke Perpustakaan":
 		enter_secret_library()
 	elif action_type == "exit_library" or action_type == "Keluar ke Kota":
@@ -6026,7 +6207,7 @@ func enter_secret_library() -> void:
 		gameplay_hud.hide_interact_prompt(true)
 
 	var on_midpoint := func() -> void:
-		if not is_scene_4_in_progress and not is_scene_4_completed:
+		if selected_game_mode != "open_world" and not is_scene_4_in_progress and not is_scene_4_completed:
 			start_story_scene_4()
 		else:
 			is_inside_secret_library = true
@@ -6048,13 +6229,22 @@ func enter_secret_library() -> void:
 						p.last_direction = Vector2.UP
 					if p.has_method("play_idle_animation"):
 						p.play_idle_animation()
+			update_party_visibility()
 			if is_instance_valid(camera):
 				camera.global_position = SECRET_LIBRARY_L1_SPAWN
 				camera.reset_smoothing()
 				if camera.has_method("force_update_scroll"):
 					camera.force_update_scroll()
 
-	play_black_fade_transition(on_midpoint)
+	var on_completed := func() -> void:
+		set_party_movement_locked(false)
+		var leader := get_active_leader()
+		if is_instance_valid(leader):
+			_set_character_collision_active(leader, true)
+			leader.set_physics_process(true)
+			leader.set_process_unhandled_input(true)
+
+	play_black_fade_transition(on_midpoint, on_completed)
 
 
 func exit_secret_library() -> void:
@@ -6079,6 +6269,7 @@ func exit_secret_library() -> void:
 				if member.has_method("play_idle_animation"):
 					member.play_idle_animation()
 
+		update_party_visibility()
 		update_camera_limits_for_location("outdoor")
 		if is_instance_valid(camera):
 			camera.global_position = spawn_pos
@@ -6086,7 +6277,15 @@ func exit_secret_library() -> void:
 			if camera.has_method("force_update_scroll"):
 				camera.force_update_scroll()
 
-	play_black_fade_transition(on_midpoint)
+	var on_completed := func() -> void:
+		set_party_movement_locked(false)
+		var leader := get_active_leader()
+		if is_instance_valid(leader):
+			_set_character_collision_active(leader, true)
+			leader.set_physics_process(true)
+			leader.set_process_unhandled_input(true)
+
+	play_black_fade_transition(on_midpoint, on_completed)
 
 
 func enter_castle_hall() -> void:
@@ -6103,9 +6302,29 @@ func enter_castle_hall() -> void:
 	if is_instance_valid(marker):
 		marker.visible = false
 
+	if selected_game_mode == "open_world":
+		var hall := get_node_or_null("CastleMeetingHall")
+		if is_instance_valid(hall):
+			var pm := hall.get_node_or_null("Participant_Magnus")
+			if is_instance_valid(pm):
+				pm.queue_free()
+			var pa := hall.get_node_or_null("Participant_Anastasya")
+			if is_instance_valid(pa):
+				pa.queue_free()
+
 	await transition_to_location(CASTLE_HALL_SPAWN_POS, "Aula Rapat Istana")
 
-	if not is_castle_meeting_completed and not is_meeting_in_progress:
+	if selected_game_mode == "open_world":
+		var hall := get_node_or_null("CastleMeetingHall")
+		if is_instance_valid(hall):
+			var pm := hall.get_node_or_null("Participant_Magnus")
+			if is_instance_valid(pm):
+				pm.queue_free()
+			var pa := hall.get_node_or_null("Participant_Anastasya")
+			if is_instance_valid(pa):
+				pa.queue_free()
+
+	if selected_game_mode != "open_world" and not is_castle_meeting_completed and not is_meeting_in_progress:
 		start_castle_meeting_cutscene()
 
 
