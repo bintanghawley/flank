@@ -5745,12 +5745,7 @@ func start_story_scene_4() -> void:
 	setup_party_for_scene_4()
 
 	# 2. Aktifkan Lantai 1 library, sembunyikan Lantai 2
-	var lib_node := get_node_or_null("SecretLibrary")
-	if is_instance_valid(lib_node):
-		var floor1 := lib_node.get_node_or_null("LibraryFloor1")
-		var floor2 := lib_node.get_node_or_null("LibraryFloor2")
-		if floor1: floor1.visible = true
-		if floor2: floor2.visible = false
+	_set_secret_library_floor(false)
 
 	# 3. Update camera limits ke perpustakaan SEBELUM teleport
 	update_camera_limits_for_location("library")
@@ -5839,6 +5834,35 @@ func _pose_scene_4_heroes_looking_at_bookshelf() -> void:
 			hero.play_idle_animation()
 
 
+func _set_secret_library_floor(to_floor_2: bool) -> void:
+	is_on_library_floor_2 = to_floor_2
+	var lib_node := get_node_or_null("SecretLibrary")
+	if not is_instance_valid(lib_node):
+		return
+	var floor1 := lib_node.get_node_or_null("LibraryFloor1")
+	var floor2 := lib_node.get_node_or_null("LibraryFloor2")
+	if floor1:
+		floor1.visible = not to_floor_2
+		floor1.process_mode = Node.PROCESS_MODE_DISABLED if to_floor_2 else Node.PROCESS_MODE_INHERIT
+		var l1_coll = floor1.get_node_or_null("L1Collisions")
+		if l1_coll and l1_coll is CollisionObject2D:
+			l1_coll.collision_layer = 0 if to_floor_2 else 1
+			l1_coll.collision_mask = 0 if to_floor_2 else 1
+		var l1_struct = floor1.get_node_or_null("L1Structure")
+		if l1_struct and "enabled" in l1_struct:
+			l1_struct.enabled = not to_floor_2
+	if floor2:
+		floor2.visible = to_floor_2
+		floor2.process_mode = Node.PROCESS_MODE_INHERIT if to_floor_2 else Node.PROCESS_MODE_DISABLED
+		var l2_coll = floor2.get_node_or_null("L2Collisions")
+		if l2_coll and l2_coll is CollisionObject2D:
+			l2_coll.collision_layer = 1 if to_floor_2 else 0
+			l2_coll.collision_mask = 1 if to_floor_2 else 0
+		var l2_struct = floor2.get_node_or_null("L2Structure")
+		if l2_struct and "enabled" in l2_struct:
+			l2_struct.enabled = to_floor_2
+
+
 func _go_to_library_floor_2() -> void:
 	if is_on_library_floor_2 or is_transitioning:
 		return
@@ -5848,15 +5872,8 @@ func _go_to_library_floor_2() -> void:
 		gameplay_hud.hide_interact_prompt(true)
 
 	var on_midpoint := func() -> void:
-		is_on_library_floor_2 = true
-
 		# Tukar lantai: sembunyikan L1, tampilkan L2
-		var lib_node := get_node_or_null("SecretLibrary")
-		if is_instance_valid(lib_node):
-			var floor1 := lib_node.get_node_or_null("LibraryFloor1")
-			var floor2 := lib_node.get_node_or_null("LibraryFloor2")
-			if floor1: floor1.visible = false
-			if floor2: floor2.visible = true
+		_set_secret_library_floor(true)
 
 		if selected_game_mode == "open_world":
 			for i in range(party_members.size()):
@@ -5918,14 +5935,7 @@ func _go_to_library_floor_1() -> void:
 		gameplay_hud.hide_interact_prompt(true)
 
 	var on_midpoint := func() -> void:
-		is_on_library_floor_2 = false
-
-		var lib_node := get_node_or_null("SecretLibrary")
-		if is_instance_valid(lib_node):
-			var floor1 := lib_node.get_node_or_null("LibraryFloor1")
-			var floor2 := lib_node.get_node_or_null("LibraryFloor2")
-			if floor1: floor1.visible = true
-			if floor2: floor2.visible = false
+		_set_secret_library_floor(false)
 
 		for i in range(party_members.size()):
 			var p = party_members[i]
@@ -10763,13 +10773,7 @@ func enter_secret_library() -> void:
 			is_inside_secret_library = true
 			is_castle_meeting_completed = true
 			is_inside_castle_hall = false
-			is_on_library_floor_2 = false
-			var lib_node := get_node_or_null("SecretLibrary")
-			if is_instance_valid(lib_node):
-				var floor1 := lib_node.get_node_or_null("LibraryFloor1")
-				var floor2 := lib_node.get_node_or_null("LibraryFloor2")
-				if floor1: floor1.visible = true
-				if floor2: floor2.visible = false
+			_set_secret_library_floor(false)
 			update_camera_limits_for_location("library")
 			for i in range(party_members.size()):
 				var p = party_members[i]
@@ -10807,7 +10811,7 @@ func exit_secret_library() -> void:
 	var on_midpoint := func() -> void:
 		_crossfade_to_bgm(BGM_GAMEPLAY)
 		is_inside_secret_library = false
-		is_on_library_floor_2 = false
+		_set_secret_library_floor(false)
 		is_castle_meeting_completed = true
 		is_inside_castle_hall = false
 
