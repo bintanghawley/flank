@@ -2873,6 +2873,14 @@ func _is_position_in_any_arena(pos: Vector2) -> bool:
 	return false
 
 
+func _is_position_in_worm_arena(pos: Vector2) -> bool:
+	for i in range(mini(2, arena_zones.size())):
+		var zone_bounds: Rect2 = arena_zones[i]["bounds"]
+		if zone_bounds.grow(150.0).has_point(pos):
+			return true
+	return false
+
+
 func _make_worm_atlas(tex: Texture2D, x: int, region_h: int) -> AtlasTexture:
 	var atlas := AtlasTexture.new()
 	atlas.atlas = tex
@@ -8546,6 +8554,24 @@ func _restore_hero_full_for_alaric(hero: CharacterBody2D) -> void:
 			hero.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", false)
 		if hero.has_method("reset_combat_skills"):
 			hero.reset_combat_skills()
+
+
+func _heal_party_full_for_story_mode() -> void:
+	if selected_game_mode == "open_world":
+		return
+	for member in party_members:
+		if is_instance_valid(member):
+			_restore_hero_full_for_alaric(member)
+	for h_name in all_heroes.keys():
+		var h: CharacterBody2D = all_heroes[h_name]
+		if is_instance_valid(h):
+			h.is_dead = false
+			if "current_health" in h and "max_health" in h:
+				h.current_health = h.max_health
+	update_party_visibility()
+	if is_instance_valid(gameplay_hud):
+		if gameplay_hud.has_method("update_party_hud"):
+			gameplay_hud.update_party_hud()
 
 
 func _teleport_to_arena_kamp_and_fight() -> void:
