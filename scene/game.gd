@@ -688,9 +688,9 @@ const ENEMY_WORM_SCENE = preload("res://scene/enemy/enemy.tscn")
 const WORM_IDLE_TEXTURE = preload("res://assets/characters/animal/cacing/cacing_idle.png")
 const WORM_WALK_TEXTURE = preload("res://assets/characters/animal/cacing/cacing_walk.png")
 const WORM_ATTACK_TEXTURE = preload("res://assets/characters/animal/cacing/cacing_attack.png")
-const WORM_MAX_HEALTH: int = 320
-const WORM_CONTACT_DAMAGE: int = 10
-const WORM_MELEE_DAMAGE: int = 18
+const WORM_MAX_HEALTH: int = 260           # HP sedang: ±7 tebasan Knight (40 dmg)
+const WORM_CONTACT_DAMAGE: int = 8         # Damage sentuhan ringan
+const WORM_MELEE_DAMAGE: int = 22          # Damage serangan sedang, tidak terlalu mematikan
 const WORM_MELEE_RANGE: float = 90.0
 const WORM_CHASE_SPEED: float = 105.0
 const WORM_WANDER_SPEED: float = 45.0
@@ -727,7 +727,7 @@ var target_camera_zoom: Vector2 = CAMERA_ZOOM_EXPLORE
 var is_camera_locked_to_arena: bool = false
 var arena_clear_delay_timer: float = 0.0
 var arena_group_respawn_timer: float = 0.0
-const ARENA_GROUP_RESPAWN_DELAY: float = 7.0
+const ARENA_GROUP_RESPAWN_DELAY: float = 5.0
 var is_party_fading_out: bool = false
 var _party_fade_tweens: Array[Tween] = []
 var is_transitioning: bool = false
@@ -2394,9 +2394,17 @@ func _init_arena_enemies() -> void:
 
 		var assigned: bool = false
 		for zone in arena_zones:
+			var zone_enemies: Array[CharacterBody2D] = zone["enemies"]
+			if zone_enemies.has(e):
+				assigned = true
+				if "wait_for_arena" in e:
+					e.wait_for_arena = true
+				if "can_respawn" in e:
+					e.can_respawn = false
+				break
 			var zone_bounds: Rect2 = zone["bounds"]
 			if zone_bounds.grow(150.0).has_point(e.global_position):
-				(zone["enemies"] as Array[CharacterBody2D]).append(e)
+				zone_enemies.append(e)
 				assigned = true
 				if "wait_for_arena" in e:
 					e.wait_for_arena = true
@@ -2407,13 +2415,15 @@ func _init_arena_enemies() -> void:
 		# Fallback penempatan berdasarkan nama jika ada pergeseran posisi editor
 		if not assigned:
 			if "Archer" in e.name:
-				(arena_zones[0]["enemies"] as Array[CharacterBody2D]).append(e)
+				if not (arena_zones[0]["enemies"] as Array[CharacterBody2D]).has(e):
+					(arena_zones[0]["enemies"] as Array[CharacterBody2D]).append(e)
 				if "wait_for_arena" in e:
 					e.wait_for_arena = true
 				if "can_respawn" in e:
 					e.can_respawn = false
 			elif "Knight" in e.name:
-				(arena_zones[1]["enemies"] as Array[CharacterBody2D]).append(e)
+				if not (arena_zones[1]["enemies"] as Array[CharacterBody2D]).has(e):
+					(arena_zones[1]["enemies"] as Array[CharacterBody2D]).append(e)
 				if "wait_for_arena" in e:
 					e.wait_for_arena = true
 				if "can_respawn" in e:
@@ -2499,6 +2509,7 @@ func _spawn_worm_arena_enemies() -> void:
 
 			# Cacing bertarung jarak dekat seperti Knight (melee AI).
 			worm.enemy_type = 1
+			worm.is_worm = true
 			worm.max_health = WORM_MAX_HEALTH
 			worm.current_health = WORM_MAX_HEALTH
 			worm.contact_damage = WORM_CONTACT_DAMAGE
@@ -2510,6 +2521,7 @@ func _spawn_worm_arena_enemies() -> void:
 			worm.can_respawn = false
 			worm.wait_for_arena = true
 			worm.spawn_position = worm.global_position
+			(zone["enemies"] as Array[CharacterBody2D]).append(worm)
 			if worm.has_method("setup_health_bar"):
 				worm.setup_health_bar()
 
@@ -2903,11 +2915,11 @@ func end_arena_battle() -> void:
 		arena_zones[active_arena_idx]["is_cleared"] = true
 		if selected_game_mode == "open_world":
 			arena_zones[active_arena_idx]["respawn_timer"] = ARENA_GROUP_RESPAWN_DELAY
-			print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Musuh akan spawn lagi dalam ", ARENA_GROUP_RESPAWN_DELAY, " detik.")
+			print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Mode Jelajah: Seluruh musuh akan respawn serentak dalam ", ARENA_GROUP_RESPAWN_DELAY, " detik.")
 		else:
 			# Mode Cerita: arena yang sudah dibersihkan tidak memunculkan musuh lagi.
-			arena_zones[active_arena_idx]["respawn_timer"] = 0.0
-			print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Mode Cerita: musuh tidak akan respawn.")
+			arena_zones[active_arena_idx]["respawn_timer"] = -1.0
+			print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Mode Cerita: musuh mati permanen dan tidak akan respawn lagi.")
 
 	# Jika arena tebing hutan selesai dalam prolog, tandai pertarungan selesai
 	if active_arena_idx == 1 or (active_arena_idx >= 0 and arena_zones[active_arena_idx].get("name") == "Arena_2_Forest"):
@@ -2983,14 +2995,11 @@ func end_arena_battle() -> void:
 
 
 func handle_arena_group_respawn(delta: float) -> void:
-	# Mode Cerita tidak melakukan respawn musuh arena yang sudah dikalahkan.
+	# Mode Cerita: musuh arena yang sudah mati tidak melakukan respawn lagi.
 	if selected_game_mode != "open_world":
 		return
 	for zone in arena_zones:
-		# Jangan respawn arena tebing hutan atau arena jalan setapak
-		if zone.get("name") in ["Arena_1_Courtyard", "Arena_2_Forest"]:
-			continue
-		if zone.get("is_cleared", false):
+		if zone.get("is_cleared", false) and zone.get("respawn_timer", 0.0) > 0.0:
 			zone["respawn_timer"] -= delta
 			if zone["respawn_timer"] <= 0.0:
 				_respawn_zone_enemies(zone)
@@ -3000,7 +3009,16 @@ func _respawn_zone_enemies(zone: Dictionary) -> void:
 	zone["is_cleared"] = false
 	zone["respawn_timer"] = 0.0
 	var z_enemies: Array = zone.get("enemies", [])
-	for e in z_enemies:
+	var center: Vector2 = zone.get("center", Vector2.ZERO)
+	var spawn_offsets: Array = [
+		Vector2(-150.0, 40.0),
+		Vector2(0.0, -90.0),
+		Vector2(150.0, 40.0),
+	]
+
+	var valid_enemies: Array[CharacterBody2D] = []
+	for i in range(z_enemies.size()):
+		var e = z_enemies[i]
 		if is_instance_valid(e):
 			if "wait_for_arena" in e:
 				e.wait_for_arena = true
@@ -3008,11 +3026,45 @@ func _respawn_zone_enemies(zone: Dictionary) -> void:
 				e.in_arena_combat = false
 			if e.has_method("respawn"):
 				e.respawn()
+			valid_enemies.append(e)
+		else:
+			# Fallback re-instantiate jika node cacing sempat terhapus
+			var worm := ENEMY_WORM_SCENE.instantiate() as CharacterBody2D
+			if is_instance_valid(worm):
+				worm.name = "Worm_Arena%d_%d" % [zone.get("id", 1), i + 1]
+				worm.position = center + spawn_offsets[i % spawn_offsets.size()]
+				add_child(worm)
+				worm.enemy_type = 1
+				worm.is_worm = true
+				worm.max_health = WORM_MAX_HEALTH
+				worm.current_health = WORM_MAX_HEALTH
+				worm.contact_damage = WORM_CONTACT_DAMAGE
+				worm.melee_damage = WORM_MELEE_DAMAGE
+				worm.melee_attack_range = WORM_MELEE_RANGE
+				worm.chase_speed = WORM_CHASE_SPEED
+				worm.wander_speed = WORM_WANDER_SPEED
+				worm.attack_cooldown = WORM_ATTACK_COOLDOWN
+				worm.can_respawn = false
+				worm.wait_for_arena = true
+				worm.spawn_position = worm.global_position
+				var sprite := worm.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+				if is_instance_valid(sprite):
+					sprite.sprite_frames = _get_worm_sprite_frames()
+					sprite.modulate = Color.WHITE
+					sprite.animation = &"idle_s"
+					sprite.frame = 0
+				if worm.has_method("setup_health_bar"):
+					worm.setup_health_bar()
+				if worm.has_method("play_idle_animation"):
+					worm.play_idle_animation()
+				valid_enemies.append(worm)
+
+	zone["enemies"] = valid_enemies
 
 	if arena_state == ArenaState.CLEARED:
 		arena_state = ArenaState.INACTIVE
 
-	print("[Arena] Musuh di zona ", zone["name"], " telah spawn kembali setelah 7 detik!")
+	print("[Arena] Seluruh musuh di zona ", zone["name"], " telah spawn kembali secara serentak setelah ", ARENA_GROUP_RESPAWN_DELAY, " detik!")
 
 
 func _respawn_arena_enemy_group() -> void:
@@ -4081,7 +4133,7 @@ func _on_prologue_monsters_cleared() -> void:
 	# Pastikan musuh tebing hutan di Arena 2 tidak respawn
 	if arena_zones.size() > 1:
 		arena_zones[1]["is_cleared"] = true
-		arena_zones[1]["respawn_timer"] = 999999.0
+		arena_zones[1]["respawn_timer"] = -1.0
 
 	# Munculkan burung gagak di atas tiang lampu setelah monster arena selesai dilawan
 	_spawn_prologue_crow()
@@ -4459,7 +4511,7 @@ func _on_scene2_monsters_cleared() -> void:
 	# Pastikan monster jalan setapak di Arena 1 tidak respawn
 	if arena_zones.size() > 0:
 		arena_zones[0]["is_cleared"] = true
-		arena_zones[0]["respawn_timer"] = 999999.0
+		arena_zones[0]["respawn_timer"] = -1.0
 
 	set_party_movement_locked(true)
 	var lead := get_active_leader()
