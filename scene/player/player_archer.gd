@@ -35,6 +35,7 @@ var shield_tween: Tween = null
 # =========================
 var is_leader: bool = true
 var is_movement_locked: bool = false
+var is_cutscene_walking: bool = false
 var leader_node: CharacterBody2D = null
 var queue_slot_index: int = 0
 var in_party_combat: bool = false
@@ -114,6 +115,7 @@ func reset_combat_skills() -> void:
 	if current_skill_state != SkillState.INACTIVE:
 		deactivate_skill_mode()
 	cancel_skill()
+	deactivate_shield()
 	skill_cooldown_timer = 0.0
 	attack_timer = 0.0
 	is_attacking = false
@@ -142,9 +144,12 @@ func set_party_combat_mode(active: bool) -> void:
 
 
 func is_in_combat_mode() -> bool:
+	var game_node = get_tree().current_scene if is_inside_tree() else null
+	if game_node:
+		if "is_inside_castle_hall" in game_node and game_node.is_inside_castle_hall:
+			return false
 	if in_party_combat:
 		return true
-	var game_node = get_tree().current_scene if is_inside_tree() else null
 	if game_node:
 		if "current_combat_state" in game_node and "PartyCombatState" in game_node:
 			if game_node.current_combat_state == game_node.PartyCombatState.COMBAT:
@@ -367,8 +372,8 @@ func _physics_process(delta: float) -> void:
 
 	if is_movement_locked:
 		velocity = Vector2.ZERO
-		is_moving = false
-		if has_method("play_idle_animation"):
+		is_moving = is_cutscene_walking
+		if not is_cutscene_walking and has_method("play_idle_animation"):
 			play_idle_animation()
 		move_and_slide()
 		return
@@ -2082,6 +2087,12 @@ func grant_shield(duration: float, points: int = 300) -> void:
 	is_shield_active = true
 	shield_timer = duration
 	shield_points = points
+
+	# Timer pengaman agar perisai selalu dinonaktifkan setelah durasi berakhir
+	get_tree().create_timer(duration).timeout.connect(func():
+		if is_instance_valid(self) and is_shield_active:
+			deactivate_shield()
+	)
 
 	_setup_shield_sprite()
 	if shield_sprite:
