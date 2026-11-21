@@ -1,4 +1,4 @@
-﻿extends Node2D
+extends Node2D
 
 # =========================================================
 # GAME CONTROLLER & 4-CHARACTER PARTY MANAGER
