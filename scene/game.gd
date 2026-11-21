@@ -34,7 +34,7 @@ const CASTLE_MEETING_SIT_POS: Vector2 = Vector2(2457.0, -1385.0)
 const CASTLE_MEETING_TABLE_CENTER: Vector2 = Vector2(2533.0, -1490.0)
 const CASTLE_LIBRARY_POS: Vector2 = Vector2(2533.0, -1720.0) # deprecated, diganti konstanta library baru
 # === SECRET LIBRARY ===
-const LIBRARY_ENTRANCE_POS: Vector2 = Vector2(690.0, 1380.0)        # Pintu luar perpustakaan (bangunan kiri atas kota sesuai lingkaran biru)
+const LIBRARY_ENTRANCE_POS: Vector2 = Vector2(1910.0, 1095.0)        # Pintu luar perpustakaan (gedung toko ramuan barat kastil sesuai gambar)
 const SECRET_LIBRARY_EXIT_L1_POS: Vector2 = Vector2(4300.0, -1140.0) # Pintu keluar Lantai 1 perpustakaan
 const SECRET_LIBRARY_WORLD_POS: Vector2 = Vector2(4300.0, -1500.0)
 const SECRET_LIBRARY_L1_SPAWN: Vector2 = Vector2(4300.0, -1340.0)   # tengah lantai 1 (spawn masuk)
@@ -42,42 +42,34 @@ const SECRET_LIBRARY_L2_SPAWN: Vector2 = Vector2(4235.0, -1610.0)   # tengah kar
 const SECRET_LIBRARY_STAIR_POS: Vector2 = Vector2(3870.0, -1360.0)  # posisi tangga (kiri bawah L1)
 var is_scene_4_in_progress: bool = false
 var is_scene_4_completed: bool = false
-var is_scene_5_in_progress: bool = false
-var is_scene_5_completed: bool = false
 var is_inside_secret_library: bool = false
 var is_on_library_floor_2: bool = false
 
 func _is_near_library_entrance(pos: Vector2) -> bool:
-	# Deteksi area di depan pintu perpustakaan (X: 600..800, Y: 1340..1490)
+	# Deteksi area di depan pintu perpustakaan
 	if pos.distance_to(LIBRARY_ENTRANCE_POS) <= 130.0:
 		return true
-	return pos.x >= 600.0 and pos.x <= 800.0 and pos.y >= 1340.0 and pos.y <= 1490.0
+	return pos.x >= 1830.0 and pos.x <= 2010.0 and pos.y >= 1060.0 and pos.y <= 1180.0
 
 # === GERBANG KOTA (collision: OutdoorObstacles/CollisionShape2D132 di outdoor_world.tscn) ===
 const CITY_GATE_POS: Vector2 = Vector2(2560.0, 3877.0)
-const CITY_GATE_INSIDE_POS: Vector2 = Vector2(2560.0, 3600.0)   # sisi dalam kota (utara, halaman paving depan gerbang)
-const CITY_GATE_OUTSIDE_POS: Vector2 = Vector2(2560.0, 4150.0)  # sisi luar kota (selatan, jalan setapak luar gerbang)
+const CITY_GATE_INSIDE_POS: Vector2 = Vector2(2560.0, 3780.0)   # sisi dalam (utara)
+const CITY_GATE_OUTSIDE_POS: Vector2 = Vector2(2560.0, 3975.0)  # sisi luar (selatan)
 
 func _is_near_city_gate(pos: Vector2) -> bool:
-	if absf(pos.x - CITY_GATE_POS.x) > 220.0:
-		return false
-	# Meliputi area interaksi dari arah dalam (utara) maupun luar (selatan) gerbang
-	return pos.y >= 3520.0 and pos.y <= 4240.0
+	return absf(pos.x - CITY_GATE_POS.x) <= 220.0 and absf(pos.y - CITY_GATE_POS.y) <= 120.0
 
 func _is_outside_city_gate(pos: Vector2) -> bool:
 	return pos.y > CITY_GATE_POS.y
 
 func use_city_gate() -> void:
-	if is_transitioning or is_scene_5_in_progress:
+	if is_transitioning:
 		return
 	var leader := get_active_leader()
 	if not is_instance_valid(leader):
 		return
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 		gameplay_hud.hide_interact_prompt(true)
-	if selected_game_mode != "open_world" and not _is_outside_city_gate(leader.global_position) and (is_scene_4_completed or tracked_quest_id == "main_08") and not is_scene_5_completed:
-		start_story_scene_5()
-		return
 	if _is_outside_city_gate(leader.global_position):
 		await transition_to_location(CITY_GATE_INSIDE_POS, "Kota Kerajaan")
 	else:
@@ -85,6 +77,18 @@ func use_city_gate() -> void:
 
 const ALARIC_CAMP_POS: Vector2 = Vector2(6780.0, 1700.0)
 const ARTHUR_CAMP_RETURN_POS: Vector2 = Vector2(6650.0, 1700.0)
+const SCENE_6_START_POS: Vector2 = Vector2(1600.0, 4250.0)
+const SCENE_6_BUSH_POS: Vector2 = Vector2(400.0, 4250.0)
+const SCENE_6_OUTDOOR_CAMP_POS: Vector2 = Vector2(-1380.0, 2980.0)
+const SCENE_10_ARENA_POS: Vector2 = Vector2(6200.0, 8400.0)
+var is_scene_6_in_progress: bool = false
+var is_scene_6_bush_triggered: bool = false
+var is_scene_6_waiting_outdoor_camp_alaric: bool = false
+var is_scene_6_completed: bool = false
+var is_scene_7_in_progress: bool = false
+var is_scene_10_in_progress: bool = false
+var is_scene_10_completed: bool = false
+var _is_scene_6_party_assembled_at_camp: bool = false
 const ARENA_KAMP_ARTHUR_POS: Vector2 = Vector2(7950.0, -1210.0)
 const ARENA_KAMP_ALARIC_POS: Vector2 = Vector2(8350.0, -1210.0)
 const ARENA_KAMP_CENTER_POS: Vector2 = Vector2(8155.0, -1210.0)
@@ -309,56 +313,166 @@ const CH1_KNIGHT_ROOM_DIALOGUE: Array[Dictionary] = [
 ]
 
 # =========================================================
-# NASKAH DIALOG CAMP LATIHAN SEBELUM DUEL (CHAPTER 1.2)
-# Sesuai Storyboard FLK-007
+# NASKAH DIALOG SCENE 6: JALUR MENUJU CAMP LATIHAN — UJI FORMASI (FULL 4-HERO PARTY)
 # =========================================================
-const CH1_CAMP_TRAINING_PRE_FIGHT_DIALOGUE: Array[Dictionary] = [
+const CH1_SCENE_06A_CAMP_PATH_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Forzato Arthur",
-		"portrait": "arthur",
-		"text": "Alaric, aku cukup siap untuk ini. Aku akan melawanmu, kan?"
-	},
-	{
-		"speaker": "Pelatih Alaric",
-		"portrait": "alaric",
-		"text": "Iya Yang Mulia, setidaknya cukup bertahan saja dariku ha-ha-ha."
+		"speaker": "Carina Hellene",
+		"portrait": "assassin",
+		"text": "Tunggu. Di semak depan itu ada sekelompok monster yang berkumpul."
 	},
 	{
 		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
-		"text": "Sedari dulu kau memang kesatria yang arogan, ayo kita lihat siapa yang lebih kuat!"
+		"text": "Bagus. Sebelum kita bertemu pelatih Alaric, kita uji kekompakan kita berempat di sini."
+	},
+	{
+		"speaker": "Astuta Anastasya",
+		"portrait": "anastasya",
+		"text": "Panahku siap!"
+	}
+]
+
+const CH1_SCENE_06B_CAMP_PATH_POST_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Carina Hellene",
+		"portrait": "assassin",
+		"text": "Kerja sama yang bagus. Pangeran rupanya memang bisa bertarung."
+	},
+	{
+		"speaker": "Forzato Arthur",
+		"portrait": "arthur",
+		"text": "Tentu saja. Ayo, camp latihan Alaric ada di depan."
 	}
 ]
 
 # =========================================================
-# NASKAH DIALOG PASCA LATIHAN & PETUNJUK PEMAKAMAN (CHAPTER 1.2)
-# Sesuai Storyboard FLK-008
+# NASKAH DIALOG SCENE 6 & 7: SAAT SAMPAI DI CAMP LUAR & DISURUH KE TEMPAT DUEL DI DALAM KINGDOM
+# =========================================================
+const CH1_SCENE_06_CAMP_ALARIC_MEET_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Pelatih Alaric",
+		"portrait": "alaric",
+		"text": "Haha! Akhirnya pangeran kita datang membawa teman-teman barunya. Mau apa kalian mencariku ke camp ini?"
+	},
+	{
+		"speaker": "Forzato Arthur",
+		"portrait": "arthur",
+		"text": "Alaric, situasi di luar makin gawat. Kami butuh senjata yang cukup kuat untuk menembus kulit monster besar. Kami butuh pedang pusaka Ksatria Lancelot."
+	},
+	{
+		"speaker": "Pelatih Alaric",
+		"portrait": "alaric",
+		"text": "(Wajahnya mendadak mengeras, memegang pedang besarnya)\nMakam Lancelot adalah tempat suci prajurit terbaik yang pernah kulatih sebelum kau lahir, Arthur. Pedang pusakanya tidak boleh diambil sembarang orang."
+	},
+	{
+		"speaker": "Forzato Arthur",
+		"portrait": "arthur",
+		"text": "Aku tahu dia ksatria kebanggaanmu. Tapi kerajaan ini sedang terancam!"
+	},
+	{
+		"speaker": "Pelatih Alaric",
+		"portrait": "alaric",
+		"text": "Kalau begitu, jangan bawa-bawa temanmu! Pusaka ksatria hanya untuk ksatria sejati. Buktikan sendiri padaku apakah pangeran kita sanggup bertarung satu lawan satu!\n(Alaric mengacungkan pedang besarnya ke arah Arthur)\nTempat ini terlalu sempit. Temui aku di tempat duelku yang ada di dalam Kingdom! Aku akan menunggu kalian di sana!"
+	},
+	{
+		"speaker": "Astuta Anastasya",
+		"portrait": "anastasya",
+		"text": "Pangeran Arthur... pedang besarnya terlihat sangat berat!"
+	},
+	{
+		"speaker": "Forzato Arthur",
+		"portrait": "arthur",
+		"text": "Ayo kita menuju tempat duel Alaric di dalam Kingdom. Ini urusan ksatria antara aku dan pelatihku."
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG SCENE 7: TEMPAT DUEL DI DALAM KINGDOM — BOSS 1: PELATIH ALARIC (FLK-007)
+# =========================================================
+const CH1_CAMP_TRAINING_PRE_FIGHT_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Pelatih Alaric",
+		"portrait": "alaric",
+		"text": "Kalian sudah sampai di tempat duelku! Kalian bertiga, tunggu di pinggir arena! Arthur, cabut pedangmu, lawan aku!!"
+	},
+	{
+		"speaker": "Astuta Anastasya",
+		"portrait": "anastasya",
+		"text": "Berhati-hatilah, Pangeran Arthur!"
+	},
+	{
+		"speaker": "Forzato Arthur",
+		"portrait": "arthur",
+		"text": "(Tersenyum tenang sambil melangkah masuk ke tengah arena)\nKalian bertiga tunggu di luar gelanggang. Ini urusan ksatria antara aku dan pelatihku. Biar aku sendiri yang hadapi."
+	},
+	{
+		"speaker": "Pelatih Alaric",
+		"portrait": "alaric",
+		"text": "Hahaha! Bagus! Maju kau, Pangeran! HA-HA-HA!!"
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG PASCA-BOSS ALARIC & PETUNJUK PEMAKAMAN (SCENE 7 / FLK-008)
 # =========================================================
 const CH1_CAMP_TRAINING_POST_FIGHT_DIALOGUE: Array[Dictionary] = [
 	{
 		"speaker": "Pelatih Alaric",
 		"portrait": "alaric",
-		"text": "Kau memang cukup tangguh Yang Mulia, sayangnya aku cukup lihai untuk melawanmu haha."
+		"text": "(Alaric mundur beberapa langkah, menopang tubuhnya di gagang pedang sambil tersenyum bangga)\nKhh... ha-ha-ha! Luar biasa! Tangkisanmu makin kokoh dan tebasanmu makin tajam, Arthur!"
 	},
 	{
 		"speaker": "Forzato Arthur",
 		"portrait": "arthur",
-		"text": "Astaga, kurasa kita cukup imbang..."
+		"text": "(Menurunkan pedangnya)\nBagaimana, Alaric? Apakah aku sudah cukup pantas?"
 	},
 	{
 		"speaker": "Pelatih Alaric",
 		"portrait": "alaric",
-		"text": "Menurut saya, kau sudah cukup tangguh untuk perjalanan ini."
+		"text": "Kau ksatria sejati, Arthur. Lancelot pasti bangga pedangnya dipegang olehmu."
 	},
 	{
 		"speaker": "Pelatih Alaric",
 		"portrait": "alaric",
-		"text": "Pergi ke daerah pemakaman, di situ terdapat makam prajurit terhebat yang pernah kulatih dahulu, Lancelot. Terdapat pedang yang pernah ditempa oleh penempa legendaris di sana."
+		"text": "Pergilah ke bukit pemakaman di timur bersama kawan-kawanmu. Cari makam dengan nisan batu berlambang singa bersayap. Gali tanahnya dan ambil pedang pusaka Lancelot. Pakailah untuk melindungi tanah ini!"
+	}
+]
+
+# =========================================================
+# NASKAH DIALOG SCENE 10: PENUTUP CHAPTER 1 (EPILOG)
+# Sesuai Storyboard FLK-010 / Penutup Chapter 1
+# =========================================================
+const CH1_SCENE_10_EPILOGUE_DIALOGUE: Array[Dictionary] = [
+	{
+		"speaker": "Astuta Anastasya",
+		"portrait": "anastasya",
+		"text": "(Menurunkan busurnya, menghela napas lega)\nHah... hah... monster itu akhirnya hancur juga."
 	},
 	{
-		"speaker": "Pelatih Alaric",
-		"portrait": "alaric",
-		"text": "Gali saja makam itu dan ambil pedangnya, dia sudah mewariskan padaku sejak masa kritisnya, hanya saja aku menunggu saat yang tepat."
+		"speaker": "Pensatore Magnus",
+		"portrait": "magnus",
+		"text": "Pedang Lancelot tadi benar-benar memotong inti sihir kutukannya dalam satu tebasan. Pilihan Alaric memang tidak salah."
+	},
+	{
+		"speaker": "Carina Hellene",
+		"portrait": "assassin",
+		"text": "(Menyeka debu di belatinya, menatap ke arah cakrawala barat)\nPertarungan hebat... Tapi jangan lengah dulu. Yang barusan ini cuma efek percikan dari gelombang pertama."
+	},
+	{
+		"speaker": "Forzato Arthur",
+		"portrait": "arthur",
+		"text": "Maksudmu... serbuan monster di kerajaanku ini baru permulaan?"
+	},
+	{
+		"speaker": "Carina Hellene",
+		"portrait": "assassin",
+		"text": "Benar. Besok fajar, gelombang monster yang sesungguhnya akan mulai keluar dan menyerang kerajaanku di seberang pegunungan. Waktu kita tidak banyak."
+	},
+	{
+		"speaker": "Forzato Arthur",
+		"portrait": "arthur",
+		"text": "(Menyarungkan pedangnya dengan mantap, menatap ketiga rekannya)\nKita sudah punya formasi berempat yang solid, sihir terkuat, dan pedang pusaka ini. Beristirahatlah malam ini di istana.\nBesok begitu matahari terbit... kita berangkat menyelamatkan kerajaanmu!"
 	}
 ]
 
@@ -550,70 +664,36 @@ const CH1_ASSASSIN_APPEARANCE_DIALOGUE: Array[Dictionary] = [
 ]
 
 # =========================================================
-# NASKAH DIALOG SCENE 5: GERBANG LUAR & BERGABUNGNYA ASSASSIN
+# NASKAH DIALOG LEPAS TOPENG ASSASSIN & ALIANSI (CHAPTER 1.3 CLEAR / CH1-SC11)
+# Sesuai Storyboard FLK-017 (Aliansi Assassin)
 # =========================================================
-const CH1_SCENE_05A_GATE_DIALOGUE: Array[Dictionary] = [
+const CH1_ASSASSIN_UNMASK_DIALOGUE: Array[Dictionary] = [
 	{
-		"speaker": "Arthur",
-		"portrait": "arthur",
-		"text": "Monster-monster itu menerobos gerbang! Carina, bidik dari jauh!"
+		"speaker": "Carina Hellene",
+		"portrait": "assassin",
+		"text": "Aku adalah assassin dari kerajaan seberang. Aku bisa sampai ke sini karena menyamar saat aku dan pengawalku sedang berada di hutan."
 	},
 	{
-		"speaker": "Archer",
-		"portrait": "carina",
-		"text": "Siap, Pangeran!"
+		"speaker": "Carina Hellene",
+		"portrait": "assassin",
+		"text": "Pengawalku habis pada malam itu. Aku berhasil membunuh satu dari mereka dan menggunakan sebagian dari tubuhnya sebagai penyamaran ini."
+	},
+	{
+		"speaker": "Carina Hellene",
+		"portrait": "assassin",
+		"text": "Saat ini aku yakin, tidak hanya kastilmu yang diserang, kastilku sedang dalam bahaya, esok hari akan ada iblis yang menyerang kastilku."
+	},
+	{
+		"speaker": "Carina Hellene",
+		"portrait": "assassin",
+		"text": "Tolong bantu aku menyelesaikan masalah ini, kita perlu bersatu untuk menyelamatkan kehidupan manusia."
+	},
+	{
+		"speaker": "Forzato Arthur",
+		"portrait": "arthur",
+		"text": "Aku tidak akan ikut denganmu, kau yang akan ikut dengan kita. Tunjukkan aku jalannya!"
 	}
 ]
-
-const CH1_SCENE_05B_POST_FIGHT_DIALOGUE: Array[Dictionary] = [
-	{
-		"speaker": "Arthur",
-		"portrait": "arthur",
-		"text": "Tahan! Siapa kau? Kenapa mengenakan kulit monster menjijikkan seperti itu?"
-	},
-	{
-		"speaker": "Assassin",
-		"portrait": "assassin",
-		"text": "Tenang, aku manusia. Aku adalah Assassin dari kerajaan seberang perbatasan."
-	},
-	{
-		"speaker": "Archer",
-		"portrait": "carina",
-		"text": "Kenapa Assassin kerajaan seberang bisa menyusup sampai ke halaman kastil kami?"
-	},
-	{
-		"speaker": "Assassin",
-		"portrait": "assassin",
-		"text": "Pasukan pengawalku dibantai habis di hutan perbatasan beberapa malam lalu. Aku berhasil membunuh satu monster dan memakai kulitnya sebagai penyamaran agar bisa mengintai ke mana gerombolan ini bergerak."
-	},
-	{
-		"speaker": "Assassin",
-		"portrait": "assassin",
-		"text": "Dan firasatku benar... Mereka tidak cuma mengincar kerajaanku. Kastil kalian juga masuk target serbuan mereka. Esok hari, gelombang besar akan mulai memusnahkan kota-kota perbatasan!"
-	},
-	{
-		"speaker": "Magnus",
-		"portrait": "magnus",
-		"text": "Ramalan para peramal tadi... persis seperti yang dia katakan."
-	},
-	{
-		"speaker": "Assassin",
-		"portrait": "assassin",
-		"text": "Kita tidak bisa bertarung sendiri-sendiri. Kita butuh bersatu jika ingin selamat melewati minggu terkutuk ini."
-	},
-	{
-		"speaker": "Arthur",
-		"portrait": "arthur",
-		"text": "Aku setuju. Kau punya kelincahan dan informasi musuh. Bergabunglah dengan kami."
-	},
-	{
-		"speaker": "Assassin",
-		"portrait": "assassin",
-		"text": "Terima kasih, Pangeran. Panggil saja aku Assassin. Aku akan menunjukkan di mana sarang mereka nanti."
-	}
-]
-
-const CH1_ASSASSIN_UNMASK_DIALOGUE: Array[Dictionary] = CH1_SCENE_05B_POST_FIGHT_DIALOGUE
 
 # =========================================================
 # REGISTRI KAMUS DIALOG STORYBOARD LENGKAP (FLK-001 s/d FLK-017)
@@ -644,14 +724,27 @@ const STORY_DIALOGUES: Dictionary = {
 	"CH1-SC06": CH1_KNIGHT_ROOM_DIALOGUE,
 	"ch1_knight_room": CH1_KNIGHT_ROOM_DIALOGUE,
 
+	"scene_06a": CH1_SCENE_06A_CAMP_PATH_DIALOGUE,
+	"scene_06b": CH1_SCENE_06B_CAMP_PATH_POST_DIALOGUE,
+	"scene_06_camp_meet": CH1_SCENE_06_CAMP_ALARIC_MEET_DIALOGUE,
+	"CH1-SC06-A": CH1_SCENE_06A_CAMP_PATH_DIALOGUE,
+	"CH1-SC06-B": CH1_SCENE_06B_CAMP_PATH_POST_DIALOGUE,
+
 	"FLK-007": CH1_CAMP_TRAINING_PRE_FIGHT_DIALOGUE,
+	"scene_07_pre": CH1_CAMP_TRAINING_PRE_FIGHT_DIALOGUE,
 	"ch1_camp_training_pre": CH1_CAMP_TRAINING_PRE_FIGHT_DIALOGUE,
 
 	"FLK-008": CH1_CAMP_TRAINING_POST_FIGHT_DIALOGUE,
+	"scene_07_post": CH1_CAMP_TRAINING_POST_FIGHT_DIALOGUE,
 	"ch1_camp_training_post": CH1_CAMP_TRAINING_POST_FIGHT_DIALOGUE,
 
 	"FLK-009": CH1_GRAVEYARD_SWORD_FOUND_DIALOGUE,
 	"ch1_graveyard_sword": CH1_GRAVEYARD_SWORD_FOUND_DIALOGUE,
+
+	"scene_10": CH1_SCENE_10_EPILOGUE_DIALOGUE,
+	"scene_10_epilogue": CH1_SCENE_10_EPILOGUE_DIALOGUE,
+	"CH1_EPILOGUE": CH1_SCENE_10_EPILOGUE_DIALOGUE,
+	"FLK-010": CH1_SCENE_10_EPILOGUE_DIALOGUE,
 
 	"FLK-011": CH1_FORGE_MAGNUS_REQUEST_DIALOGUE,
 	"ch1_forge_magnus": CH1_FORGE_MAGNUS_REQUEST_DIALOGUE,
@@ -670,9 +763,6 @@ const STORY_DIALOGUES: Dictionary = {
 	"ch1_library_golden_book": CH1_SCENE_04B_GOLDEN_BOOK_DIALOGUE,
 	"scene_04b": CH1_SCENE_04B_GOLDEN_BOOK_DIALOGUE,
 	"scene_04c": CH1_SCENE_04C_ALARM_BELL_DIALOGUE,
-
-	"scene_05a": CH1_SCENE_05A_GATE_DIALOGUE,
-	"scene_05b": CH1_SCENE_05B_POST_FIGHT_DIALOGUE,
 
 	"FLK-017_GATE": CH1_GATE_INVASION_DIALOGUE,
 	"CH1-SC07": CH1_GATE_INVASION_DIALOGUE,
@@ -774,7 +864,6 @@ var arena_zones: Array[Dictionary] = [
 		"enemies": [] as Array[CharacterBody2D],
 		"is_cleared": false,
 		"respawn_timer": 0.0,
-		"worm_count": 4,
 	},
 	{
 		"id": 3,
@@ -833,35 +922,6 @@ var _is_party_initialized: bool = false
 const BGM_GAMEPLAY = preload("res://assets/audio/bgm/game.ogg")
 const BGM_GAME_OVER = preload("res://assets/audio/bgm/game_over.ogg")
 const BGM_ALARIC = preload("res://assets/audio/bgm/alaric.ogg")
-const BGM_LAYAR_HITAM_AWAL = preload("res://assets/audio/bgm/layar_hitam_awal.ogg")
-const BGM_GRAVEYARD = preload("res://assets/audio/bgm/graveyard.ogg")
-const BGM_BATTLE_CACING = preload("res://assets/audio/bgm/battle_cacing.ogg")
-const BGM_CUTSCENE_GAGAK = preload("res://assets/audio/bgm/cutscene_gagak.ogg")
-const BGM_CUTSCENE_RAPAT = preload("res://assets/audio/bgm/cutscene_rapat.ogg")
-var BGM_PERPUS: AudioStream = null
-
-func _get_bgm_perpus() -> AudioStream:
-	if is_instance_valid(BGM_PERPUS):
-		return BGM_PERPUS
-	if ResourceLoader.exists("res://assets/audio/bgm/perpus.ogg"):
-		var res = load("res://assets/audio/bgm/perpus.ogg")
-		if res is AudioStream:
-			BGM_PERPUS = res
-			return BGM_PERPUS
-	if FileAccess.file_exists("res://assets/audio/bgm/perpus.ogg"):
-		var stream = AudioStreamOggVorbis.load_from_file("res://assets/audio/bgm/perpus.ogg")
-		if stream:
-			BGM_PERPUS = stream
-			return BGM_PERPUS
-		var fa = FileAccess.open("res://assets/audio/bgm/perpus.ogg", FileAccess.READ)
-		if fa:
-			var bytes = fa.get_buffer(fa.get_length())
-			fa.close()
-			var ogg_stream = AudioStreamOggVorbis.load_from_buffer(bytes)
-			if ogg_stream:
-				BGM_PERPUS = ogg_stream
-				return BGM_PERPUS
-	return BGM_PERPUS
 var _bgm_player_a: AudioStreamPlayer = null
 var _bgm_player_b: AudioStreamPlayer = null
 var _active_bgm_player: AudioStreamPlayer = null
@@ -870,7 +930,7 @@ var _bgm_tween: Tween = null
 var _bgm_loop_timer: Timer = null
 var _is_crossfading: bool = false
 const BGM_CROSSFADE_DURATION: float = 2.5
-const BGM_BASE_VOLUME_DB: float = 0.0 # Standar volume penuh (100% / 0 dB) sesuai slider UI
+const BGM_BASE_VOLUME_DB: float = -4.0 # Dikalibrasi seimbang saat volume UI 100%
 
 func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 	if not stream:
@@ -911,9 +971,8 @@ func _ensure_bgm_loop_timer() -> void:
 	_bgm_loop_timer.timeout.connect(_update_bgm_loop)
 
 
-func _init_and_play_bgm(initial_stream: AudioStream = BGM_GAMEPLAY, fade_in_at_start: bool = true) -> void:
-	var stream: AudioStream = initial_stream if initial_stream else BGM_GAMEPLAY
-	if not stream:
+func _init_and_play_bgm(fade_in_at_start: bool = true) -> void:
+	if not BGM_GAMEPLAY:
 		return
 	_ensure_music_bus()
 	_ensure_bgm_loop_timer()
@@ -921,18 +980,18 @@ func _init_and_play_bgm(initial_stream: AudioStream = BGM_GAMEPLAY, fade_in_at_s
 	if not is_instance_valid(_bgm_player_a):
 		_bgm_player_a = AudioStreamPlayer.new()
 		_bgm_player_a.name = "BgmPlayerA"
+		_bgm_player_a.stream = BGM_GAMEPLAY
 		_bgm_player_a.bus = &"Music"
 		_bgm_player_a.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(_bgm_player_a)
-	_bgm_player_a.stream = stream
 	
 	if not is_instance_valid(_bgm_player_b):
 		_bgm_player_b = AudioStreamPlayer.new()
 		_bgm_player_b.name = "BgmPlayerB"
+		_bgm_player_b.stream = BGM_GAMEPLAY
 		_bgm_player_b.bus = &"Music"
 		_bgm_player_b.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(_bgm_player_b)
-	_bgm_player_b.stream = stream
 	
 	if _bgm_player_a.stream is AudioStreamOggVorbis:
 		(_bgm_player_a.stream as AudioStreamOggVorbis).loop = false
@@ -990,9 +1049,6 @@ func _start_bgm_crossfade(time_left: float) -> void:
 	var fade_time := clampf(time_left, 1.0, BGM_CROSSFADE_DURATION)
 	var base_linear := db_to_linear(BGM_BASE_VOLUME_DB)
 	
-	incoming.stream = outgoing.stream
-	if incoming.stream is AudioStreamOggVorbis:
-		(incoming.stream as AudioStreamOggVorbis).loop = false
 	incoming.volume_db = -80.0
 	incoming.play(0.0)
 	
@@ -1284,30 +1340,26 @@ func _ready() -> void:
 	_load_alaric_best_record()
 	_setup_alaric_npc.call_deferred()
 	_init_defeat_overlay.call_deferred()
-	_set_secret_library_floor(1)
 
 	# 6. Jalankan efek pembukaan Circular Mask (Iris Open) saat masuk arena game
+	_init_and_play_bgm()
+
 	# Jika masuk melalui menu 'Lanjutkan' di Start Menu, muat save slot tertunda
 	if pending_load_slot_id > 0:
-		_init_and_play_bgm(BGM_GAMEPLAY)
 		play_iris_opening_transition()
 		var slot_to_load := pending_load_slot_id
 		pending_load_slot_id = -1
 		call_deferred("load_game_from_slot", slot_to_load)
 	elif selected_game_mode == "open_world":
-		_init_and_play_bgm(BGM_GAMEPLAY)
 		play_iris_opening_transition()
 		_setup_open_world_mode.call_deferred()
 	elif not is_prologue_completed:
-		# Mode Cerita baru: putar BGM layar hitam awal, tampilkan narasi abad ke-7 di layar hitam sebelum masuk gameplay
-		_init_and_play_bgm(BGM_LAYAR_HITAM_AWAL)
+		# Mode Cerita baru: tampilkan narasi abad ke-7 di layar hitam sebelum masuk gameplay
 		_show_story_prologue_intro_crawl(func():
-			_crossfade_to_bgm(BGM_GAMEPLAY)
 			play_iris_opening_transition()
 			_start_story_prologue_sequence.call_deferred()
 		)
 	else:
-		_init_and_play_bgm(BGM_GAMEPLAY)
 		play_iris_opening_transition()
 		_start_story_prologue_sequence.call_deferred()
 
@@ -1383,8 +1435,13 @@ func _unhandled_input(event: InputEvent) -> void:
 					get_viewport().set_input_as_handled()
 				return
 
-		# Shortcut debug testing: F7 untuk langsung menguji Cutscene Scene 4 (Perpustakaan)
+		# Shortcut debug testing: F7 untuk langsung menguji Scene 10 (Penutup Chapter 1 / Epilog) di Mode Cerita
 		if key_code == KEY_F7:
+			start_story_scene_10(true)
+			if get_viewport():
+				get_viewport().set_input_as_handled()
+			return
+		elif key_code == KEY_F6:
 			enter_secret_library()
 			if get_viewport():
 				get_viewport().set_input_as_handled()
@@ -1443,8 +1500,17 @@ func _unhandled_input(event: InputEvent) -> void:
 						if leader.global_position.distance_to(CASTLE_ENTRANCE_POS) <= 120.0:
 							enter_castle_hall()
 							get_viewport().set_input_as_handled()
-						elif leader.global_position.distance_to(ALARIC_CAMP_POS) <= 120.0 and not is_alaric_sparring_in_progress:
-							_start_alaric_pre_fight_dialogue()
+						elif is_scene_6_in_progress and not is_scene_6_bush_triggered and leader.global_position.distance_to(SCENE_6_BUSH_POS) <= 180.0:
+							trigger_scene_6_bush_encounter()
+							get_viewport().set_input_as_handled()
+						elif is_scene_6_waiting_outdoor_camp_alaric and leader.global_position.distance_to(SCENE_6_OUTDOOR_CAMP_POS) <= 160.0:
+							trigger_scene_6_outdoor_camp_alaric_dialogue()
+							get_viewport().set_input_as_handled()
+						elif leader.global_position.distance_to(ALARIC_CAMP_POS) <= 120.0 and not is_alaric_sparring_in_progress and not is_scene_6_waiting_outdoor_camp_alaric:
+							if is_scene_6_in_progress and not is_scene_6_bush_triggered:
+								trigger_scene_6_bush_encounter()
+							else:
+								_start_alaric_pre_fight_dialogue()
 							get_viewport().set_input_as_handled()
 						elif leader.global_position.distance_to(SKELETON_BOSS_POS) <= 140.0 and not is_skeleton_boss_fight_in_progress and arena_state != ArenaState.COMBAT:
 							_show_skeleton_boss_challenge_prompt()
@@ -1672,7 +1738,7 @@ func set_active_leader(idx: int, prev_leader_override: CharacterBody2D = null) -
 		if is_instance_valid(follower):
 			if follower.has_method("set_as_leader"):
 				follower.set_as_leader(false, leader, slot_order)
-			if arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress and not _is_scene2_fight_active and not _is_scene2_party_visible and follower.is_inside_tree() and not ("is_dead" in follower and follower.is_dead):
+			if arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress and not _is_scene2_fight_active and not _is_scene2_party_visible and not is_scene_6_in_progress and not is_scene_6_waiting_outdoor_camp_alaric and follower.is_inside_tree() and not ("is_dead" in follower and follower.is_dead):
 				remove_child(follower)
 		slot_order += 1
 
@@ -1709,8 +1775,8 @@ func _set_character_collision_active(char_node: CharacterBody2D, active: bool) -
 
 
 func update_party_visibility() -> void:
-	var in_arena_combat: bool = (arena_state == ArenaState.COMBAT or is_in_training_arena or is_in_arena_kamp or is_alaric_sparring_in_progress or _is_scene2_fight_active or _is_scene2_party_visible)
-	var show_all_library_cutscene: bool = (is_scene_4_in_progress and is_on_library_floor_2) or is_scene_5_in_progress
+	var in_arena_combat: bool = (arena_state == ArenaState.COMBAT or is_in_training_arena or is_in_arena_kamp or is_alaric_sparring_in_progress or _is_scene2_fight_active or _is_scene2_party_visible or is_scene_6_in_progress or is_scene_6_waiting_outdoor_camp_alaric or is_scene_10_in_progress)
+	var show_all_library_cutscene: bool = (is_scene_4_in_progress and is_on_library_floor_2)
 	for i in range(party_members.size()):
 		var member = party_members[i]
 		if not is_instance_valid(member):
@@ -1734,7 +1800,11 @@ func update_party_visibility() -> void:
 			if not is_party_fading_out or i == active_leader_index:
 				member.modulate = Color.WHITE
 				if not member.is_physics_processing() and not is_transitioning and not ("is_movement_locked" in member and member.is_movement_locked):
-					member.set_physics_process(true)
+					if not (is_scene_6_waiting_outdoor_camp_alaric and i != active_leader_index) and not is_scene_10_in_progress:
+						member.set_physics_process(true)
+				elif (is_scene_6_waiting_outdoor_camp_alaric and i != active_leader_index) or is_scene_10_in_progress:
+					if member.is_physics_processing():
+						member.set_physics_process(false)
 				if not member.is_processing() and not is_transitioning:
 					member.set_process(true)
 			var should_input: bool = (i == active_leader_index) and not is_transitioning
@@ -1989,6 +2059,37 @@ func _init_starter_quests() -> void:
 			"description": "Mendiang ibu Magnus menyegel buku sihir kuno di Perpustakaan Istana untuk kondisi darurat. Arthur, Magnus, dan Anastasya harus segera mengambil buku itu.",
 			"status": "active" if is_castle_meeting_completed else "inactive",
 			"target_position": CASTLE_HALL_EXIT_POS,
+			"rewards": {
+				"items": [
+					{
+						"id": "apple",
+						"name": "Apel Merah Hutan",
+						"quantity": 2,
+						"icon_path": "res://assets/ui/icons/items/items_sheets.png",
+						"icon_rect": Rect2(32, 432, 16, 16)
+					}
+				]
+			}
+		},
+		{
+			"id": "scene_06_quest",
+			"category": "main",
+			"title": "Uji Kekompakan Tim",
+			"location": "Jalur Menuju Camp Latihan",
+			"objective": "Singkirkan monster liar di semak jalur camp pelatihan.",
+			"description": "Keempat hero berjalan menuju camp latihan. Di semak belukar pinggir jalan, sekelompok monster liar tampak berkeliaran mengancam jalur tentara.",
+			"status": "completed" if is_scene_6_completed else ("active" if is_scene_6_in_progress else "inactive"),
+			"target_position": SCENE_6_BUSH_POS
+		},
+		{
+			"id": "scene_07_quest",
+			"category": "main",
+			"title": "Ujian Sang Pelatih",
+			"location": "Camp Latihan Istana",
+			"objective": "Buktikan ketangguhan beradu pedang 1 lawan 1 melawan Pelatih Alaric.",
+			"description": "Party tiba di Camp Latihan. Arthur harus membuktikan ketangguhannya dalam duel satu lawan satu melawan Pelatih Alaric demi mendapatkan izin mengambil pedang pusaka Ksatria Lancelot.",
+			"status": "completed" if is_alaric_sparring_completed else ("active" if is_scene_7_in_progress else "inactive"),
+			"target_position": ALARIC_CAMP_POS,
 			"rewards": {
 				"items": [
 					{
@@ -2550,11 +2651,8 @@ func _init_arena_enemies() -> void:
 		if "Skeleton" in e.name or ("is_skeleton_boss" in e and e.is_skeleton_boss):
 			skeleton_boss_node = e
 
-	if is_instance_valid(skeleton_boss_node):
-		if arena_zones.size() >= 3 and not (arena_zones[2]["enemies"] as Array[CharacterBody2D]).has(skeleton_boss_node):
-			(arena_zones[2]["enemies"] as Array[CharacterBody2D]).append(skeleton_boss_node)
-		if not is_skeleton_boss_fight_in_progress:
-			_set_skeleton_boss_standby_mode()
+	if is_instance_valid(skeleton_boss_node) and not is_skeleton_boss_fight_in_progress:
+		_set_skeleton_boss_standby_mode()
 
 	print("[Arena] Inisialisasi Arena Zones:")
 	for zone in arena_zones:
@@ -2564,14 +2662,6 @@ func _init_arena_enemies() -> void:
 func _is_position_in_any_arena(pos: Vector2) -> bool:
 	for zone in arena_zones:
 		var zone_bounds: Rect2 = zone["bounds"]
-		if zone_bounds.grow(150.0).has_point(pos):
-			return true
-	return false
-
-
-func _is_position_in_worm_arena(pos: Vector2) -> bool:
-	for i in range(mini(2, arena_zones.size())):
-		var zone_bounds: Rect2 = arena_zones[i]["bounds"]
 		if zone_bounds.grow(150.0).has_point(pos):
 			return true
 	return false
@@ -2612,18 +2702,13 @@ func _get_worm_sprite_frames() -> SpriteFrames:
 
 
 func _spawn_worm_arena_enemies() -> void:
-	# Hapus musuh lama yang berada di dalam area arena cacing (Arena 1 dan Arena 2).
-	# Jangan pernah menghapus Skeleton Boss (Arena 3) maupun Pelatih Alaric.
+	# Hapus musuh lama yang berada di dalam area arena (termasuk 3 node musuh bawaan scene).
 	for e in get_tree().get_nodes_in_group("enemy"):
 		if not is_instance_valid(e) or not (e is CharacterBody2D):
 			continue
 		if "is_alaric" in e and e.is_alaric:
 			continue
-		if "is_skeleton_boss" in e and e.is_skeleton_boss:
-			continue
-		if "Skeleton" in e.name or "Alaric" in e.name:
-			continue
-		if _is_position_in_worm_arena(e.global_position):
+		if _is_position_in_any_arena(e.global_position):
 			e.remove_from_group("enemy")
 			if is_instance_valid(e.get_parent()):
 				e.get_parent().remove_child(e)
@@ -2646,8 +2731,7 @@ func _spawn_worm_arena_enemies() -> void:
 		Vector2(150.0, 60.0),
 	]
 
-	# Cacing hanya di-spawn untuk Arena 1 (Kiri) dan Arena 2 (Kanan). Arena 3 khusus Boss Skeleton.
-	for zone_idx in range(mini(2, arena_zones.size())):
+	for zone_idx in range(arena_zones.size()):
 		var zone: Dictionary = arena_zones[zone_idx]
 		var center: Vector2 = zone["center"]
 		var count: int = int(zone.get("worm_count", 4))
@@ -2828,12 +2912,6 @@ func start_arena_battle(zone_idx: int = 0) -> void:
 	# Tampilkan elemen HUD pertarungan saat memasuki arena
 	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
 		gameplay_hud.set_combat_hud_visible(true, true)
-
-	# 5. Ganti BGM sesuai zona arena: Arena Skeleton (2) menggunakan graveyard, Arena Cacing (0 & 1) menggunakan battle_cacing
-	if active_arena_idx == 2:
-		_crossfade_to_bgm(BGM_GRAVEYARD)
-	else:
-		_crossfade_to_bgm(BGM_BATTLE_CACING)
 
 	print("Arena Battle Dimulai! Zona: ", zone["name"], ", Kamera fokus ke (", arena_center, "), musuh aktif: ", arena_enemies.size())
 
@@ -3093,12 +3171,8 @@ func end_arena_battle() -> void:
 			arena_zones[active_arena_idx]["respawn_timer"] = 0.0
 		else:
 			arena_zones[active_arena_idx]["is_cleared"] = true
-			if selected_game_mode == "open_world":
-				arena_zones[active_arena_idx]["respawn_timer"] = ARENA_GROUP_RESPAWN_DELAY
-				print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Musuh akan spawn lagi dalam ", ARENA_GROUP_RESPAWN_DELAY, " detik.")
-			else:
-				arena_zones[active_arena_idx]["respawn_timer"] = 0.0
-				print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Mode Cerita: musuh tidak akan respawn.")
+			arena_zones[active_arena_idx]["respawn_timer"] = ARENA_GROUP_RESPAWN_DELAY
+			print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Musuh akan spawn lagi dalam ", ARENA_GROUP_RESPAWN_DELAY, " detik.")
 
 	# Cek apakah seluruh zona arena cerita telah diselesaikan
 	var has_remaining_arena: bool = false
@@ -3119,10 +3193,7 @@ func end_arena_battle() -> void:
 	# 1. Buka batas arena (nonaktifkan barrier)
 	_set_arena_barrier_enabled(false)
 
-	# 2. Kembalikan musik pertarungan arena ke BGM gameplay normal dengan seamless crossfade
-	_crossfade_to_bgm(BGM_GAMEPLAY)
-
-	# 3. Kembalikan kamera ke mode eksplorasi (zoom explore dan ikuti leader)
+	# 2. Kembalikan kamera ke mode eksplorasi (zoom explore dan ikuti leader)
 	target_camera_zoom = CAMERA_ZOOM_EXPLORE
 	is_camera_locked_to_arena = false
 
@@ -3163,16 +3234,17 @@ func end_arena_battle() -> void:
 	active_arena_idx = -1
 	print("Arena Battle Selesai! Kamera kembali ke Leader, party kembali ke mode eksplorasi.")
 
-	# Khusus Mode Cerita: pulihkan darah seluruh anggota party menjadi penuh setiap selesai pertarungan
-	if selected_game_mode != "open_world":
-		_heal_party_full_for_story_mode()
-
 	if was_skeleton_arena:
 		for member in party_members:
 			if is_instance_valid(member):
 				_restore_hero_full_for_alaric(member)
 		update_party_visibility()
 		_set_skeleton_boss_standby_mode()
+		if selected_game_mode != "open_world":
+			_pending_skeleton_victory_popup = false
+			print("[Story] Boss Skeleton tumbang! Langsung transisi ke Scene 10 (Penutup Chapter 1).")
+			start_story_scene_10(true)
+			return
 		if _pending_skeleton_victory_popup:
 			_pending_skeleton_victory_popup = false
 			_show_alaric_victory_time_popup(_last_skeleton_clear_time, _skeleton_best_time_sec, _last_skeleton_new_record, func():
@@ -3204,17 +3276,6 @@ func handle_arena_group_respawn(delta: float) -> void:
 
 
 func _respawn_zone_enemies(zone: Dictionary) -> void:
-	# Arena 3 khusus Boss Skeleton: tidak boleh memunculkan cacing
-	if zone.get("id") == 3 or zone.get("name") == "Arena_3_SouthForest":
-		zone["is_cleared"] = false
-		zone["respawn_timer"] = 0.0
-		if is_instance_valid(skeleton_boss_node):
-			if skeleton_boss_node.has_method("reset_skeleton_boss_state"):
-				skeleton_boss_node.reset_skeleton_boss_state()
-			_set_skeleton_boss_standby_mode()
-			zone["enemies"] = [skeleton_boss_node] as Array[CharacterBody2D]
-		return
-
 	zone["is_cleared"] = false
 	zone["respawn_timer"] = 0.0
 	var z_enemies: Array = zone.get("enemies", [])
@@ -3793,6 +3854,14 @@ func get_follower_trail_slot(slot_index: int) -> Dictionary:
 
 
 func get_follower_nav_target(slot_index: int, follower_pos: Vector2, space_state: PhysicsDirectSpaceState2D = null) -> Dictionary:
+	if is_scene_6_waiting_outdoor_camp_alaric or is_scene_10_in_progress:
+		return {
+			"target_pos": follower_pos,
+			"final_slot": follower_pos,
+			"dir": Vector2.LEFT,
+			"is_corner_waypoint": false
+		}
+
 	var slot_info := get_follower_trail_slot(slot_index)
 	if slot_info.is_empty():
 		return {}
@@ -3961,7 +4030,7 @@ func _on_hud_dialogue_started(_dialogue_id: String) -> void:
 
 
 func _on_hud_dialogue_finished(_dialogue_id: String) -> void:
-	if (is_scene_4_in_progress and is_on_library_floor_2) or is_scene_5_in_progress:
+	if is_scene_4_in_progress and is_on_library_floor_2:
 		set_party_movement_locked(true)
 		return
 	set_party_movement_locked(false)
@@ -4376,9 +4445,6 @@ func _on_prologue_monsters_cleared() -> void:
 		return
 	_is_waiting_prologue_return = true
 
-	# Khusus Mode Cerita: pulihkan darah langsung penuh setelah pertarungan selesai
-	_heal_party_full_for_story_mode()
-
 	# Pastikan musuh tebing hutan di Arena 2 tidak respawn
 	if arena_zones.size() > 1:
 		arena_zones[1]["is_cleared"] = true
@@ -4433,16 +4499,11 @@ func _start_prologue_crow_dialogue_sequence() -> void:
 		if lead.has_method("play_idle_animation"):
 			lead.play_idle_animation()
 
-	# Ganti musik ke BGM cutscene gagak dengan crossfade
-	_crossfade_to_bgm(BGM_CUTSCENE_GAGAK)
-
 	# Pastikan Burung Gagak ada di atas tiang lampu kayu
 	_spawn_prologue_crow()
 
 	# Mainkan Naskah Dialog 1B (Setelah Fight & Burung Gagak Tiba)
 	play_story_dialogue("FLK-002-B", func():
-		# Kembalikan musik ke BGM gameplay normal saat rangkaian dialog cutscene gagak selesai
-		_crossfade_to_bgm(BGM_GAMEPLAY)
 		_transition_prologue_to_scene2()
 	)
 
@@ -4762,9 +4823,6 @@ func _on_scene2_monsters_cleared() -> void:
 	_is_scene2_fight_done = true
 	_is_scene2_intro_triggered = false
 
-	# Khusus Mode Cerita: pulihkan darah seluruh anggota party penuh setelah pertarungan selesai
-	_heal_party_full_for_story_mode()
-
 	# Pastikan monster jalan setapak di Arena 1 tidak respawn
 	if arena_zones.size() > 0:
 		arena_zones[0]["is_cleared"] = true
@@ -4993,7 +5051,6 @@ func start_castle_meeting_cutscene() -> void:
 	if selected_game_mode == "open_world" or is_meeting_in_progress or is_castle_meeting_completed or is_transitioning:
 		return
 	is_meeting_in_progress = true
-	_crossfade_to_bgm(BGM_CUTSCENE_RAPAT)
 
 	# Pastikan Quest Rapat Darurat Istana aktif dan ditampilkan di HUD
 	for q in quest_list:
@@ -5302,8 +5359,8 @@ func _on_knight_room_dialogue_finished(fade_canvas: CanvasLayer, fade_rect: Colo
 	is_knight_room_cutscene_in_progress = false
 
 	# 1. Pindahkan Arthur dan seluruh party ke luar aula rapat (Halaman Depan Kastil)
+	is_castle_meeting_completed = true
 	is_inside_castle_hall = false
-	_crossfade_to_bgm(BGM_GAMEPLAY)
 	for i in range(party_members.size()):
 		var member = party_members[i]
 		if is_instance_valid(member):
@@ -5402,10 +5459,10 @@ func start_story_scene_4() -> void:
 	if selected_game_mode == "open_world" or is_scene_4_in_progress:
 		return
 	is_scene_4_in_progress = true
+	is_castle_meeting_completed = true
 	is_inside_castle_hall = false
 	is_inside_secret_library = true
 	is_on_library_floor_2 = false
-	_crossfade_to_bgm(_get_bgm_perpus())
 	set_party_movement_locked(true)
 
 	if gameplay_hud and gameplay_hud.has_method("hide_interact_prompt"):
@@ -5414,8 +5471,13 @@ func start_story_scene_4() -> void:
 	# 1. Konfigurasi 3 Hero: Arthur, Magnus, Anastasya
 	setup_party_for_scene_4()
 
-	# 2. Aktifkan Lantai 1 library, nonaktifkan Lantai 2 (collision & visual)
-	_set_secret_library_floor(1)
+	# 2. Aktifkan Lantai 1 library, sembunyikan Lantai 2
+	var lib_node := get_node_or_null("SecretLibrary")
+	if is_instance_valid(lib_node):
+		var floor1 := lib_node.get_node_or_null("LibraryFloor1")
+		var floor2 := lib_node.get_node_or_null("LibraryFloor2")
+		if floor1: floor1.visible = true
+		if floor2: floor2.visible = false
 
 	# 3. Update camera limits ke perpustakaan SEBELUM teleport
 	update_camera_limits_for_location("library")
@@ -5504,42 +5566,6 @@ func _pose_scene_4_heroes_looking_at_bookshelf() -> void:
 			hero.play_idle_animation()
 
 
-func _set_secret_library_floor(floor_num: int) -> void:
-	var lib_node := get_node_or_null("SecretLibrary")
-	if not is_instance_valid(lib_node):
-		return
-	var floor1 := lib_node.get_node_or_null("LibraryFloor1")
-	var floor2 := lib_node.get_node_or_null("LibraryFloor2")
-
-	var f1_active: bool = (floor_num == 1)
-	if is_instance_valid(floor1):
-		floor1.visible = f1_active
-		floor1.process_mode = Node.PROCESS_MODE_INHERIT if f1_active else Node.PROCESS_MODE_DISABLED
-		var l1_struct = floor1.get_node_or_null("L1Structure")
-		if is_instance_valid(l1_struct) and l1_struct is TileMapLayer:
-			l1_struct.enabled = f1_active
-		var l1_col = floor1.get_node_or_null("L1Collisions")
-		if is_instance_valid(l1_col) and l1_col is StaticBody2D:
-			l1_col.collision_layer = 1 if f1_active else 0
-			l1_col.collision_mask = 1 if f1_active else 0
-		var stair_zone = floor1.get_node_or_null("StairInteractZone")
-		if is_instance_valid(stair_zone) and stair_zone is Area2D:
-			stair_zone.monitoring = f1_active
-			stair_zone.monitorable = f1_active
-
-	var f2_active: bool = (floor_num == 2)
-	if is_instance_valid(floor2):
-		floor2.visible = f2_active
-		floor2.process_mode = Node.PROCESS_MODE_INHERIT if f2_active else Node.PROCESS_MODE_DISABLED
-		var l2_struct = floor2.get_node_or_null("L2Structure")
-		if is_instance_valid(l2_struct) and l2_struct is TileMapLayer:
-			l2_struct.enabled = f2_active
-		var l2_col = floor2.get_node_or_null("L2Collisions")
-		if is_instance_valid(l2_col) and l2_col is StaticBody2D:
-			l2_col.collision_layer = 1 if f2_active else 0
-			l2_col.collision_mask = 1 if f2_active else 0
-
-
 func _go_to_library_floor_2() -> void:
 	if is_on_library_floor_2 or is_transitioning:
 		return
@@ -5551,8 +5577,13 @@ func _go_to_library_floor_2() -> void:
 	var on_midpoint := func() -> void:
 		is_on_library_floor_2 = true
 
-		# Tukar lantai: aktifkan L2, nonaktifkan L1 (collision & visual)
-		_set_secret_library_floor(2)
+		# Tukar lantai: sembunyikan L1, tampilkan L2
+		var lib_node := get_node_or_null("SecretLibrary")
+		if is_instance_valid(lib_node):
+			var floor1 := lib_node.get_node_or_null("LibraryFloor1")
+			var floor2 := lib_node.get_node_or_null("LibraryFloor2")
+			if floor1: floor1.visible = false
+			if floor2: floor2.visible = true
 
 		if selected_game_mode == "open_world":
 			for i in range(party_members.size()):
@@ -5616,8 +5647,12 @@ func _go_to_library_floor_1() -> void:
 	var on_midpoint := func() -> void:
 		is_on_library_floor_2 = false
 
-		# Tukar lantai: aktifkan L1, nonaktifkan L2 (collision & visual)
-		_set_secret_library_floor(1)
+		var lib_node := get_node_or_null("SecretLibrary")
+		if is_instance_valid(lib_node):
+			var floor1 := lib_node.get_node_or_null("LibraryFloor1")
+			var floor2 := lib_node.get_node_or_null("LibraryFloor2")
+			if floor1: floor1.visible = true
+			if floor2: floor2.visible = false
 
 		for i in range(party_members.size()):
 			var p = party_members[i]
@@ -5781,13 +5816,12 @@ func _play_emergency_bell_sequence(on_finished: Callable) -> void:
 
 func _complete_story_scene_4() -> void:
 	var on_midpoint := func() -> void:
-		_crossfade_to_bgm(BGM_GAMEPLAY)
 		is_scene_4_in_progress = false
 		is_scene_4_completed = true
 		is_inside_secret_library = false
 		is_on_library_floor_2 = false
-		is_inside_castle_hall = false
-		_set_secret_library_floor(1)
+		is_castle_meeting_completed = true
+	is_inside_castle_hall = false
 		var spawn_pos := LIBRARY_ENTRANCE_POS + Vector2(0.0, 30.0)
 		for i in range(party_members.size()):
 			var member = party_members[i]
@@ -5809,16 +5843,146 @@ func _complete_story_scene_4() -> void:
 	var on_completed := func() -> void:
 		set_party_movement_locked(false)
 		print("[Story] Scene 4: Perpustakaan Istana selesai! Lonceng berbunyi, bersiap menuju Scene 5 (Gerbang).")
-		for q in quest_list:
-			if q.get("id") == "main_03":
-				q["status"] = "completed"
-			elif q.get("id") == "main_08":
-				q["status"] = "active"
-				q["title"] = "Pertahanan Gerbang"
-				q["location"] = "Halaman Luar Gerbang Istana"
-				q["objective"] = "Kalahkan gerombolan monster penyusup di halaman depan [Tekan E di Gerbang]."
-				q["target_position"] = CITY_GATE_POS
 		tracked_quest_id = "main_08"
+		if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("set_quest_navigation"):
+			gameplay_hud.set_quest_navigation(CASTLE_ENTRANCE_POS, "Gerbang Depan Istana")
+
+	play_black_fade_transition(on_midpoint, on_completed)
+
+
+# =========================================================
+# CHAPTER 1 - SCENE 6 & SCENE 7: JALUR CAMP LATIHAN & BOSS 1 PELATIH ALARIC
+# =========================================================
+
+func setup_party_for_scene_6() -> void:
+	party_members.clear()
+	var needed: Array[String] = ["Knight_1", "Mage_1", "Archer_1", "Bandit_1"]
+	for n in needed:
+		var hero: CharacterBody2D = all_heroes.get(n)
+		if is_instance_valid(hero):
+			if not hero.is_inside_tree():
+				add_child(hero)
+			_restore_hero_full_for_alaric(hero)
+			hero.visible = true
+			hero.modulate = Color.WHITE
+			hero.set_physics_process(true)
+			hero.set_process_unhandled_input(true)
+			_set_character_collision_active(hero, true)
+			party_members.append(hero)
+
+	for i in range(party_members.size()):
+		for j in range(i + 1, party_members.size()):
+			party_members[i].add_collision_exception_with(party_members[j])
+			party_members[j].add_collision_exception_with(party_members[i])
+
+	set_active_leader(0)
+	setup_party_enemy_collision_exceptions.call_deferred()
+	update_party_visibility()
+
+	if is_instance_valid(gameplay_hud):
+		gameplay_hud.is_character_switch_unlocked = true
+		if gameplay_hud.has_method("update_party_order"):
+			gameplay_hud.update_party_order(party_members, active_leader_index)
+		elif gameplay_hud.has_method("update_party_hud"):
+			gameplay_hud.party_members = party_members
+			gameplay_hud.update_party_hud()
+			if gameplay_hud.has_method("update_leader_indicator"):
+				gameplay_hud.update_leader_indicator()
+		if gameplay_hud.has_method("_sync_gameplay_hud_controls_prompts"):
+			gameplay_hud._sync_gameplay_hud_controls_prompts()
+
+
+func start_story_scene_6(teleport_to_path: bool = true) -> void:
+	selected_game_mode = "story"
+	is_prologue_completed = true
+	is_scene2_completed = true
+	is_castle_meeting_completed = true
+	is_knight_room_completed = true
+	is_scene_4_in_progress = false
+	is_scene_4_completed = true
+	_is_waiting_prologue_return = false
+	_is_scene2_fight_active = false
+	_cleanup_prologue_entities()
+
+	is_castle_meeting_completed = true
+	is_inside_castle_hall = false
+	is_inside_secret_library = false
+	is_on_library_floor_2 = false
+	is_in_arena_kamp = false
+
+	is_scene_6_in_progress = true
+	is_scene_6_bush_triggered = false
+	is_scene_6_waiting_outdoor_camp_alaric = false
+	_is_scene_6_party_assembled_at_camp = false
+	is_scene_6_completed = false
+	is_scene_7_in_progress = false
+	is_alaric_sparring_completed = false
+	_has_seen_alaric_intro_dialogue = false
+
+	if is_instance_valid(gameplay_hud):
+		if gameplay_hud.has_method("set_open_world_mode"):
+			gameplay_hud.set_open_world_mode(false)
+		if gameplay_hud.has_method("hide_interact_prompt"):
+			gameplay_hud.hide_interact_prompt(true)
+
+	_setup_alaric_npc()
+	if is_instance_valid(alaric_node):
+		alaric_node.global_position = SCENE_6_OUTDOOR_CAMP_POS
+		alaric_node.last_direction = Vector2.DOWN
+		if alaric_node.has_method("play_idle_animation"):
+			alaric_node.play_idle_animation()
+
+	var apply_scene_6_state := func() -> void:
+		setup_party_for_scene_6()
+		if teleport_to_path:
+			for i in range(party_members.size()):
+				var member: CharacterBody2D = party_members[i]
+				if is_instance_valid(member):
+					var offset_pos := Vector2(55.0 * i, 0.0) if i > 0 else Vector2.ZERO
+					member.global_position = SCENE_6_START_POS + offset_pos
+					if "target_position" in member:
+						member.target_position = member.global_position
+					member.velocity = Vector2.ZERO
+					if "last_direction" in member:
+						member.last_direction = Vector2.LEFT
+					if member.has_method("play_idle_animation"):
+						member.play_idle_animation()
+			update_party_visibility()
+			update_camera_limits_for_location("outdoor")
+			if is_instance_valid(camera):
+				camera.global_position = SCENE_6_START_POS
+				camera.reset_smoothing()
+				if camera.has_method("force_update_scroll"):
+					camera.force_update_scroll()
+
+		var has_s6_quest := false
+		for q in quest_list:
+			var qid: String = str(q.get("id", ""))
+			if qid in ["main_01", "main_02", "main_03_meeting", "main_03"]:
+				q["status"] = "completed"
+			elif qid == "scene_06_quest":
+				has_s6_quest = true
+				q["status"] = "active"
+				q["title"] = "Uji Kekompakan Tim"
+				q["location"] = "Jalur Menuju Camp Latihan"
+				q["objective"] = "Singkirkan monster liar di semak jalur camp pelatihan."
+				q["target_position"] = SCENE_6_BUSH_POS
+			elif qid == "scene_07_quest":
+				q["status"] = "inactive"
+
+		if not has_s6_quest:
+			quest_list.append({
+				"id": "scene_06_quest",
+				"category": "main",
+				"title": "Uji Kekompakan Tim",
+				"location": "Jalur Menuju Camp Latihan",
+				"objective": "Singkirkan monster liar di semak jalur camp pelatihan.",
+				"description": "Keempat hero berjalan menuju camp latihan. Di semak belukar pinggir jalan, sekelompok monster liar tampak berkeliaran mengancam jalur tentara.",
+				"status": "active",
+				"target_position": SCENE_6_BUSH_POS
+			})
+
+		tracked_quest_id = "scene_06_quest"
 		if is_instance_valid(gameplay_hud):
 			if gameplay_hud.has_method("set_quests"):
 				gameplay_hud.set_quests(quest_list, tracked_quest_id)
@@ -5826,361 +5990,656 @@ func _complete_story_scene_4() -> void:
 			if not tracked_q.is_empty() and gameplay_hud.has_method("update_hud_quest_display"):
 				gameplay_hud.update_hud_quest_display(tracked_q)
 			if gameplay_hud.has_method("set_quest_navigation"):
-				gameplay_hud.set_quest_navigation(CITY_GATE_POS, "Gerbang Luar Istana")
+				gameplay_hud.set_quest_navigation(SCENE_6_BUSH_POS, "Semak Jalur Camp Latihan")
 
-	play_black_fade_transition(on_midpoint, on_completed)
+		enter_location("Jalur Menuju Camp Latihan")
+
+	if teleport_to_path:
+		play_black_fade_transition(
+			apply_scene_6_state,
+			func() -> void:
+				set_party_movement_locked(false)
+				var leader := get_active_leader()
+				if is_instance_valid(leader):
+					_set_character_collision_active(leader, true)
+					leader.set_physics_process(true)
+					leader.set_process_unhandled_input(true)
+				print("[Story] Scene 6 dimulai! Gerakkan karakter ke semak jalur camp latihan.")
+		)
+	else:
+		apply_scene_6_state.call()
+		set_party_movement_locked(false)
 
 
-# =========================================================
-# SCENE 5: GERBANG LUAR & BERGABUNGNYA ASSASSIN (OPSI 2 - PUDAR HITAM)
-# =========================================================
-
-func start_story_scene_5() -> void:
-	if selected_game_mode == "open_world" or is_scene_5_in_progress or is_scene_5_completed:
+func trigger_scene_6_bush_encounter() -> void:
+	if not is_scene_6_in_progress or is_scene_6_bush_triggered or is_transitioning:
 		return
-	is_scene_5_in_progress = true
-	is_inside_castle_hall = false
-	is_inside_secret_library = false
-	set_party_movement_locked(true)
+	is_scene_6_bush_triggered = true
 
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 		gameplay_hud.hide_interact_prompt(true)
 
-	# 1. Cutscene Aksi Pudar Hitam (Assassin melompat dari benteng & menebas monster)
-	_play_scene_5_action_black_screen(func():
-		set_party_movement_locked(true)
-		# 2. Dialog 5A (Arthur & Archer)
-		play_story_dialogue("scene_05a", func():
-			set_party_movement_locked(true)
-			# 3. Pertarungan Kroco 3 Pudar Hitam (Opsi 2 - Auto-Skip Fight)
-			_play_scene_5_fight_black_screen(func():
-				set_party_movement_locked(true)
-				# 4. Dialog 5B (Pasca Fight & Lepas Topeng Assassin)
-				play_story_dialogue("scene_05b", func():
-					_complete_story_scene_5()
-				)
+	set_party_movement_locked(true)
+	var leader := get_active_leader()
+	if is_instance_valid(leader):
+		leader.velocity = Vector2.ZERO
+		if "target_position" in leader:
+			leader.target_position = leader.global_position
+		if leader.has_method("play_idle_animation"):
+			leader.play_idle_animation()
+
+	# 1. Dialog 6A: Assassin, Arthur, Archer
+	play_story_dialogue("scene_06a", func() -> void:
+		# 2. Fight Kroco 4 berupa layar hitam dengan teks narasi
+		_play_scene_6_fight_black_screen(func() -> void:
+			# 3. Dialog 6B (Pasca Fight): Assassin & Arthur
+			play_story_dialogue("scene_06b", func() -> void:
+				_prepare_scene_6_outdoor_camp_alaric_step()
 			)
 		)
 	)
 
 
-func _pose_scene_5_heroes_at_outer_gate(post_fight: bool = false) -> void:
-	var arthur: CharacterBody2D = all_heroes.get("Knight_1")
-	var magnus: CharacterBody2D = all_heroes.get("Mage_1")
-	var archer: CharacterBody2D = all_heroes.get("Archer_1")
-	var assassin: CharacterBody2D = all_heroes.get("Bandit_1")
+func _send_companions_ahead_to_outdoor_camp() -> void:
+	var needed: Array[String] = ["Mage_1", "Archer_1", "Bandit_1"]
+	var alaric_pos: Vector2 = SCENE_6_OUTDOOR_CAMP_POS
+	var offsets: Dictionary = {
+		"Mage_1": Vector2(65.0, -32.0),     # Magnus di depan Alaric (sisi atas)
+		"Archer_1": Vector2(65.0, 32.0),    # Anastasya di depan Alaric (sisi bawah)
+		"Bandit_1": Vector2(105.0, 0.0)     # Carina Hellene di belakang
+	}
+	for n in needed:
+		var hero: CharacterBody2D = all_heroes.get(n)
+		if is_instance_valid(hero):
+			if not hero.is_inside_tree():
+				add_child(hero)
+			if hero not in party_members:
+				party_members.append(hero)
+			hero.visible = true
+			hero.modulate = Color.WHITE
+			hero.modulate.a = 1.0
+			var target_p: Vector2 = alaric_pos + offsets.get(n, Vector2(70.0, 0.0))
+			hero.global_position = target_p
+			if "target_position" in hero:
+				hero.target_position = target_p
+			hero.velocity = Vector2.ZERO
+			if "last_direction" in hero:
+				hero.last_direction = Vector2.LEFT
+			if "is_movement_locked" in hero:
+				hero.is_movement_locked = true
+			hero.set_physics_process(false)
+			hero.set_process_unhandled_input(false)
+			if hero.has_node("AnimatedSprite2D"):
+				var anim_spr := hero.get_node("AnimatedSprite2D") as AnimatedSprite2D
+				if is_instance_valid(anim_spr):
+					anim_spr.flip_h = false
+					anim_spr.play("idle_w")
+			elif hero.has_method("play_idle_animation"):
+				hero.play_idle_animation()
+			_set_character_collision_active(hero, true)
 
-	update_camera_limits_for_location("outdoor")
+
+func _prepare_scene_6_outdoor_camp_alaric_step() -> void:
+	is_scene_6_waiting_outdoor_camp_alaric = true
+	if is_instance_valid(alaric_node):
+		alaric_node.global_position = SCENE_6_OUTDOOR_CAMP_POS
+		alaric_node.velocity = Vector2.ZERO
+		alaric_node.last_direction = Vector2.RIGHT
+		if alaric_node.has_node("AnimatedSprite2D"):
+			var anim_spr := alaric_node.get_node("AnimatedSprite2D") as AnimatedSprite2D
+			if is_instance_valid(anim_spr):
+				anim_spr.play("idle_e")
+		elif alaric_node.has_method("play_idle_animation"):
+			alaric_node.play_idle_animation()
+
+	# Kirim Archer, Mage, dan Assassin duluan ke camp menunggu Arthur di hadapan Alaric
+	_send_companions_ahead_to_outdoor_camp()
 	update_party_visibility()
 
-	var arthur_pos := Vector2(CITY_GATE_OUTSIDE_POS.x, CITY_GATE_OUTSIDE_POS.y + (55.0 if post_fight else 25.0))
-	var magnus_pos := Vector2(CITY_GATE_OUTSIDE_POS.x - 65.0, CITY_GATE_OUTSIDE_POS.y + 10.0)
-	var archer_pos := Vector2(CITY_GATE_OUTSIDE_POS.x + 65.0, CITY_GATE_OUTSIDE_POS.y + 10.0)
-	var assassin_pos := Vector2(CITY_GATE_OUTSIDE_POS.x, CITY_GATE_OUTSIDE_POS.y + 115.0)
+	for q in quest_list:
+		if q.get("id") == "scene_06_quest":
+			q["status"] = "active"
+			q["title"] = "Menuju Camp Latihan"
+			q["location"] = "Camp Militer Barat"
+			q["objective"] = "Temui Pelatih Alaric di camp militer barat."
+			q["target_position"] = SCENE_6_OUTDOOR_CAMP_POS
 
-	var trio_Configs: Array[Dictionary] = [
-		{"node": arthur, "pos": arthur_pos, "dir": Vector2.DOWN},
-		{"node": magnus, "pos": magnus_pos, "dir": Vector2.DOWN},
-		{"node": archer, "pos": archer_pos, "dir": Vector2.DOWN},
-	]
+	tracked_quest_id = "scene_06_quest"
+	if is_instance_valid(gameplay_hud):
+		if gameplay_hud.has_method("set_quests"):
+			gameplay_hud.set_quests(quest_list, tracked_quest_id)
+		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
+		if not tracked_q.is_empty() and gameplay_hud.has_method("update_hud_quest_display"):
+			gameplay_hud.update_hud_quest_display(tracked_q)
+		if gameplay_hud.has_method("set_quest_navigation"):
+			gameplay_hud.set_quest_navigation(SCENE_6_OUTDOOR_CAMP_POS, "Camp Pelatih Alaric")
 
-	for cfg in trio_Configs:
-		var h: CharacterBody2D = cfg["node"]
+	# Hanya Arthur (Leader) yang dapat berjalan bebas menuju camp
+	var leader := get_active_leader()
+	if is_instance_valid(leader):
+		if "is_movement_locked" in leader:
+			leader.is_movement_locked = false
+		_set_character_collision_active(leader, true)
+		leader.set_physics_process(true)
+		leader.set_process_unhandled_input(true)
+	print("[Story] Kroco jalur camp bersih! Archer, Mage, dan Assassin sudah berada di depan Alaric menunggu Arthur.")
+
+
+func _assemble_party_in_front_of_outdoor_alaric() -> void:
+	var needed: Array[String] = ["Knight_1", "Mage_1", "Archer_1", "Bandit_1"]
+	var alaric_pos: Vector2 = SCENE_6_OUTDOOR_CAMP_POS
+	var offsets: Dictionary = {
+		"Knight_1": Vector2(60.0, 0.0),
+		"Mage_1": Vector2(105.0, -35.0),
+		"Archer_1": Vector2(105.0, 35.0),
+		"Bandit_1": Vector2(150.0, 0.0)
+	}
+	for n in needed:
+		var hero: CharacterBody2D = all_heroes.get(n)
+		if is_instance_valid(hero):
+			if not hero.is_inside_tree():
+				add_child(hero)
+			hero.visible = true
+			hero.modulate = Color.WHITE
+			var target_p: Vector2 = alaric_pos + offsets.get(n, Vector2(60.0, 0.0))
+			hero.global_position = target_p
+			if "target_position" in hero:
+				hero.target_position = target_p
+			hero.velocity = Vector2.ZERO
+			if "last_direction" in hero:
+				hero.last_direction = Vector2.LEFT
+			if hero.has_node("AnimatedSprite2D"):
+				var anim_spr := hero.get_node("AnimatedSprite2D") as AnimatedSprite2D
+				if is_instance_valid(anim_spr):
+					anim_spr.play("idle_w")
+			elif hero.has_method("play_idle_animation"):
+				hero.play_idle_animation()
+			_set_character_collision_active(hero, true)
+	update_party_visibility()
+
+
+func trigger_scene_6_outdoor_camp_alaric_dialogue() -> void:
+	if not is_scene_6_waiting_outdoor_camp_alaric or is_transitioning:
+		return
+	is_scene_6_waiting_outdoor_camp_alaric = false
+
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
+
+	_assemble_party_in_front_of_outdoor_alaric()
+	set_party_movement_locked(true)
+	var leader := get_active_leader()
+	if is_instance_valid(leader):
+		leader.velocity = Vector2.ZERO
+		if "target_position" in leader:
+			leader.target_position = leader.global_position
+		if leader.has_method("play_idle_animation"):
+			leader.play_idle_animation()
+
+	if is_instance_valid(alaric_node):
+		alaric_node.last_direction = Vector2.RIGHT
+		if alaric_node.has_method("play_idle_animation"):
+			alaric_node.play_idle_animation()
+
+	# Dialog saat bertemu Alaric di Camp Luar -> Alaric menyuruh ke tempat duelnya di dalam Kingdom
+	play_story_dialogue("scene_06_camp_meet", func() -> void:
+		var on_midpoint := func() -> void:
+			# Pindahkan Alaric ke Tempat Duel di dalam Kingdom (ALARIC_CAMP_POS)
+			if is_instance_valid(alaric_node):
+				alaric_node.global_position = ALARIC_CAMP_POS
+				alaric_node.velocity = Vector2.ZERO
+				alaric_node.last_direction = Vector2.DOWN
+				if alaric_node.has_method("play_idle_animation"):
+					alaric_node.play_idle_animation()
+
+		var on_completed := func() -> void:
+			_complete_story_scene_6()
+
+		play_black_fade_transition(on_midpoint, on_completed)
+	)
+
+
+func _play_scene_6_fight_black_screen(on_done: Callable) -> void:
+	var canvas := CanvasLayer.new()
+	canvas.name = "Scene6FightCrawl"
+	canvas.layer = 125
+
+	var bg := ColorRect.new()
+	bg.color = Color(0.04, 0.04, 0.05, 0.0)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	canvas.add_child(bg)
+
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	canvas.add_child(center)
+
+	var vbox := VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 18)
+	vbox.modulate.a = 0.0
+	center.add_child(vbox)
+
+	var title_lbl := Label.new()
+	title_lbl.text = "— PERTEMPURAN JALUR CAMP: UJI FORMASI —"
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_lbl.add_theme_font_size_override("font_size", 18)
+	title_lbl.add_theme_color_override("font_color", Color(0.95, 0.85, 0.45))
+	if UI_FONT_BEHOLDEN:
+		title_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	vbox.add_child(title_lbl)
+
+	var desc_lbl := Label.new()
+	desc_lbl.text = "Arthur, Magnus, Archer, dan Assassin menyerbu kawanan monster liar di semak belukar...\nTebasan pedang, mantra sihir, hujan panah, dan serangan belati berpadu dalam formasi 4 hero.\n\nSeluruh monster liar di jalur menuju Camp Latihan berhasil disingkirkan!"
+	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc_lbl.add_theme_font_size_override("font_size", 15)
+	desc_lbl.add_theme_color_override("font_color", Color(0.92, 0.92, 0.95))
+	if UI_FONT_BEHOLDEN:
+		desc_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	vbox.add_child(desc_lbl)
+
+	var prompt_lbl := Label.new()
+	prompt_lbl.text = "[ Tekan Spasi / Klik untuk Lanjut ]"
+	prompt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	prompt_lbl.add_theme_font_size_override("font_size", 12)
+	prompt_lbl.add_theme_color_override("font_color", Color(0.65, 0.65, 0.70))
+	if UI_FONT_BEHOLDEN:
+		prompt_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	vbox.add_child(prompt_lbl)
+
+	add_child(canvas)
+
+	var tw_in := create_tween()
+	tw_in.tween_property(bg, "color:a", 1.0, 0.4)
+	tw_in.parallel().tween_property(vbox, "modulate:a", 1.0, 0.5)
+
+	var is_closed: Array[bool] = [false]
+	var advance_crawl: Callable
+	advance_crawl = func() -> void:
+		if is_closed[0]:
+			return
+		is_closed[0] = true
+		_alaric_boss_modal_input_cb = Callable()
+		play_sfx(preload("res://assets/audio/sfx/ui/ui_click.wav"), -3.0)
+		var tw_out := create_tween()
+		tw_out.tween_property(bg, "color:a", 0.0, 0.35)
+		tw_out.parallel().tween_property(vbox, "modulate:a", 0.0, 0.25)
+		tw_out.tween_callback(func() -> void:
+			if is_instance_valid(canvas):
+				canvas.queue_free()
+			if on_done.is_valid():
+				on_done.call()
+		)
+
+	bg.gui_input.connect(func(ev: InputEvent) -> void:
+		if (ev is InputEventMouseButton and ev.pressed) or (ev is InputEventScreenTouch and ev.pressed):
+			advance_crawl.call()
+	)
+
+	var auto_timer := Timer.new()
+	auto_timer.wait_time = 3.5
+	auto_timer.one_shot = true
+	auto_timer.autostart = true
+	canvas.add_child(auto_timer)
+	auto_timer.timeout.connect(func() -> void:
+		advance_crawl.call()
+	)
+
+
+func _complete_story_scene_6() -> void:
+	is_scene_6_in_progress = false
+	is_scene_6_completed = true
+	is_scene_6_waiting_outdoor_camp_alaric = false
+	for h_name in ["Knight_1", "Mage_1", "Archer_1", "Bandit_1"]:
+		var h: CharacterBody2D = all_heroes.get(h_name)
 		if is_instance_valid(h):
-			if not h.is_inside_tree():
-				add_child(h)
-			h.visible = true
-			h.modulate = Color.WHITE
-			h.global_position = cfg["pos"]
-			h.velocity = Vector2.ZERO
-			h.set_physics_process(false)
-			h.set_process_unhandled_input(false)
-			_set_character_collision_active(h, false)
-			if "last_direction" in h:
-				h.last_direction = cfg["dir"]
-			if h.has_node("AnimatedSprite2D"):
-				var spr := h.get_node("AnimatedSprite2D") as AnimatedSprite2D
-				if spr and spr.sprite_frames and spr.sprite_frames.has_animation("idle_s"):
-					spr.play("idle_s")
-
-	if is_instance_valid(assassin):
-		if not assassin.is_inside_tree():
-			add_child(assassin)
-		assassin.visible = true
-		assassin.modulate = Color.WHITE
-		assassin.global_position = assassin_pos
-		assassin.velocity = Vector2.ZERO
-		assassin.set_physics_process(false)
-		assassin.set_process_unhandled_input(false)
-		_set_character_collision_active(assassin, false)
-		var ass_dir := Vector2.UP if post_fight else Vector2.DOWN
-		if "last_direction" in assassin:
-			assassin.last_direction = ass_dir
-		if assassin.has_node("AnimatedSprite2D"):
-			var spr := assassin.get_node("AnimatedSprite2D") as AnimatedSprite2D
-			var anim_name := "idle_n" if post_fight else "idle_s"
-			if spr and spr.sprite_frames and spr.sprite_frames.has_animation(anim_name):
-				spr.play(anim_name)
-
-	if is_instance_valid(camera):
-		camera.global_position = Vector2(CITY_GATE_OUTSIDE_POS.x, CITY_GATE_OUTSIDE_POS.y + 65.0)
-		if camera.has_method("reset_smoothing"):
-			camera.reset_smoothing()
-		if camera.has_method("force_update_scroll"):
-			camera.force_update_scroll()
+			if "is_movement_locked" in h:
+				h.is_movement_locked = false
+			h.set_physics_process(true)
+	for q in quest_list:
+		if q.get("id") == "scene_06_quest":
+			q["status"] = "completed"
+	print("[Story] Scene 6 selesai! Lanjut ke Scene 7 (Camp Latihan Alaric).")
+	start_story_scene_7()
 
 
-func _play_scene_5_action_black_screen(on_done: Callable) -> void:
-	var canvas := CanvasLayer.new()
-	canvas.layer = 125
-	canvas.name = "Scene5ActionBlackScreen"
+func start_story_scene_7() -> void:
+	is_scene_6_waiting_outdoor_camp_alaric = false
+	is_scene_7_in_progress = true
+	is_alaric_sparring_completed = false
+	_has_seen_alaric_intro_dialogue = false
+	_setup_alaric_npc()
+	if is_instance_valid(alaric_node):
+		alaric_node.global_position = ALARIC_CAMP_POS
+		alaric_node.last_direction = Vector2.DOWN
+		if alaric_node.has_method("play_idle_animation"):
+			alaric_node.play_idle_animation()
 
-	var bg := ColorRect.new()
-	bg.color = Color(0.04, 0.04, 0.05, 0.0)
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_STOP
-	canvas.add_child(bg)
+	var has_s7_quest := false
+	for q in quest_list:
+		var qid: String = str(q.get("id", ""))
+		if qid == "scene_06_quest":
+			q["status"] = "completed"
+		elif qid == "scene_07_quest":
+			has_s7_quest = true
+			q["status"] = "active"
+			q["title"] = "Ujian Sang Pelatih"
+			q["location"] = "Tempat Duel Kingdom"
+			q["objective"] = "Temui Pelatih Alaric di tempat duelnya di dalam Kingdom dan menangkan duel 1 lawan 1."
+			q["target_position"] = ALARIC_CAMP_POS
 
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	canvas.add_child(center)
+	if not has_s7_quest:
+		quest_list.append({
+			"id": "scene_07_quest",
+			"category": "main",
+			"title": "Ujian Sang Pelatih",
+			"location": "Tempat Duel Kingdom",
+			"objective": "Temui Pelatih Alaric di tempat duelnya di dalam Kingdom dan menangkan duel 1 lawan 1.",
+			"description": "Pelatih Alaric menyuruh Arthur dan kawan-kawannya menuju tempat duelnya di dalam Kingdom untuk membuktikan ketangguhan Arthur satu lawan satu.",
+			"status": "active",
+			"target_position": ALARIC_CAMP_POS
+		})
 
-	var vbox := VBoxContainer.new()
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_theme_constant_override("separation", 18)
-	vbox.modulate.a = 0.0
-	center.add_child(vbox)
+	tracked_quest_id = "scene_07_quest"
+	if is_instance_valid(gameplay_hud):
+		if gameplay_hud.has_method("set_quests"):
+			gameplay_hud.set_quests(quest_list, tracked_quest_id)
+		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
+		if not tracked_q.is_empty() and gameplay_hud.has_method("update_hud_quest_display"):
+			gameplay_hud.update_hud_quest_display(tracked_q)
+		if gameplay_hud.has_method("set_quest_navigation"):
+			gameplay_hud.set_quest_navigation(ALARIC_CAMP_POS, "Tempat Duel Alaric (Dalam Kingdom)")
 
-	var title_lbl := Label.new()
-	title_lbl.text = "— PENYERGAPAN DI GERBANG LUAR —"
-	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_lbl.add_theme_font_size_override("font_size", 18)
-	title_lbl.add_theme_color_override("font_color", Color(0.95, 0.85, 0.45))
-	vbox.add_child(title_lbl)
-
-	var desc_lbl := Label.new()
-	desc_lbl.text = "Beberapa monster menyusup ke halaman gerbang luar!\n\nDari atas benteng, sesosok lincah bertopeng kulit monster melompat,\nmenebas satu monster dengan dua belati kilat, lalu berguling siap bertarung!"
-	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	desc_lbl.add_theme_font_size_override("font_size", 15)
-	desc_lbl.add_theme_color_override("font_color", Color(0.92, 0.92, 0.95))
-	vbox.add_child(desc_lbl)
-
-	var prompt_lbl := Label.new()
-	prompt_lbl.text = "[ Klik / Tunggu Sebentar untuk Lanjut ]"
-	prompt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt_lbl.add_theme_font_size_override("font_size", 12)
-	prompt_lbl.add_theme_color_override("font_color", Color(0.65, 0.65, 0.70))
-	vbox.add_child(prompt_lbl)
-
-	add_child(canvas)
-
-	play_sfx(preload("res://assets/audio/sfx/enemy/enemy_alert.wav"), -1.0)
-	var tw_in := create_tween()
-	tw_in.tween_property(bg, "color:a", 1.0, 0.4)
-	tw_in.parallel().tween_property(vbox, "modulate:a", 1.0, 0.5)
-	tw_in.tween_callback(func():
-		_pose_scene_5_heroes_at_outer_gate(false)
-		play_sfx(preload("res://assets/audio/sfx/ui/start_sword_raise.wav"), 2.0)
-		apply_camera_shake(6.0)
-		if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_location_banner"):
-			gameplay_hud.show_location_banner("Halaman Luar Gerbang Istana")
-	)
-
-	var is_closed: Array[bool] = [false]
-	var advance_crawl: Callable
-	advance_crawl = func():
-		if is_closed[0]:
-			return
-		is_closed[0] = true
-		play_sfx(preload("res://assets/audio/sfx/ui/ui_click.wav"), -3.0)
-		var tw_out := create_tween()
-		tw_out.tween_property(bg, "color:a", 0.0, 0.4)
-		tw_out.parallel().tween_property(vbox, "modulate:a", 0.0, 0.3)
-		tw_out.tween_callback(func():
-			if is_instance_valid(canvas):
-				canvas.queue_free()
-			if on_done.is_valid():
-				on_done.call()
-		)
-
-	bg.gui_input.connect(func(ev: InputEvent):
-		if (ev is InputEventMouseButton and ev.pressed) or (ev is InputEventScreenTouch and ev.pressed):
-			advance_crawl.call()
-	)
-
-	var auto_timer := Timer.new()
-	auto_timer.wait_time = 3.2
-	auto_timer.one_shot = true
-	auto_timer.autostart = true
-	canvas.add_child(auto_timer)
-	auto_timer.timeout.connect(func():
-		advance_crawl.call()
-	)
+	set_party_movement_locked(false)
+	var leader := get_active_leader()
+	if is_instance_valid(leader):
+		_set_character_collision_active(leader, true)
+		leader.set_physics_process(true)
+		leader.set_process_unhandled_input(true)
+	print("[Story] Scene 7 aktif! Menuju Tempat Duel Pelatih Alaric di dalam Kingdom.")
 
 
-func _play_scene_5_fight_black_screen(on_done: Callable) -> void:
-	var canvas := CanvasLayer.new()
-	canvas.layer = 125
-	canvas.name = "Scene5FightBlackScreen"
+func _setup_arena_kamp_spectators(show_spectators: bool) -> void:
+	var arena_kamp := get_node_or_null("ArenaKamp") as Node2D
+	if not is_instance_valid(arena_kamp):
+		return
+	var existing := arena_kamp.get_node_or_null("Scene7Spectators")
+	if is_instance_valid(existing):
+		existing.queue_free()
+	if not show_spectators:
+		return
 
-	var bg := ColorRect.new()
-	bg.color = Color(0.04, 0.04, 0.05, 0.0)
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_STOP
-	canvas.add_child(bg)
+	var container := Node2D.new()
+	container.name = "Scene7Spectators"
+	container.z_index = 3
+	arena_kamp.add_child(container)
 
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	canvas.add_child(center)
+	# Penonton di luar arena (Magnus, Archer, Assassin) berdiri di tepi atas arena menghadap ke bawah
+	var tex_mage_s: Texture2D = load("res://assets/characters/mage/idle/idle-s.png")
+	var tex_archer_s: Texture2D = load("res://assets/characters/archer/idle/idle-s.png")
+	var tex_bandit_s: Texture2D = load("res://assets/characters/bandit/idle/idle-s.png")
 
-	var vbox := VBoxContainer.new()
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_theme_constant_override("separation", 18)
-	vbox.modulate.a = 0.0
-	center.add_child(vbox)
-
-	var title_lbl := Label.new()
-	title_lbl.text = "— PERTAHANAN GERBANG LUAR —"
-	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_lbl.add_theme_font_size_override("font_size", 18)
-	title_lbl.add_theme_color_override("font_color", Color(0.95, 0.85, 0.45))
-	vbox.add_child(title_lbl)
-
-	var desc_lbl := Label.new()
-	desc_lbl.text = "Arthur, Magnus, dan Archer bertarung bahu-membahu di halaman gerbang...\n\nTebasan pedang, bidikan panah, dan ledakan sihir berhasil\nmengalahkan ke-4 monster penyusup hingga tak tersisa!"
-	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	desc_lbl.add_theme_font_size_override("font_size", 15)
-	desc_lbl.add_theme_color_override("font_color", Color(0.92, 0.92, 0.95))
-	vbox.add_child(desc_lbl)
-
-	var prompt_lbl := Label.new()
-	prompt_lbl.text = "[ Klik / Tunggu Sebentar untuk Lanjut ]"
-	prompt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt_lbl.add_theme_font_size_override("font_size", 12)
-	prompt_lbl.add_theme_color_override("font_color", Color(0.65, 0.65, 0.70))
-	vbox.add_child(prompt_lbl)
-
-	add_child(canvas)
-
-	var tw_in := create_tween()
-	tw_in.tween_property(bg, "color:a", 1.0, 0.4)
-	tw_in.parallel().tween_property(vbox, "modulate:a", 1.0, 0.5)
-	tw_in.tween_callback(func():
-		_pose_scene_5_heroes_at_outer_gate(true)
-		play_sfx(preload("res://assets/audio/sfx/ui/start_sword_raise.wav"), 2.0)
-		apply_camera_shake(6.0)
-	)
-
-	var is_closed: Array[bool] = [false]
-	var advance_crawl: Callable
-	advance_crawl = func():
-		if is_closed[0]:
-			return
-		is_closed[0] = true
-		play_sfx(preload("res://assets/audio/sfx/ui/ui_click.wav"), -3.0)
-		var tw_out := create_tween()
-		tw_out.tween_property(bg, "color:a", 0.0, 0.4)
-		tw_out.parallel().tween_property(vbox, "modulate:a", 0.0, 0.3)
-		tw_out.tween_callback(func():
-			if is_instance_valid(canvas):
-				canvas.queue_free()
-			if on_done.is_valid():
-				on_done.call()
-		)
-
-	bg.gui_input.connect(func(ev: InputEvent):
-		if (ev is InputEventMouseButton and ev.pressed) or (ev is InputEventScreenTouch and ev.pressed):
-			advance_crawl.call()
-	)
-
-	var auto_timer := Timer.new()
-	auto_timer.wait_time = 3.0
-	auto_timer.one_shot = true
-	auto_timer.autostart = true
-	canvas.add_child(auto_timer)
-	auto_timer.timeout.connect(func():
-		advance_crawl.call()
-	)
+	if tex_mage_s:
+		var sp_mag := _create_meeting_npc(tex_mage_s, 96, 64, 4, Vector2(1010.0, 445.0), "idle_s")
+		sp_mag.name = "Spectator_Magnus"
+		container.add_child(sp_mag)
+	if tex_archer_s:
+		var sp_arch := _create_meeting_npc(tex_archer_s, 32, 32, 4, Vector2(1135.0, 445.0), "idle_s")
+		sp_arch.name = "Spectator_Archer"
+		container.add_child(sp_arch)
+	if tex_bandit_s:
+		var sp_assn := _create_meeting_npc(tex_bandit_s, 32, 32, 4, Vector2(1260.0, 445.0), "idle_s")
+		sp_assn.name = "Spectator_Assassin"
+		container.add_child(sp_assn)
 
 
-func _complete_story_scene_5() -> void:
-	is_scene_5_in_progress = false
-	is_scene_5_completed = true
+# =========================================================
+# CHAPTER 1 - SCENE 10: PENUTUP CHAPTER 1 (EPILOG)
+# Dialog Kemenangan 4 Hero di Luar Pemakaman & Transisi Chapter Clear
+# =========================================================
 
-	# Rekrut Assassin (Bandit_1) resmi ke dalam Party (Total 4 Hero Lengkap)
-	var knight: CharacterBody2D = all_heroes.get("Knight_1")
-	var mage: CharacterBody2D = all_heroes.get("Mage_1")
-	var archer: CharacterBody2D = all_heroes.get("Archer_1")
-	var bandit: CharacterBody2D = all_heroes.get("Bandit_1")
-
+func setup_party_for_scene_10() -> void:
 	party_members.clear()
-	var full_party: Array[CharacterBody2D] = [knight, mage, archer, bandit]
-	for i in range(full_party.size()):
-		var h: CharacterBody2D = full_party[i]
-		if is_instance_valid(h):
-			party_members.append(h)
-			h.modulate = Color.WHITE
-			h.is_dead = false
-			if "current_health" in h and "max_health" in h:
-				h.current_health = h.max_health
-			if i == 0:
-				if not h.is_inside_tree():
-					add_child(h)
-				h.visible = true
-				h.global_position = Vector2(CITY_GATE_OUTSIDE_POS.x, CITY_GATE_OUTSIDE_POS.y + 45.0)
-				h.set_physics_process(true)
-				h.set_process_unhandled_input(true)
-				_set_character_collision_active(h, true)
+	var needed: Array[String] = ["Knight_1", "Mage_1", "Archer_1", "Bandit_1"]
+	var base_pos: Vector2 = SCENE_10_ARENA_POS
+	var hero_positions: Dictionary = {
+		"Knight_1": base_pos + Vector2(-120.0, 0.0),        # Arthur di barat (sisi kiri)
+		"Mage_1": base_pos + Vector2(60.0, -90.0),          # Magnus di kanan atas
+		"Archer_1": base_pos + Vector2(60.0, 90.0),         # Anastasya di kanan bawah
+		"Bandit_1": base_pos + Vector2(180.0, 0.0)          # Carina Hellene di kanan tengah
+	}
+	for n in needed:
+		var hero: CharacterBody2D = all_heroes.get(n)
+		if is_instance_valid(hero):
+			if not hero.is_inside_tree():
+				add_child(hero)
+			_restore_hero_full_for_alaric(hero)
+			hero.visible = true
+			hero.modulate = Color.WHITE
+			hero.modulate.a = 1.0
+			var target_p: Vector2 = hero_positions.get(n, base_pos)
+			hero.global_position = target_p
+			if "target_position" in hero:
+				hero.target_position = target_p
+			hero.velocity = Vector2.ZERO
+			if n == "Knight_1":
+				if "last_direction" in hero:
+					hero.last_direction = Vector2.RIGHT
+				if hero.has_node("AnimatedSprite2D"):
+					var anim_spr := hero.get_node("AnimatedSprite2D") as AnimatedSprite2D
+					if is_instance_valid(anim_spr):
+						anim_spr.flip_h = false
+						anim_spr.play("idle_e")
+				elif hero.has_method("play_idle_animation"):
+					hero.play_idle_animation()
 			else:
-				h.visible = false
-				h.set_physics_process(false)
-				h.set_process_unhandled_input(false)
-				_set_character_collision_active(h, false)
-				if h.is_inside_tree():
-					remove_child(h)
+				if "last_direction" in hero:
+					hero.last_direction = Vector2.LEFT
+				if hero.has_node("AnimatedSprite2D"):
+					var anim_spr := hero.get_node("AnimatedSprite2D") as AnimatedSprite2D
+					if is_instance_valid(anim_spr):
+						anim_spr.flip_h = false
+						anim_spr.play("idle_w")
+				elif hero.has_method("play_idle_animation"):
+					hero.play_idle_animation()
+			if "is_movement_locked" in hero:
+				hero.is_movement_locked = true
+			hero.set_physics_process(false)
+			hero.set_process_unhandled_input(false)
+			_set_character_collision_active(hero, true)
+			party_members.append(hero)
 
 	for i in range(party_members.size()):
 		for j in range(i + 1, party_members.size()):
 			party_members[i].add_collision_exception_with(party_members[j])
 			party_members[j].add_collision_exception_with(party_members[i])
 
+	set_active_leader(0)
 	setup_party_enemy_collision_exceptions.call_deferred()
-
-	active_leader_index = 0
-	for i in range(party_members.size()):
-		var member: CharacterBody2D = party_members[i]
-		if is_instance_valid(member) and member.has_method("set_as_leader"):
-			member.set_as_leader(i == 0, knight if i != 0 else null, i)
-
 	update_party_visibility()
 
-	# Selesaikan Quest 5 (main_08)
-	for q in quest_list:
-		if q.get("id") == "main_08":
-			q["status"] = "completed"
-
 	if is_instance_valid(gameplay_hud):
-		if gameplay_hud.has_method("set_party_switch_locked"):
-			gameplay_hud.set_party_switch_locked(false)
+		gameplay_hud.is_character_switch_unlocked = true
 		if gameplay_hud.has_method("update_party_order"):
 			gameplay_hud.update_party_order(party_members, active_leader_index)
-		if gameplay_hud.has_method("update_party_hud"):
+		elif gameplay_hud.has_method("update_party_hud"):
+			gameplay_hud.party_members = party_members
 			gameplay_hud.update_party_hud()
-		if gameplay_hud.has_method("update_leader_indicator"):
-			gameplay_hud.update_leader_indicator()
+			if gameplay_hud.has_method("update_leader_indicator"):
+				gameplay_hud.update_leader_indicator()
 		if gameplay_hud.has_method("_sync_gameplay_hud_controls_prompts"):
 			gameplay_hud._sync_gameplay_hud_controls_prompts()
-		if gameplay_hud.has_method("set_quests"):
-			gameplay_hud.set_quests(quest_list, tracked_quest_id)
-		if gameplay_hud.has_method("clear_quest_navigation"):
-			gameplay_hud.clear_quest_navigation()
-		if gameplay_hud.has_method("show_location_banner"):
-			gameplay_hud.show_location_banner("Assassin resmi bergabung ke dalam Party! (Total 4 Hero Lengkap)")
 
-	set_party_movement_locked(false)
-	print("[Story] Scene 5 selesai! Assassin resmi bergabung ke dalam Party (Total 4 Hero Lengkap).")
+
+func start_story_scene_10(teleport_to_arena: bool = true) -> void:
+	selected_game_mode = "story"
+	is_prologue_completed = true
+	is_scene2_completed = true
+	is_castle_meeting_completed = true
+	is_knight_room_completed = true
+	is_scene_4_in_progress = false
+	is_scene_4_completed = true
+	is_scene_6_in_progress = false
+	is_scene_6_completed = true
+	is_scene_6_waiting_outdoor_camp_alaric = false
+	is_scene_7_in_progress = false
+	is_alaric_sparring_completed = true
+	is_skeleton_boss_fight_in_progress = false
+	_pending_skeleton_victory_popup = false
+	_cleanup_prologue_entities()
+
+	is_inside_castle_hall = false
+	is_inside_secret_library = false
+	is_on_library_floor_2 = false
+	is_in_arena_kamp = false
+	arena_state = ArenaState.INACTIVE
+
+	is_scene_10_in_progress = true
+	is_scene_10_completed = false
+
+	if is_instance_valid(gameplay_hud):
+		if gameplay_hud.has_method("set_open_world_mode"):
+			gameplay_hud.set_open_world_mode(false)
+		if gameplay_hud.has_method("hide_interact_prompt"):
+			gameplay_hud.hide_interact_prompt(true)
+		if gameplay_hud.has_method("hide_quest_navigation"):
+			gameplay_hud.hide_quest_navigation()
+
+	_crossfade_to_bgm(BGM_GAMEPLAY)
+
+	var apply_scene_10_state := func() -> void:
+		setup_party_for_scene_10()
+		update_camera_limits_for_location("outdoor")
+		if is_instance_valid(camera):
+			camera.global_position = SCENE_10_ARENA_POS
+			camera.reset_smoothing()
+			if camera.has_method("force_update_scroll"):
+				camera.force_update_scroll()
+
+		# Mulai dialog kemenangan Scene 10 (Epilog Chapter 1)
+		play_story_dialogue("scene_10_epilogue", func() -> void:
+			# Setelah dialog selesai, tampilkan layar transisi Chapter Clear
+			_play_scene_10_chapter_clear_screen(func() -> void:
+				is_scene_10_in_progress = false
+				is_scene_10_completed = true
+				set_party_movement_locked(false)
+				for m in party_members:
+					if is_instance_valid(m):
+						if "is_movement_locked" in m:
+							m.is_movement_locked = false
+						_set_character_collision_active(m, true)
+						m.set_physics_process(true)
+				var leader := get_active_leader()
+				if is_instance_valid(leader):
+					leader.set_process_unhandled_input(true)
+				save_game_to_slot(1)
+				print("[Story] Scene 10 (Penutup Chapter 1) SELESAI! Chapter 1 Clear!")
+			)
+		)
+
+	if teleport_to_arena:
+		play_black_fade_transition(
+			func():
+				apply_scene_10_state.call()
+		)
+	else:
+		apply_scene_10_state.call()
+
+
+func _play_scene_10_chapter_clear_screen(on_done: Callable = Callable()) -> void:
+	var canvas := CanvasLayer.new()
+	canvas.name = "Scene10ChapterClear"
+	canvas.layer = 126
+
+	var bg := ColorRect.new()
+	bg.color = Color(0.02, 0.02, 0.03, 0.0)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	canvas.add_child(bg)
+
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	canvas.add_child(center)
+
+	var vbox := VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 22)
+	vbox.modulate.a = 0.0
+	center.add_child(vbox)
+
+	var title_lbl := Label.new()
+	title_lbl.text = "— CHAPTER 1: CLEAR —"
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_lbl.add_theme_font_size_override("font_size", 30)
+	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.84, 0.32)) # Emas elegan
+	if UI_FONT_BEHOLDEN:
+		title_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	vbox.add_child(title_lbl)
+
+	var sub_lbl := Label.new()
+	sub_lbl.text = "PUSAKA KSATRIA & FORMASI EMPAT PAHLAWAN"
+	sub_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub_lbl.add_theme_font_size_override("font_size", 16)
+	sub_lbl.add_theme_color_override("font_color", Color(0.92, 0.92, 0.96))
+	if UI_FONT_BEHOLDEN:
+		sub_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	vbox.add_child(sub_lbl)
+
+	var desc_lbl := Label.new()
+	desc_lbl.text = "Kutukan monster telah dipatahkan dan pedang pusaka Lancelot telah kembali.\nSaat fajar menyingsing, petualangan baru menuju Kerajaan Barat menanti..."
+	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc_lbl.add_theme_font_size_override("font_size", 14)
+	desc_lbl.add_theme_color_override("font_color", Color(0.80, 0.82, 0.90, 0.9))
+	if UI_FONT_BEHOLDEN:
+		desc_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	vbox.add_child(desc_lbl)
+
+	var prompt_lbl := Label.new()
+	prompt_lbl.text = "[ Tekan Spasi / Klik untuk Selesai ]"
+	prompt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	prompt_lbl.add_theme_font_size_override("font_size", 13)
+	prompt_lbl.add_theme_color_override("font_color", Color(0.68, 0.68, 0.75))
+	if UI_FONT_BEHOLDEN:
+		prompt_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	vbox.add_child(prompt_lbl)
+
+	add_child(canvas)
+
+	# Animasi layar menggelap perlahan dan teks emas memudar masuk elegan
+	var tw_in := create_tween()
+	tw_in.tween_property(bg, "color:a", 0.94, 1.2)
+	tw_in.parallel().tween_property(vbox, "modulate:a", 1.0, 1.4)
+
+	var is_closed: Array[bool] = [false]
+	var close_clear_screen: Callable
+	close_clear_screen = func() -> void:
+		if is_closed[0]:
+			return
+		is_closed[0] = true
+		_alaric_boss_modal_input_cb = Callable()
+		play_sfx(preload("res://assets/audio/sfx/ui/ui_click.wav"), -3.0)
+		var tw_out := create_tween()
+		tw_out.tween_property(bg, "color:a", 0.0, 0.8)
+		tw_out.parallel().tween_property(vbox, "modulate:a", 0.0, 0.6)
+		tw_out.tween_callback(func() -> void:
+			if is_instance_valid(canvas):
+				canvas.queue_free()
+			if on_done.is_valid():
+				on_done.call()
+		)
+
+	bg.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			close_clear_screen.call()
+	)
+
+	_alaric_boss_modal_input_cb = func(event: InputEvent) -> bool:
+		if event.is_action_pressed("ui_accept") or event.is_action_pressed("attack") or (event is InputEventKey and event.pressed and event.keycode in [KEY_SPACE, KEY_ENTER, KEY_ESCAPE, KEY_E]):
+			close_clear_screen.call()
+			return true
+		return false
 
 
 # =========================================================
@@ -6673,12 +7132,17 @@ func _start_alaric_pre_fight_dialogue() -> void:
 	if is_alaric_sparring_in_progress or is_transitioning:
 		return
 
+	if selected_game_mode != "open_world" and is_alaric_sparring_completed:
+		return
+
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 		gameplay_hud.hide_interact_prompt(true)
 
-	# Jika di Mode Jelajah ATAU sudah pernah menang / sudah pernah melihat dialog pengantar FLK-007,
-	# langsung tampilkan konfirmasi tantangan duel agar pemain bisa terus mencoba & mengejar Rekor Tercepat
-	if selected_game_mode == "open_world" or is_alaric_sparring_completed or _has_seen_alaric_intro_dialogue:
+	# Jika di Mode Jelajah (Open World), pemain bisa terus menantang duel untuk mengejar rekor waktu
+	if selected_game_mode == "open_world":
+		_show_alaric_boss_challenge_prompt()
+		return
+	elif _has_seen_alaric_intro_dialogue:
 		_show_alaric_boss_challenge_prompt()
 		return
 
@@ -6721,24 +7185,6 @@ func _restore_hero_full_for_alaric(hero: CharacterBody2D) -> void:
 			hero.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", false)
 		if hero.has_method("reset_combat_skills"):
 			hero.reset_combat_skills()
-
-
-func _heal_party_full_for_story_mode() -> void:
-	if selected_game_mode == "open_world":
-		return
-	for member in party_members:
-		if is_instance_valid(member):
-			_restore_hero_full_for_alaric(member)
-	for h_name in all_heroes.keys():
-		var h: CharacterBody2D = all_heroes[h_name]
-		if is_instance_valid(h):
-			h.is_dead = false
-			if "current_health" in h and "max_health" in h:
-				h.current_health = h.max_health
-	update_party_visibility()
-	if is_instance_valid(gameplay_hud):
-		if gameplay_hud.has_method("update_party_hud"):
-			gameplay_hud.update_party_hud()
 
 
 func _teleport_to_arena_kamp_and_fight() -> void:
@@ -6824,6 +7270,7 @@ func _teleport_to_arena_kamp_and_fight() -> void:
 				_clear_alaric_player_collision_exceptions.call_deferred()
 
 			update_camera_limits_for_location("arena_kamp")
+			_setup_arena_kamp_spectators(selected_game_mode != "open_world")
 			if is_instance_valid(camera):
 				camera.global_position = ARENA_KAMP_CENTER_POS
 				camera.reset_smoothing()
@@ -6989,9 +7436,10 @@ func _teleport_back_to_training_camp(player_won: bool = true, was_already_comple
 	play_black_fade_transition(
 		func():
 			is_in_arena_kamp = false
-			if selected_game_mode == "open_world":
-				# Mode Jelajah: Kembalikan seluruh 4 anggota party setelah duel solo Knight selesai
-				var all_hero_names: Array[String] = ["Knight_1", "Bandit_1", "Archer_1", "Mage_1"]
+			_setup_arena_kamp_spectators(false)
+			if selected_game_mode == "open_world" or is_scene_6_completed or is_scene_7_in_progress:
+				# Kembalikan seluruh 4 anggota party setelah duel solo Knight selesai
+				var all_hero_names: Array[String] = ["Knight_1", "Mage_1", "Archer_1", "Bandit_1"]
 				for h_name in all_hero_names:
 					var hero: CharacterBody2D = all_heroes.get(h_name)
 					if is_instance_valid(hero):
@@ -7954,6 +8402,9 @@ func _start_skeleton_boss_battle() -> void:
 
 
 func _on_alaric_post_fight_dialogue_finished() -> void:
+	is_scene_7_in_progress = false
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
 	set_party_movement_locked(false)
 	var leader := get_active_leader()
 	if is_instance_valid(leader):
@@ -7967,11 +8418,10 @@ func _on_alaric_post_fight_dialogue_finished() -> void:
 			anim_spr.modulate = Color.WHITE
 
 	for q in quest_list:
-		if q.get("id") == "main_03":
+		if q.get("id") in ["main_03", "scene_06_quest", "scene_07_quest"]:
 			q["status"] = "completed"
-		elif q.get("id") == "main_04":
-			q["status"] = "active"
-	tracked_quest_id = "main_04"
+
+	tracked_quest_id = "scene_07_quest"
 
 	if is_instance_valid(gameplay_hud):
 		if gameplay_hud.has_method("set_quests"):
@@ -7979,10 +8429,11 @@ func _on_alaric_post_fight_dialogue_finished() -> void:
 		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
 		if not tracked_q.is_empty() and gameplay_hud.has_method("update_hud_quest_display"):
 			gameplay_hud.update_hud_quest_display(tracked_q)
-		if gameplay_hud.has_method("set_quest_navigation"):
-			gameplay_hud.set_quest_navigation(GRAVEYARD_POS, "Makam Ksatria Lancelot")
+		if gameplay_hud.has_method("hide_quest_navigation"):
+			gameplay_hud.hide_quest_navigation()
 
 	save_game_to_slot(1)
+	print("[Story] Scene 7 (Boss Fight 1 Pelatih Alaric) selesai!")
 
 
 func _setup_meeting_participants() -> void:
@@ -8400,14 +8851,6 @@ func load_game_from_slot(slot_id: int) -> bool:
 	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
 		gameplay_hud.set_combat_hud_visible(arena_state == ArenaState.COMBAT, false)
 
-	# Sinkronisasi BGM jika memuat permainan di dalam ruangan khusus
-	if is_inside_castle_hall or current_location_name == "Aula Rapat Istana":
-		is_inside_castle_hall = true
-		_crossfade_to_bgm(BGM_CUTSCENE_RAPAT)
-	elif is_inside_secret_library or current_location_name == "Perpustakaan Istana" or current_location_name == "Perpustakaan":
-		is_inside_secret_library = true
-		_crossfade_to_bgm(_get_bgm_perpus())
-
 	_setup_alaric_npc()
 
 	print("GAME LOADED: Slot %d | Leader: %s | HP: %d | Playtime: %f" % [slot_id, String(leader.name) if leader else "None", int(leader.current_health) if (leader and "current_health" in leader) else 0, total_playtime])
@@ -8670,12 +9113,29 @@ func check_castle_interactions(delta: float) -> void:
 					gameplay_hud.show_interact_prompt("Bicara dengan Magnus", "E", "talk_magnus")
 				return
 
+		# Trigger otomatis Scene 6 ketika pemain berjalan mendekati area semak jalur camp latihan
+		if selected_game_mode != "open_world" and is_scene_6_in_progress and not is_scene_6_bush_triggered:
+			var dist_bush := leader.global_position.distance_to(SCENE_6_BUSH_POS)
+			if dist_bush <= 155.0:
+				trigger_scene_6_bush_encounter()
+				return
+
+		if selected_game_mode != "open_world" and is_scene_6_waiting_outdoor_camp_alaric:
+			var dist_out_camp := leader.global_position.distance_to(SCENE_6_OUTDOOR_CAMP_POS)
+			if dist_out_camp <= 155.0:
+				if not _is_scene_6_party_assembled_at_camp:
+					_is_scene_6_party_assembled_at_camp = true
+					_assemble_party_in_front_of_outdoor_alaric()
+				if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
+					gameplay_hud.show_interact_prompt("Bicara dengan Pelatih Alaric", "E", "talk_alaric_outdoor_camp")
+				return
+
 		var dist_castle := leader.global_position.distance_to(CASTLE_ENTRANCE_POS)
 		var dist_alaric := leader.global_position.distance_to(ALARIC_CAMP_POS)
 		if dist_castle <= 110.0:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
 				gameplay_hud.show_interact_prompt("Masuk ke Aula Kastil", "E", "enter_castle")
-		elif dist_alaric <= 110.0 and not is_alaric_sparring_in_progress:
+		elif dist_alaric <= 110.0 and not is_alaric_sparring_in_progress and not is_scene_6_waiting_outdoor_camp_alaric and not (selected_game_mode != "open_world" and is_alaric_sparring_completed):
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
 				var prompt_title := "Tantang Pelatih Alaric" if selected_game_mode == "open_world" else "Bicara dengan Pelatih Alaric"
 				gameplay_hud.show_interact_prompt(prompt_title, "E", "talk_alaric")
@@ -8781,11 +9241,15 @@ func _on_hud_interaction_pressed(action_type: String) -> void:
 	elif action_type == "join_meeting" or action_type == "Ikut Rapat":
 		if selected_game_mode != "open_world":
 			start_castle_meeting_cutscene()
+	elif action_type == "talk_alaric_outdoor_camp":
+		trigger_scene_6_outdoor_camp_alaric_dialogue()
 	elif action_type == "talk_alaric" or action_type == "Bicara dengan Pelatih Alaric":
-		_start_alaric_pre_fight_dialogue()
-	elif action_type == "talk_magnus" or action_type == "Bicara dengan Magnus":
-		_is_waiting_prologue_return = false
-		_start_prologue_crow_dialogue_sequence()
+		if selected_game_mode != "open_world" and is_alaric_sparring_completed:
+			return
+		if is_scene_6_waiting_outdoor_camp_alaric:
+			trigger_scene_6_outdoor_camp_alaric_dialogue()
+		else:
+			_start_alaric_pre_fight_dialogue()
 	elif action_type == "talk_skeleton_boss" or action_type == "Tantang Boss Skeleton":
 		_show_skeleton_boss_challenge_prompt()
 	elif action_type == "go_library_floor2" or action_type == "Naik ke Lantai 2":
@@ -8807,14 +9271,19 @@ func enter_secret_library() -> void:
 		gameplay_hud.hide_interact_prompt(true)
 
 	var on_midpoint := func() -> void:
-		_crossfade_to_bgm(_get_bgm_perpus())
 		if selected_game_mode != "open_world" and not is_scene_4_in_progress and not is_scene_4_completed:
 			start_story_scene_4()
 		else:
 			is_inside_secret_library = true
-			is_inside_castle_hall = false
+			is_castle_meeting_completed = true
+	is_inside_castle_hall = false
 			is_on_library_floor_2 = false
-			_set_secret_library_floor(1)
+			var lib_node := get_node_or_null("SecretLibrary")
+			if is_instance_valid(lib_node):
+				var floor1 := lib_node.get_node_or_null("LibraryFloor1")
+				var floor2 := lib_node.get_node_or_null("LibraryFloor2")
+				if floor1: floor1.visible = true
+				if floor2: floor2.visible = false
 			update_camera_limits_for_location("library")
 			for i in range(party_members.size()):
 				var p = party_members[i]
@@ -8850,11 +9319,10 @@ func exit_secret_library() -> void:
 		gameplay_hud.hide_interact_prompt(true)
 
 	var on_midpoint := func() -> void:
-		_crossfade_to_bgm(BGM_GAMEPLAY)
 		is_inside_secret_library = false
 		is_on_library_floor_2 = false
-		is_inside_castle_hall = false
-		_set_secret_library_floor(1)
+		is_castle_meeting_completed = true
+	is_inside_castle_hall = false
 
 		var spawn_pos := LIBRARY_ENTRANCE_POS + Vector2(0.0, 30.0)
 		for i in range(party_members.size()):
@@ -8890,7 +9358,6 @@ func enter_castle_hall() -> void:
 	if is_transitioning:
 		return
 	is_inside_castle_hall = true
-	_crossfade_to_bgm(BGM_CUTSCENE_RAPAT)
 	if is_instance_valid(gameplay_hud):
 		if gameplay_hud.has_method("hide_interact_prompt"):
 			gameplay_hud.hide_interact_prompt()
@@ -8948,8 +9415,8 @@ func enter_castle_hall() -> void:
 func exit_castle_hall() -> void:
 	if is_transitioning:
 		return
+	is_castle_meeting_completed = true
 	is_inside_castle_hall = false
-	_crossfade_to_bgm(BGM_GAMEPLAY)
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 		gameplay_hud.hide_interact_prompt()
 
@@ -9094,16 +9561,6 @@ func transition_to_location(target_pos: Vector2, new_location_name: String = "")
 				3: offset = Vector2(0, 70)
 			member.global_position = target_pos + offset
 			member.velocity = Vector2.ZERO
-			if target_pos == CITY_GATE_INSIDE_POS:
-				if "last_direction" in member:
-					member.last_direction = Vector2.UP
-				if member.has_method("play_idle_animation"):
-					member.play_idle_animation()
-			elif target_pos == CITY_GATE_OUTSIDE_POS:
-				if "last_direction" in member:
-					member.last_direction = Vector2.DOWN
-				if member.has_method("play_idle_animation"):
-					member.play_idle_animation()
 
 	update_camera_limits_for_hall(is_inside_castle_hall)
 
