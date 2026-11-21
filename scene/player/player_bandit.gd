@@ -1262,7 +1262,7 @@ func take_damage(amount: int, source_position = null) -> void:
 	if knockback_dir == Vector2.ZERO:
 		knockback_dir = Vector2.UP
 
-	# 1. SHIELD GUARD (DARI KNIGHT): Menahan damage dengan Shield Points (+300)
+	# 1. SHIELD GUARD (DARI KNIGHT): Kebal 100% terhadap seluruh damage selama perisai aktif
 	if is_shield_active:
 		modulate = Color(1.8, 1.8, 2.4)
 		var shield_flash_tween = create_tween()
@@ -1272,19 +1272,8 @@ func take_damage(amount: int, source_position = null) -> void:
 		# Jika sedang memiliki super armor atau sedang melancarkan serangan, dilarang knockback dan dilarang membatalkan aksi!
 		if not in_super_armor and not is_attacking:
 			apply_knockback(knockback_dir * 80.0)
-		if shield_points > 0:
-			if amount <= shield_points:
-				shield_points -= amount
-				print(name, " menahan serangan dengan perisai! Sisa Shield: ", shield_points, ". Aksi berlanjut.")
-				return
-			else:
-				var absorbed: int = shield_points
-				shield_points = 0
-				amount -= absorbed
-				deactivate_shield()
-				print(name, " perisai pecah! Menerima sisa damage: ", amount)
-		else:
-			return
+		print(name, " menahan 100% serangan dengan perisai (Kebal Damage)!")
+		return
 
 	# 2. DAMAGE NORMAL
 	current_health = max(0, current_health - amount)

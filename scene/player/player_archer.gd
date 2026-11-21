@@ -1575,26 +1575,15 @@ func take_damage(amount: int, _source_position = null) -> void:
 		return
 	invulnerability_timer = invulnerability_duration
 
-	# Shield Guard: menahan damage dengan Shield Points (+300)
+	# Shield Guard: kebal 100% terhadap seluruh damage selama perisai aktif
 	if is_shield_active:
 		modulate = Color(1.8, 1.8, 2.4)
 		var tween = create_tween()
 		tween.tween_property(self, "modulate", Color.WHITE, 0.2)
 		apply_camera_shake(3.0)
 		play_sfx(SFX_SHIELD_BLOCK, 0.0)
-		if shield_points > 0:
-			if amount <= shield_points:
-				shield_points -= amount
-				print(name, " menahan serangan dengan perisai! Sisa Shield: ", shield_points)
-				return
-			else:
-				var absorbed: int = shield_points
-				shield_points = 0
-				amount -= absorbed
-				deactivate_shield()
-				print(name, " perisai pecah! Menerima sisa damage: ", amount)
-		else:
-			return
+		print(name, " menahan 100% serangan dengan perisai (Kebal Damage)!")
+		return
 
 	current_health -= amount
 	play_sfx(SFX_HURT, -4.0)

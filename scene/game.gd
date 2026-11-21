@@ -556,6 +556,13 @@ var alaric_node: CharacterBody2D = null
 var _alaric_sprite_frames_cache: SpriteFrames = null
 var _alaric_boss_prompt_layer: CanvasLayer = null
 var _alaric_boss_modal_input_cb: Callable = Callable()
+var _alaric_match_elapsed_time: float = 0.0
+var _alaric_best_time_sec: float = -1.0
+var _alaric_timer_hud_layer: CanvasLayer = null
+var _alaric_timer_value_lbl: Label = null
+var _alaric_timer_best_lbl: Label = null
+var _has_seen_alaric_intro_dialogue: bool = false
+const ALARIC_RECORD_SAVE_PATH: String = "user://alaric_best_record.cfg"
 
 
 # State Tempur Party ala Guardian Tales
@@ -1030,6 +1037,7 @@ func _ready() -> void:
 	_init_arena_enemies.call_deferred()
 	_init_nav_compass.call_deferred()
 	_setup_meeting_participants.call_deferred()
+	_load_alaric_best_record()
 	_setup_alaric_npc.call_deferred()
 	_init_defeat_overlay.call_deferred()
 
@@ -1899,6 +1907,7 @@ func _process(delta: float) -> void:
 	update_party_visibility()
 	check_castle_interactions(delta)
 	if is_alaric_sparring_in_progress:
+		_update_alaric_top_timer_hud(delta)
 		check_alaric_sparring_status(delta)
 
 
@@ -4706,12 +4715,17 @@ func _setup_alaric_npc() -> void:
 	alaric_node.z_index = 4
 	alaric_node.collision_layer = 1
 	alaric_node.collision_mask = 1
+	alaric_node.is_alaric_boss = true
 	alaric_node.can_respawn = false
 	alaric_node.wait_for_arena = false
-	alaric_node.max_health = 600
-	alaric_node.current_health = 600
-	alaric_node.melee_damage = 25
-	alaric_node.melee_attack_range = 100.0
+	alaric_node.max_health = 2600
+	alaric_node.current_health = 2600
+	alaric_node.contact_damage = 0
+	alaric_node.melee_damage = 160
+	alaric_node.melee_attack_range = 115.0
+	alaric_node.chase_speed = 220.0
+	if alaric_node.has_method("reset_alaric_boss_state"):
+		alaric_node.reset_alaric_boss_state()
 
 	var anim_spr = alaric_node.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
 	if is_instance_valid(anim_spr):
@@ -4872,10 +4886,13 @@ func _show_alaric_boss_challenge_prompt() -> void:
 	desc_lbl.anchor_top = 0.5
 	desc_lbl.anchor_bottom = 0.5
 	desc_lbl.offset_left = 20.0
-	desc_lbl.offset_top = -52.0
+	desc_lbl.offset_top = -54.0
 	desc_lbl.offset_right = -20.0
-	desc_lbl.offset_bottom = 10.0
-	desc_lbl.text = "Pelatih Alaric adalah ksatria veteran berilmu tinggi (Boss)!\nApakah kau siap menantangnya bertarung di arena tempur?"
+	desc_lbl.offset_bottom = 12.0
+	var record_line: String = ""
+	if _alaric_best_time_sec > 0.0:
+		record_line = "\nRekor Tercepat: %s" % _format_alaric_time(_alaric_best_time_sec)
+	desc_lbl.text = "Pelatih Alaric adalah ksatria veteran berilmu tinggi (Boss)!\nApakah kau siap menantangnya bertarung di arena tempur?" + record_line
 	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -5077,7 +5094,9 @@ func _start_alaric_pre_fight_dialogue() -> void:
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 		gameplay_hud.hide_interact_prompt(true)
 
-	if selected_game_mode == "open_world":
+	# Jika di Mode Jelajah ATAU sudah pernah menang / sudah pernah melihat dialog pengantar FLK-007,
+	# langsung tampilkan konfirmasi tantangan duel agar pemain bisa terus mencoba & mengejar Rekor Tercepat
+	if selected_game_mode == "open_world" or is_alaric_sparring_completed or _has_seen_alaric_intro_dialogue:
 		_show_alaric_boss_challenge_prompt()
 		return
 
@@ -5090,23 +5109,36 @@ func _start_alaric_pre_fight_dialogue() -> void:
 		if alaric_node.has_method("play_idle_animation"):
 			alaric_node.play_idle_animation()
 
-	if is_alaric_sparring_completed:
-		play_story_dialogue("FLK-008", func():
-			set_party_movement_locked(false)
-			var cur_lead := get_active_leader()
-			if is_instance_valid(cur_lead):
-				_set_character_collision_active(cur_lead, true)
-				cur_lead.set_physics_process(true)
-				cur_lead.set_process_unhandled_input(true)
-			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("set_quest_navigation"):
-				gameplay_hud.set_quest_navigation(GRAVEYARD_POS, "Makam Ksatria Lancelot")
-		)
-		return
-
-	# Dialog FLK-007 di Kamp Pelatihan, setelah selesai teleport ke Arena Kamp untuk duel
+	# Dialog FLK-007 di Kamp Pelatihan saat pertama kali datang di Mode Cerita, lalu masuk Arena Kamp
+	_has_seen_alaric_intro_dialogue = true
 	play_story_dialogue("FLK-007", func():
 		_teleport_to_arena_kamp_and_fight()
 	)
+
+
+func _restore_hero_full_for_alaric(hero: CharacterBody2D) -> void:
+	if not is_instance_valid(hero):
+		return
+	if hero.has_method("revive_full_for_arena"):
+		hero.revive_full_for_arena()
+	else:
+		hero.is_dead = false
+		if "current_health" in hero and "max_health" in hero:
+			hero.current_health = hero.max_health
+		hero.visible = true
+		hero.modulate = Color.WHITE
+		if "velocity" in hero:
+			hero.velocity = Vector2.ZERO
+		if "knockback_velocity" in hero:
+			hero.knockback_velocity = Vector2.ZERO
+		if not hero.is_in_group("player"):
+			hero.add_to_group("player")
+		if hero.has_node("CollisionShape2D"):
+			hero.get_node("CollisionShape2D").set_deferred("disabled", false)
+		if hero.has_node("Hurtbox/CollisionShape2D"):
+			hero.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", false)
+		if hero.has_method("reset_combat_skills"):
+			hero.reset_combat_skills()
 
 
 func _teleport_to_arena_kamp_and_fight() -> void:
@@ -5120,11 +5152,7 @@ func _teleport_to_arena_kamp_and_fight() -> void:
 		if not knight_hero.is_inside_tree():
 			add_child(knight_hero)
 		party_members.append(knight_hero)
-		knight_hero.visible = true
-		knight_hero.modulate.a = 1.0
-		knight_hero.is_dead = false
-		if "current_health" in knight_hero and "max_health" in knight_hero and knight_hero.current_health <= 0:
-			knight_hero.current_health = knight_hero.max_health
+		_restore_hero_full_for_alaric(knight_hero)
 		knight_hero.set_physics_process(true)
 		knight_hero.set_process_unhandled_input(true)
 		_set_character_collision_active(knight_hero, true)
@@ -5170,11 +5198,12 @@ func _teleport_to_arena_kamp_and_fight() -> void:
 				if is_instance_valid(member):
 					if not member.is_inside_tree():
 						add_child(member)
-					member.visible = true
-					member.modulate.a = 1.0
+					_restore_hero_full_for_alaric(member)
 					var offset_pos := Vector2(-70.0 * i, 30.0 * (1 if i % 2 == 1 else -1)) if i > 0 else Vector2.ZERO
 					member.global_position = ARENA_KAMP_ARTHUR_POS + offset_pos
 					member.velocity = Vector2.ZERO
+					if "target_position" in member:
+						member.target_position = member.global_position
 					if "last_direction" in member:
 						member.last_direction = Vector2.RIGHT
 					if member.has_method("play_idle_animation"):
@@ -5185,6 +5214,8 @@ func _teleport_to_arena_kamp_and_fight() -> void:
 						member.set_party_combat_mode(true)
 
 			if is_instance_valid(alaric_node):
+				if alaric_node.has_method("reset_alaric_boss_state"):
+					alaric_node.reset_alaric_boss_state()
 				alaric_node.global_position = ARENA_KAMP_ALARIC_POS
 				alaric_node.velocity = Vector2.ZERO
 				alaric_node.last_direction = Vector2.LEFT
@@ -5212,6 +5243,7 @@ func _start_alaric_sparring_match() -> void:
 	var leader := get_active_leader()
 	for member in party_members:
 		if is_instance_valid(member):
+			_restore_hero_full_for_alaric(member)
 			_set_character_collision_active(member, true)
 			member.set_physics_process(true)
 			member.set_process_unhandled_input(true)
@@ -5219,12 +5251,30 @@ func _start_alaric_sparring_match() -> void:
 				member.set_party_combat_mode(true)
 
 	is_alaric_sparring_in_progress = true
+	_alaric_match_elapsed_time = 0.0
+	_show_alaric_top_timer_hud()
 
 	if is_instance_valid(alaric_node):
+		alaric_node.is_alaric_boss = true
+		if alaric_node.has_method("reset_alaric_boss_state"):
+			alaric_node.reset_alaric_boss_state()
+		else:
+			alaric_node.max_health = 2600
+			alaric_node.current_health = 2600
+		alaric_node.is_dead = false
+		alaric_node.is_shooting = false
+		alaric_node.wait_for_arena = false
+		alaric_node.in_arena_combat = true
 		alaric_node.remove_from_group("npc")
-		alaric_node.add_to_group("enemy")
+		if not alaric_node.is_in_group("enemy"):
+			alaric_node.add_to_group("enemy")
+		if "collision_shape" in alaric_node and is_instance_valid(alaric_node.collision_shape):
+			alaric_node.collision_shape.set_deferred("disabled", false)
+		if alaric_node.has_node("Hurtbox/CollisionShape2D"):
+			alaric_node.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", false)
+		if alaric_node.has_node("DetectionArea/CollisionShape2D"):
+			alaric_node.get_node("DetectionArea/CollisionShape2D").set_deferred("disabled", false)
 		alaric_node.set_physics_process(true)
-		alaric_node.current_health = alaric_node.max_health
 		if "health_bar" in alaric_node and is_instance_valid(alaric_node.health_bar):
 			alaric_node.health_bar.visible = true
 			alaric_node.health_bar.max_value = alaric_node.max_health
@@ -5233,8 +5283,14 @@ func _start_alaric_sparring_match() -> void:
 			alaric_node.damage_bar.visible = true
 			alaric_node.damage_bar.max_value = alaric_node.max_health
 			alaric_node.damage_bar.value = alaric_node.current_health
-		if leader and alaric_node.has_method("alert_to_combat"):
-			alaric_node.alert_to_combat(leader)
+		if leader and is_instance_valid(leader):
+			alaric_node.player = leader
+			alaric_node.threat_target = leader
+			alaric_node.threat_timer = 5.0
+			if "State" in alaric_node:
+				alaric_node.current_state = alaric_node.State.CHASE
+			if alaric_node.has_method("alert_to_combat"):
+				alaric_node.alert_to_combat(leader)
 
 	notify_party_combat_state(true)
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("set_combat_hud_visible"):
@@ -5245,35 +5301,52 @@ func check_alaric_sparring_status(_delta: float) -> void:
 	if not is_alaric_sparring_in_progress or not is_instance_valid(alaric_node) or is_transitioning:
 		return
 
-	var hp_threshold: int = int(alaric_node.max_health * 0.2)
 	var is_alaric_down: bool = false
 	if "is_dead" in alaric_node and alaric_node.is_dead:
 		is_alaric_down = true
-	elif "current_health" in alaric_node and alaric_node.current_health <= hp_threshold:
+	elif "current_health" in alaric_node and alaric_node.current_health <= 0:
 		is_alaric_down = true
 
 	var leader := get_active_leader()
 	var is_leader_low: bool = false
 	if is_instance_valid(leader):
-		var leader_threshold: int = int(leader.max_health * 0.2) if "max_health" in leader else 100
 		if "is_dead" in leader and leader.is_dead:
 			is_leader_low = true
-		elif "current_health" in leader and leader.current_health <= leader_threshold:
+		elif "current_health" in leader and leader.current_health <= 0:
 			is_leader_low = true
 
-	if is_alaric_down or is_leader_low:
-		_end_alaric_sparring_match()
+	if is_alaric_down:
+		_end_alaric_sparring_match(true)
+	elif is_leader_low:
+		_end_alaric_sparring_match(false)
 
 
-func _end_alaric_sparring_match() -> void:
+func _end_alaric_sparring_match(player_won: bool = true) -> void:
 	is_alaric_sparring_in_progress = false
-	is_alaric_sparring_completed = true
+	var was_already_completed: bool = is_alaric_sparring_completed
+	if player_won:
+		is_alaric_sparring_completed = true
 	active_combat_targets = []
 
+	var final_elapsed_time: float = maxf(0.1, _alaric_match_elapsed_time)
+	var is_new_record: bool = false
+	if player_won:
+		if _alaric_best_time_sec <= 0.0 or final_elapsed_time < _alaric_best_time_sec:
+			_alaric_best_time_sec = final_elapsed_time
+			is_new_record = true
+			_save_alaric_best_record(_alaric_best_time_sec)
+
+	_hide_alaric_top_timer_hud()
+
 	if is_instance_valid(alaric_node):
+		if alaric_node.has_method("reset_alaric_boss_state"):
+			alaric_node.reset_alaric_boss_state()
 		alaric_node.remove_from_group("enemy")
-		alaric_node.add_to_group("npc")
+		if not alaric_node.is_in_group("npc"):
+			alaric_node.add_to_group("npc")
 		alaric_node.is_dead = false
+		alaric_node.is_shooting = false
+		alaric_node.in_arena_combat = false
 		alaric_node.visible = true
 		alaric_node.modulate = Color.WHITE
 		var anim_spr := alaric_node.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
@@ -5295,28 +5368,20 @@ func _end_alaric_sparring_match() -> void:
 	notify_party_combat_state(false)
 	for member in party_members:
 		if is_instance_valid(member):
-			if member.has_method("reset_combat_skills"):
-				member.reset_combat_skills()
-			if "current_health" in member and "max_health" in member and member.current_health <= 0:
-				member.current_health = member.max_health
-				member.is_dead = false
-				member.visible = true
-				member.modulate.a = 1.0
+			_restore_hero_full_for_alaric(member)
 
 	var leader := get_active_leader()
 	if is_instance_valid(leader):
-		if "current_health" in leader and "max_health" in leader:
-			leader.current_health = leader.max_health
-		leader.velocity = Vector2.ZERO
+		_restore_hero_full_for_alaric(leader)
 
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("set_combat_hud_visible"):
 		gameplay_hud.set_combat_hud_visible(false, false)
 
 	set_party_movement_locked(true)
-	_teleport_back_to_training_camp()
+	_teleport_back_to_training_camp(player_won, was_already_completed, final_elapsed_time, is_new_record)
 
 
-func _teleport_back_to_training_camp() -> void:
+func _teleport_back_to_training_camp(player_won: bool = true, was_already_completed: bool = false, final_time: float = 0.0, is_new_record: bool = false) -> void:
 	play_black_fade_transition(
 		func():
 			is_in_arena_kamp = false
@@ -5328,12 +5393,7 @@ func _teleport_back_to_training_camp() -> void:
 					if is_instance_valid(hero):
 						if hero not in party_members:
 							party_members.append(hero)
-						hero.modulate.a = 1.0
-						hero.is_dead = false
-						if "current_health" in hero and "max_health" in hero and hero.current_health <= 0:
-							hero.current_health = hero.max_health
-						if hero.has_method("reset_combat_skills"):
-							hero.reset_combat_skills()
+						_restore_hero_full_for_alaric(hero)
 				for i in range(party_members.size()):
 					for j in range(i + 1, party_members.size()):
 						party_members[i].add_collision_exception_with(party_members[j])
@@ -5351,8 +5411,11 @@ func _teleport_back_to_training_camp() -> void:
 			for i in range(party_members.size()):
 				var member: CharacterBody2D = party_members[i]
 				if is_instance_valid(member):
+					_restore_hero_full_for_alaric(member)
 					var offset_pos := Vector2(-70.0 * i, 0.0) if i > 0 else Vector2.ZERO
 					member.global_position = ARTHUR_CAMP_RETURN_POS + offset_pos
+					if "target_position" in member:
+						member.target_position = member.global_position
 					member.velocity = Vector2.ZERO
 					if "last_direction" in member:
 						member.last_direction = Vector2.RIGHT
@@ -5380,20 +5443,403 @@ func _teleport_back_to_training_camp() -> void:
 
 			enter_location("Camp Latihan Istana"),
 		func():
-			if selected_game_mode == "open_world":
+			var resume_gameplay := func():
 				set_party_movement_locked(false)
 				var leader := get_active_leader()
 				if is_instance_valid(leader):
+					_restore_hero_full_for_alaric(leader)
 					_set_character_collision_active(leader, true)
 					leader.set_physics_process(true)
 					leader.set_process_unhandled_input(true)
 				update_party_visibility()
-			else:
-				set_party_movement_locked(true)
-				play_story_dialogue("FLK-008", func():
-					_on_alaric_post_fight_dialogue_finished()
-				)
+
+			if not player_won:
+				# Kalah duel: kembalikan kontrol penuh di Camp Latihan agar pemain bisa langsung menantang ulang Alaric!
+				resume_gameplay.call()
+				return
+
+			# Menang duel: tampilkan Popup Hasil Waktu Tempuh & Rekor Tercepat terlebih dahulu!
+			_show_alaric_victory_time_popup(final_time, _alaric_best_time_sec, is_new_record, func():
+				if selected_game_mode == "open_world" or was_already_completed:
+					resume_gameplay.call()
+				else:
+					set_party_movement_locked(true)
+					play_story_dialogue("FLK-008", func():
+						_on_alaric_post_fight_dialogue_finished()
+					)
+			)
 	)
+
+
+# =========================================================
+# SISTEM TIMESTAMP DUEL (ATAS TENGAH) & POPUP REKOR TERCEPAT ALARIC
+# =========================================================
+
+func _load_alaric_best_record() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load(ALARIC_RECORD_SAVE_PATH) == OK:
+		_alaric_best_time_sec = float(cfg.get_value("alaric_duel", "best_time_sec", -1.0))
+
+
+func _save_alaric_best_record(best_sec: float) -> void:
+	var cfg := ConfigFile.new()
+	cfg.set_value("alaric_duel", "best_time_sec", best_sec)
+	cfg.save(ALARIC_RECORD_SAVE_PATH)
+
+
+func _format_alaric_time(seconds: float) -> String:
+	if seconds <= 0.0:
+		return "--:--.--"
+	var total_cs: int = int(round(seconds * 100.0))
+	var mins: int = total_cs / 6000
+	var secs: int = (total_cs / 100) % 60
+	var cs: int = total_cs % 100
+	return "%02d:%02d.%02d" % [mins, secs, cs]
+
+
+func _show_alaric_top_timer_hud() -> void:
+	_hide_alaric_top_timer_hud()
+
+	var cl := CanvasLayer.new()
+	cl.layer = 18
+	cl.name = "AlaricTopTimerHUD"
+	_alaric_timer_hud_layer = cl
+	add_child(cl)
+
+	var root := Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cl.add_child(root)
+
+	var panel := PanelContainer.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.anchor_left = 0.5
+	panel.anchor_right = 0.5
+	panel.anchor_top = 0.0
+	panel.anchor_bottom = 0.0
+	panel.offset_left = -105.0
+	panel.offset_right = 105.0
+	panel.offset_top = 12.0
+	panel.offset_bottom = 66.0
+
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.11, 0.08, 0.09, 0.88)
+	sb.border_color = Color(0.88, 0.72, 0.36, 0.95)
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(6)
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.42)
+	sb.shadow_size = 8
+	sb.shadow_offset = Vector2(0, 3)
+	sb.content_margin_left = 12
+	sb.content_margin_right = 12
+	sb.content_margin_top = 5
+	sb.content_margin_bottom = 5
+	panel.add_theme_stylebox_override("panel", sb)
+	root.add_child(panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 1)
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(vbox)
+
+	var time_lbl := Label.new()
+	time_lbl.text = "⏱ 00:00.00"
+	time_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	time_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	time_lbl.add_theme_font_size_override("font_size", 20)
+	time_lbl.add_theme_color_override("font_color", Color(1.0, 0.92, 0.52, 1.0))
+	time_lbl.add_theme_color_override("font_outline_color", Color(0.08, 0.05, 0.05, 1.0))
+	time_lbl.add_theme_constant_override("outline_size", 3)
+	if UI_FONT_BEHOLDEN:
+		time_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	vbox.add_child(time_lbl)
+	_alaric_timer_value_lbl = time_lbl
+
+	var best_lbl := Label.new()
+	if _alaric_best_time_sec > 0.0:
+		best_lbl.text = "Rekor Tercepat: %s" % _format_alaric_time(_alaric_best_time_sec)
+	else:
+		best_lbl.text = "Rekor Tercepat: --:--.--"
+	best_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	best_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	best_lbl.add_theme_font_size_override("font_size", 11)
+	best_lbl.add_theme_color_override("font_color", Color(0.86, 0.80, 0.70, 0.95))
+	best_lbl.add_theme_color_override("font_outline_color", Color(0.08, 0.05, 0.05, 1.0))
+	best_lbl.add_theme_constant_override("outline_size", 2)
+	if UI_FONT_BEHOLDEN:
+		best_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	vbox.add_child(best_lbl)
+	_alaric_timer_best_lbl = best_lbl
+
+
+func _update_alaric_top_timer_hud(delta: float) -> void:
+	_alaric_match_elapsed_time += delta
+	if is_instance_valid(_alaric_timer_value_lbl):
+		_alaric_timer_value_lbl.text = "⏱ " + _format_alaric_time(_alaric_match_elapsed_time)
+
+
+func _hide_alaric_top_timer_hud() -> void:
+	if is_instance_valid(_alaric_timer_hud_layer):
+		_alaric_timer_hud_layer.queue_free()
+	_alaric_timer_hud_layer = null
+	_alaric_timer_value_lbl = null
+	_alaric_timer_best_lbl = null
+
+
+func _show_alaric_victory_time_popup(clear_time_sec: float, best_time_sec: float, is_new_record: bool, on_closed: Callable = Callable()) -> void:
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
+	if is_instance_valid(_alaric_boss_prompt_layer):
+		_alaric_boss_prompt_layer.queue_free()
+		_alaric_boss_prompt_layer = null
+
+	set_party_movement_locked(true)
+
+	var cl := CanvasLayer.new()
+	cl.layer = 122
+	cl.name = "AlaricVictoryTimePopup"
+	_alaric_boss_prompt_layer = cl
+	add_child(cl)
+
+	var root := Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_PASS
+	cl.add_child(root)
+
+	var dimmer := ColorRect.new()
+	dimmer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dimmer.color = Color(0.0, 0.0, 0.0, 0.48)
+	dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(dimmer)
+
+	var center := Control.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(center)
+
+	var shadow := Panel.new()
+	shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shadow.anchor_left = 0.5
+	shadow.anchor_top = 0.5
+	shadow.anchor_right = 0.5
+	shadow.anchor_bottom = 0.5
+	shadow.offset_left = -242.0
+	shadow.offset_top = -124.0
+	shadow.offset_right = 242.0
+	shadow.offset_bottom = 130.0
+	var shadow_sb := StyleBoxFlat.new()
+	shadow_sb.bg_color = Color(0, 0, 0, 0)
+	shadow_sb.shadow_color = Color(0, 0, 0, 0.48)
+	shadow_sb.shadow_size = 14
+	shadow_sb.shadow_offset = Vector2(0, 6)
+	shadow_sb.set_corner_radius_all(6)
+	shadow.add_theme_stylebox_override("panel", shadow_sb)
+	center.add_child(shadow)
+
+	var ui_sheet: Texture2D = load("res://assets/ui/menus/common/ui_menu_sheet.png")
+	var arrow_tex: Texture2D = load("res://assets/ui/menus/common/ui_arrow_indicator.png")
+
+	var dialog_box := NinePatchRect.new()
+	dialog_box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	dialog_box.mouse_filter = Control.MOUSE_FILTER_STOP
+	dialog_box.anchor_left = 0.5
+	dialog_box.anchor_top = 0.5
+	dialog_box.anchor_right = 0.5
+	dialog_box.anchor_bottom = 0.5
+	dialog_box.offset_left = -240.0
+	dialog_box.offset_top = -126.0
+	dialog_box.offset_right = 240.0
+	dialog_box.offset_bottom = 126.0
+	dialog_box.patch_margin_left = 10
+	dialog_box.patch_margin_top = 10
+	dialog_box.patch_margin_right = 10
+	dialog_box.patch_margin_bottom = 10
+	if ui_sheet:
+		var frame_atlas := AtlasTexture.new()
+		frame_atlas.atlas = ui_sheet
+		frame_atlas.region = Rect2(0, 500, 32, 32)
+		dialog_box.texture = frame_atlas
+	center.add_child(dialog_box)
+
+	var title_lbl := Label.new()
+	title_lbl.anchor_left = 0.0
+	title_lbl.anchor_right = 1.0
+	title_lbl.offset_top = 18.0
+	title_lbl.offset_bottom = 46.0
+	title_lbl.text = "Kemenangan Duel!"
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_lbl.add_theme_font_size_override("font_size", 22)
+	title_lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+	if UI_FONT_BEHOLDEN:
+		title_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	dialog_box.add_child(title_lbl)
+
+	var div_row := HBoxContainer.new()
+	div_row.anchor_left = 0.0
+	div_row.anchor_right = 1.0
+	div_row.offset_top = 47.0
+	div_row.offset_bottom = 56.0
+	div_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	div_row.set("theme_override_constants/separation", 8)
+	div_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if ui_sheet:
+		var dots_atlas := AtlasTexture.new()
+		dots_atlas.atlas = ui_sheet
+		dots_atlas.region = Rect2(65, 263, 30, 3)
+
+		var dots_l := TextureRect.new()
+		dots_l.texture = dots_atlas
+		dots_l.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		dots_l.custom_minimum_size = Vector2(48, 9)
+		dots_l.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dots_l.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		dots_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		div_row.add_child(dots_l)
+
+		var dots_r := TextureRect.new()
+		dots_r.texture = dots_atlas
+		dots_r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		dots_r.custom_minimum_size = Vector2(48, 9)
+		dots_r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dots_r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		dots_r.flip_h = true
+		dots_r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		div_row.add_child(dots_r)
+	dialog_box.add_child(div_row)
+
+	var info_vbox := VBoxContainer.new()
+	info_vbox.anchor_left = 0.0
+	info_vbox.anchor_right = 1.0
+	info_vbox.offset_left = 24.0
+	info_vbox.offset_right = -24.0
+	info_vbox.offset_top = 62.0
+	info_vbox.offset_bottom = 178.0
+	info_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	info_vbox.add_theme_constant_override("separation", 6)
+	dialog_box.add_child(info_vbox)
+
+	var badge_lbl := Label.new()
+	badge_lbl.text = "★ REKOR TERCEPAT BARU! ★" if is_new_record else "Pelatih Alaric Berhasil Dikalahkan!"
+	badge_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	badge_lbl.add_theme_font_size_override("font_size", 15)
+	badge_lbl.add_theme_color_override("font_color", Color(0.75, 0.34, 0.06, 1.0) if is_new_record else Color(0.38, 0.26, 0.26, 1.0))
+	if UI_FONT_BEHOLDEN:
+		badge_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	info_vbox.add_child(badge_lbl)
+
+	var stats_panel := PanelContainer.new()
+	var stats_sb := StyleBoxFlat.new()
+	stats_sb.bg_color = Color(0.24, 0.16, 0.14, 0.10)
+	stats_sb.border_color = Color(0.45, 0.32, 0.25, 0.35)
+	stats_sb.set_border_width_all(1)
+	stats_sb.set_corner_radius_all(4)
+	stats_sb.content_margin_left = 18
+	stats_sb.content_margin_right = 18
+	stats_sb.content_margin_top = 8
+	stats_sb.content_margin_bottom = 8
+	stats_panel.add_theme_stylebox_override("panel", stats_sb)
+	info_vbox.add_child(stats_panel)
+
+	var stats_vbox := VBoxContainer.new()
+	stats_vbox.add_theme_constant_override("separation", 4)
+	stats_panel.add_child(stats_vbox)
+
+	var cur_time_lbl := Label.new()
+	cur_time_lbl.text = "Waktu Tempuh   :  %s" % _format_alaric_time(clear_time_sec)
+	cur_time_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cur_time_lbl.add_theme_font_size_override("font_size", 17)
+	cur_time_lbl.add_theme_color_override("font_color", Color(0.22, 0.14, 0.15, 1.0))
+	if UI_FONT_BEHOLDEN:
+		cur_time_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	stats_vbox.add_child(cur_time_lbl)
+
+	var best_time_lbl := Label.new()
+	best_time_lbl.text = "Rekor Tercepat :  %s" % _format_alaric_time(best_time_sec)
+	best_time_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	best_time_lbl.add_theme_font_size_override("font_size", 16)
+	best_time_lbl.add_theme_color_override("font_color", Color(0.68, 0.32, 0.08, 1.0) if is_new_record else Color(0.35, 0.24, 0.24, 1.0))
+	if UI_FONT_BEHOLDEN:
+		best_time_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	stats_vbox.add_child(best_time_lbl)
+
+	# Tombol Lanjutkan
+	var btn_row := HBoxContainer.new()
+	btn_row.anchor_left = 0.0
+	btn_row.anchor_right = 1.0
+	btn_row.anchor_top = 1.0
+	btn_row.anchor_bottom = 1.0
+	btn_row.offset_top = -58.0
+	btn_row.offset_bottom = -18.0
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	dialog_box.add_child(btn_row)
+
+	var btn_hover_atlas: AtlasTexture = null
+	if ui_sheet:
+		btn_hover_atlas = AtlasTexture.new()
+		btn_hover_atlas.atlas = ui_sheet
+		btn_hover_atlas.region = Rect2(65, 449, 62, 14)
+
+	var btn_box := NinePatchRect.new()
+	btn_box.custom_minimum_size = Vector2(132, 38)
+	btn_box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	btn_box.texture = btn_hover_atlas
+	btn_box.patch_margin_left = 5
+	btn_box.patch_margin_top = 4
+	btn_box.patch_margin_right = 5
+	btn_box.patch_margin_bottom = 4
+	btn_row.add_child(btn_box)
+
+	var btn_lbl := Label.new()
+	btn_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	btn_lbl.text = "Lanjutkan"
+	btn_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	btn_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	btn_lbl.add_theme_font_size_override("font_size", 16)
+	btn_lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+	if UI_FONT_BEHOLDEN:
+		btn_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	btn_box.add_child(btn_lbl)
+
+	var arrow := TextureRect.new()
+	arrow.texture = arrow_tex
+	arrow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	arrow.position = Vector2(-18.0, 13.5)
+	arrow.size = Vector2(9.0, 11.0)
+	arrow.stretch_mode = TextureRect.STRETCH_KEEP
+	arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn_box.add_child(arrow)
+
+	var click_btn := TextureButton.new()
+	click_btn.set_anchors_preset(Control.PRESET_FULL_RECT)
+	click_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	btn_box.add_child(click_btn)
+
+	var sfx_click: AudioStream = load("res://assets/audio/sfx/ui/ui_click.wav")
+	var close_victory_popup := func():
+		_alaric_boss_modal_input_cb = Callable()
+		if sfx_click and has_method("play_sfx"):
+			play_sfx(sfx_click, -2.0)
+		if is_instance_valid(_alaric_boss_prompt_layer):
+			_alaric_boss_prompt_layer.queue_free()
+			_alaric_boss_prompt_layer = null
+		if on_closed.is_valid():
+			on_closed.call()
+
+	click_btn.pressed.connect(close_victory_popup)
+
+	_alaric_boss_modal_input_cb = func(event: InputEvent) -> bool:
+		if not (event is InputEventKey):
+			return false
+		var ke := event as InputEventKey
+		if not ke.pressed or ke.echo:
+			return false
+		var kc: int = ke.keycode if ke.keycode != 0 else ke.physical_keycode
+		if kc == KEY_ENTER or kc == KEY_KP_ENTER or kc == KEY_SPACE or kc == KEY_E or kc == KEY_ESCAPE:
+			close_victory_popup.call()
+			return true
+		return true
 
 
 func _on_alaric_post_fight_dialogue_finished() -> void:

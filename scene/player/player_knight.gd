@@ -106,6 +106,7 @@ var knockback_decay: float = 1500.0
 
 @export var invulnerability_duration: float = 0.25 # Durasi proteksi kebal singkat setelah terkena hit (mencegah double hit)
 var invulnerability_timer: float = 0.0
+var _death_tween: Tween = null
 
 # =========================
 # CAMERA SHAKE SETTINGS
@@ -1064,26 +1065,15 @@ func take_damage(amount: int, _source_position = null) -> void:
 		return
 	invulnerability_timer = invulnerability_duration
 
-	# Shield Guard: menahan damage dengan Shield Points (+300)
-	if is_shield_active:
+	# Shield Guard: kebal 100% terhadap seluruh damage selama perisai aktif
+	if is_shield_active or is_skill_animating:
 		modulate = Color(1.8, 1.8, 2.4)
 		var shield_flash_tween = create_tween()
 		shield_flash_tween.tween_property(self, "modulate", Color.WHITE, 0.2)
 		apply_camera_shake(3.0)
 		play_sfx(SFX_KNIGHT_SHIELD_BLOCK, 0.0)
-		if shield_points > 0:
-			if amount <= shield_points:
-				shield_points -= amount
-				print(name, " menahan serangan dengan perisai! Sisa Shield: ", shield_points)
-				return
-			else:
-				var absorbed: int = shield_points
-				shield_points = 0
-				amount -= absorbed
-				deactivate_shield()
-				print(name, " perisai pecah! Menerima sisa damage: ", amount)
-		else:
-			return
+		print(name, " menahan 100% serangan dengan perisai (Kebal Damage)!")
+		return
 
 	current_health -= amount
 	play_sfx(SFX_HURT, -4.0)
@@ -1141,9 +1131,11 @@ func die() -> void:
 	spawn_death_ghost()
 
 	# 3. Mainkan animasi tubuh hero memudar kemerahan
-	var death_tween := create_tween()
-	if death_tween:
-		death_tween.tween_property(self, "modulate", Color(0.9, 0.25, 0.25, 0.0), 0.5)
+	if _death_tween and _death_tween.is_valid():
+		_death_tween.kill()
+	_death_tween = create_tween()
+	if _death_tween:
+		_death_tween.tween_property(self, "modulate", Color(0.9, 0.25, 0.25, 0.0), 0.5)
 
 	# 4. Auto-switch jika Leader aktif gugur: segera reorganisasi roster dan naikkan karakter hidup berikutnya
 	var was_leader := is_leader
@@ -1157,10 +1149,36 @@ func die() -> void:
 		elif game_node and game_node.has_method("switch_to_next_character"):
 			game_node.switch_to_next_character(true)
 
-	if death_tween:
-		await death_tween.finished
+	if _death_tween:
+		await _death_tween.finished
 
-	visible = false
+	if is_dead:
+		visible = false
+
+
+func revive_full_for_arena() -> void:
+	if _death_tween and _death_tween.is_valid():
+		_death_tween.kill()
+	_death_tween = null
+	is_dead = false
+	current_health = max_health
+	visible = true
+	modulate = Color.WHITE
+	velocity = Vector2.ZERO
+	knockback_velocity = Vector2.ZERO
+	is_moving = false
+	has_pending_click_move = false
+	is_attacking = false
+	is_slash_active = false
+	invulnerability_timer = 0.0
+	if not is_in_group("player"):
+		add_to_group("player")
+	if collision_shape:
+		collision_shape.set_deferred("disabled", false)
+	if has_node("Hurtbox/CollisionShape2D"):
+		$Hurtbox/CollisionShape2D.set_deferred("disabled", false)
+	reset_combat_skills()
+	play_idle_animation()
 
 
 func spawn_death_ghost() -> void:
