@@ -53,11 +53,14 @@ func _is_near_library_entrance(pos: Vector2) -> bool:
 
 # === GERBANG KOTA (collision: OutdoorObstacles/CollisionShape2D132 di outdoor_world.tscn) ===
 const CITY_GATE_POS: Vector2 = Vector2(2560.0, 3877.0)
-const CITY_GATE_INSIDE_POS: Vector2 = Vector2(2560.0, 3780.0)   # sisi dalam (utara)
-const CITY_GATE_OUTSIDE_POS: Vector2 = Vector2(2560.0, 3975.0)  # sisi luar (selatan)
+const CITY_GATE_INSIDE_POS: Vector2 = Vector2(2560.0, 3600.0)   # sisi dalam kota (utara, halaman paving depan gerbang)
+const CITY_GATE_OUTSIDE_POS: Vector2 = Vector2(2560.0, 4150.0)  # sisi luar kota (selatan, jalan setapak luar gerbang)
 
 func _is_near_city_gate(pos: Vector2) -> bool:
-	return absf(pos.x - CITY_GATE_POS.x) <= 220.0 and absf(pos.y - CITY_GATE_POS.y) <= 120.0
+	if absf(pos.x - CITY_GATE_POS.x) > 220.0:
+		return false
+	# Meliputi area interaksi dari arah dalam (utara) maupun luar (selatan) gerbang
+	return pos.y >= 3520.0 and pos.y <= 4240.0
 
 func _is_outside_city_gate(pos: Vector2) -> bool:
 	return pos.y > CITY_GATE_POS.y
@@ -729,6 +732,7 @@ var arena_zones: Array[Dictionary] = [
 		"enemies": [] as Array[CharacterBody2D],
 		"is_cleared": false,
 		"respawn_timer": 0.0,
+		"worm_count": 4,
 	},
 	{
 		"id": 3,
@@ -2467,8 +2471,11 @@ func _init_arena_enemies() -> void:
 		if "Skeleton" in e.name or ("is_skeleton_boss" in e and e.is_skeleton_boss):
 			skeleton_boss_node = e
 
-	if is_instance_valid(skeleton_boss_node) and not is_skeleton_boss_fight_in_progress:
-		_set_skeleton_boss_standby_mode()
+	if is_instance_valid(skeleton_boss_node):
+		if arena_zones.size() >= 3 and not (arena_zones[2]["enemies"] as Array[CharacterBody2D]).has(skeleton_boss_node):
+			(arena_zones[2]["enemies"] as Array[CharacterBody2D]).append(skeleton_boss_node)
+		if not is_skeleton_boss_fight_in_progress:
+			_set_skeleton_boss_standby_mode()
 
 	print("[Arena] Inisialisasi Arena Zones:")
 	for zone in arena_zones:
@@ -2478,6 +2485,14 @@ func _init_arena_enemies() -> void:
 func _is_position_in_any_arena(pos: Vector2) -> bool:
 	for zone in arena_zones:
 		var zone_bounds: Rect2 = zone["bounds"]
+		if zone_bounds.grow(150.0).has_point(pos):
+			return true
+	return false
+
+
+func _is_position_in_worm_arena(pos: Vector2) -> bool:
+	for i in range(mini(2, arena_zones.size())):
+		var zone_bounds: Rect2 = arena_zones[i]["bounds"]
 		if zone_bounds.grow(150.0).has_point(pos):
 			return true
 	return false
@@ -2518,13 +2533,18 @@ func _get_worm_sprite_frames() -> SpriteFrames:
 
 
 func _spawn_worm_arena_enemies() -> void:
-	# Hapus musuh lama yang berada di dalam area arena (termasuk 3 node musuh bawaan scene).
+	# Hapus musuh lama yang berada di dalam area arena cacing (Arena 1 dan Arena 2).
+	# Jangan pernah menghapus Skeleton Boss (Arena 3) maupun Pelatih Alaric.
 	for e in get_tree().get_nodes_in_group("enemy"):
 		if not is_instance_valid(e) or not (e is CharacterBody2D):
 			continue
 		if "is_alaric" in e and e.is_alaric:
 			continue
-		if _is_position_in_any_arena(e.global_position):
+		if "is_skeleton_boss" in e and e.is_skeleton_boss:
+			continue
+		if "Skeleton" in e.name or "Alaric" in e.name:
+			continue
+		if _is_position_in_worm_arena(e.global_position):
 			e.remove_from_group("enemy")
 			if is_instance_valid(e.get_parent()):
 				e.get_parent().remove_child(e)
@@ -2547,7 +2567,8 @@ func _spawn_worm_arena_enemies() -> void:
 		Vector2(150.0, 60.0),
 	]
 
-	for zone_idx in range(arena_zones.size()):
+	# Cacing hanya di-spawn untuk Arena 1 (Kiri) dan Arena 2 (Kanan). Arena 3 khusus Boss Skeleton.
+	for zone_idx in range(mini(2, arena_zones.size())):
 		var zone: Dictionary = arena_zones[zone_idx]
 		var center: Vector2 = zone["center"]
 		var count: int = int(zone.get("worm_count", 4))
@@ -2987,8 +3008,12 @@ func end_arena_battle() -> void:
 			arena_zones[active_arena_idx]["respawn_timer"] = 0.0
 		else:
 			arena_zones[active_arena_idx]["is_cleared"] = true
-			arena_zones[active_arena_idx]["respawn_timer"] = ARENA_GROUP_RESPAWN_DELAY
-			print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Musuh akan spawn lagi dalam ", ARENA_GROUP_RESPAWN_DELAY, " detik.")
+			if selected_game_mode == "open_world":
+				arena_zones[active_arena_idx]["respawn_timer"] = ARENA_GROUP_RESPAWN_DELAY
+				print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Musuh akan spawn lagi dalam ", ARENA_GROUP_RESPAWN_DELAY, " detik.")
+			else:
+				arena_zones[active_arena_idx]["respawn_timer"] = 0.0
+				print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Mode Cerita: musuh tidak akan respawn.")
 
 	# Cek apakah seluruh zona arena cerita telah diselesaikan
 	var has_remaining_arena: bool = false
@@ -3087,6 +3112,17 @@ func handle_arena_group_respawn(delta: float) -> void:
 
 
 func _respawn_zone_enemies(zone: Dictionary) -> void:
+	# Arena 3 khusus Boss Skeleton: tidak boleh memunculkan cacing
+	if zone.get("id") == 3 or zone.get("name") == "Arena_3_SouthForest":
+		zone["is_cleared"] = false
+		zone["respawn_timer"] = 0.0
+		if is_instance_valid(skeleton_boss_node):
+			if skeleton_boss_node.has_method("reset_skeleton_boss_state"):
+				skeleton_boss_node.reset_skeleton_boss_state()
+			_set_skeleton_boss_standby_mode()
+			zone["enemies"] = [skeleton_boss_node] as Array[CharacterBody2D]
+		return
+
 	zone["is_cleared"] = false
 	zone["respawn_timer"] = 0.0
 	var z_enemies: Array = zone.get("enemies", [])
@@ -8532,6 +8568,16 @@ func transition_to_location(target_pos: Vector2, new_location_name: String = "")
 				3: offset = Vector2(0, 70)
 			member.global_position = target_pos + offset
 			member.velocity = Vector2.ZERO
+			if target_pos == CITY_GATE_INSIDE_POS:
+				if "last_direction" in member:
+					member.last_direction = Vector2.UP
+				if member.has_method("play_idle_animation"):
+					member.play_idle_animation()
+			elif target_pos == CITY_GATE_OUTSIDE_POS:
+				if "last_direction" in member:
+					member.last_direction = Vector2.DOWN
+				if member.has_method("play_idle_animation"):
+					member.play_idle_animation()
 
 	update_camera_limits_for_hall(is_inside_castle_hall)
 
