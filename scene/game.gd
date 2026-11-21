@@ -957,6 +957,7 @@ var _has_seen_alaric_intro_dialogue: bool = false
 const ALARIC_RECORD_SAVE_PATH: String = "user://alaric_best_record.cfg"
 
 const SKELETON_BOSS_POS: Vector2 = Vector2(6200.0, 8400.0)
+const SKELETON_ARENA_HERO_LEFT_SPAWN: Vector2 = Vector2(5580.0, 8400.0)
 var skeleton_boss_node: CharacterBody2D = null
 var is_skeleton_boss_fight_in_progress: bool = false
 var _skeleton_match_elapsed_time: float = 0.0
@@ -9750,102 +9751,106 @@ func _start_skeleton_boss_battle() -> void:
 		if is_instance_valid(member):
 			_restore_hero_full_for_alaric(member)
 
-	var leader := get_active_leader()
-	if is_instance_valid(leader):
-		var offset_from_boss: Vector2 = leader.global_position - SKELETON_BOSS_POS
-		var dist_from_boss: float = offset_from_boss.length()
-		if dist_from_boss < 110.0:
-			var push_dir: Vector2 = offset_from_boss.normalized() if dist_from_boss > 1.0 else Vector2.DOWN
-			leader.global_position = SKELETON_BOSS_POS + push_dir * 135.0
-		elif dist_from_boss > 260.0:
-			leader.global_position = SKELETON_BOSS_POS + Vector2(0.0, 165.0)
-		if "target_position" in leader:
-			leader.target_position = leader.global_position
+	play_black_fade_transition(func():
+		# Posisikan karakter masuk dari sisi kiri arena (menghadap ke kanan arah Boss)
+		var leader := get_active_leader()
+		if is_instance_valid(leader):
+			leader.global_position = SKELETON_ARENA_HERO_LEFT_SPAWN
+			if "target_position" in leader:
+				leader.target_position = leader.global_position
+			if "last_direction" in leader:
+				leader.last_direction = Vector2.RIGHT
+			if leader.has_method("play_idle_animation"):
+				leader.play_idle_animation()
 
-	if not is_instance_valid(skeleton_boss_node):
-		skeleton_boss_node = get_node_or_null("SkeletonBoss") as CharacterBody2D
+		if not is_instance_valid(skeleton_boss_node):
+			skeleton_boss_node = get_node_or_null("SkeletonBoss") as CharacterBody2D
 
-	if is_instance_valid(skeleton_boss_node):
-		skeleton_boss_node.is_skeleton_boss = true
-		if skeleton_boss_node.has_method("reset_skeleton_boss_state"):
-			skeleton_boss_node.reset_skeleton_boss_state()
-		else:
-			skeleton_boss_node.max_health = 1500
-			skeleton_boss_node.current_health = 1500
-		skeleton_boss_node.global_position = SKELETON_BOSS_POS
-		skeleton_boss_node.velocity = Vector2.ZERO
-		skeleton_boss_node.is_dead = false
-		skeleton_boss_node.is_shooting = false
-		skeleton_boss_node.wait_for_arena = false
-		skeleton_boss_node.in_arena_combat = true
-		skeleton_boss_node.visible = true
-		skeleton_boss_node.modulate = Color.WHITE
-		skeleton_boss_node.remove_from_group("npc")
-		if not skeleton_boss_node.is_in_group("enemy"):
-			skeleton_boss_node.add_to_group("enemy")
-		if "collision_shape" in skeleton_boss_node and is_instance_valid(skeleton_boss_node.collision_shape):
-			skeleton_boss_node.collision_shape.set_deferred("disabled", false)
-		if skeleton_boss_node.has_node("Hurtbox/CollisionShape2D"):
-			skeleton_boss_node.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", false)
-		if skeleton_boss_node.has_node("Hitbox/CollisionShape2D"):
-			skeleton_boss_node.get_node("Hitbox/CollisionShape2D").set_deferred("disabled", false)
-		if skeleton_boss_node.has_node("DetectionArea/CollisionShape2D"):
-			skeleton_boss_node.get_node("DetectionArea/CollisionShape2D").set_deferred("disabled", false)
-		skeleton_boss_node.set_physics_process(true)
-		if "health_bar" in skeleton_boss_node and is_instance_valid(skeleton_boss_node.health_bar):
-			skeleton_boss_node.health_bar.visible = true
-			skeleton_boss_node.health_bar.max_value = skeleton_boss_node.max_health
-			skeleton_boss_node.health_bar.value = skeleton_boss_node.current_health
-		if "damage_bar" in skeleton_boss_node and is_instance_valid(skeleton_boss_node.damage_bar):
-			skeleton_boss_node.damage_bar.visible = true
-			skeleton_boss_node.damage_bar.max_value = skeleton_boss_node.max_health
-			skeleton_boss_node.damage_bar.value = skeleton_boss_node.current_health
+		if is_instance_valid(skeleton_boss_node):
+			skeleton_boss_node.is_skeleton_boss = true
+			if skeleton_boss_node.has_method("reset_skeleton_boss_state"):
+				skeleton_boss_node.reset_skeleton_boss_state()
+			else:
+				skeleton_boss_node.max_health = 1500
+				skeleton_boss_node.current_health = 1500
+			skeleton_boss_node.global_position = SKELETON_BOSS_POS
+			skeleton_boss_node.velocity = Vector2.ZERO
+			skeleton_boss_node.is_dead = false
+			skeleton_boss_node.is_shooting = false
+			skeleton_boss_node.wait_for_arena = false
+			skeleton_boss_node.in_arena_combat = true
+			skeleton_boss_node.visible = true
+			skeleton_boss_node.modulate = Color.WHITE
+			skeleton_boss_node.last_direction = Vector2.LEFT
+			if skeleton_boss_node.has_method("play_idle_animation"):
+				skeleton_boss_node.play_idle_animation()
+			skeleton_boss_node.remove_from_group("npc")
+			if not skeleton_boss_node.is_in_group("enemy"):
+				skeleton_boss_node.add_to_group("enemy")
+			if "collision_shape" in skeleton_boss_node and is_instance_valid(skeleton_boss_node.collision_shape):
+				skeleton_boss_node.collision_shape.set_deferred("disabled", false)
+			if skeleton_boss_node.has_node("Hurtbox/CollisionShape2D"):
+				skeleton_boss_node.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", false)
+			if skeleton_boss_node.has_node("Hitbox/CollisionShape2D"):
+				skeleton_boss_node.get_node("Hitbox/CollisionShape2D").set_deferred("disabled", false)
+			if skeleton_boss_node.has_node("DetectionArea/CollisionShape2D"):
+				skeleton_boss_node.get_node("DetectionArea/CollisionShape2D").set_deferred("disabled", false)
+			skeleton_boss_node.set_physics_process(true)
+			if "health_bar" in skeleton_boss_node and is_instance_valid(skeleton_boss_node.health_bar):
+				skeleton_boss_node.health_bar.visible = true
+				skeleton_boss_node.health_bar.max_value = skeleton_boss_node.max_health
+				skeleton_boss_node.health_bar.value = skeleton_boss_node.current_health
+			if "damage_bar" in skeleton_boss_node and is_instance_valid(skeleton_boss_node.damage_bar):
+				skeleton_boss_node.damage_bar.visible = true
+				skeleton_boss_node.damage_bar.max_value = skeleton_boss_node.max_health
+				skeleton_boss_node.damage_bar.value = skeleton_boss_node.current_health
+			for p in party_members:
+				if is_instance_valid(p):
+					p.remove_collision_exception_with(skeleton_boss_node)
+					skeleton_boss_node.remove_collision_exception_with(p)
+
+		# Pastikan Arena 3 (index 2) siap dimulai dan memiliki referensi skeleton_boss_node
+		if arena_zones.size() >= 3:
+			arena_zones[2]["is_cleared"] = false
+			var z_enemies: Array[CharacterBody2D] = arena_zones[2]["enemies"]
+			if is_instance_valid(skeleton_boss_node) and skeleton_boss_node not in z_enemies:
+				z_enemies.clear()
+				z_enemies.append(skeleton_boss_node)
+
+		is_skeleton_boss_fight_in_progress = true
+		_skeleton_match_elapsed_time = 0.0
+		_pending_skeleton_victory_popup = false
+		_show_alaric_top_timer_hud(_skeleton_best_time_sec)
+
+		arena_state = ArenaState.INACTIVE
+		start_arena_battle(2)
+		current_combat_state = PartyCombatState.COMBAT
+		notify_party_combat_state(true)
+		set_party_movement_locked(false)
+		var active_lead := get_active_leader()
+		if is_instance_valid(active_lead):
+			_set_character_collision_active(active_lead, true)
+			active_lead.set_physics_process(true)
+			active_lead.set_process_unhandled_input(true)
+
 		for p in party_members:
 			if is_instance_valid(p):
-				p.remove_collision_exception_with(skeleton_boss_node)
-				skeleton_boss_node.remove_collision_exception_with(p)
+				p.set("is_movement_locked", false)
+				p.set_physics_process(true)
+				_set_character_collision_active(p, true)
+				if p.has_method("set_party_combat_mode"):
+					p.set_party_combat_mode(true)
+				if p != active_lead and p.has_method("set_as_leader"):
+					p.set_as_leader(false, active_lead, party_members.find(p))
 
-	# Pastikan Arena 3 (index 2) siap dimulai dan memiliki referensi skeleton_boss_node
-	if arena_zones.size() >= 3:
-		arena_zones[2]["is_cleared"] = false
-		var z_enemies: Array[CharacterBody2D] = arena_zones[2]["enemies"]
-		if is_instance_valid(skeleton_boss_node) and skeleton_boss_node not in z_enemies:
-			z_enemies.clear()
-			z_enemies.append(skeleton_boss_node)
-
-	is_skeleton_boss_fight_in_progress = true
-	_skeleton_match_elapsed_time = 0.0
-	_pending_skeleton_victory_popup = false
-	_show_alaric_top_timer_hud(_skeleton_best_time_sec)
-
-	arena_state = ArenaState.INACTIVE
-	start_arena_battle(2)
-	current_combat_state = PartyCombatState.COMBAT
-	notify_party_combat_state(true)
-	set_party_movement_locked(false)
-	var active_lead := get_active_leader()
-	if is_instance_valid(active_lead):
-		_set_character_collision_active(active_lead, true)
-		active_lead.set_physics_process(true)
-		active_lead.set_process_unhandled_input(true)
-
-	for p in party_members:
-		if is_instance_valid(p):
-			p.set("is_movement_locked", false)
-			p.set_physics_process(true)
-			_set_character_collision_active(p, true)
-			if p.has_method("set_party_combat_mode"):
-				p.set_party_combat_mode(true)
-			if p != active_lead and p.has_method("set_as_leader"):
-				p.set_as_leader(false, active_lead, party_members.find(p))
-
-	if is_instance_valid(skeleton_boss_node):
-		for p in party_members:
-			if is_instance_valid(p):
-				p.remove_collision_exception_with(skeleton_boss_node)
-				skeleton_boss_node.remove_collision_exception_with(p)
-		if is_instance_valid(leader) and skeleton_boss_node.has_method("alert_to_combat"):
-			skeleton_boss_node.alert_to_combat(leader)
+		if is_instance_valid(skeleton_boss_node):
+			for p in party_members:
+				if is_instance_valid(p):
+					p.remove_collision_exception_with(skeleton_boss_node)
+					skeleton_boss_node.remove_collision_exception_with(p)
+			if is_instance_valid(leader) and skeleton_boss_node.has_method("alert_to_combat"):
+				skeleton_boss_node.alert_to_combat(leader)
+	)
 
 
 func _on_alaric_post_fight_dialogue_finished() -> void:
