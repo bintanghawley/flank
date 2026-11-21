@@ -247,11 +247,35 @@ size = Vector2(328, 290)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ao5mj"]
 size = Vector2(173, 155.5)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_y3eww"]
+size = Vector2(197, 65.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ke4so"]
+size = Vector2(122, 67)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6gudt"]
+size = Vector2(57, 90)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_0vebx"]
+size = Vector2(51, 53)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_a7tb3"]
+size = Vector2(50, 54)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3bmir"]
+size = Vector2(23, 30.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1rfws"]
+size = Vector2(50, 39)
+
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_4"]
 size = Vector2(473, 162)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ap43q"]
 size = Vector2(166, 61)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_nbf0k"]
+size = Vector2(166, 91.5)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_q4vr2"]
 size = Vector2(82.125, 52.625)
@@ -280,8 +304,44 @@ size = Vector2(82, 59)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_iw5yk"]
 size = Vector2(338, 24.5)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lercb"]
+size = Vector2(1486, 4510.875)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_m8ypv"]
+size = Vector2(484, 242)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_o6i6h"]
+size = Vector2(249, 409)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bpv43"]
+size = Vector2(192, 137)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_licnx"]
+size = Vector2(1038, 5266.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_oo827"]
+size = Vector2(14306.625, 1203)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_yn640"]
+size = Vector2(82, 83)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fyw7y"]
+size = Vector2(84, 53)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3rml5"]
+size = Vector2(199, 209)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ieob6"]
+size = Vector2(85.5, 19)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ss8on"]
+size = Vector2(69, 128)
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_gvh8e"]
 size = Vector2(107.96875, 25)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_4d76g"]
+size = Vector2(108, 108)
 
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_5"]
 size = Vector2(320, 311.5)
@@ -316,6 +376,18 @@ size = Vector2(137, 73)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_g07p5"]
 size = Vector2(111, 24.5)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_5y1r3"]
+size = Vector2(119, 113)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bnuls"]
+size = Vector2(165.6875, 162.875)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ywnhc"]
+size = Vector2(30.75, 3161)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kovjk"]
+size = Vector2(73, 37)
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_j7n6y"]
 size = Vector2(72.75, 52)
 
@@ -326,7 +398,10 @@ size = Vector2(67, 25)
 size = Vector2(22, 25)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3al2f"]
-size = Vector2(22.6875, 27)
+size = Vector2(22.6875, 30.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_c1wew"]
+size = Vector2(87, 76)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_n15xe"]
 size = Vector2(118, 43)
@@ -338,10 +413,67 @@ size = Vector2(580, 119)
 size = Vector2(118.5, 24)
 
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_11"]
-size = Vector2(1518, 799)
+size = Vector2(1535, 804)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_jpfuy"]
+size = Vector2(177, 96)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ko85k"]
+size = Vector2(1535.25, 814)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1oky1"]
+size = Vector2(496, 90)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rxbvp"]
+size = Vector2(1539, 575)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_dqv24"]
+size = Vector2(89, 255)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_28eph"]
+size = Vector2(657, 734.25)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_stkvb"]
-size = Vector2(726, 484)
+size = Vector2(726, 488)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1i1k6"]
+size = Vector2(224, 657)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_yefnk"]
+size = Vector2(331, 729)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_x0w5e"]
+size = Vector2(185.38184, 574)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_740wh"]
+size = Vector2(175.52734, 573.7422)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fosc4"]
+size = Vector2(171.89063, 606.96875)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_n4rcu"]
+size = Vector2(170.4375, 615.125)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_a7ac0"]
+size = Vector2(333.5, 696.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wsp50"]
+size = Vector2(360, 488)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_adexb"]
+size = Vector2(172, 730.875)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_00xkj"]
+size = Vector2(168, 886)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sy02y"]
+size = Vector2(251, 649)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_u1kh4"]
+size = Vector2(408, 331)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ltmae"]
+size = Vector2(90, 888)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8hmx5"]
 size = Vector2(210, 245)
@@ -356,7 +488,10 @@ size = Vector2(1520, 280)
 size = Vector2(1520, 200)
 
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_14"]
-size = Vector2(257, 81)
+size = Vector2(257, 125)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_y7dpv"]
+size = Vector2(62.75, 59)
 
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_15"]
 size = Vector2(32, 667)
@@ -365,22 +500,49 @@ size = Vector2(32, 667)
 size = Vector2(41, 330)
 
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_17"]
-size = Vector2(275, 75)
+size = Vector2(1093, 72)
 
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_18"]
-size = Vector2(434, 75)
+size = Vector2(145, 85)
 
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_19"]
-size = Vector2(305, 155)
+size = Vector2(146.5, 136)
 
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_20"]
 size = Vector2(65, 80)
 
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_21"]
-size = Vector2(100, 90)
+size = Vector2(173, 92)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_omx25"]
+size = Vector2(180, 99)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3xpmt"]
+size = Vector2(391, 164)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_unjcg"]
+size = Vector2(21, 29)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_0ye54"]
+size = Vector2(343, 121)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_street_lamp"]
 size = Vector2(50, 60)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_xhtml"]
+size = Vector2(50, 38)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3182q"]
+size = Vector2(95, 176)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_yib25"]
+size = Vector2(50, 38)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_4nb8p"]
+size = Vector2(82, 54)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_uma22"]
+size = Vector2(82, 46)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_w4kmr"]
 size = Vector2(209, 133)
@@ -601,6 +763,42 @@ shape = SubResource("RectangleShape2D_ao5mj")
 position = Vector2(-1760, 3363)
 shape = SubResource("RectangleShape2D_ao5mj")
 
+[node name="CollisionShape2D72" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1085531755]
+position = Vector2(-1725.5, 2980.75)
+shape = SubResource("RectangleShape2D_y3eww")
+
+[node name="CollisionShape2D73" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=120616752]
+position = Vector2(-1848, 2695.5)
+shape = SubResource("RectangleShape2D_ke4so")
+
+[node name="CollisionShape2D74" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=57252453]
+position = Vector2(-1697.5, 2818)
+shape = SubResource("RectangleShape2D_6gudt")
+
+[node name="CollisionShape2D75" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=412139058]
+position = Vector2(-1862.5, 2914.5)
+shape = SubResource("RectangleShape2D_0vebx")
+
+[node name="CollisionShape2D76" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1762602230]
+position = Vector2(-1948, 2950)
+shape = SubResource("RectangleShape2D_a7tb3")
+
+[node name="CollisionShape2D79" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1295086273]
+position = Vector2(-1498, 3015)
+shape = SubResource("RectangleShape2D_a7tb3")
+
+[node name="CollisionShape2D80" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2102318606]
+position = Vector2(3159.5, 4141)
+shape = SubResource("RectangleShape2D_3bmir")
+
+[node name="CollisionShape2D77" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1453395537]
+position = Vector2(-1803, 3092.5)
+shape = SubResource("RectangleShape2D_1rfws")
+
+[node name="CollisionShape2D78" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1554252875]
+position = Vector2(-1683, 3093)
+shape = SubResource("RectangleShape2D_1rfws")
+
 [node name="CollisionShape2D51" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=197428723]
 position = Vector2(-2000, 3368)
 shape = SubResource("RectangleShape2D_ao5mj")
@@ -628,6 +826,14 @@ shape = SubResource("RectangleShape2D_ap43q")
 [node name="CollisionShape2D48" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=113803629]
 position = Vector2(5680, 4448)
 shape = SubResource("RectangleShape2D_ap43q")
+
+[node name="CollisionShape2D129" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=189478048]
+position = Vector2(1200, 5016.75)
+shape = SubResource("RectangleShape2D_nbf0k")
+
+[node name="CollisionShape2D130" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=744019070]
+position = Vector2(3765, 5177)
+shape = SubResource("RectangleShape2D_nbf0k")
 
 [node name="CollisionShape2D47" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1128730302]
 position = Vector2(1200, 5093)
@@ -685,6 +891,34 @@ shape = SubResource("RectangleShape2D_q4vr2")
 position = Vector2(2826, 8220)
 shape = SubResource("RectangleShape2D_q4vr2")
 
+[node name="CollisionShape2D91" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1361088301]
+position = Vector2(9741, 6947.875)
+shape = SubResource("RectangleShape2D_lercb")
+
+[node name="CollisionShape2D94" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=711862179]
+position = Vector2(-3149, 2880.5625)
+shape = SubResource("RectangleShape2D_lercb")
+
+[node name="CollisionShape2D95" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1903430598]
+position = Vector2(-320, 8200)
+shape = SubResource("RectangleShape2D_m8ypv")
+
+[node name="CollisionShape2D98" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1692548186]
+position = Vector2(-359.5, 8200.5)
+shape = SubResource("RectangleShape2D_o6i6h")
+
+[node name="CollisionShape2D119" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=921481412]
+position = Vector2(-88, 7830.5)
+shape = SubResource("RectangleShape2D_bpv43")
+
+[node name="CollisionShape2D92" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1997389377]
+position = Vector2(10018, 2258.25)
+shape = SubResource("RectangleShape2D_licnx")
+
+[node name="CollisionShape2D93" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1910108629]
+position = Vector2(2462.3125, 208.5)
+shape = SubResource("RectangleShape2D_oo827")
+
 [node name="CollisionShape2D39" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1516259070]
 position = Vector2(2874, 8300)
 shape = SubResource("RectangleShape2D_q4vr2")
@@ -701,21 +935,37 @@ shape = SubResource("RectangleShape2D_q4vr2")
 position = Vector2(2720, 6117)
 shape = SubResource("RectangleShape2D_q4vr2")
 
+[node name="CollisionShape2D83" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1738235667]
+position = Vector2(2720, 6085.5)
+shape = SubResource("RectangleShape2D_yn640")
+
+[node name="CollisionShape2D84" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=399497117]
+position = Vector2(2409, 6011.5)
+shape = SubResource("RectangleShape2D_fyw7y")
+
 [node name="CollisionShape2D43" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1302044601]
 position = Vector2(2410, 6060)
 shape = SubResource("RectangleShape2D_q4vr2")
 
-[node name="CollisionShape2D44" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=215844113]
-position = Vector2(2420, 5360)
-shape = SubResource("RectangleShape2D_q4vr2")
+[node name="CollisionShape2D82" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1289113239]
+position = Vector2(2365.5, 5301.5)
+shape = SubResource("RectangleShape2D_3rml5")
 
-[node name="CollisionShape2D45" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1443988377]
-position = Vector2(2310, 5355)
-shape = SubResource("RectangleShape2D_q4vr2")
+[node name="CollisionShape2D45" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=181633283]
+position = Vector2(2309.25, 5282.5)
+shape = SubResource("RectangleShape2D_ieob6")
+
+[node name="CollisionShape2D44" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=343936330]
+position = Vector2(2364.5, 5381)
+shape = SubResource("RectangleShape2D_ss8on")
 
 [node name="CollisionShape2D36" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1145736587]
 position = Vector2(-1458, 8954.5)
 shape = SubResource("RectangleShape2D_gvh8e")
+
+[node name="CollisionShape2D127" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2142934168]
+position = Vector2(-1492, 2811)
+shape = SubResource("RectangleShape2D_4d76g")
 
 [node name="CollisionShape2D55" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=979424229]
 position = Vector2(-1492, 2870)
@@ -768,6 +1018,22 @@ shape = SubResource("RectangleShape2D_iqfe1")
 [node name="CollisionShape2D11" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=130544300]
 position = Vector2(-2296, 10120.25)
 shape = SubResource("RectangleShape2D_g07p5")
+
+[node name="CollisionShape2D125" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1831504248]
+position = Vector2(-194, 6751.5)
+shape = SubResource("RectangleShape2D_5y1r3")
+
+[node name="CollisionShape2D124" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1859220978]
+position = Vector2(-719.84375, 8157.5625)
+shape = SubResource("RectangleShape2D_bnuls")
+
+[node name="CollisionShape2D123" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=535409604]
+position = Vector2(-393.375, 9972.5)
+shape = SubResource("RectangleShape2D_ywnhc")
+
+[node name="CollisionShape2D122" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1243911569]
+position = Vector2(-3150.5, 9767.5)
+shape = SubResource("RectangleShape2D_kovjk")
 
 [node name="CollisionShape2D13" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=817667636]
 position = Vector2(-2680, 9811)
@@ -822,7 +1088,15 @@ position = Vector2(-1315, 2783)
 shape = SubResource("RectangleShape2D_3al2f")
 
 [node name="CollisionShape2D31" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1286456961]
-position = Vector2(1245, 8943)
+position = Vector2(1245, 8941.25)
+shape = SubResource("RectangleShape2D_3al2f")
+
+[node name="CollisionShape2D131" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=757728870]
+position = Vector2(1319.5, 7699)
+shape = SubResource("RectangleShape2D_c1wew")
+
+[node name="CollisionShape2D120" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1531433706]
+position = Vector2(1325, 7740)
 shape = SubResource("RectangleShape2D_3al2f")
 
 [node name="CollisionShape2D29" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1208493265]
@@ -862,12 +1136,88 @@ position = Vector2(-2577.25, 10120)
 shape = SubResource("RectangleShape2D_40g47")
 
 [node name="Village_Hall_1_Wall" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112011]
-position = Vector2(359, 8640.5)
+position = Vector2(360.5, 8643)
 shape = SubResource("Rect_Obstacle_11")
 
+[node name="CollisionShape2D99" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1435299777]
+position = Vector2(-3.5, 8204)
+shape = SubResource("RectangleShape2D_jpfuy")
+
+[node name="CollisionShape2D117" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1499217351]
+position = Vector2(359.375, 9519)
+shape = SubResource("RectangleShape2D_ko85k")
+
+[node name="CollisionShape2D115" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2099004730]
+position = Vector2(801, 7078)
+shape = SubResource("RectangleShape2D_1oky1")
+
+[node name="CollisionShape2D118" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2063404817]
+position = Vector2(360.5, 10280.5)
+shape = SubResource("RectangleShape2D_rxbvp")
+
+[node name="CollisionShape2D114" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=657382982]
+position = Vector2(1164.5, 7320.5)
+shape = SubResource("RectangleShape2D_dqv24")
+
+[node name="CollisionShape2D113" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1713931474]
+position = Vector2(800.5, 7480.125)
+shape = SubResource("RectangleShape2D_28eph")
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1355595593]
-position = Vector2(840, 8161)
+position = Vector2(840, 8159)
 shape = SubResource("RectangleShape2D_stkvb")
+
+[node name="CollisionShape2D112" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=306694025]
+position = Vector2(504, 7439.5)
+shape = SubResource("RectangleShape2D_1i1k6")
+
+[node name="CollisionShape2D104" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2004843490]
+position = Vector2(-641.5, 7478.5)
+shape = SubResource("RectangleShape2D_yefnk")
+
+[node name="CollisionShape2D111" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=469826571]
+position = Vector2(404.69092, 7399)
+shape = SubResource("RectangleShape2D_x0w5e")
+
+[node name="CollisionShape2D110" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=268164786]
+position = Vector2(240.23633, 7320.871)
+shape = SubResource("RectangleShape2D_740wh")
+
+[node name="CollisionShape2D109" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1684475916]
+position = Vector2(159.94531, 7259.5156)
+shape = SubResource("RectangleShape2D_fosc4")
+
+[node name="CollisionShape2D108" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1151419373]
+position = Vector2(1.21875, 7182.4375)
+shape = SubResource("RectangleShape2D_n4rcu")
+
+[node name="CollisionShape2D107" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=624180170]
+position = Vector2(-238.75, 7141.75)
+shape = SubResource("RectangleShape2D_a7ac0")
+
+[node name="CollisionShape2D106" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1052252743]
+position = Vector2(-417, 7280)
+shape = SubResource("RectangleShape2D_wsp50")
+
+[node name="CollisionShape2D105" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1930469236]
+position = Vector2(-401, 7238.4375)
+shape = SubResource("RectangleShape2D_adexb")
+
+[node name="CollisionShape2D103" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1463806681]
+position = Vector2(-640, 7479)
+shape = SubResource("RectangleShape2D_00xkj")
+
+[node name="CollisionShape2D101" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1038610597]
+position = Vector2(-840.5, 7759.5)
+shape = SubResource("RectangleShape2D_sy02y")
+
+[node name="CollisionShape2D102" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=827514219]
+position = Vector2(-840, 7839.5)
+shape = SubResource("RectangleShape2D_u1kh4")
+
+[node name="CollisionShape2D100" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=560740105]
+position = Vector2(-840, 7720)
+shape = SubResource("RectangleShape2D_ltmae")
 
 [node name="CollisionShape2D2" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=569569858]
 position = Vector2(1178, 8119.5)
@@ -881,6 +1231,22 @@ shape = SubResource("RectangleShape2D_q6jnr")
 position = Vector2(440, 8040)
 shape = SubResource("RectangleShape2D_q6jnr")
 
+[node name="CollisionShape2D116" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=269828568]
+position = Vector2(1163, 7720)
+shape = SubResource("RectangleShape2D_q6jnr")
+
+[node name="CollisionShape2D121" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1797896044]
+position = Vector2(1162, 8407)
+shape = SubResource("RectangleShape2D_q6jnr")
+
+[node name="CollisionShape2D96" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=507867486]
+position = Vector2(-601, 8200)
+shape = SubResource("RectangleShape2D_q6jnr")
+
+[node name="CollisionShape2D97" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1287063722]
+position = Vector2(-360, 7959)
+shape = SubResource("RectangleShape2D_q6jnr")
+
 [node name="Village_Hall_2_Wall" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112012]
 position = Vector2(360, 9780)
 shape = SubResource("Rect_Obstacle_12")
@@ -890,8 +1256,12 @@ position = Vector2(360, 10460)
 shape = SubResource("Rect_Obstacle_13")
 
 [node name="Camp_House_Wall" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112014]
-position = Vector2(8265.5, 3802.5)
+position = Vector2(8265.5, 3780.5)
 shape = SubResource("Rect_Obstacle_14")
+
+[node name="CollisionShape2D81" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1856471586]
+position = Vector2(7977.625, 4297.5)
+shape = SubResource("RectangleShape2D_y7dpv")
 
 [node name="Camp_Fence_Left" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112015]
 position = Vector2(7933, 3993.5)
@@ -902,15 +1272,15 @@ position = Vector2(9022.5, 3825)
 shape = SubResource("Rect_Obstacle_16")
 
 [node name="Camp_Fence_Top_Left" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112017]
-position = Vector2(8082.5, 3697.5)
+position = Vector2(8491.5, 3696)
 shape = SubResource("Rect_Obstacle_17")
 
 [node name="Camp_Fence_Top_Right" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112018]
-position = Vector2(8787, 3697.5)
+position = Vector2(8101.5, 3942.5)
 shape = SubResource("Rect_Obstacle_18")
 
 [node name="Camp_Wagon" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112019]
-position = Vector2(8427.5, 4007.5)
+position = Vector2(8345.75, 4095)
 shape = SubResource("Rect_Obstacle_19")
 
 [node name="Camp_Crate_Left" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112020]
@@ -918,8 +1288,24 @@ position = Vector2(8023, 3791)
 shape = SubResource("Rect_Obstacle_20")
 
 [node name="Camp_Crate_Right" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112021]
-position = Vector2(8835, 3900)
+position = Vector2(8865.5, 3964)
 shape = SubResource("Rect_Obstacle_21")
+
+[node name="CollisionShape2D69" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1290414819]
+position = Vector2(8200, 4082.5)
+shape = SubResource("RectangleShape2D_omx25")
+
+[node name="CollisionShape2D71" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1600384604]
+position = Vector2(8663.5, 3772)
+shape = SubResource("RectangleShape2D_3xpmt")
+
+[node name="CollisionShape2D70" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=219254997]
+position = Vector2(8439.5, 4381.5)
+shape = SubResource("RectangleShape2D_unjcg")
+
+[node name="CollisionShape2D68" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=893754850]
+position = Vector2(8444.5, 4075.5)
+shape = SubResource("RectangleShape2D_0ye54")
 
 [node name="River_Water_West" type="CollisionPolygon2D" parent="OutdoorObstacles" unique_id=2026112022]
 build_mode = 1
@@ -946,28 +1332,33 @@ build_mode = 1
 polygon = PackedVector2Array(8455, -145, 8555, -145, 8555, 640, 8630, 640, 8630, 650, 8650, 650, 8650, 895, 8825, 895, 8825, 925, 10045, 925, 10060, 925, 10060, 780, 10120, 780, 10120, 755, 10520, 755, 10520, 865, 10120, 865, 10120, 875, 10060, 875, 10060, 1035, 10045, 1035, 10045, 1030, 8825, 1030, 8825, 1000, 8650, 1000, 8650, 745, 8630, 745, 8630, 740, 8555, 740, 8455, 740)
 
 [node name="Undakan_NorthEast_3" type="CollisionPolygon2D" parent="OutdoorObstacles" unique_id=2026112104]
+position = Vector2(-8, -39)
 build_mode = 1
-polygon = PackedVector2Array(6180, 2685, 6185, 2685, 6190, 2685, 6190, 2665, 7500, 2665, 7515, 2665, 7520, 2665, 7520, 2340, 8830, 2340, 8845, 2340, 8850, 2340, 8850, 2015, 10085, 2015, 10100, 2015, 10100, 1855, 10230, 1855, 10230, 1850, 10300, 1850, 10300, 1810, 10485, 1810, 10485, 1800, 10500, 1800, 10505, 1800, 10505, 1730, 10520, 1730, 10520, 1830, 10505, 1830, 10505, 1915, 10500, 1915, 10485, 1915, 10485, 1920, 10300, 1920, 10300, 1960, 10230, 1960, 10100, 1960, 10100, 2125, 10085, 2125, 10085, 2120, 8850, 2120, 8850, 2440, 8845, 2440, 8830, 2440, 8830, 2445, 7520, 2445, 7520, 2765, 7515, 2765, 7500, 2765, 7500, 2770, 6190, 2770, 6190, 3355, 6185, 3355, 6180, 3355)
+polygon = PackedVector2Array(6180, 2685, 6185, 2685, 6190, 2685, 6190, 2665, 7500, 2665, 7515, 2665, 7520, 2665, 7520, 2340, 8830, 2340, 8845, 2340, 8850, 2340, 8850, 2015, 10085, 2015, 10100, 2015, 10100, 1855, 10230, 1855, 10230, 1850, 10300, 1850, 10300, 1810, 10485, 1810, 10485, 1800, 10500, 1800, 10505, 1800, 10505, 1730, 10520, 1730, 10520, 1830, 10505, 1830, 10505, 1915, 10500, 1915, 10485, 1915, 10485, 1920, 10300, 1920, 10300, 1960, 10230, 1960, 10100, 1960, 10100, 2125, 10085, 2125, 10085, 2120, 8885, 2201, 8871, 2521, 8856, 2522, 8847, 2517, 8822, 2522, 7545, 2521, 7542, 2797, 7538, 2837, 7505, 2836, 7504, 2837, 6214, 2841, 6203, 3450, 6185, 3450, 6177, 3452)
 
 [node name="Undakan_Peninsula_West" type="CollisionPolygon2D" parent="OutdoorObstacles" unique_id=2026112105]
 build_mode = 1
 polygon = PackedVector2Array(-4480, 4290, -4435, 4290, -4420, 4290, -4420, 4320, -4400, 4320, -4400, 4375, -4195, 4375, -4180, 4375, -4180, 4400, -4160, 4400, -4160, 4450, -4040, 4450, -4040, 4455, -4025, 4455, -4025, 4460, -4025, 4580, -4040, 4580, -4160, 4580, -4180, 4580, -4180, 4500, -4195, 4500, -4400, 4500, -4420, 4500, -4420, 4420, -4435, 4420, -4480, 4420)
 
 [node name="Undakan_RiverNorth_West" type="CollisionPolygon2D" parent="OutdoorObstacles" unique_id=2026112115]
+position = Vector2(0, -32)
 build_mode = 1
 polygon = PackedVector2Array(-4010, 4855, -3555, 4855, -3540, 4855, -3540, 4880, -3520, 4880, -3520, 4930, -3395, 4930, -3395, 4940, -3380, 4940, -3380, 4960, -3360, 4960, -3360, 5010, -3200, 5010, -3200, 5000, -3185, 5000, -3185, 4930, -3045, 4930, -3045, 4900, -3030, 4900, -3030, 4855, -3015, 4855, -2435, 4855, -2420, 4855, -2420, 4880, -2400, 4880, -2400, 4935, -2195, 4935, -2195, 4940, -2180, 4940, -2180, 4970, -2160, 4970, -2160, 5010, -2115, 5010, -2100, 5010, -2100, 5040, -2080, 5040, -2080, 5090, -2035, 5090, -2020, 5090, -2020, 5120, -2000, 5120, -2000, 5175, -1715, 5175, -1715, 5185, -1700, 5185, -1700, 5200, -1680, 5200, -1680, 5250, -1635, 5250, -1620, 5250, -1620, 5280, -1600, 5280, -1600, 5330, -1555, 5330, -1540, 5330, -1540, 5360, -1520, 5360, -1520, 5410, -1475, 5410, -1460, 5410, -1460, 5440, -1440, 5440, -1440, 5490, -1395, 5490, -1380, 5490, -1380, 5520, -1360, 5520, -1360, 5570, -1315, 5570, -1300, 5570, -1300, 5610, -1280, 5610, -1280, 5665, -1155, 5665, -1155, 5660, -1140, 5660, -1140, 5730, -1075, 5730, -1075, 5735, -1055, 5735, -1055, 5790, -1025, 5790, -1025, 5815, -835, 5815, -835, 5810, -820, 5810, -820, 5895, -755, 5895, -740, 5895, -740, 6005, -675, 6005, -675, 6015, -660, 6015, -660, 6070, -630, 6070, -630, 6090, -275, 6090, -275, 6095, -260, 6095, -260, 6150, -230, 6150, -230, 6170, 445, 6170, 445, 6175, 470, 6175, 470, 6210, 525, 6210, 525, 6215, 545, 6215, 545, 6285, 570, 6285, 570, 6330, 2445, 6330, 2445, 6425, 570, 6425, 545, 6425, 545, 6370, 525, 6370, 525, 6340, 470, 6340, 470, 6325, 445, 6325, 445, 6265, -230, 6265, -230, 6260, -260, 6260, -260, 6180, -275, 6180, -275, 6185, -630, 6185, -630, 6180, -660, 6180, -660, 6100, -675, 6100, -740, 6100, -740, 6020, -755, 6020, -820, 6020, -820, 5940, -835, 5940, -1025, 5940, -1055, 5940, -1055, 5890, -1075, 5890, -1075, 5860, -1140, 5860, -1140, 5780, -1155, 5780, -1280, 5780, -1300, 5780, -1300, 5700, -1315, 5700, -1360, 5700, -1380, 5700, -1380, 5620, -1395, 5620, -1440, 5620, -1460, 5620, -1460, 5540, -1475, 5540, -1520, 5540, -1540, 5540, -1540, 5460, -1555, 5460, -1600, 5460, -1620, 5460, -1620, 5380, -1635, 5380, -1680, 5380, -1700, 5380, -1700, 5300, -1715, 5300, -1715, 5305, -2000, 5305, -2000, 5300, -2020, 5300, -2020, 5220, -2035, 5220, -2080, 5220, -2100, 5220, -2100, 5140, -2115, 5140, -2160, 5140, -2180, 5140, -2180, 5060, -2195, 5060, -2400, 5060, -2420, 5060, -2420, 4980, -2435, 4980, -3015, 4980, -3015, 5055, -3030, 5055, -3030, 5065, -3045, 5065, -3045, 5060, -3185, 5060, -3185, 5145, -3200, 5145, -3360, 5145, -3360, 5140, -3380, 5140, -3380, 5060, -3395, 5060, -3520, 5060, -3540, 5060, -3540, 4980, -3555, 4980, -3555, 4985, -4010, 4985)
 
 [node name="Undakan_RiverNorth_10" type="CollisionPolygon2D" parent="OutdoorObstacles" unique_id=2026112117]
+position = Vector2(-1, -35)
 build_mode = 1
-polygon = PackedVector2Array(-4480, 4130, -3620, 4130, -3620, 4145, -3600, 4145, -3600, 4455, -2290, 4455, -2290, 4470, -2270, 4470, -2270, 4780, -1695, 4780, -1695, 4740, -1095, 4740, -1095, 4780, -945, 4780, -945, 4790, -925, 4790, -925, 4880, -790, 4880, -790, 4900, -755, 4900, -755, 4905, -735, 4905, -735, 4965, -570, 4965, -570, 5010, -90, 5010, -90, 5035, 100, 5035, 100, 5075, 285, 5075, 285, 5115, 470, 5115, 470, 5155, 1890, 5155, 1890, 5110, 2075, 5110, 2075, 5085, 2215, 5085, 2215, 5075, 2230, 5075, 2230, 4920, 2235, 4920, 2235, 5180, 2230, 5180, 2230, 5190, 2215, 5190, 2215, 5185, 2075, 5185, 2075, 5220, 1890, 5220, 1890, 5260, 470, 5260, 470, 5220, 285, 5220, 285, 5180, 100, 5180, 100, 5140, -90, 5140, -90, 5110, -570, 5110, -570, 5070, -735, 5070, -735, 5000, -755, 5000, -790, 5000, -790, 4995, -925, 4995, -925, 4875, -945, 4875, -945, 4880, -1095, 4880, -1095, 4840, -1695, 4840, -1695, 4880, -2270, 4880, -2270, 4565, -2290, 4565, -2290, 4560, -3600, 4560, -3600, 4240, -3620, 4240, -3620, 4235, -4480, 4235)
+polygon = PackedVector2Array(-4480, 4130, -3620, 4130, -3620, 4145, -3600, 4145, -3600, 4455, -2290, 4455, -2290, 4470, -2270, 4470, -2270, 4780, -1695, 4780, -1695, 4740, -1095, 4740, -1095, 4780, -945, 4780, -945, 4790, -925, 4790, -916, 4886, -790, 4880, -790, 4900, -755, 4900, -755, 4905, -735, 4905, -735, 4965, -570, 4965, -570, 5010, -90, 5010, -90, 5035, 100, 5035, 100, 5075, 285, 5075, 285, 5115, 470, 5115, 470, 5155, 1135.1746, 5155, 1890, 5155, 1890, 5110, 2075, 5110, 2075, 5085, 2215, 5085, 2215, 5075, 2230, 5075, 2222, 4919, 2235, 4920, 2248, 5182, 2245, 5225, 2240, 5238, 2223, 5242, 2206, 5242, 2094, 5240, 2091, 5267, 1914, 5264, 1910, 5309, 484, 5304, 472, 5273, 307, 5276, 288, 5228, 115, 5231, 106, 5188, -69, 5187, -81, 5154, -556, 5165, -572, 5125, -741, 5121, -744, 5044, -762, 5045, -785, 5043, -802, 5044, -928, 5048, -934, 4958, -944, 4922, -955, 4929, -1089, 4930, -1095, 4884, -1682, 4882, -1687, 4936, -2275, 4932, -2278, 4616, -2283, 4612, -2291, 4605, -3605, 4600, -3618, 4295, -3622, 4301, -3619, 4301, -4481, 4292)
 
 [node name="Undakan_RiverNorth_14" type="CollisionPolygon2D" parent="OutdoorObstacles" unique_id=2026112122]
+position = Vector2(-4, -44)
 build_mode = 1
-polygon = PackedVector2Array(2885, 4915, 2890, 4915, 2890, 5125, 3025, 5125, 3025, 5120, 3045, 5120, 3045, 5190, 3215, 5190, 3215, 5205, 3235, 5205, 3235, 5280, 3405, 5280, 3405, 5320, 3590, 5320, 3590, 5360, 4865, 5360, 4865, 5320, 5050, 5320, 5050, 5280, 5235, 5280, 5235, 5270, 5250, 5270, 5255, 5270, 5255, 5190, 5425, 5190, 5425, 5180, 5440, 5180, 5445, 5180, 5445, 5100, 5615, 5100, 5615, 5075, 5625, 5075, 5625, 5200, 5615, 5200, 5615, 5210, 5445, 5210, 5445, 5295, 5440, 5295, 5425, 5295, 5425, 5300, 5255, 5300, 5255, 5385, 5250, 5385, 5235, 5385, 5235, 5390, 5050, 5390, 5050, 5430, 4865, 5430, 4865, 5465, 3590, 5465, 3590, 5425, 3405, 5425, 3405, 5390, 3235, 5390, 3235, 5300, 3215, 5300, 3045, 5300, 3045, 5225, 3025, 5225, 2890, 5225, 2890, 5220, 2885, 5220)
+polygon = PackedVector2Array(2885, 4915, 2890, 4915, 2890, 5125, 3025, 5125, 3025, 5120, 3045, 5120, 3045, 5190, 3215, 5190, 3215, 5205, 3235, 5205, 3235, 5280, 3405, 5280, 3405, 5320, 3590, 5320, 3590, 5360, 4865, 5360, 4865, 5320, 5050, 5320, 5050, 5280, 5235, 5280, 5235, 5270, 5250, 5270, 5255, 5270, 5255, 5190, 5425, 5190, 5425, 5180, 5440, 5180, 5445, 5180, 5445, 5100, 5615, 5100, 5615, 5020, 5640, 5020, 5643, 5201, 5643, 5232, 5635, 5270, 5535, 5268, 5456, 5268, 5457, 5291, 5458, 5357, 5432, 5358, 5267, 5357, 5266, 5379, 5268, 5396, 5270, 5443, 5249, 5450, 5078, 5450, 5068, 5491, 4892, 5493, 4885, 5532, 3605, 5529, 3595, 5490, 3418, 5490, 3411, 5445, 3225, 5444, 3225, 5354, 3209, 5354, 3035, 5355, 3037, 5283, 3021, 5282, 2894, 5288, 2887, 5285, 2885, 5288)
 
 [node name="Undakan_RiverNorth_16" type="CollisionPolygon2D" parent="OutdoorObstacles" unique_id=2026112124]
+position = Vector2(0, -43)
 build_mode = 1
-polygon = PackedVector2Array(5620, 4925, 5645, 4925, 5645, 4915, 5790, 4915, 5790, 4905, 5805, 4905, 5810, 4905, 5810, 4825, 5980, 4825, 5980, 4820, 5995, 4820, 6000, 4820, 6000, 4780, 6020, 4780, 6020, 4750, 6035, 4750, 6035, 4765, 6105, 4765, 6105, 4865, 6035, 4865, 6035, 4875, 6020, 4875, 6000, 4875, 6000, 4930, 5995, 4930, 5980, 4930, 5810, 4930, 5810, 5020, 5805, 5020, 5790, 5020, 5645, 5020, 5645, 5025, 5620, 5025)
+polygon = PackedVector2Array(5620, 4925, 5645, 4925, 5645, 4915, 5790, 4915, 5790, 4905, 5805, 4905, 5810, 4905, 5810, 4825, 5980, 4825, 5980, 4820, 5995, 4820, 6000, 4820, 6000, 4780, 6012, 4776, 6013, 4750, 6030, 4749, 6038, 4763, 6110, 4785, 6187, 4784, 6188, 4879, 6189, 4934, 6119, 4932, 6048, 4931, 6010, 4931, 6009, 4991, 5982, 4996, 5822, 4993, 5822, 5019, 5823, 5074, 5792, 5075, 5685, 5083, 5651, 5082, 5621, 5080)
 
 [node name="Undakan_RiverNorth_17" type="CollisionPolygon2D" parent="OutdoorObstacles" unique_id=2026112125]
 build_mode = 1
@@ -975,9 +1366,10 @@ polygon = PackedVector2Array(6125, 4770, 6150, 4770, 6150, 4870, 6125, 4870)
 
 [node name="Undakan_RiverNorth_18" type="CollisionPolygon2D" parent="OutdoorObstacles" unique_id=2026112126]
 build_mode = 1
-polygon = PackedVector2Array(6025, 4405, 6165, 4405, 6165, 4400, 6180, 4400, 6180, 4250, 6255, 4250, 6255, 3465, 6375, 3465, 6375, 4355, 6255, 4355, 6255, 4350, 6180, 4350, 6180, 4510, 6165, 4510, 6165, 4495, 6025, 4495)
+polygon = PackedVector2Array(6024, 4363, 6157, 4363, 6155, 4359, 6158, 4311, 6167, 4221, 6250, 4203, 6329, 4194, 6331, 3494, 6216, 3488, 6159, 3415, 6192, 3402, 6244, 3460, 6332, 3460, 6375, 3465, 6375, 4355, 6255, 4355, 6255, 4350, 6180, 4350, 6180, 4510, 6165, 4510, 6165, 4495, 6025, 4495)
 
 [node name="Undakan_RiverNorth_East" type="CollisionPolygon2D" parent="OutdoorObstacles" unique_id=2026112127]
+position = Vector2(0, -32)
 build_mode = 1
 polygon = PackedVector2Array(2675, 6330, 5805, 6330, 5820, 6330, 5820, 6400, 6635, 6400, 6635, 6365, 6650, 6365, 6650, 6315, 6665, 6315, 6665, 6295, 6800, 6295, 6800, 6280, 6815, 6280, 6815, 6210, 6870, 6210, 6870, 6205, 6885, 6205, 6885, 6140, 6900, 6140, 6900, 6135, 7115, 6135, 7115, 6100, 7130, 6100, 7130, 6055, 7145, 6055, 7675, 6055, 7675, 6020, 7690, 6020, 7690, 5975, 7705, 5975, 8155, 5975, 8155, 5940, 8170, 5940, 8170, 5895, 8185, 5895, 8555, 5895, 8555, 5860, 8570, 5860, 8570, 5815, 8585, 5815, 8765, 5815, 8780, 5815, 8780, 5840, 8800, 5840, 8800, 5895, 9165, 5895, 9180, 5895, 9180, 5920, 9200, 5920, 9200, 5970, 9325, 5970, 9325, 5975, 9340, 5975, 9340, 6000, 9360, 6000, 9360, 6050, 9585, 6050, 9585, 6020, 9600, 6020, 9600, 5740, 9615, 5740, 9615, 5730, 9630, 5730, 9680, 5730, 9680, 5720, 9695, 5720, 9695, 5650, 9760, 5650, 9760, 5640, 9775, 5640, 9775, 5570, 9835, 5570, 9835, 5540, 9850, 5540, 9850, 5500, 9865, 5500, 10235, 5500, 10235, 5465, 10250, 5465, 10250, 5410, 10265, 5410, 10265, 5415, 10395, 5415, 10395, 5385, 10410, 5385, 10410, 5330, 10425, 5330, 10520, 5330, 10520, 5460, 10425, 5460, 10425, 5535, 10410, 5535, 10410, 5545, 10395, 5545, 10265, 5545, 10265, 5615, 10250, 5615, 10250, 5625, 10235, 5625, 9865, 5625, 9865, 5695, 9850, 5695, 9850, 5705, 9835, 5705, 9835, 5700, 9775, 5700, 9775, 5785, 9760, 5785, 9760, 5780, 9695, 5780, 9695, 5865, 9680, 5865, 9680, 5860, 9630, 5860, 9630, 6165, 9615, 6165, 9615, 6185, 9600, 6185, 9585, 6185, 9360, 6185, 9360, 6180, 9340, 6180, 9340, 6100, 9325, 6100, 9200, 6100, 9180, 6100, 9180, 6020, 9165, 6020, 9165, 6025, 8800, 6025, 8800, 6020, 8780, 6020, 8780, 5940, 8765, 5940, 8585, 5940, 8585, 6015, 8570, 6015, 8570, 6025, 8555, 6025, 8555, 6020, 8185, 6020, 8185, 6095, 8170, 6095, 8170, 6105, 8155, 6105, 8155, 6100, 7705, 6100, 7705, 6175, 7690, 6175, 7690, 6185, 7675, 6185, 7145, 6185, 7145, 6255, 7130, 6255, 7130, 6265, 7115, 6265, 6900, 6265, 6900, 6345, 6885, 6345, 6870, 6345, 6870, 6340, 6815, 6340, 6815, 6425, 6800, 6425, 6800, 6420, 6665, 6420, 6665, 6495, 6650, 6495, 6650, 6505, 6635, 6505, 5820, 6505, 5820, 6420, 5805, 6420, 5805, 6425, 2675, 6425)
 
@@ -996,6 +1388,14 @@ shape = SubResource("RectangleShape2D_street_lamp")
 [node name="StreetLamp_2" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112171]
 position = Vector2(-755, 3475)
 shape = SubResource("RectangleShape2D_street_lamp")
+
+[node name="CollisionShape2D126" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1432060243]
+position = Vector2(-525, 4247)
+shape = SubResource("RectangleShape2D_xhtml")
+
+[node name="CollisionShape2D128" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=84774100]
+position = Vector2(-755, 3433)
+shape = SubResource("RectangleShape2D_xhtml")
 
 [node name="StreetLamp_3" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112172]
 position = Vector2(-525, 4285)
@@ -1021,6 +1421,10 @@ shape = SubResource("RectangleShape2D_street_lamp")
 position = Vector2(2360, 7629)
 shape = SubResource("RectangleShape2D_street_lamp")
 
+[node name="CollisionShape2D89" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=320880210]
+position = Vector2(2735.5, 7150)
+shape = SubResource("RectangleShape2D_3182q")
+
 [node name="StreetLamp_19" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1098698544]
 position = Vector2(2760, 7235)
 shape = SubResource("RectangleShape2D_street_lamp")
@@ -1029,9 +1433,25 @@ shape = SubResource("RectangleShape2D_street_lamp")
 position = Vector2(2760, 6030)
 shape = SubResource("RectangleShape2D_street_lamp")
 
-[node name="StreetLamp_21" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=530638997]
-position = Vector2(2365, 5390)
-shape = SubResource("RectangleShape2D_street_lamp")
+[node name="CollisionShape2D85" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=719984400]
+position = Vector2(2760, 5982)
+shape = SubResource("RectangleShape2D_yib25")
+
+[node name="CollisionShape2D87" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=10072608]
+position = Vector2(2420, 9425)
+shape = SubResource("RectangleShape2D_4nb8p")
+
+[node name="CollisionShape2D86" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1020969980]
+position = Vector2(2360, 9352)
+shape = SubResource("RectangleShape2D_yib25")
+
+[node name="CollisionShape2D88" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2039030114]
+position = Vector2(2760, 9674)
+shape = SubResource("RectangleShape2D_yib25")
+
+[node name="CollisionShape2D90" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=786536807]
+position = Vector2(2725, 7262)
+shape = SubResource("RectangleShape2D_uma22")
 
 [node name="StreetLamp_9" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112178]
 position = Vector2(2760, 8270)
