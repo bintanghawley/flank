@@ -238,6 +238,12 @@ size = Vector2(42.5, 641)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_t15o3"]
 size = Vector2(196, 81)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_if55h"]
+size = Vector2(92.5, 106.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_p5q12"]
+size = Vector2(485, 44)
+
 [sub_resource type="RectangleShape2D" id="Rect_Obstacle_2"]
 size = Vector2(405.75, 171)
 
@@ -746,6 +752,18 @@ shape = SubResource("Rect_Obstacle_1")
 [node name="CollisionShape2D66" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=731797809]
 position = Vector2(-2673, 9064.5)
 shape = SubResource("RectangleShape2D_t15o3")
+
+[node name="CollisionShape2D133" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1959414907]
+position = Vector2(2264, 3923)
+shape = SubResource("RectangleShape2D_if55h")
+
+[node name="CollisionShape2D134" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1332728793]
+position = Vector2(2849.75, 3932.5)
+shape = SubResource("RectangleShape2D_if55h")
+
+[node name="CollisionShape2D132" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=1011921676]
+position = Vector2(2560.5, 3877)
+shape = SubResource("RectangleShape2D_p5q12")
 
 [node name="Village_House_NW_Wall" type="CollisionShape2D" parent="OutdoorObstacles" unique_id=2026112002]
 position = Vector2(-2678.875, 7598.5)
