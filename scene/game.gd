@@ -1284,6 +1284,7 @@ func _ready() -> void:
 	_load_alaric_best_record()
 	_setup_alaric_npc.call_deferred()
 	_init_defeat_overlay.call_deferred()
+	_set_secret_library_floor(1)
 
 	# 6. Jalankan efek pembukaan Circular Mask (Iris Open) saat masuk arena game
 	# Jika masuk melalui menu 'Lanjutkan' di Start Menu, muat save slot tertunda
@@ -5413,13 +5414,8 @@ func start_story_scene_4() -> void:
 	# 1. Konfigurasi 3 Hero: Arthur, Magnus, Anastasya
 	setup_party_for_scene_4()
 
-	# 2. Aktifkan Lantai 1 library, sembunyikan Lantai 2
-	var lib_node := get_node_or_null("SecretLibrary")
-	if is_instance_valid(lib_node):
-		var floor1 := lib_node.get_node_or_null("LibraryFloor1")
-		var floor2 := lib_node.get_node_or_null("LibraryFloor2")
-		if floor1: floor1.visible = true
-		if floor2: floor2.visible = false
+	# 2. Aktifkan Lantai 1 library, nonaktifkan Lantai 2 (collision & visual)
+	_set_secret_library_floor(1)
 
 	# 3. Update camera limits ke perpustakaan SEBELUM teleport
 	update_camera_limits_for_location("library")
@@ -5508,6 +5504,42 @@ func _pose_scene_4_heroes_looking_at_bookshelf() -> void:
 			hero.play_idle_animation()
 
 
+func _set_secret_library_floor(floor_num: int) -> void:
+	var lib_node := get_node_or_null("SecretLibrary")
+	if not is_instance_valid(lib_node):
+		return
+	var floor1 := lib_node.get_node_or_null("LibraryFloor1")
+	var floor2 := lib_node.get_node_or_null("LibraryFloor2")
+
+	var f1_active: bool = (floor_num == 1)
+	if is_instance_valid(floor1):
+		floor1.visible = f1_active
+		floor1.process_mode = Node.PROCESS_MODE_INHERIT if f1_active else Node.PROCESS_MODE_DISABLED
+		var l1_struct = floor1.get_node_or_null("L1Structure")
+		if is_instance_valid(l1_struct) and l1_struct is TileMapLayer:
+			l1_struct.enabled = f1_active
+		var l1_col = floor1.get_node_or_null("L1Collisions")
+		if is_instance_valid(l1_col) and l1_col is StaticBody2D:
+			l1_col.collision_layer = 1 if f1_active else 0
+			l1_col.collision_mask = 1 if f1_active else 0
+		var stair_zone = floor1.get_node_or_null("StairInteractZone")
+		if is_instance_valid(stair_zone) and stair_zone is Area2D:
+			stair_zone.monitoring = f1_active
+			stair_zone.monitorable = f1_active
+
+	var f2_active: bool = (floor_num == 2)
+	if is_instance_valid(floor2):
+		floor2.visible = f2_active
+		floor2.process_mode = Node.PROCESS_MODE_INHERIT if f2_active else Node.PROCESS_MODE_DISABLED
+		var l2_struct = floor2.get_node_or_null("L2Structure")
+		if is_instance_valid(l2_struct) and l2_struct is TileMapLayer:
+			l2_struct.enabled = f2_active
+		var l2_col = floor2.get_node_or_null("L2Collisions")
+		if is_instance_valid(l2_col) and l2_col is StaticBody2D:
+			l2_col.collision_layer = 1 if f2_active else 0
+			l2_col.collision_mask = 1 if f2_active else 0
+
+
 func _go_to_library_floor_2() -> void:
 	if is_on_library_floor_2 or is_transitioning:
 		return
@@ -5519,13 +5551,8 @@ func _go_to_library_floor_2() -> void:
 	var on_midpoint := func() -> void:
 		is_on_library_floor_2 = true
 
-		# Tukar lantai: sembunyikan L1, tampilkan L2
-		var lib_node := get_node_or_null("SecretLibrary")
-		if is_instance_valid(lib_node):
-			var floor1 := lib_node.get_node_or_null("LibraryFloor1")
-			var floor2 := lib_node.get_node_or_null("LibraryFloor2")
-			if floor1: floor1.visible = false
-			if floor2: floor2.visible = true
+		# Tukar lantai: aktifkan L2, nonaktifkan L1 (collision & visual)
+		_set_secret_library_floor(2)
 
 		if selected_game_mode == "open_world":
 			for i in range(party_members.size()):
@@ -5589,12 +5616,8 @@ func _go_to_library_floor_1() -> void:
 	var on_midpoint := func() -> void:
 		is_on_library_floor_2 = false
 
-		var lib_node := get_node_or_null("SecretLibrary")
-		if is_instance_valid(lib_node):
-			var floor1 := lib_node.get_node_or_null("LibraryFloor1")
-			var floor2 := lib_node.get_node_or_null("LibraryFloor2")
-			if floor1: floor1.visible = true
-			if floor2: floor2.visible = false
+		# Tukar lantai: aktifkan L1, nonaktifkan L2 (collision & visual)
+		_set_secret_library_floor(1)
 
 		for i in range(party_members.size()):
 			var p = party_members[i]
@@ -5764,6 +5787,7 @@ func _complete_story_scene_4() -> void:
 		is_inside_secret_library = false
 		is_on_library_floor_2 = false
 		is_inside_castle_hall = false
+		_set_secret_library_floor(1)
 		var spawn_pos := LIBRARY_ENTRANCE_POS + Vector2(0.0, 30.0)
 		for i in range(party_members.size()):
 			var member = party_members[i]
@@ -8790,12 +8814,7 @@ func enter_secret_library() -> void:
 			is_inside_secret_library = true
 			is_inside_castle_hall = false
 			is_on_library_floor_2 = false
-			var lib_node := get_node_or_null("SecretLibrary")
-			if is_instance_valid(lib_node):
-				var floor1 := lib_node.get_node_or_null("LibraryFloor1")
-				var floor2 := lib_node.get_node_or_null("LibraryFloor2")
-				if floor1: floor1.visible = true
-				if floor2: floor2.visible = false
+			_set_secret_library_floor(1)
 			update_camera_limits_for_location("library")
 			for i in range(party_members.size()):
 				var p = party_members[i]
@@ -8835,6 +8854,7 @@ func exit_secret_library() -> void:
 		is_inside_secret_library = false
 		is_on_library_floor_2 = false
 		is_inside_castle_hall = false
+		_set_secret_library_floor(1)
 
 		var spawn_pos := LIBRARY_ENTRANCE_POS + Vector2(0.0, 30.0)
 		for i in range(party_members.size()):
