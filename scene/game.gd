@@ -49,6 +49,31 @@ func _is_near_library_entrance(pos: Vector2) -> bool:
 	if pos.distance_to(LIBRARY_ENTRANCE_POS) <= 130.0:
 		return true
 	return pos.x >= 600.0 and pos.x <= 800.0 and pos.y >= 1340.0 and pos.y <= 1490.0
+
+# === GERBANG KOTA (collision: OutdoorObstacles/CollisionShape2D132 di outdoor_world.tscn) ===
+const CITY_GATE_POS: Vector2 = Vector2(2560.0, 3877.0)
+const CITY_GATE_INSIDE_POS: Vector2 = Vector2(2560.0, 3780.0)   # sisi dalam (utara)
+const CITY_GATE_OUTSIDE_POS: Vector2 = Vector2(2560.0, 3975.0)  # sisi luar (selatan)
+
+func _is_near_city_gate(pos: Vector2) -> bool:
+	return absf(pos.x - CITY_GATE_POS.x) <= 220.0 and absf(pos.y - CITY_GATE_POS.y) <= 120.0
+
+func _is_outside_city_gate(pos: Vector2) -> bool:
+	return pos.y > CITY_GATE_POS.y
+
+func use_city_gate() -> void:
+	if is_transitioning:
+		return
+	var leader := get_active_leader()
+	if not is_instance_valid(leader):
+		return
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
+	if _is_outside_city_gate(leader.global_position):
+		await transition_to_location(CITY_GATE_INSIDE_POS, "Kota Kerajaan")
+	else:
+		await transition_to_location(CITY_GATE_OUTSIDE_POS, "Luar Gerbang Kota")
+
 const ALARIC_CAMP_POS: Vector2 = Vector2(6780.0, 1700.0)
 const ARTHUR_CAMP_RETURN_POS: Vector2 = Vector2(6650.0, 1700.0)
 const ARENA_KAMP_ARTHUR_POS: Vector2 = Vector2(7950.0, -1210.0)
@@ -1315,6 +1340,9 @@ func _unhandled_input(event: InputEvent) -> void:
 							get_viewport().set_input_as_handled()
 						elif _is_near_library_entrance(leader.global_position):
 							enter_secret_library()
+							get_viewport().set_input_as_handled()
+						elif _is_near_city_gate(leader.global_position):
+							use_city_gate()
 							get_viewport().set_input_as_handled()
 					elif is_inside_secret_library:
 						if not is_on_library_floor_2:
@@ -7409,6 +7437,10 @@ func check_castle_interactions(delta: float) -> void:
 		elif _is_near_library_entrance(leader.global_position):
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
 				gameplay_hud.show_interact_prompt("Masuk ke Perpustakaan", "E", "enter_library")
+		elif _is_near_city_gate(leader.global_position):
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
+				var gate_title := "Masuk Gerbang Kota" if _is_outside_city_gate(leader.global_position) else "Keluar Gerbang Kota"
+				gameplay_hud.show_interact_prompt(gate_title, "E", "city_gate")
 		else:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 				gameplay_hud.hide_interact_prompt()
@@ -7513,6 +7545,8 @@ func _on_hud_interaction_pressed(action_type: String) -> void:
 		_go_to_library_floor_2()
 	elif action_type == "go_library_floor1" or action_type == "Turun ke Lantai 1":
 		_go_to_library_floor_1()
+	elif action_type == "city_gate" or action_type == "Masuk Gerbang Kota" or action_type == "Keluar Gerbang Kota":
+		use_city_gate()
 	elif action_type == "enter_library" or action_type == "Masuk ke Perpustakaan":
 		enter_secret_library()
 	elif action_type == "exit_library" or action_type == "Keluar ke Kota":
