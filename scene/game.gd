@@ -1704,7 +1704,7 @@ func _unhandled_input(event: InputEvent) -> void:
 							else:
 								_start_alaric_pre_fight_dialogue()
 							get_viewport().set_input_as_handled()
-						elif leader.global_position.distance_to(SKELETON_BOSS_POS) <= 140.0 and not is_skeleton_boss_fight_in_progress and arena_state != ArenaState.COMBAT:
+						elif (leader.global_position.distance_to(SKELETON_BOSS_POS) <= 160.0 or (is_instance_valid(skeleton_boss_node) and leader.global_position.distance_to(skeleton_boss_node.global_position) <= 160.0)) and not is_skeleton_boss_fight_in_progress and arena_state != ArenaState.COMBAT:
 							if selected_game_mode != "open_world" and not is_scene_9_completed:
 								start_story_scene_9()
 							else:
@@ -3084,6 +3084,9 @@ func check_arena_trigger() -> void:
 		return
 	for i in range(arena_zones.size()):
 		var zone: Dictionary = arena_zones[i]
+		# Arena 3 (Boss Skeleton) di mode jelajah / eksplorasi dimulai melalui interaksi UI tombol "Mulai" seperti Boss Alaric
+		if int(zone.get("id", 0)) == 3:
+			continue
 		if zone["is_cleared"]:
 			continue
 		var enemies_list: Array = zone.get("enemies", [])
@@ -3104,13 +3107,6 @@ func check_arena_trigger() -> void:
 		if trig.has_point(leader.global_position):
 			if i == 0 and selected_game_mode != "open_world" and not _is_scene2_intro_triggered and not is_scene2_completed:
 				_start_scene2_intro_sequence()
-				break
-			if i == 2:
-				if selected_game_mode != "open_world" and not is_scene_9_completed:
-					if is_scene_8_completed and not is_scene_9_in_progress:
-						start_story_scene_9()
-					break
-				_start_skeleton_boss_battle()
 				break
 			start_arena_battle(i)
 			break
@@ -7804,6 +7800,8 @@ func _setup_scene_9_boss_battle_formation() -> void:
 			skeleton_boss_node.collision_shape.set_deferred("disabled", false)
 		if skeleton_boss_node.has_node("Hurtbox/CollisionShape2D"):
 			skeleton_boss_node.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", false)
+		if skeleton_boss_node.has_node("Hitbox/CollisionShape2D"):
+			skeleton_boss_node.get_node("Hitbox/CollisionShape2D").set_deferred("disabled", false)
 		if skeleton_boss_node.has_node("DetectionArea/CollisionShape2D"):
 			skeleton_boss_node.get_node("DetectionArea/CollisionShape2D").set_deferred("disabled", false)
 		skeleton_boss_node.set_physics_process(true)
@@ -9385,6 +9383,10 @@ func _set_skeleton_boss_standby_mode() -> void:
 		skeleton_boss_node.collision_shape.set_deferred("disabled", false)
 	if skeleton_boss_node.has_node("Hurtbox/CollisionShape2D"):
 		skeleton_boss_node.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", true)
+	if skeleton_boss_node.has_node("Hitbox/CollisionShape2D"):
+		skeleton_boss_node.get_node("Hitbox/CollisionShape2D").set_deferred("disabled", true)
+	if skeleton_boss_node.has_node("DetectionArea/CollisionShape2D"):
+		skeleton_boss_node.get_node("DetectionArea/CollisionShape2D").set_deferred("disabled", true)
 	if "health_bar" in skeleton_boss_node and is_instance_valid(skeleton_boss_node.health_bar):
 		skeleton_boss_node.health_bar.visible = false
 	if "damage_bar" in skeleton_boss_node and is_instance_valid(skeleton_boss_node.damage_bar):
@@ -9785,6 +9787,8 @@ func _start_skeleton_boss_battle() -> void:
 			skeleton_boss_node.collision_shape.set_deferred("disabled", false)
 		if skeleton_boss_node.has_node("Hurtbox/CollisionShape2D"):
 			skeleton_boss_node.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", false)
+		if skeleton_boss_node.has_node("Hitbox/CollisionShape2D"):
+			skeleton_boss_node.get_node("Hitbox/CollisionShape2D").set_deferred("disabled", false)
 		if skeleton_boss_node.has_node("DetectionArea/CollisionShape2D"):
 			skeleton_boss_node.get_node("DetectionArea/CollisionShape2D").set_deferred("disabled", false)
 		skeleton_boss_node.set_physics_process(true)
@@ -10608,7 +10612,7 @@ func check_castle_interactions(delta: float) -> void:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
 				var prompt_title := "Tantang Pelatih Alaric" if selected_game_mode == "open_world" else "Bicara dengan Pelatih Alaric"
 				gameplay_hud.show_interact_prompt(prompt_title, "E", "talk_alaric")
-		elif leader.global_position.distance_to(SKELETON_BOSS_POS) <= 135.0 and not is_skeleton_boss_fight_in_progress and arena_state != ArenaState.COMBAT:
+		elif (leader.global_position.distance_to(SKELETON_BOSS_POS) <= 160.0 or (is_instance_valid(skeleton_boss_node) and leader.global_position.distance_to(skeleton_boss_node.global_position) <= 160.0)) and not is_skeleton_boss_fight_in_progress and arena_state != ArenaState.COMBAT:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
 				gameplay_hud.show_interact_prompt("Tantang Boss Skeleton", "E", "talk_skeleton_boss")
 		elif _is_near_library_entrance(leader.global_position):
