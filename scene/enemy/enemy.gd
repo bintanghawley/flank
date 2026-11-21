@@ -167,8 +167,11 @@ func _ready() -> void:
 		melee_damage = ALARIC_BASIC_DAMAGE
 		chase_speed = ALARIC_BASE_MOVE_SPEED
 		melee_attack_range = 115.0
-	else:
-		max_health = 1
+	elif is_worm or ("Worm" in name):
+		if max_health <= 1:
+			max_health = 380
+	elif max_health <= 1:
+		max_health = 380
 	current_health = max_health
 	spawn_position = global_position
 	wander_target = spawn_position
@@ -1158,8 +1161,6 @@ func take_damage(amount: int, attacker: CharacterBody2D = null) -> void:
 		return
 
 	wait_for_arena = false
-	if not is_training_dummy and not is_alaric_boss:
-		amount = max(amount, current_health)
 	current_health = max(0, current_health - amount)
 	play_sfx(SFX_HURT, -2.0)
 
@@ -1192,7 +1193,7 @@ func take_damage(amount: int, attacker: CharacterBody2D = null) -> void:
 	if animated_sprite:
 		animated_sprite.modulate = Color(3.0, 3.0, 3.0)
 		var flash_tween := create_tween()
-		var default_col: Color = Color.WHITE if ("Alaric" in name or is_alaric_boss or is_in_group("npc")) else Color(1.3, 0.4, 0.4)
+		var default_col: Color = Color.WHITE if ("Alaric" in name or is_alaric_boss or is_in_group("npc") or is_worm or ("Worm" in name)) else Color(1.3, 0.4, 0.4)
 		if is_alaric_boss and is_alaric_enraged:
 			default_col = Color(1.22, 0.82, 0.78)
 		flash_tween.tween_property(animated_sprite, "modulate", default_col, 0.1)

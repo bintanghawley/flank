@@ -688,9 +688,9 @@ const ENEMY_WORM_SCENE = preload("res://scene/enemy/enemy.tscn")
 const WORM_IDLE_TEXTURE = preload("res://assets/characters/animal/cacing/cacing_idle.png")
 const WORM_WALK_TEXTURE = preload("res://assets/characters/animal/cacing/cacing_walk.png")
 const WORM_ATTACK_TEXTURE = preload("res://assets/characters/animal/cacing/cacing_attack.png")
-const WORM_MAX_HEALTH: int = 260           # HP sedang: ±7 tebasan Knight (40 dmg)
-const WORM_CONTACT_DAMAGE: int = 8         # Damage sentuhan ringan
-const WORM_MELEE_DAMAGE: int = 22          # Damage serangan sedang, tidak terlalu mematikan
+const WORM_MAX_HEALTH: int = 380           # HP cacing: dinaikkan dari 260 -> 380 agar lebih tebal
+const WORM_CONTACT_DAMAGE: int = 15        # Damage sentuhan: dinaikkan dari 8 -> 15
+const WORM_MELEE_DAMAGE: int = 35          # Damage gigitan cacing: dinaikkan dari 22 -> 35
 const WORM_MELEE_RANGE: float = 90.0
 const WORM_CHASE_SPEED: float = 105.0
 const WORM_WANDER_SPEED: float = 45.0
@@ -708,6 +708,7 @@ var arena_zones: Array[Dictionary] = [
 		"enemies": [] as Array[CharacterBody2D],
 		"is_cleared": false,
 		"respawn_timer": 0.0,
+		"worm_count": 7,
 	},
 	{
 		"id": 2,
@@ -718,6 +719,7 @@ var arena_zones: Array[Dictionary] = [
 		"enemies": [] as Array[CharacterBody2D],
 		"is_cleared": false,
 		"respawn_timer": 0.0,
+		"worm_count": 4,
 	}
 ]
 var active_arena_idx: int = -1
@@ -2490,21 +2492,33 @@ func _spawn_worm_arena_enemies() -> void:
 			e.queue_free()
 
 	var worm_frames := _get_worm_sprite_frames()
-	var spawn_offsets: Array = [
-		Vector2(-150.0, 40.0),
-		Vector2(0.0, -90.0),
-		Vector2(150.0, 40.0),
+	var spawn_offsets_7: Array = [
+		Vector2(-180.0, -80.0),
+		Vector2(-90.0, 70.0),
+		Vector2(0.0, -110.0),
+		Vector2(0.0, 40.0),
+		Vector2(90.0, -70.0),
+		Vector2(180.0, 80.0),
+		Vector2(-140.0, 110.0),
+	]
+	var spawn_offsets_4: Array = [
+		Vector2(-140.0, -60.0),
+		Vector2(-60.0, 70.0),
+		Vector2(80.0, -70.0),
+		Vector2(150.0, 60.0),
 	]
 
 	for zone_idx in range(arena_zones.size()):
 		var zone: Dictionary = arena_zones[zone_idx]
 		var center: Vector2 = zone["center"]
-		for i in range(WORMS_PER_ARENA):
+		var count: int = int(zone.get("worm_count", 4))
+		var offsets: Array = spawn_offsets_7 if count >= 7 else spawn_offsets_4
+		for i in range(count):
 			var worm := ENEMY_WORM_SCENE.instantiate() as CharacterBody2D
 			if not is_instance_valid(worm):
 				continue
 			worm.name = "Worm_Arena%d_%d" % [zone_idx + 1, i + 1]
-			worm.position = center + spawn_offsets[i % spawn_offsets.size()]
+			worm.position = center + offsets[i % offsets.size()]
 			add_child(worm)
 
 			# Cacing bertarung jarak dekat seperti Knight (melee AI).
@@ -2535,7 +2549,7 @@ func _spawn_worm_arena_enemies() -> void:
 			if worm.has_method("play_idle_animation"):
 				worm.play_idle_animation()
 
-	print("[Arena] %d cacing ditempatkan pada masing-masing %d arena." % [WORMS_PER_ARENA, arena_zones.size()])
+	print("[Arena] Arena 1 (Kiri): %d cacing, Arena 2 (Kanan): %d cacing." % [arena_zones[0].get("worm_count", 7), arena_zones[1].get("worm_count", 4)])
 
 
 func _init_training_dummy() -> void:
@@ -3010,11 +3024,23 @@ func _respawn_zone_enemies(zone: Dictionary) -> void:
 	zone["respawn_timer"] = 0.0
 	var z_enemies: Array = zone.get("enemies", [])
 	var center: Vector2 = zone.get("center", Vector2.ZERO)
-	var spawn_offsets: Array = [
-		Vector2(-150.0, 40.0),
-		Vector2(0.0, -90.0),
-		Vector2(150.0, 40.0),
+	var count: int = int(zone.get("worm_count", 4))
+	var spawn_offsets_7: Array = [
+		Vector2(-180.0, -80.0),
+		Vector2(-90.0, 70.0),
+		Vector2(0.0, -110.0),
+		Vector2(0.0, 40.0),
+		Vector2(90.0, -70.0),
+		Vector2(180.0, 80.0),
+		Vector2(-140.0, 110.0),
 	]
+	var spawn_offsets_4: Array = [
+		Vector2(-140.0, -60.0),
+		Vector2(-60.0, 70.0),
+		Vector2(80.0, -70.0),
+		Vector2(150.0, 60.0),
+	]
+	var offsets: Array = spawn_offsets_7 if count >= 7 else spawn_offsets_4
 
 	var valid_enemies: Array[CharacterBody2D] = []
 	for i in range(z_enemies.size()):
@@ -3032,7 +3058,7 @@ func _respawn_zone_enemies(zone: Dictionary) -> void:
 			var worm := ENEMY_WORM_SCENE.instantiate() as CharacterBody2D
 			if is_instance_valid(worm):
 				worm.name = "Worm_Arena%d_%d" % [zone.get("id", 1), i + 1]
-				worm.position = center + spawn_offsets[i % spawn_offsets.size()]
+				worm.position = center + offsets[i % offsets.size()]
 				add_child(worm)
 				worm.enemy_type = 1
 				worm.is_worm = true
