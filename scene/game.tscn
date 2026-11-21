@@ -99,6 +99,11 @@ can_respawn = false
 position = Vector2(3980, 4700)
 can_respawn = false
 
+[node name="SkeletonBoss" parent="." unique_id=110304383 instance=ExtResource("7_enemy_knight")]
+position = Vector2(6200, 8400)
+can_respawn = false
+is_skeleton_boss = true
+
 [node name="Npc_Guard_Left" parent="." unique_id=1290897880 instance=ExtResource("9_npc_guard")]
 position = Vector2(2400, 1035)
 

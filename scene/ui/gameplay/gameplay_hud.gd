@@ -502,7 +502,7 @@ const HERO_LORE: Dictionary = {
 		"title": "Ksatria Kerajaan",
 		"race": "Manusia",
 		"birthday": "31 Agustus",
-		"skill_desc": "Kebal Semua Damage (5 dtk)\nPerisai pelindung tim\nCD 12 detik"
+		"skill_desc": "Kebal Damage (3.5 dtk)\nPerisai pelindung tim\nCD 12 detik"
 	},
 	1: {
 		"display_name": "Hellene",
@@ -2552,6 +2552,7 @@ func _update_character_info_ui() -> void:
 		skill_preview_icon.texture = hero_skill_icons[hero_type]
 
 	if skill_preview_desc:
+		skill_preview_desc.autowrap_mode = TextServer.AUTOWRAP_OFF
 		skill_preview_desc.text = data.get("skill_desc", "-")
 
 	# Navigasi tombol panah biodata (hanya tampil jika anggota party > 1)
