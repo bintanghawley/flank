@@ -1024,6 +1024,7 @@ var arena_zones: Array[Dictionary] = [
 		"enemies": [] as Array[CharacterBody2D],
 		"is_cleared": false,
 		"respawn_timer": 0.0,
+		"worm_count": 4,
 	},
 	{
 		"id": 3,
@@ -2857,6 +2858,31 @@ func _init_arena_enemies() -> void:
 		if "Skeleton" in e.name or ("is_skeleton_boss" in e and e.is_skeleton_boss):
 			skeleton_boss_node = e
 
+	if not is_instance_valid(skeleton_boss_node):
+		skeleton_boss_node = get_node_or_null("SkeletonBoss") as CharacterBody2D
+	if not is_instance_valid(skeleton_boss_node):
+		for en in get_tree().get_nodes_in_group("enemy"):
+			if is_instance_valid(en) and (("is_skeleton_boss" in en and en.is_skeleton_boss) or "Skeleton" in en.name):
+				skeleton_boss_node = en
+				break
+	if not is_instance_valid(skeleton_boss_node):
+		var skel_scene = preload("res://scene/enemy/enemy_knight.tscn")
+		var skel := skel_scene.instantiate() as CharacterBody2D
+		skel.name = "SkeletonBoss"
+		skel.is_skeleton_boss = true
+		skel.global_position = SKELETON_BOSS_POS
+		add_child(skel)
+		skeleton_boss_node = skel
+
+	if is_instance_valid(skeleton_boss_node) and arena_zones.size() >= 3:
+		var a3_enemies: Array[CharacterBody2D] = arena_zones[2]["enemies"]
+		a3_enemies.clear()
+		a3_enemies.append(skeleton_boss_node)
+		if "wait_for_arena" in skeleton_boss_node:
+			skeleton_boss_node.wait_for_arena = true
+		if "can_respawn" in skeleton_boss_node:
+			skeleton_boss_node.can_respawn = false
+
 	if is_instance_valid(skeleton_boss_node) and not is_skeleton_boss_fight_in_progress:
 		_set_skeleton_boss_standby_mode()
 
@@ -2916,13 +2942,17 @@ func _get_worm_sprite_frames() -> SpriteFrames:
 
 
 func _spawn_worm_arena_enemies() -> void:
-	# Hapus musuh lama yang berada di dalam area arena (termasuk 3 node musuh bawaan scene).
+	# Hapus musuh cacing lama di dalam arena cacing (Arena 1 & 2), abaikan Alaric dan Skeleton Boss
 	for e in get_tree().get_nodes_in_group("enemy"):
 		if not is_instance_valid(e) or not (e is CharacterBody2D):
 			continue
 		if "is_alaric" in e and e.is_alaric:
 			continue
-		if _is_position_in_any_arena(e.global_position):
+		if "is_skeleton_boss" in e and e.is_skeleton_boss:
+			continue
+		if "Skeleton" in e.name:
+			continue
+		if _is_position_in_worm_arena(e.global_position):
 			e.remove_from_group("enemy")
 			if is_instance_valid(e.get_parent()):
 				e.get_parent().remove_child(e)
@@ -2945,8 +2975,11 @@ func _spawn_worm_arena_enemies() -> void:
 		Vector2(150.0, 60.0),
 	]
 
-	for zone_idx in range(arena_zones.size()):
+	# Hanya spawn cacing di Arena 1 dan Arena 2. Arena 3 adalah arena Boss Skeleton!
+	for zone_idx in range(mini(2, arena_zones.size())):
 		var zone: Dictionary = arena_zones[zone_idx]
+		if int(zone.get("id", 0)) == 3:
+			continue
 		var center: Vector2 = zone["center"]
 		var count: int = int(zone.get("worm_count", 4))
 		var offsets: Array = spawn_offsets_7 if count >= 7 else spawn_offsets_4
@@ -2986,7 +3019,7 @@ func _spawn_worm_arena_enemies() -> void:
 			if worm.has_method("play_idle_animation"):
 				worm.play_idle_animation()
 
-	print("[Arena] Arena 1 (Kiri): %d cacing, Arena 2 (Kanan): %d cacing." % [arena_zones[0].get("worm_count", 7), arena_zones[1].get("worm_count", 4)])
+	print("[Arena] Arena 1 (Kiri): %d cacing, Arena 2 (Kanan): %d cacing. Arena 3 khusus Boss Skeleton." % [arena_zones[0].get("worm_count", 7), arena_zones[1].get("worm_count", 4) if arena_zones.size() > 1 else 0])
 
 
 func _init_training_dummy() -> void:
@@ -3051,9 +3084,6 @@ func check_arena_trigger() -> void:
 		return
 	for i in range(arena_zones.size()):
 		var zone: Dictionary = arena_zones[i]
-		# Arena 3 (Boss Skeleton) dimulai melalui interaksi tombol "Mulai" seperti Alaric
-		if int(zone.get("id", 0)) == 3:
-			continue
 		if zone["is_cleared"]:
 			continue
 		var enemies_list: Array = zone.get("enemies", [])
@@ -3074,6 +3104,13 @@ func check_arena_trigger() -> void:
 		if trig.has_point(leader.global_position):
 			if i == 0 and selected_game_mode != "open_world" and not _is_scene2_intro_triggered and not is_scene2_completed:
 				_start_scene2_intro_sequence()
+				break
+			if i == 2:
+				if selected_game_mode != "open_world" and not is_scene_9_completed:
+					if is_scene_8_completed and not is_scene_9_in_progress:
+						start_story_scene_9()
+					break
+				_start_skeleton_boss_battle()
 				break
 			start_arena_battle(i)
 			break
@@ -3129,6 +3166,7 @@ func start_arena_battle(zone_idx: int = 0) -> void:
 
 	# 5. Ganti BGM sesuai zona arena: Arena Skeleton (2) menggunakan graveyard, Arena Cacing (0 & 1) menggunakan battle_cacing
 	if active_arena_idx == 2:
+		is_skeleton_boss_fight_in_progress = true
 		_crossfade_to_bgm(BGM_GRAVEYARD)
 	else:
 		_crossfade_to_bgm(BGM_BATTLE_CACING)
@@ -3501,6 +3539,11 @@ func handle_arena_group_respawn(delta: float) -> void:
 
 
 func _respawn_zone_enemies(zone: Dictionary) -> void:
+	if int(zone.get("id", 0)) == 3:
+		# Arena 3 adalah Boss Skeleton, bukan cacing
+		if is_instance_valid(skeleton_boss_node):
+			_set_skeleton_boss_standby_mode()
+		return
 	zone["is_cleared"] = false
 	zone["respawn_timer"] = 0.0
 	var z_enemies: Array = zone.get("enemies", [])
