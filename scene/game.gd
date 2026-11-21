@@ -5610,8 +5610,8 @@ func _format_alaric_time(seconds: float) -> String:
 	if seconds <= 0.0:
 		return "--:--.--"
 	var total_cs: int = int(round(seconds * 100.0))
-	var mins: int = total_cs / 6000
-	var secs: int = (total_cs / 100) % 60
+	var mins: int = int(float(total_cs) / 6000.0)
+	var secs: int = int(float(total_cs) / 100.0) % 60
 	var cs: int = total_cs % 100
 	return "%02d:%02d.%02d" % [mins, secs, cs]
 

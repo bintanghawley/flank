@@ -1739,7 +1739,7 @@ func _apply_boss_camera_shake(intensity: float = 8.0) -> void:
 		game_node.apply_camera_shake(intensity)
 
 
-func _process_alaric_boss_ai(delta: float, dir: Vector2, dist_to_player: float, has_los: bool) -> void:
+func _process_alaric_boss_ai(delta: float, dir: Vector2, _dist_to_player: float, has_los: bool) -> void:
 	chase_speed = get_alaric_current_move_speed()
 
 	# 1. Jika sedang dalam Wind-up atau eksekusi tebasan (is_shooting), diam di tempat
