@@ -833,6 +833,35 @@ var _is_party_initialized: bool = false
 const BGM_GAMEPLAY = preload("res://assets/audio/bgm/game.ogg")
 const BGM_GAME_OVER = preload("res://assets/audio/bgm/game_over.ogg")
 const BGM_ALARIC = preload("res://assets/audio/bgm/alaric.ogg")
+const BGM_LAYAR_HITAM_AWAL = preload("res://assets/audio/bgm/layar_hitam_awal.ogg")
+const BGM_GRAVEYARD = preload("res://assets/audio/bgm/graveyard.ogg")
+const BGM_BATTLE_CACING = preload("res://assets/audio/bgm/battle_cacing.ogg")
+const BGM_CUTSCENE_GAGAK = preload("res://assets/audio/bgm/cutscene_gagak.ogg")
+const BGM_CUTSCENE_RAPAT = preload("res://assets/audio/bgm/cutscene_rapat.ogg")
+var BGM_PERPUS: AudioStream = null
+
+func _get_bgm_perpus() -> AudioStream:
+	if is_instance_valid(BGM_PERPUS):
+		return BGM_PERPUS
+	if ResourceLoader.exists("res://assets/audio/bgm/perpus.ogg"):
+		var res = load("res://assets/audio/bgm/perpus.ogg")
+		if res is AudioStream:
+			BGM_PERPUS = res
+			return BGM_PERPUS
+	if FileAccess.file_exists("res://assets/audio/bgm/perpus.ogg"):
+		var stream = AudioStreamOggVorbis.load_from_file("res://assets/audio/bgm/perpus.ogg")
+		if stream:
+			BGM_PERPUS = stream
+			return BGM_PERPUS
+		var fa = FileAccess.open("res://assets/audio/bgm/perpus.ogg", FileAccess.READ)
+		if fa:
+			var bytes = fa.get_buffer(fa.get_length())
+			fa.close()
+			var ogg_stream = AudioStreamOggVorbis.load_from_buffer(bytes)
+			if ogg_stream:
+				BGM_PERPUS = ogg_stream
+				return BGM_PERPUS
+	return BGM_PERPUS
 var _bgm_player_a: AudioStreamPlayer = null
 var _bgm_player_b: AudioStreamPlayer = null
 var _active_bgm_player: AudioStreamPlayer = null
@@ -841,7 +870,7 @@ var _bgm_tween: Tween = null
 var _bgm_loop_timer: Timer = null
 var _is_crossfading: bool = false
 const BGM_CROSSFADE_DURATION: float = 2.5
-const BGM_BASE_VOLUME_DB: float = -4.0 # Dikalibrasi seimbang saat volume UI 100%
+const BGM_BASE_VOLUME_DB: float = 0.0 # Standar volume penuh (100% / 0 dB) sesuai slider UI
 
 func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 	if not stream:
@@ -882,8 +911,9 @@ func _ensure_bgm_loop_timer() -> void:
 	_bgm_loop_timer.timeout.connect(_update_bgm_loop)
 
 
-func _init_and_play_bgm(fade_in_at_start: bool = true) -> void:
-	if not BGM_GAMEPLAY:
+func _init_and_play_bgm(initial_stream: AudioStream = BGM_GAMEPLAY, fade_in_at_start: bool = true) -> void:
+	var stream: AudioStream = initial_stream if initial_stream else BGM_GAMEPLAY
+	if not stream:
 		return
 	_ensure_music_bus()
 	_ensure_bgm_loop_timer()
@@ -891,18 +921,18 @@ func _init_and_play_bgm(fade_in_at_start: bool = true) -> void:
 	if not is_instance_valid(_bgm_player_a):
 		_bgm_player_a = AudioStreamPlayer.new()
 		_bgm_player_a.name = "BgmPlayerA"
-		_bgm_player_a.stream = BGM_GAMEPLAY
 		_bgm_player_a.bus = &"Music"
 		_bgm_player_a.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(_bgm_player_a)
+	_bgm_player_a.stream = stream
 	
 	if not is_instance_valid(_bgm_player_b):
 		_bgm_player_b = AudioStreamPlayer.new()
 		_bgm_player_b.name = "BgmPlayerB"
-		_bgm_player_b.stream = BGM_GAMEPLAY
 		_bgm_player_b.bus = &"Music"
 		_bgm_player_b.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(_bgm_player_b)
+	_bgm_player_b.stream = stream
 	
 	if _bgm_player_a.stream is AudioStreamOggVorbis:
 		(_bgm_player_a.stream as AudioStreamOggVorbis).loop = false
@@ -960,6 +990,9 @@ func _start_bgm_crossfade(time_left: float) -> void:
 	var fade_time := clampf(time_left, 1.0, BGM_CROSSFADE_DURATION)
 	var base_linear := db_to_linear(BGM_BASE_VOLUME_DB)
 	
+	incoming.stream = outgoing.stream
+	if incoming.stream is AudioStreamOggVorbis:
+		(incoming.stream as AudioStreamOggVorbis).loop = false
 	incoming.volume_db = -80.0
 	incoming.play(0.0)
 	
@@ -1253,24 +1286,27 @@ func _ready() -> void:
 	_init_defeat_overlay.call_deferred()
 
 	# 6. Jalankan efek pembukaan Circular Mask (Iris Open) saat masuk arena game
-	_init_and_play_bgm()
-
 	# Jika masuk melalui menu 'Lanjutkan' di Start Menu, muat save slot tertunda
 	if pending_load_slot_id > 0:
+		_init_and_play_bgm(BGM_GAMEPLAY)
 		play_iris_opening_transition()
 		var slot_to_load := pending_load_slot_id
 		pending_load_slot_id = -1
 		call_deferred("load_game_from_slot", slot_to_load)
 	elif selected_game_mode == "open_world":
+		_init_and_play_bgm(BGM_GAMEPLAY)
 		play_iris_opening_transition()
 		_setup_open_world_mode.call_deferred()
 	elif not is_prologue_completed:
-		# Mode Cerita baru: tampilkan narasi abad ke-7 di layar hitam sebelum masuk gameplay
+		# Mode Cerita baru: putar BGM layar hitam awal, tampilkan narasi abad ke-7 di layar hitam sebelum masuk gameplay
+		_init_and_play_bgm(BGM_LAYAR_HITAM_AWAL)
 		_show_story_prologue_intro_crawl(func():
+			_crossfade_to_bgm(BGM_GAMEPLAY)
 			play_iris_opening_transition()
 			_start_story_prologue_sequence.call_deferred()
 		)
 	else:
+		_init_and_play_bgm(BGM_GAMEPLAY)
 		play_iris_opening_transition()
 		_start_story_prologue_sequence.call_deferred()
 
@@ -2792,6 +2828,12 @@ func start_arena_battle(zone_idx: int = 0) -> void:
 	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
 		gameplay_hud.set_combat_hud_visible(true, true)
 
+	# 5. Ganti BGM sesuai zona arena: Arena Skeleton (2) menggunakan graveyard, Arena Cacing (0 & 1) menggunakan battle_cacing
+	if active_arena_idx == 2:
+		_crossfade_to_bgm(BGM_GRAVEYARD)
+	else:
+		_crossfade_to_bgm(BGM_BATTLE_CACING)
+
 	print("Arena Battle Dimulai! Zona: ", zone["name"], ", Kamera fokus ke (", arena_center, "), musuh aktif: ", arena_enemies.size())
 
 
@@ -3076,7 +3118,10 @@ func end_arena_battle() -> void:
 	# 1. Buka batas arena (nonaktifkan barrier)
 	_set_arena_barrier_enabled(false)
 
-	# 2. Kembalikan kamera ke mode eksplorasi (zoom explore dan ikuti leader)
+	# 2. Kembalikan musik pertarungan arena ke BGM gameplay normal dengan seamless crossfade
+	_crossfade_to_bgm(BGM_GAMEPLAY)
+
+	# 3. Kembalikan kamera ke mode eksplorasi (zoom explore dan ikuti leader)
 	target_camera_zoom = CAMERA_ZOOM_EXPLORE
 	is_camera_locked_to_arena = false
 
@@ -4387,11 +4432,16 @@ func _start_prologue_crow_dialogue_sequence() -> void:
 		if lead.has_method("play_idle_animation"):
 			lead.play_idle_animation()
 
+	# Ganti musik ke BGM cutscene gagak dengan crossfade
+	_crossfade_to_bgm(BGM_CUTSCENE_GAGAK)
+
 	# Pastikan Burung Gagak ada di atas tiang lampu kayu
 	_spawn_prologue_crow()
 
 	# Mainkan Naskah Dialog 1B (Setelah Fight & Burung Gagak Tiba)
 	play_story_dialogue("FLK-002-B", func():
+		# Kembalikan musik ke BGM gameplay normal saat rangkaian dialog cutscene gagak selesai
+		_crossfade_to_bgm(BGM_GAMEPLAY)
 		_transition_prologue_to_scene2()
 	)
 
@@ -4942,6 +4992,7 @@ func start_castle_meeting_cutscene() -> void:
 	if selected_game_mode == "open_world" or is_meeting_in_progress or is_castle_meeting_completed or is_transitioning:
 		return
 	is_meeting_in_progress = true
+	_crossfade_to_bgm(BGM_CUTSCENE_RAPAT)
 
 	# Pastikan Quest Rapat Darurat Istana aktif dan ditampilkan di HUD
 	for q in quest_list:
@@ -5251,6 +5302,7 @@ func _on_knight_room_dialogue_finished(fade_canvas: CanvasLayer, fade_rect: Colo
 
 	# 1. Pindahkan Arthur dan seluruh party ke luar aula rapat (Halaman Depan Kastil)
 	is_inside_castle_hall = false
+	_crossfade_to_bgm(BGM_GAMEPLAY)
 	for i in range(party_members.size()):
 		var member = party_members[i]
 		if is_instance_valid(member):
@@ -5352,6 +5404,7 @@ func start_story_scene_4() -> void:
 	is_inside_castle_hall = false
 	is_inside_secret_library = true
 	is_on_library_floor_2 = false
+	_crossfade_to_bgm(_get_bgm_perpus())
 	set_party_movement_locked(true)
 
 	if gameplay_hud and gameplay_hud.has_method("hide_interact_prompt"):
@@ -5705,6 +5758,7 @@ func _play_emergency_bell_sequence(on_finished: Callable) -> void:
 
 func _complete_story_scene_4() -> void:
 	var on_midpoint := func() -> void:
+		_crossfade_to_bgm(BGM_GAMEPLAY)
 		is_scene_4_in_progress = false
 		is_scene_4_completed = true
 		is_inside_secret_library = false
@@ -8322,6 +8376,14 @@ func load_game_from_slot(slot_id: int) -> bool:
 	if gameplay_hud and gameplay_hud.has_method("set_combat_hud_visible"):
 		gameplay_hud.set_combat_hud_visible(arena_state == ArenaState.COMBAT, false)
 
+	# Sinkronisasi BGM jika memuat permainan di dalam ruangan khusus
+	if is_inside_castle_hall or current_location_name == "Aula Rapat Istana":
+		is_inside_castle_hall = true
+		_crossfade_to_bgm(BGM_CUTSCENE_RAPAT)
+	elif is_inside_secret_library or current_location_name == "Perpustakaan Istana" or current_location_name == "Perpustakaan":
+		is_inside_secret_library = true
+		_crossfade_to_bgm(_get_bgm_perpus())
+
 	_setup_alaric_npc()
 
 	print("GAME LOADED: Slot %d | Leader: %s | HP: %d | Playtime: %f" % [slot_id, String(leader.name) if leader else "None", int(leader.current_health) if (leader and "current_health" in leader) else 0, total_playtime])
@@ -8697,6 +8759,9 @@ func _on_hud_interaction_pressed(action_type: String) -> void:
 			start_castle_meeting_cutscene()
 	elif action_type == "talk_alaric" or action_type == "Bicara dengan Pelatih Alaric":
 		_start_alaric_pre_fight_dialogue()
+	elif action_type == "talk_magnus" or action_type == "Bicara dengan Magnus":
+		_is_waiting_prologue_return = false
+		_start_prologue_crow_dialogue_sequence()
 	elif action_type == "talk_skeleton_boss" or action_type == "Tantang Boss Skeleton":
 		_show_skeleton_boss_challenge_prompt()
 	elif action_type == "go_library_floor2" or action_type == "Naik ke Lantai 2":
@@ -8718,6 +8783,7 @@ func enter_secret_library() -> void:
 		gameplay_hud.hide_interact_prompt(true)
 
 	var on_midpoint := func() -> void:
+		_crossfade_to_bgm(_get_bgm_perpus())
 		if selected_game_mode != "open_world" and not is_scene_4_in_progress and not is_scene_4_completed:
 			start_story_scene_4()
 		else:
@@ -8765,6 +8831,7 @@ func exit_secret_library() -> void:
 		gameplay_hud.hide_interact_prompt(true)
 
 	var on_midpoint := func() -> void:
+		_crossfade_to_bgm(BGM_GAMEPLAY)
 		is_inside_secret_library = false
 		is_on_library_floor_2 = false
 		is_inside_castle_hall = false
@@ -8803,6 +8870,7 @@ func enter_castle_hall() -> void:
 	if is_transitioning:
 		return
 	is_inside_castle_hall = true
+	_crossfade_to_bgm(BGM_CUTSCENE_RAPAT)
 	if is_instance_valid(gameplay_hud):
 		if gameplay_hud.has_method("hide_interact_prompt"):
 			gameplay_hud.hide_interact_prompt()
@@ -8861,6 +8929,7 @@ func exit_castle_hall() -> void:
 	if is_transitioning:
 		return
 	is_inside_castle_hall = false
+	_crossfade_to_bgm(BGM_GAMEPLAY)
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 		gameplay_hud.hide_interact_prompt()
 

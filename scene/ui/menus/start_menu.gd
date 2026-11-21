@@ -51,7 +51,7 @@ var _bgm_tween: Tween = null
 var _bgm_loop_timer: Timer = null
 var _is_crossfading: bool = false
 const BGM_CROSSFADE_DURATION: float = 2.5
-const BGM_BASE_VOLUME_DB: float = -4.0 # Dikalibrasi seimbang saat volume UI 100%
+const BGM_BASE_VOLUME_DB: float = 0.0 # Standar volume penuh (100% / 0 dB) sesuai slider UI
 
 # Kecepatan dasar parallax
 const BASE_CLOUD_SPEED: float = 20.0
