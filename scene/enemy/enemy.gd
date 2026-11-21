@@ -59,6 +59,67 @@ var alaric_attack_token: int = 0
 var alaric_active_telegraph: Node2D = null
 var alaric_enrage_aura: Node2D = null
 
+# =========================================================
+# SKELETON BOSS STATS, ENRAGE (30% HP) & 4 FIRE AOE ATTACKS
+# =========================================================
+@export var is_skeleton_boss: bool = false
+const SKELETON_MAX_HP: int = 5000
+const SKELETON_TILE_SIZE: float = 85.0                  # Ukuran 1 tile dunia (skala 5x)
+const SKELETON_NORMAL_MOVE_SPEED: float = 176.0         # 2,2 tile/detik (35,2 px * 5x skala dunia)
+const SKELETON_ENRAGE_MOVE_SPEED: float = 208.0         # 2,6 tile/detik (41,6 px * 5x skala dunia)
+const SKELETON_DAMAGE_REDUCTION: float = 0.10           # Damage Reduction 10%
+const SKELETON_ENRAGE_HP_RATIO: float = 0.30            # Enrage aktif pada HP <= 30% (450 HP)
+const SKELETON_ATTACK_BREATHING_GAP: float = 2.4        # Jeda terbuka antar serangan agar pemain punya kesempatan menyerang
+
+# A. Ring of Fire (Circular AoE: Radius awal 1 tile -> Radius akhir 3 tile)
+const SKELETON_RING_DAMAGE: int = 180
+const SKELETON_RING_WINDUP_NORMAL: float = 1.0
+const SKELETON_RING_WINDUP_ENRAGE: float = 0.75
+const SKELETON_RING_RECOVERY: float = 1.2
+const SKELETON_RING_COOLDOWN: float = 7.0
+const SKELETON_RING_START_TILES: float = 1.0
+const SKELETON_RING_END_TILES: float = 3.0
+
+# B. Flame Pillar (Targeted AoE: 2 karakter bergantian, Radius 1 tile)
+const SKELETON_PILLAR_DAMAGE: int = 210
+const SKELETON_PILLAR_WINDUP_NORMAL: float = 1.2
+const SKELETON_PILLAR_WINDUP_ENRAGE: float = 0.9
+const SKELETON_PILLAR_RECOVERY: float = 1.0
+const SKELETON_PILLAR_COOLDOWN: float = 8.0
+const SKELETON_PILLAR_RADIUS_TILES: float = 1.0
+const SKELETON_PILLAR_TARGET_COUNT: int = 2
+
+# C. Infernal Burst (Radial AoE: 4 arah utama Atas/Bawah/Kiri/Kanan, Jangkauan 4 tile)
+const SKELETON_BURST_DAMAGE: int = 260
+const SKELETON_BURST_WINDUP_NORMAL: float = 1.5
+const SKELETON_BURST_WINDUP_ENRAGE: float = 1.2
+const SKELETON_BURST_RECOVERY: float = 1.5
+const SKELETON_BURST_COOLDOWN: float = 11.0
+const SKELETON_BURST_RANGE_TILES: float = 4.0
+
+# D. Fireball Rain (Multi-target AoE: 5 area acak, Radius 1 tile, 150 damage/ledakan)
+const SKELETON_RAIN_DAMAGE: int = 150
+const SKELETON_RAIN_WINDUP_NORMAL: float = 1.8
+const SKELETON_RAIN_WINDUP_ENRAGE: float = 1.4
+const SKELETON_RAIN_RECOVERY: float = 1.3
+const SKELETON_RAIN_COOLDOWN: float = 13.0
+const SKELETON_RAIN_AREA_COUNT: int = 5
+const SKELETON_RAIN_RADIUS_TILES: float = 1.0
+
+var is_skeleton_enraged: bool = false
+var skeleton_ring_cd_timer: float = 0.0
+var skeleton_pillar_cd_timer: float = 0.0
+var skeleton_burst_cd_timer: float = 0.0
+var skeleton_rain_cd_timer: float = 0.0
+var skeleton_recovery_timer: float = 0.0
+var skeleton_attack_gap_timer: float = 0.0
+var skeleton_attack_token: int = 0
+var skeleton_active_telegraphs: Array[Node2D] = []
+var skeleton_enrage_aura: Node2D = null
+static var _skeleton_sprite_frames_cache: SpriteFrames = null
+static var _orange_fireball_frames_cache: SpriteFrames = null
+static var _orange_explosion_frames_cache: SpriteFrames = null
+
 # =========================
 # RANGED ATTACK / TEMBAKAN MUSUH
 # =========================
@@ -76,6 +137,10 @@ const SFX_DEATH = preload("res://assets/audio/sfx/enemy/enemy_death.wav")
 const SFX_RESPAWN = preload("res://assets/audio/sfx/enemy/enemy_respawn.wav")
 const SFX_KNIGHT_SLASH = preload("res://assets/audio/sfx/characters/knight/knight_slash.wav")
 const SFX_KNIGHT_SLASH_HIT = preload("res://assets/audio/sfx/characters/knight/knight_slash_hit.wav")
+const SFX_FIRE_AIM = preload("res://assets/audio/sfx/characters/mage/mage_skill_meteor_aim.wav")
+const SFX_FIRE_CAST = preload("res://assets/audio/sfx/characters/mage/mage_skill_meteor_cast.wav")
+const SFX_FIRE_FALL = preload("res://assets/audio/sfx/characters/mage/mage_meteor_fall.wav")
+const SFX_FIRE_IMPACT = preload("res://assets/audio/sfx/characters/mage/mage_meteor_impact.wav")
 
 func play_sfx(stream: AudioStream, volume_db: float = 0.0) -> void:
 	if not stream:
@@ -154,6 +219,8 @@ func _ready() -> void:
 	add_to_group("enemy")
 	if "Alaric" in name:
 		is_alaric_boss = true
+	if "Skeleton" in name:
+		is_skeleton_boss = true
 	if is_training_dummy:
 		max_health = 2500
 		can_respawn = false
@@ -167,11 +234,21 @@ func _ready() -> void:
 		melee_damage = ALARIC_BASIC_DAMAGE
 		chase_speed = ALARIC_BASE_MOVE_SPEED
 		melee_attack_range = 115.0
-	elif is_worm or ("Worm" in name):
-		if max_health <= 1:
-			max_health = 380
-	elif max_health <= 1:
-		max_health = 380
+	elif is_skeleton_boss:
+		max_health = SKELETON_MAX_HP
+		can_respawn = false
+		contact_damage = 0
+		melee_damage = SKELETON_RING_DAMAGE
+		chase_speed = SKELETON_NORMAL_MOVE_SPEED
+		melee_attack_range = 120.0
+		collision_layer = 1
+		collision_mask = 1
+		if animated_sprite:
+			animated_sprite.sprite_frames = _get_or_create_skeleton_sprite_frames()
+			animated_sprite.modulate = Color.WHITE
+			animated_sprite.offset = Vector2(0, 0)
+	else:
+		max_health = 1
 	current_health = max_health
 	spawn_position = global_position
 	wander_target = spawn_position
@@ -196,6 +273,13 @@ func _setup_player_collision_exceptions() -> void:
 	if not is_inside_tree():
 		return
 	var party := get_tree().get_nodes_in_group("player")
+	if is_alaric_boss or is_skeleton_boss:
+		# Boss Alaric & Boss Skeleton: Collision TIDAK BISA DITEMBUS oleh karakter pemain
+		for p in party:
+			if is_instance_valid(p) and p is CollisionObject2D:
+				remove_collision_exception_with(p)
+				p.remove_collision_exception_with(self)
+		return
 	for p in party:
 		if is_instance_valid(p) and p is CollisionObject2D:
 			add_collision_exception_with(p)
@@ -381,7 +465,7 @@ func _physics_process(delta: float) -> void:
 		if dir == Vector2.ZERO:
 			dir = last_direction
 
-		# Hitung mundur cooldown tembak & cooldown skill Alaric Boss
+		# Hitung mundur cooldown tembak & cooldown skill Alaric Boss / Skeleton Boss
 		shoot_timer -= delta
 		if is_alaric_boss:
 			if alaric_basic_cd_timer > 0.0:
@@ -391,13 +475,26 @@ func _physics_process(delta: float) -> void:
 			if alaric_rupture_cd_timer > 0.0:
 				alaric_rupture_cd_timer = maxf(0.0, alaric_rupture_cd_timer - delta)
 			_check_and_update_alaric_enrage()
+		elif is_skeleton_boss:
+			if not is_shooting:
+				if skeleton_ring_cd_timer > 0.0:
+					skeleton_ring_cd_timer = maxf(0.0, skeleton_ring_cd_timer - delta)
+				if skeleton_pillar_cd_timer > 0.0:
+					skeleton_pillar_cd_timer = maxf(0.0, skeleton_pillar_cd_timer - delta)
+				if skeleton_burst_cd_timer > 0.0:
+					skeleton_burst_cd_timer = maxf(0.0, skeleton_burst_cd_timer - delta)
+				if skeleton_rain_cd_timer > 0.0:
+					skeleton_rain_cd_timer = maxf(0.0, skeleton_rain_cd_timer - delta)
+			_check_and_update_skeleton_enrage()
 
 		var has_los := has_clear_projectile_los_to(player, 12.0)
 		var dist_to_player: float = dist
 
-		# 1. Jarak serang & manuver AI Musuh (Alaric Boss vs Melee Knight vs Ranged Archer)
+		# 1. Jarak serang & manuver AI Musuh (Alaric Boss vs Skeleton Boss vs Melee Knight vs Ranged Archer)
 		if is_alaric_boss:
 			_process_alaric_boss_ai(delta, dir, dist_to_player, has_los)
+		elif is_skeleton_boss:
+			_process_skeleton_boss_ai(delta, dir, dist_to_player, has_los)
 		elif enemy_type == EnemyType.KNIGHT:
 			if dist_to_player <= melee_attack_range and has_los:
 				is_flanking = false
@@ -537,7 +634,7 @@ func _physics_process(delta: float) -> void:
 	# 2. LOGIKA DAMAGE KONTAK SAAT MENYENTUH HERO
 	# ---------------------------------------------------------
 	damage_timer -= delta
-	if not is_alaric_boss and contact_damage > 0:
+	if not is_alaric_boss and not is_skeleton_boss and contact_damage > 0:
 		var target_touching := update_touching_players_and_get_target()
 		if target_touching != null:
 			if current_state == State.IDLE_PATROL:
@@ -1161,11 +1258,18 @@ func take_damage(amount: int, attacker: CharacterBody2D = null) -> void:
 		return
 
 	wait_for_arena = false
+	if is_skeleton_boss:
+		# Damage Reduction 10% pada Boss Skeleton
+		amount = maxi(1, int(round(float(amount) * (1.0 - SKELETON_DAMAGE_REDUCTION))))
+	elif not is_training_dummy and not is_alaric_boss:
+		amount = max(amount, current_health)
 	current_health = max(0, current_health - amount)
 	play_sfx(SFX_HURT, -2.0)
 
 	if is_alaric_boss:
 		_check_and_update_alaric_enrage()
+	elif is_skeleton_boss:
+		_check_and_update_skeleton_enrage()
 
 	# Kamera bergetar (camera shake) saat player mengenai musuh
 	var player_node = get_tree().get_first_node_in_group("player")
@@ -1193,9 +1297,11 @@ func take_damage(amount: int, attacker: CharacterBody2D = null) -> void:
 	if animated_sprite:
 		animated_sprite.modulate = Color(3.0, 3.0, 3.0)
 		var flash_tween := create_tween()
-		var default_col: Color = Color.WHITE if ("Alaric" in name or is_alaric_boss or is_in_group("npc") or is_worm or ("Worm" in name)) else Color(1.3, 0.4, 0.4)
+		var default_col: Color = Color.WHITE if ("Alaric" in name or is_alaric_boss or is_skeleton_boss or is_in_group("npc")) else Color(1.3, 0.4, 0.4)
 		if is_alaric_boss and is_alaric_enraged:
 			default_col = Color(1.22, 0.82, 0.78)
+		elif is_skeleton_boss and is_skeleton_enraged:
+			default_col = Color(1.35, 0.85, 0.55)
 		flash_tween.tween_property(animated_sprite, "modulate", default_col, 0.1)
 
 	# Multi-Target Aggro: Prioritaskan penyerang yang baru memberi damage
@@ -1245,6 +1351,15 @@ func die() -> void:
 		is_shooting = false
 		velocity = Vector2.ZERO
 		knockback_velocity = Vector2.ZERO
+		play_idle_animation()
+		return
+	if is_skeleton_boss:
+		_cleanup_skeleton_combat_effects()
+		is_dead = true
+		is_shooting = false
+		velocity = Vector2.ZERO
+		knockback_velocity = Vector2.ZERO
+		play_sfx(SFX_DEATH, 0.0)
 		play_idle_animation()
 		return
 	is_dead = true
@@ -1461,7 +1576,7 @@ func update_touching_players_and_get_target(exited_body: Node2D = null) -> Chara
 
 
 func _on_hitbox_body_entered(body: Node2D) -> void:
-	if is_dead or is_training_dummy or is_alaric_boss or contact_damage <= 0 or body == null:
+	if is_dead or is_training_dummy or is_alaric_boss or is_skeleton_boss or contact_damage <= 0 or body == null:
 		return
 	if body is CharacterBody2D and body.is_in_group("player") and not ("is_dead" in body and body.is_dead):
 		if body not in touching_players:
@@ -2344,3 +2459,1117 @@ class AlaricEnrageAuraNode extends Node2D:
 		var r := 42.0 + pulse * 6.0
 		draw_circle(Vector2.ZERO, r, Color(0.95, 0.22, 0.12, 0.18 + pulse * 0.10))
 		draw_arc(Vector2.ZERO, r, 0.0, TAU, 32, Color(1.0, 0.48, 0.18, 0.65 + pulse * 0.25), 2.2)
+
+
+# =========================================================
+# SKELETON BOSS COMBAT SYSTEM (7.200 HP, 10% DR, ENRAGE 30%, 4 SERANGAN AOE API & FIREBALL ORANYE)
+# =========================================================
+
+static func _get_or_create_skeleton_sprite_frames() -> SpriteFrames:
+	if _skeleton_sprite_frames_cache != null:
+		return _skeleton_sprite_frames_cache
+
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.remove_animation(&"default")
+
+	var tex := load("res://assets/enemies/Skeleton.png") as Texture2D
+	if not tex:
+		_skeleton_sprite_frames_cache = frames
+		return frames
+
+	var img := tex.get_image()
+	# Layout Skeleton.png (192x320, grid 32x32 -> 6 kolom x 10 baris):
+	# Row 0: idle_s (6 frame), Row 1: idle_e (6 frame, flip untuk idle_w), Row 2: idle_n (6 frame)
+	# Row 3: walk_s (6 frame), Row 4: walk_e (6 frame, flip untuk walk_w), Row 5: walk_n (6 frame)
+	# Row 6: death (4 frame)
+	# Row 7: atk_s/skill_s (4 frame), Row 8: atk_e/skill_e (4 frame, flip untuk atk_w/skill_w), Row 9: atk_n/skill_n (4 frame)
+	var anim_defs: Array[Dictionary] = [
+		{"name": &"idle_s", "row": 0, "count": 6, "speed": 7.0, "loop": true, "flip": false},
+		{"name": &"idle_e", "row": 1, "count": 6, "speed": 7.0, "loop": true, "flip": false},
+		{"name": &"idle_w", "row": 1, "count": 6, "speed": 7.0, "loop": true, "flip": true},
+		{"name": &"idle_n", "row": 2, "count": 6, "speed": 7.0, "loop": true, "flip": false},
+		{"name": &"walk_s", "row": 3, "count": 6, "speed": 10.0, "loop": true, "flip": false},
+		{"name": &"walk_e", "row": 4, "count": 6, "speed": 10.0, "loop": true, "flip": false},
+		{"name": &"walk_w", "row": 4, "count": 6, "speed": 10.0, "loop": true, "flip": true},
+		{"name": &"walk_n", "row": 5, "count": 6, "speed": 10.0, "loop": true, "flip": false},
+		{"name": &"atk_s", "row": 7, "count": 4, "speed": 10.0, "loop": false, "flip": false},
+		{"name": &"atk_e", "row": 8, "count": 4, "speed": 10.0, "loop": false, "flip": false},
+		{"name": &"atk_w", "row": 8, "count": 4, "speed": 10.0, "loop": false, "flip": true},
+		{"name": &"atk_n", "row": 9, "count": 4, "speed": 10.0, "loop": false, "flip": false},
+		{"name": &"skill_s", "row": 7, "count": 4, "speed": 10.0, "loop": false, "flip": false},
+		{"name": &"skill_e", "row": 8, "count": 4, "speed": 10.0, "loop": false, "flip": false},
+		{"name": &"skill_w", "row": 8, "count": 4, "speed": 10.0, "loop": false, "flip": true},
+		{"name": &"skill_n", "row": 9, "count": 4, "speed": 10.0, "loop": false, "flip": false},
+	]
+
+	for def in anim_defs:
+		var anim_name: StringName = def["name"]
+		frames.add_animation(anim_name)
+		frames.set_animation_speed(anim_name, def["speed"])
+		frames.set_animation_loop(anim_name, def["loop"])
+		var row: int = def["row"]
+		var count: int = def["count"]
+		var do_flip: bool = def["flip"]
+		for col in range(count):
+			if do_flip and img != null:
+				var sub_img := img.get_region(Rect2i(col * 32, row * 32, 32, 32))
+				sub_img.flip_x()
+				var flipped_tex := ImageTexture.create_from_image(sub_img)
+				frames.add_frame(anim_name, flipped_tex)
+			else:
+				var atlas_tex := AtlasTexture.new()
+				atlas_tex.atlas = tex
+				atlas_tex.region = Rect2(col * 32, row * 32, 32, 32)
+				frames.add_frame(anim_name, atlas_tex)
+
+	_skeleton_sprite_frames_cache = frames
+	return _skeleton_sprite_frames_cache
+
+
+static func _recolor_cyan_fire_image_to_orange(src_img: Image) -> Image:
+	var out_img := src_img.duplicate() as Image
+	var w := out_img.get_width()
+	var h := out_img.get_height()
+	for y in range(h):
+		for x in range(w):
+			var c := out_img.get_pixel(x, y)
+			if c.a <= 0.01:
+				continue
+			# Konversi palet api biru/cyan menjadi api oranye-merah-kuning membara
+			var lum := clampf(c.b * 0.55 + c.g * 0.35 + c.r * 0.10, 0.0, 1.0)
+			var fire_col: Color
+			if lum >= 0.88:
+				# Inti api putih-kekuningan sangat panas
+				fire_col = Color(1.0, 0.96, 0.72, c.a)
+			elif lum >= 0.68:
+				# Api kuning-oranye terang
+				var t := (lum - 0.68) / 0.20
+				fire_col = Color(1.0, lerpf(0.58, 0.90, t), lerpf(0.10, 0.42, t), c.a)
+			elif lum >= 0.42:
+				# Api oranye menyala
+				var t := (lum - 0.42) / 0.26
+				fire_col = Color(lerpf(0.95, 1.0, t), lerpf(0.28, 0.58, t), lerpf(0.04, 0.10, t), c.a)
+			else:
+				# Tepi api merah-oranye bara
+				var t := lum / 0.42
+				fire_col = Color(lerpf(0.65, 0.95, t), lerpf(0.10, 0.28, t), 0.03, c.a)
+			out_img.set_pixel(x, y, fire_col)
+	return out_img
+
+
+static func _get_or_create_orange_fireball_frames() -> SpriteFrames:
+	if _orange_fireball_frames_cache != null:
+		return _orange_fireball_frames_cache
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.set_animation_speed(&"default", 14.0)
+		frames.set_animation_loop(&"default", true)
+	else:
+		frames.add_animation(&"default")
+		frames.set_animation_speed(&"default", 14.0)
+		frames.set_animation_loop(&"default", true)
+
+	var tex := load("res://assets/skills/mage/fireball/meteor.png") as Texture2D
+	if tex and tex.get_image():
+		var orange_img := _recolor_cyan_fire_image_to_orange(tex.get_image())
+		var orange_tex := ImageTexture.create_from_image(orange_img)
+		for i in range(4):
+			var atlas := AtlasTexture.new()
+			atlas.atlas = orange_tex
+			atlas.region = Rect2(i * 64, 0, 64, 64)
+			frames.add_frame(&"default", atlas)
+	_orange_fireball_frames_cache = frames
+	return _orange_fireball_frames_cache
+
+
+static func _get_or_create_orange_explosion_frames() -> SpriteFrames:
+	if _orange_explosion_frames_cache != null:
+		return _orange_explosion_frames_cache
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.set_animation_speed(&"default", 14.0)
+		frames.set_animation_loop(&"default", false)
+	else:
+		frames.add_animation(&"default")
+		frames.set_animation_speed(&"default", 14.0)
+		frames.set_animation_loop(&"default", false)
+
+	var tex := load("res://assets/skills/mage/fireball/meteor-explode.png") as Texture2D
+	if tex and tex.get_image():
+		var orange_img := _recolor_cyan_fire_image_to_orange(tex.get_image())
+		var orange_tex := ImageTexture.create_from_image(orange_img)
+		for i in range(4):
+			var atlas := AtlasTexture.new()
+			atlas.atlas = orange_tex
+			atlas.region = Rect2(i * 64, 0, 64, 64)
+			frames.add_frame(&"default", atlas)
+	_orange_explosion_frames_cache = frames
+	return _orange_explosion_frames_cache
+
+
+func reset_skeleton_boss_state() -> void:
+	is_skeleton_boss = true
+	_cleanup_skeleton_combat_effects()
+	max_health = SKELETON_MAX_HP
+	current_health = SKELETON_MAX_HP
+	is_dead = false
+	is_shooting = false
+	is_skeleton_enraged = false
+	contact_damage = 0
+	melee_damage = SKELETON_RING_DAMAGE
+	chase_speed = get_skeleton_current_move_speed()
+	collision_layer = 1
+	collision_mask = 1
+	skeleton_ring_cd_timer = 1.6
+	skeleton_pillar_cd_timer = 4.2
+	skeleton_burst_cd_timer = 7.0
+	skeleton_rain_cd_timer = 10.0
+	skeleton_recovery_timer = 0.0
+	skeleton_attack_gap_timer = 1.4
+	velocity = Vector2.ZERO
+	knockback_velocity = Vector2.ZERO
+	if animated_sprite:
+		animated_sprite.sprite_frames = _get_or_create_skeleton_sprite_frames()
+		animated_sprite.modulate = Color.WHITE
+		animated_sprite.offset = Vector2(0, 0)
+	if health_bar:
+		health_bar.max_value = max_health
+		health_bar.value = current_health
+		if _style_fill:
+			health_bar.add_theme_stylebox_override("fill", _style_fill)
+	if damage_bar:
+		damage_bar.max_value = max_health
+		damage_bar.value = current_health
+	_setup_player_collision_exceptions.call_deferred()
+
+
+func _cleanup_skeleton_combat_effects() -> void:
+	skeleton_attack_token += 1
+	is_shooting = false
+	skeleton_recovery_timer = 0.0
+	for t in skeleton_active_telegraphs:
+		if is_instance_valid(t):
+			t.queue_free()
+	skeleton_active_telegraphs.clear()
+	if is_instance_valid(skeleton_enrage_aura):
+		skeleton_enrage_aura.queue_free()
+	skeleton_enrage_aura = null
+
+
+func get_skeleton_current_move_speed() -> float:
+	if is_skeleton_enraged:
+		return SKELETON_ENRAGE_MOVE_SPEED # 2,6 tile/detik
+	return SKELETON_NORMAL_MOVE_SPEED     # 2,2 tile/detik
+
+
+func _check_and_update_skeleton_enrage() -> void:
+	if not is_skeleton_boss or is_dead or current_health <= 0:
+		return
+	var enrage_threshold: int = int(float(max_health) * SKELETON_ENRAGE_HP_RATIO) # 30% dari 7.200 = 2.160 HP
+	if not is_skeleton_enraged and current_health <= enrage_threshold:
+		is_skeleton_enraged = true
+		chase_speed = get_skeleton_current_move_speed()
+		_trigger_skeleton_enrage_visuals()
+	else:
+		chase_speed = get_skeleton_current_move_speed()
+
+
+func _trigger_skeleton_enrage_visuals() -> void:
+	play_sfx(SFX_ALERT, 2.0)
+	play_sfx(SFX_FIRE_CAST, 1.0)
+	_apply_boss_camera_shake(10.5)
+
+	if health_bar:
+		var enrage_fill := StyleBoxFlat.new()
+		enrage_fill.bg_color = Color(1.0, 0.42, 0.08, 0.98)
+		enrage_fill.set_corner_radius_all(1)
+		health_bar.add_theme_stylebox_override("fill", enrage_fill)
+
+	if animated_sprite:
+		animated_sprite.modulate = Color(1.35, 0.85, 0.55)
+
+	if not is_instance_valid(skeleton_enrage_aura):
+		var aura := SkeletonFireAuraNode.new()
+		aura.name = "SkeletonEnrageAura"
+		aura.position = Vector2(0.0, 4.4)
+		aura.scale = Vector2(0.2, 0.2)
+		aura.z_index = -1
+		add_child(aura)
+		skeleton_enrage_aura = aura
+
+	if get_parent():
+		var popup := Node2D.new()
+		popup.global_position = global_position + Vector2(0.0, -78.0)
+		popup.z_index = 25
+		var lbl := Label.new()
+		lbl.text = "ENRAGE! (API MEMBARA)"
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.position = Vector2(-120.0, -14.0)
+		lbl.size = Vector2(240.0, 28.0)
+		lbl.add_theme_font_size_override("font_size", 15)
+		lbl.add_theme_color_override("font_color", Color(1.0, 0.48, 0.12, 1.0))
+		lbl.add_theme_color_override("font_outline_color", Color(0.10, 0.02, 0.01, 1.0))
+		lbl.add_theme_constant_override("outline_size", 4)
+		popup.add_child(lbl)
+		get_parent().add_child(popup)
+
+		var tw := popup.create_tween()
+		tw.tween_property(popup, "global_position:y", popup.global_position.y - 38.0, 1.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(popup, "modulate:a", 0.0, 1.3).set_delay(0.35)
+		tw.tween_callback(popup.queue_free)
+
+
+func _process_skeleton_boss_ai(delta: float, dir: Vector2, _dist_to_player: float, has_los: bool) -> void:
+	chase_speed = get_skeleton_current_move_speed()
+
+	# 1. Selama Wind-up / Casting aktif, Skeleton berhenti bergerak
+	if is_shooting:
+		velocity = Vector2.ZERO
+		move_and_slide()
+		return
+
+	# 2. Selama fase Recovery pasca-serangan, Skeleton berhenti bergerak (terbuka untuk diserang pemain)
+	if skeleton_recovery_timer > 0.0:
+		skeleton_recovery_timer = maxf(0.0, skeleton_recovery_timer - delta)
+		velocity = Vector2.ZERO
+		move_and_slide()
+		play_idle_animation()
+		return
+
+	# 3. Jeda napas antar serangan: Skeleton hanya bergerak mengejar tanpa langsung mengeluarkan serangan baru bertubi-tubi
+	var can_start_new_attack: bool = true
+	if skeleton_attack_gap_timer > 0.0:
+		skeleton_attack_gap_timer = maxf(0.0, skeleton_attack_gap_timer - delta)
+		can_start_new_attack = false
+
+	var my_origin := get_alaric_ground_origin()
+	var target_origin := get_target_ground_origin(player)
+	var ground_dist := my_origin.distance_to(target_origin)
+	var to_target_dir := (target_origin - my_origin).normalized()
+	if to_target_dir == Vector2.ZERO:
+		to_target_dir = dir
+
+	if can_start_new_attack:
+		# Evaluasi pemilihan 4 serangan utama Skeleton berdasarkan ketersediaan Cooldown & jarak:
+		# A. Ring of Fire (Circular AoE 1->3 tile = 255 px, CD 7s)
+		if skeleton_ring_cd_timer <= 0.0 and ground_dist <= SKELETON_TILE_SIZE * 2.85:
+			velocity = Vector2.ZERO
+			move_and_slide()
+			_execute_skeleton_ring_of_fire(to_target_dir)
+			return
+
+		# C. Infernal Burst (Radial AoE 4 arah utama sejauh 4 tile = 340 px, CD 11s)
+		if skeleton_burst_cd_timer <= 0.0 and ground_dist <= SKELETON_TILE_SIZE * 3.85:
+			velocity = Vector2.ZERO
+			move_and_slide()
+			_execute_skeleton_infernal_burst(to_target_dir)
+			return
+
+		# B. Flame Pillar (Targeted AoE ke 2 karakter bergantian, CD 8s)
+		if skeleton_pillar_cd_timer <= 0.0 and ground_dist <= 560.0:
+			velocity = Vector2.ZERO
+			move_and_slide()
+			_execute_skeleton_flame_pillar(to_target_dir)
+			return
+
+		# D. Fireball Rain (Multi-target AoE 5 area acak, CD 13s)
+		if skeleton_rain_cd_timer <= 0.0 and ground_dist <= 620.0:
+			velocity = Vector2.ZERO
+			move_and_slide()
+			_execute_skeleton_fireball_rain(to_target_dir)
+			return
+
+		# Jika target masih agak jauh namun Flame Pillar / Fireball Rain sudah siap, tetap lepaskan
+		if skeleton_pillar_cd_timer <= 0.0:
+			velocity = Vector2.ZERO
+			move_and_slide()
+			_execute_skeleton_flame_pillar(to_target_dir)
+			return
+		if skeleton_rain_cd_timer <= 0.0:
+			velocity = Vector2.ZERO
+			move_and_slide()
+			_execute_skeleton_fireball_rain(to_target_dir)
+			return
+
+	# Bergerak mengejar target hingga masuk jarak Ring of Fire / Infernal Burst
+	if ground_dist > 95.0:
+		if has_los:
+			is_flanking = false
+			velocity = to_target_dir * chase_speed
+			move_and_slide_with_separation()
+			apply_smoothed_facing(to_target_dir, delta)
+		else:
+			flank_timeout -= delta
+			if not is_flanking or flank_timeout <= 0.0:
+				calculate_flank_waypoints(player)
+			var active_wp := flank_wp1
+			if flank_stage == 1:
+				if global_position.distance_to(flank_wp1) <= 28.0:
+					flank_stage = 2
+					active_wp = flank_wp2
+			else:
+				active_wp = flank_wp2
+				if global_position.distance_to(flank_wp2) <= 28.0:
+					is_flanking = false
+			var move_dir := global_position.direction_to(active_wp)
+			if move_dir == Vector2.ZERO:
+				move_dir = last_direction
+			velocity = move_dir * chase_speed
+			move_and_slide_with_separation()
+			apply_smoothed_facing(move_dir, delta)
+	else:
+		velocity = Vector2.ZERO
+		move_and_slide_with_separation()
+		last_direction = get_cardinal_direction(to_target_dir)
+		play_idle_animation()
+
+
+func _play_skeleton_cast_pose(is_windup: bool) -> void:
+	if not animated_sprite or not animated_sprite.sprite_frames:
+		return
+	animated_sprite.flip_h = false
+	var suffix := "s"
+	if last_direction == Vector2.UP:
+		suffix = "n"
+	elif last_direction == Vector2.LEFT or last_direction == Vector2(-1, -1) or last_direction == Vector2(-1, 1):
+		suffix = "w"
+	elif last_direction == Vector2.RIGHT or last_direction == Vector2(1, -1) or last_direction == Vector2(1, 1):
+		suffix = "e"
+
+	var anim_name := "skill_" + suffix
+	if not animated_sprite.sprite_frames.has_animation(anim_name):
+		anim_name = "atk_" + suffix
+	if animated_sprite.sprite_frames.has_animation(anim_name):
+		animated_sprite.play(anim_name)
+	if is_windup:
+		animated_sprite.modulate = Color(1.55, 0.72, 0.35) if is_skeleton_enraged else Color(1.38, 0.82, 0.48)
+	else:
+		animated_sprite.modulate = Color(1.35, 0.85, 0.55) if is_skeleton_enraged else Color.WHITE
+
+
+# ---------------------------------------------------------
+# A. RING OF FIRE (Circular AoE: Radius awal 1 tile -> Radius akhir 3 tile)
+# Damage: 180 | Wind-up: 1,0s (Enrage: 0,75s) | Recovery: 1,2s | Cooldown: 7s
+# ---------------------------------------------------------
+func _execute_skeleton_ring_of_fire(target_dir: Vector2) -> void:
+	if is_dead or is_shooting:
+		return
+	is_shooting = true
+	skeleton_ring_cd_timer = SKELETON_RING_COOLDOWN
+	var my_token := skeleton_attack_token
+	var windup_dur: float = SKELETON_RING_WINDUP_ENRAGE if is_skeleton_enraged else SKELETON_RING_WINDUP_NORMAL
+
+	last_direction = get_cardinal_direction(target_dir)
+	var origin := get_alaric_ground_origin()
+
+	# 1. Tampilkan indikator lingkaran merah-oranye (Radius 1 tile -> 3 tile)
+	var telegraph := SkeletonTelegraphNode.new()
+	telegraph.setup_ring_of_fire(origin, SKELETON_TILE_SIZE * SKELETON_RING_START_TILES, SKELETON_TILE_SIZE * SKELETON_RING_END_TILES, windup_dur, is_skeleton_enraged)
+	if get_parent():
+		get_parent().add_child(telegraph)
+	skeleton_active_telegraphs.append(telegraph)
+
+	_play_skeleton_cast_pose(true)
+	play_sfx(SFX_FIRE_AIM, -1.0)
+
+	await get_tree().create_timer(windup_dur).timeout
+	if not is_instance_valid(self) or is_dead or my_token != skeleton_attack_token:
+		return
+
+	if is_instance_valid(telegraph):
+		skeleton_active_telegraphs.erase(telegraph)
+		telegraph.queue_free()
+
+	# 2. Gelombang api & fireball oranye menyebar dari radius 1 tile ke 3 tile
+	var cur_origin := get_alaric_ground_origin()
+	_play_skeleton_cast_pose(false)
+	play_sfx(SFX_FIRE_CAST, 1.0)
+	play_sfx(SFX_FIRE_IMPACT, 0.5)
+	_apply_boss_camera_shake(9.5)
+
+	var vfx := SkeletonFireEffectNode.new()
+	vfx.setup_ring_of_fire(cur_origin, SKELETON_TILE_SIZE * SKELETON_RING_START_TILES, SKELETON_TILE_SIZE * SKELETON_RING_END_TILES, is_skeleton_enraged, _get_or_create_orange_fireball_frames())
+	if get_parent():
+		get_parent().add_child(vfx)
+
+	# Berikan 180 damage ke seluruh karakter dalam radius 3 tile
+	_apply_skeleton_circle_damage(cur_origin, SKELETON_TILE_SIZE * SKELETON_RING_END_TILES, SKELETON_RING_DAMAGE)
+
+	# 3. Fase Recovery (1,2 detik) + jeda antar serangan
+	skeleton_ring_cd_timer = SKELETON_RING_COOLDOWN
+	skeleton_recovery_timer = SKELETON_RING_RECOVERY
+	skeleton_attack_gap_timer = SKELETON_ATTACK_BREATHING_GAP
+	await get_tree().create_timer(0.28).timeout
+	if not is_instance_valid(self) or is_dead or my_token != skeleton_attack_token:
+		return
+	is_shooting = false
+	play_idle_animation()
+
+
+# ---------------------------------------------------------
+# B. FLAME PILLAR (Targeted AoE: 2 karakter secara bergantian, Radius 1 tile)
+# Damage: 210 | Wind-up: 1,2s (Enrage: 0,9s) | Recovery: 1,0s | Cooldown: 8s
+# Indikator mengikuti pergerakan target selama fase persiapan, lalu berhenti & api menyembur
+# ---------------------------------------------------------
+func _execute_skeleton_flame_pillar(target_dir: Vector2) -> void:
+	if is_dead or is_shooting:
+		return
+	is_shooting = true
+	skeleton_pillar_cd_timer = SKELETON_PILLAR_COOLDOWN
+	var my_token := skeleton_attack_token
+	var windup_dur: float = SKELETON_PILLAR_WINDUP_ENRAGE if is_skeleton_enraged else SKELETON_PILLAR_WINDUP_NORMAL
+	var pillar_radius: float = SKELETON_TILE_SIZE * SKELETON_PILLAR_RADIUS_TILES
+
+	last_direction = get_cardinal_direction(target_dir)
+
+	# Pilih 2 karakter pemain yang hidup untuk ditandai secara bergantian
+	var targets := _pick_skeleton_flame_pillar_targets(SKELETON_PILLAR_TARGET_COUNT)
+	if targets.is_empty():
+		is_shooting = false
+		return
+
+	for target_idx in range(targets.size()):
+		if not is_instance_valid(self) or is_dead or my_token != skeleton_attack_token:
+			return
+		var t_hero: CharacterBody2D = targets[target_idx]
+		if not is_instance_valid(t_hero) or ("is_dead" in t_hero and t_hero.is_dead):
+			t_hero = get_best_target()
+		if not is_instance_valid(t_hero):
+			continue
+
+		var start_pos := get_target_ground_origin(t_hero)
+		var to_t := (start_pos - get_alaric_ground_origin()).normalized()
+		if to_t != Vector2.ZERO:
+			last_direction = get_cardinal_direction(to_t)
+
+		# 1. Spawn lingkaran merah di lokasi karakter target saat ditandai (diam di tempat agar bisa dihindari saat berlari)
+		var telegraph := SkeletonTelegraphNode.new()
+		telegraph.setup_flame_pillar(start_pos, null, pillar_radius, windup_dur, is_skeleton_enraged)
+		if get_parent():
+			get_parent().add_child(telegraph)
+		skeleton_active_telegraphs.append(telegraph)
+
+		_play_skeleton_cast_pose(true)
+		play_sfx(SFX_FIRE_AIM, -0.5)
+
+		await get_tree().create_timer(windup_dur).timeout
+		if not is_instance_valid(self) or is_dead or my_token != skeleton_attack_token:
+			return
+
+		var locked_impact_pos := start_pos
+		if is_instance_valid(telegraph):
+			skeleton_active_telegraphs.erase(telegraph)
+			telegraph.queue_free()
+
+		# 2. Lingkaran berhenti & semburan pilar api oranye menyembur dari tanah
+		_play_skeleton_cast_pose(false)
+		play_sfx(SFX_FIRE_IMPACT, 1.0)
+		_apply_boss_camera_shake(9.0)
+
+		var vfx := SkeletonFireEffectNode.new()
+		vfx.setup_flame_pillar(locked_impact_pos, pillar_radius, is_skeleton_enraged, _get_or_create_orange_fireball_frames(), _get_or_create_orange_explosion_frames())
+		if get_parent():
+			get_parent().add_child(vfx)
+
+		_apply_skeleton_circle_damage(locked_impact_pos, pillar_radius, SKELETON_PILLAR_DAMAGE)
+
+	# 3. Fase Recovery (1,0 detik) + jeda antar serangan
+	skeleton_pillar_cd_timer = SKELETON_PILLAR_COOLDOWN
+	skeleton_recovery_timer = SKELETON_PILLAR_RECOVERY
+	skeleton_attack_gap_timer = SKELETON_ATTACK_BREATHING_GAP
+	await get_tree().create_timer(0.25).timeout
+	if not is_instance_valid(self) or is_dead or my_token != skeleton_attack_token:
+		return
+	is_shooting = false
+	play_idle_animation()
+
+
+# ---------------------------------------------------------
+# C. INFERNAL BURST (Radial AoE: 4 arah utama Atas, Bawah, Kiri, Kanan, Jangkauan 4 tile)
+# Damage: 260 | Wind-up: 1,5s (Enrage: 1,2s) | Recovery: 1,5s | Cooldown: 11s
+# ---------------------------------------------------------
+func _execute_skeleton_infernal_burst(target_dir: Vector2) -> void:
+	if is_dead or is_shooting:
+		return
+	is_shooting = true
+	skeleton_burst_cd_timer = SKELETON_BURST_COOLDOWN
+	var my_token := skeleton_attack_token
+	var windup_dur: float = SKELETON_BURST_WINDUP_ENRAGE if is_skeleton_enraged else SKELETON_BURST_WINDUP_NORMAL
+	var lane_length: float = SKELETON_TILE_SIZE * SKELETON_BURST_RANGE_TILES
+	var lane_width: float = SKELETON_TILE_SIZE
+
+	last_direction = get_cardinal_direction(target_dir)
+	var origin := get_alaric_ground_origin()
+
+	# 1. Tampilkan garis-garis merah-oranye ke 4 arah utama (Atas, Bawah, Kiri, Kanan) sejauh 4 tile
+	var telegraph := SkeletonTelegraphNode.new()
+	telegraph.setup_infernal_burst(origin, SKELETON_TILE_SIZE, SKELETON_BURST_RANGE_TILES, windup_dur, is_skeleton_enraged)
+	if get_parent():
+		get_parent().add_child(telegraph)
+	skeleton_active_telegraphs.append(telegraph)
+
+	_play_skeleton_cast_pose(true)
+	play_sfx(SFX_FIRE_AIM, 0.5)
+
+	await get_tree().create_timer(windup_dur).timeout
+	if not is_instance_valid(self) or is_dead or my_token != skeleton_attack_token:
+		return
+
+	if is_instance_valid(telegraph):
+		skeleton_active_telegraphs.erase(telegraph)
+		telegraph.queue_free()
+
+	# 2. Lepaskan ledakan api & fireball oranye ke 4 arah utama (Atas, Bawah, Kiri, Kanan)
+	var cur_origin := get_alaric_ground_origin()
+	_play_skeleton_cast_pose(false)
+	play_sfx(SFX_FIRE_CAST, 1.5)
+	play_sfx(SFX_FIRE_IMPACT, 1.5)
+	_apply_boss_camera_shake(12.0)
+
+	var vfx := SkeletonFireEffectNode.new()
+	vfx.setup_infernal_burst(cur_origin, SKELETON_TILE_SIZE, SKELETON_BURST_RANGE_TILES, is_skeleton_enraged, _get_or_create_orange_fireball_frames(), _get_or_create_orange_explosion_frames())
+	if get_parent():
+		get_parent().add_child(vfx)
+
+	# Berikan 260 damage ke karakter yang berada di jalur Atas, Bawah, Kiri, atau Kanan (area diagonal aman)
+	_apply_skeleton_infernal_burst_damage(cur_origin, lane_length, lane_width, SKELETON_BURST_DAMAGE)
+
+	# 3. Fase Recovery (1,5 detik) + jeda antar serangan
+	skeleton_burst_cd_timer = SKELETON_BURST_COOLDOWN
+	skeleton_recovery_timer = SKELETON_BURST_RECOVERY
+	skeleton_attack_gap_timer = SKELETON_ATTACK_BREATHING_GAP
+	await get_tree().create_timer(0.32).timeout
+	if not is_instance_valid(self) or is_dead or my_token != skeleton_attack_token:
+		return
+	is_shooting = false
+	play_idle_animation()
+
+
+# ---------------------------------------------------------
+# D. FIREBALL RAIN (Multi-target AoE: 5 titik area acak, Radius 1 tile, 150 damage/ledakan)
+# Damage: 150/ledakan | Wind-up: 1,8s (Enrage: 1,4s) | Recovery: 1,3s | Cooldown: 13s
+# ---------------------------------------------------------
+func _execute_skeleton_fireball_rain(target_dir: Vector2) -> void:
+	if is_dead or is_shooting:
+		return
+	is_shooting = true
+	skeleton_rain_cd_timer = SKELETON_RAIN_COOLDOWN
+	var my_token := skeleton_attack_token
+	var windup_dur: float = SKELETON_RAIN_WINDUP_ENRAGE if is_skeleton_enraged else SKELETON_RAIN_WINDUP_NORMAL
+	var rain_radius: float = SKELETON_TILE_SIZE * SKELETON_RAIN_RADIUS_TILES
+
+	last_direction = get_cardinal_direction(target_dir)
+	var impact_points := _pick_skeleton_fireball_rain_points(SKELETON_RAIN_AREA_COUNT, rain_radius)
+
+	# 1. Tampilkan 5 lingkaran merah-oranye beserta animasi bola api jatuh dari langit di akhir wind-up
+	var telegraph := SkeletonTelegraphNode.new()
+	telegraph.setup_fireball_rain(impact_points, rain_radius, windup_dur, is_skeleton_enraged, _get_or_create_orange_fireball_frames())
+	if get_parent():
+		get_parent().add_child(telegraph)
+	skeleton_active_telegraphs.append(telegraph)
+
+	_play_skeleton_cast_pose(true)
+	play_sfx(SFX_FIRE_AIM, 0.0)
+	play_sfx(SFX_FIRE_FALL, -1.0)
+
+	await get_tree().create_timer(windup_dur).timeout
+	if not is_instance_valid(self) or is_dead or my_token != skeleton_attack_token:
+		return
+
+	if is_instance_valid(telegraph):
+		skeleton_active_telegraphs.erase(telegraph)
+		telegraph.queue_free()
+
+	# 2. Ke-5 bola api menghantam tanah dan menghasilkan ledakan api oranye di setiap area
+	_play_skeleton_cast_pose(false)
+	play_sfx(SFX_FIRE_IMPACT, 1.5)
+	_apply_boss_camera_shake(11.0)
+
+	var exp_frames := _get_or_create_orange_explosion_frames()
+	for pt in impact_points:
+		var vfx := SkeletonFireEffectNode.new()
+		vfx.setup_fireball_rain_impact(pt, rain_radius, is_skeleton_enraged, exp_frames)
+		if get_parent():
+			get_parent().add_child(vfx)
+		# 150 damage per ledakan
+		_apply_skeleton_circle_damage(pt, rain_radius, SKELETON_RAIN_DAMAGE)
+
+	# 3. Fase Recovery (1,3 detik) + jeda antar serangan
+	skeleton_rain_cd_timer = SKELETON_RAIN_COOLDOWN
+	skeleton_recovery_timer = SKELETON_RAIN_RECOVERY
+	skeleton_attack_gap_timer = SKELETON_ATTACK_BREATHING_GAP
+	await get_tree().create_timer(0.30).timeout
+	if not is_instance_valid(self) or is_dead or my_token != skeleton_attack_token:
+		return
+	is_shooting = false
+	play_idle_animation()
+
+
+func _pick_skeleton_flame_pillar_targets(count: int) -> Array[CharacterBody2D]:
+	var alive_players: Array[CharacterBody2D] = []
+	if is_inside_tree():
+		for p in get_tree().get_nodes_in_group("player"):
+			if is_instance_valid(p) and (p is CharacterBody2D) and p.visible and not ("is_dead" in p and p.is_dead):
+				alive_players.append(p)
+	if alive_players.is_empty():
+		return []
+
+	# Urutkan atau acak agar 2 karakter berbeda terpilih (atau 2x pada karakter yang sama jika solo)
+	alive_players.shuffle()
+	# Pastikan Leader aktif menjadi salah satu target utama agar pemain selalu merasakan tekanan langsung
+	for i in range(alive_players.size()):
+		if "is_leader" in alive_players[i] and alive_players[i].is_leader and i > 0:
+			var lead := alive_players[i]
+			alive_players[i] = alive_players[0]
+			alive_players[0] = lead
+			break
+
+	var result: Array[CharacterBody2D] = []
+	for i in range(count):
+		result.append(alive_players[i % alive_players.size()])
+	return result
+
+
+func _pick_skeleton_fireball_rain_points(count: int, radius: float) -> Array[Vector2]:
+	var pts: Array[Vector2] = []
+	var origin := get_alaric_ground_origin()
+	var alive_positions: Array[Vector2] = []
+	if is_inside_tree():
+		for p in get_tree().get_nodes_in_group("player"):
+			if is_instance_valid(p) and (p is CharacterBody2D) and p.visible and not ("is_dead" in p and p.is_dead):
+				alive_positions.append(get_target_ground_origin(p))
+
+	var min_bounds := origin - Vector2(420.0, 320.0)
+	var max_bounds := origin + Vector2(420.0, 320.0)
+	if is_inside_tree():
+		var game_node = get_tree().current_scene
+		if game_node and "arena_bounds" in game_node and (game_node.arena_bounds as Rect2).size != Vector2.ZERO:
+			var ab: Rect2 = (game_node.arena_bounds as Rect2).grow(-95.0)
+			min_bounds = ab.position
+			max_bounds = ab.end
+
+	# Tempatkan beberapa titik di dekat posisi karakter pemain dan sisanya tersebar acak di sekitar arena
+	for i in range(count):
+		var candidate := origin
+		for _attempt in range(18):
+			if i < alive_positions.size() and randf() < 0.78:
+				var base_p := alive_positions[i]
+				var ang := randf() * TAU
+				var dist := randf_range(10.0, 75.0)
+				candidate = base_p + Vector2.from_angle(ang) * dist
+			else:
+				var ref_center := alive_positions[randi() % alive_positions.size()] if not alive_positions.is_empty() else origin
+				var ang := randf() * TAU
+				var dist := randf_range(65.0, SKELETON_TILE_SIZE * 3.6)
+				candidate = ref_center + Vector2.from_angle(ang) * dist
+
+			candidate.x = clampf(candidate.x, min_bounds.x, max_bounds.x)
+			candidate.y = clampf(candidate.y, min_bounds.y, max_bounds.y)
+
+			var too_close := false
+			for existing in pts:
+				if existing.distance_to(candidate) < radius * 1.15:
+					too_close = true
+					break
+			if not too_close:
+				break
+		pts.append(candidate)
+	return pts
+
+
+func _apply_skeleton_circle_damage(center_pos: Vector2, radius: float, dmg: int) -> void:
+	if not is_inside_tree():
+		return
+	var reach := radius + 16.0
+	var players := get_tree().get_nodes_in_group("player")
+	for p in players:
+		if not is_instance_valid(p) or not (p is CharacterBody2D) or not p.visible or ("is_dead" in p and p.is_dead):
+			continue
+		var p_origin := get_target_ground_origin(p)
+		if p_origin.distance_to(center_pos) <= reach:
+			if p.has_method("take_damage"):
+				p.take_damage(dmg, center_pos)
+
+
+func _apply_skeleton_infernal_burst_damage(origin: Vector2, lane_length: float, lane_width: float, dmg: int) -> void:
+	if not is_inside_tree():
+		return
+	var max_long := lane_length + 16.0
+	var half_lat := (lane_width * 0.5) + 14.0
+	var players := get_tree().get_nodes_in_group("player")
+	for p in players:
+		if not is_instance_valid(p) or not (p is CharacterBody2D) or not p.visible or ("is_dead" in p and p.is_dead):
+			continue
+		var p_origin := get_target_ground_origin(p)
+		var diff := p_origin - origin
+		# 4 arah utama: Atas (Y-), Bawah (Y+), Kiri (X-), Kanan (X+) -> bentuk salib (+)
+		var in_horizontal_lane: bool = (absf(diff.x) <= max_long and absf(diff.y) <= half_lat)
+		var in_vertical_lane: bool = (absf(diff.y) <= max_long and absf(diff.x) <= half_lat)
+		if in_horizontal_lane or in_vertical_lane:
+			if p.has_method("take_damage"):
+				p.take_damage(dmg, origin)
+
+
+# =========================================================
+# VISUAL NODE 4: INDIKATOR AREA SERANGAN SKELETON (TELEGRAPH MERAH-ORANYE)
+# =========================================================
+class SkeletonTelegraphNode extends Node2D:
+	enum Mode { RING_OF_FIRE, FLAME_PILLAR, INFERNAL_BURST, FIREBALL_RAIN }
+
+	var mode: int = Mode.RING_OF_FIRE
+	var start_radius: float = 85.0
+	var end_radius: float = 255.0
+	var tile_size: float = 85.0
+	var range_tiles: float = 4.0
+	var follow_target: Node2D = null
+	var rain_points: Array[Vector2] = []
+	var total_duration: float = 1.0
+	var elapsed: float = 0.0
+	var enraged: bool = false
+	var _falling_fireballs: Array[AnimatedSprite2D] = []
+
+	func setup_ring_of_fire(p_origin: Vector2, p_start_r: float, p_end_r: float, p_dur: float, p_enraged: bool) -> void:
+		mode = Mode.RING_OF_FIRE
+		global_position = p_origin
+		start_radius = p_start_r
+		end_radius = p_end_r
+		total_duration = maxf(0.05, p_dur)
+		enraged = p_enraged
+		z_index = 2
+
+	func setup_flame_pillar(p_origin: Vector2, p_target: Node2D, p_radius: float, p_dur: float, p_enraged: bool) -> void:
+		mode = Mode.FLAME_PILLAR
+		global_position = p_origin
+		follow_target = p_target
+		end_radius = p_radius
+		total_duration = maxf(0.05, p_dur)
+		enraged = p_enraged
+		z_index = 2
+
+	func setup_infernal_burst(p_origin: Vector2, p_tile_size: float, p_range_tiles: float, p_dur: float, p_enraged: bool) -> void:
+		mode = Mode.INFERNAL_BURST
+		global_position = p_origin
+		tile_size = p_tile_size
+		range_tiles = p_range_tiles
+		total_duration = maxf(0.05, p_dur)
+		enraged = p_enraged
+		z_index = 2
+
+	func setup_fireball_rain(p_points: Array[Vector2], p_radius: float, p_dur: float, p_enraged: bool, fb_frames: SpriteFrames) -> void:
+		mode = Mode.FIREBALL_RAIN
+		global_position = Vector2.ZERO
+		rain_points = p_points.duplicate()
+		end_radius = p_radius
+		total_duration = maxf(0.05, p_dur)
+		enraged = p_enraged
+		z_index = 2
+
+		# Siapkan sprite bola api oranye yang meluncur turun dari atas langit menjelang akhir wind-up
+		for pt in rain_points:
+			var spr := AnimatedSprite2D.new()
+			spr.sprite_frames = fb_frames
+			spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			spr.scale = Vector2(3.4, 3.4)
+			spr.z_index = 8
+			spr.visible = false
+			spr.global_position = pt + Vector2(0.0, -420.0)
+			add_child(spr)
+			spr.play(&"default")
+			_falling_fireballs.append(spr)
+
+	func _process(delta: float) -> void:
+		elapsed += delta
+		var prog := clampf(elapsed / total_duration, 0.0, 1.0)
+
+		# Fireball Rain: Bola api oranye meluncur turun dari langit pada 35% akhir waktu wind-up
+		if mode == Mode.FIREBALL_RAIN:
+			var fall_start := 0.62
+			if prog >= fall_start:
+				var fall_t := clampf((prog - fall_start) / (1.0 - fall_start), 0.0, 1.0)
+				for i in range(mini(rain_points.size(), _falling_fireballs.size())):
+					var fb := _falling_fireballs[i]
+					if is_instance_valid(fb):
+						fb.visible = true
+						var target_pt := rain_points[i]
+						var sky_pt := target_pt + Vector2(0.0, -420.0)
+						fb.global_position = sky_pt.lerp(target_pt, fall_t)
+						fb.modulate = Color(1.25, 1.05, 0.85, 1.0) if enraged else Color.WHITE
+
+		queue_redraw()
+		if elapsed >= total_duration + 0.15:
+			queue_free()
+
+	func _draw() -> void:
+		var prog := clampf(elapsed / total_duration, 0.0, 1.0)
+		var pulse := 0.5 + 0.5 * sin(elapsed * 22.0)
+
+		var base_fill := Color(0.88, 0.18, 0.08, 0.24) if not enraged else Color(1.0, 0.26, 0.05, 0.32)
+		var charge_fill := Color(1.0, 0.42, 0.10, 0.45 + 0.18 * prog) if not enraged else Color(1.0, 0.58, 0.12, 0.54 + 0.20 * prog)
+		var border_col := Color(1.0, 0.34, 0.12, 0.90).lerp(Color(1.0, 0.92, 0.38, 1.0), prog * 0.72 + pulse * 0.2)
+
+		if mode == Mode.RING_OF_FIRE:
+			# Lingkaran luar (3 tile) + gelombang menyebar dari 1 tile ke 3 tile
+			draw_circle(Vector2.ZERO, end_radius, base_fill)
+			var cur_r := lerpf(start_radius, end_radius, prog)
+			draw_circle(Vector2.ZERO, cur_r, charge_fill)
+			draw_arc(Vector2.ZERO, start_radius, 0.0, TAU, 48, Color(1.0, 0.65, 0.22, 0.55), 1.8)
+			draw_arc(Vector2.ZERO, cur_r, 0.0, TAU, 56, Color(1.0, 0.88, 0.35, 0.88), 2.6)
+			draw_arc(Vector2.ZERO, end_radius, 0.0, TAU, 64, border_col, 3.0)
+
+		elif mode == Mode.FLAME_PILLAR:
+			# Lingkaran merah-oranye 1 tile yang mengunci target
+			draw_circle(Vector2.ZERO, end_radius, base_fill)
+			draw_circle(Vector2.ZERO, end_radius * prog, charge_fill)
+			draw_arc(Vector2.ZERO, end_radius, 0.0, TAU, 44, border_col, 2.8)
+			# Bidikan crosshair api di dalam lingkaran
+			var cr := end_radius * 0.68
+			var cross_col := Color(1.0, 0.86, 0.40, 0.55 + 0.35 * prog)
+			draw_line(Vector2(-cr, 0.0), Vector2(cr, 0.0), cross_col, 2.0)
+			draw_line(Vector2(0.0, -cr), Vector2(0.0, cr), cross_col, 2.0)
+
+		elif mode == Mode.INFERNAL_BURST:
+			# 4 jalur garis merah-oranye ke Atas, Bawah, Kiri, Kanan sejauh 4 tile
+			var dirs: Array[Vector2] = [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]
+			var max_len := tile_size * range_tiles
+			var half_w := tile_size * 0.5
+			for d in dirs:
+				draw_set_transform(Vector2.ZERO, d.angle(), Vector2.ONE)
+				var full_rect := Rect2(Vector2(0.0, -half_w), Vector2(max_len, tile_size))
+				draw_rect(full_rect, base_fill, true)
+				# Pembagian grid 4 petak sepanjang jalur
+				for t_idx in range(1, int(range_tiles) + 1):
+					var cell_rect := Rect2(Vector2(float(t_idx - 1) * tile_size, -half_w), Vector2(tile_size, tile_size)).grow(-1.5)
+					draw_rect(cell_rect, Color(1.0, 0.55, 0.22, 0.36), false, 1.0)
+				# Pengisian charge progresif sepanjang 4 tile
+				var fill_rect := Rect2(Vector2(0.0, -half_w), Vector2(max_len * prog, tile_size))
+				draw_rect(fill_rect, charge_fill, true)
+				draw_rect(full_rect, border_col, false, 2.4)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+		elif mode == Mode.FIREBALL_RAIN:
+			# 5 lingkaran merah-oranye beradius 1 tile
+			for pt in rain_points:
+				draw_circle(pt, end_radius, base_fill)
+				draw_circle(pt, end_radius * prog, charge_fill)
+				draw_arc(pt, end_radius, 0.0, TAU, 40, border_col, 2.6)
+				draw_arc(pt, end_radius * 0.45, 0.0, TAU, 28, Color(1.0, 0.85, 0.35, 0.45 + 0.35 * prog), 1.6)
+
+
+# =========================================================
+# VISUAL NODE 5: EFEK API & FIREBALL ORANYE SKELETON (FIRE VFX)
+# =========================================================
+class SkeletonFireEffectNode extends Node2D:
+	enum FireMode { RING_OF_FIRE, FLAME_PILLAR, INFERNAL_BURST, FIREBALL_RAIN_IMPACT }
+
+	var mode: int = FireMode.RING_OF_FIRE
+	var start_radius: float = 85.0
+	var end_radius: float = 255.0
+	var tile_size: float = 85.0
+	var range_tiles: float = 4.0
+	var enraged: bool = false
+	var elapsed: float = 0.0
+	var duration: float = 0.52
+	var _fire_sprites: Array[Node2D] = []
+	var _ring_angles: Array[float] = []
+
+	func setup_ring_of_fire(p_origin: Vector2, p_start_r: float, p_end_r: float, p_enraged: bool, fb_frames: SpriteFrames) -> void:
+		mode = FireMode.RING_OF_FIRE
+		global_position = p_origin
+		start_radius = p_start_r
+		end_radius = p_end_r
+		enraged = p_enraged
+		duration = 0.55
+		z_index = 6
+
+		# 12 Bola api oranye membara yang menyebar melingkar dari radius 1 tile ke 3 tile
+		var count := 12
+		for i in range(count):
+			var ang := (TAU / float(count)) * float(i)
+			_ring_angles.append(ang)
+			var spr := AnimatedSprite2D.new()
+			spr.sprite_frames = fb_frames
+			spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			spr.scale = Vector2(2.8, 2.8)
+			spr.rotation = ang + PI * 0.5
+			spr.position = Vector2.from_angle(ang) * start_radius
+			if enraged:
+				spr.modulate = Color(1.35, 1.12, 0.82, 1.0)
+			add_child(spr)
+			spr.play(&"default")
+			_fire_sprites.append(spr)
+
+	func setup_flame_pillar(p_origin: Vector2, p_radius: float, p_enraged: bool, fb_frames: SpriteFrames, exp_frames: SpriteFrames) -> void:
+		mode = FireMode.FLAME_PILLAR
+		global_position = p_origin
+		end_radius = p_radius
+		enraged = p_enraged
+		duration = 0.52
+		z_index = 6
+
+		# Semburan bola api vertikal + ledakan api oranye dari tanah
+		var pillar_spr := AnimatedSprite2D.new()
+		pillar_spr.sprite_frames = fb_frames
+		pillar_spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		pillar_spr.scale = Vector2(3.8, 4.6)
+		pillar_spr.position = Vector2(0.0, -34.0)
+		if enraged:
+			pillar_spr.modulate = Color(1.35, 1.12, 0.82, 1.0)
+		add_child(pillar_spr)
+		pillar_spr.play(&"default")
+		_fire_sprites.append(pillar_spr)
+
+		var exp_spr := AnimatedSprite2D.new()
+		exp_spr.sprite_frames = exp_frames
+		exp_spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		exp_spr.scale = Vector2(3.6, 3.6)
+		exp_spr.position = Vector2(0.0, -8.0)
+		if enraged:
+			exp_spr.modulate = Color(1.35, 1.12, 0.82, 1.0)
+		add_child(exp_spr)
+		exp_spr.play(&"default")
+		_fire_sprites.append(exp_spr)
+
+	func setup_infernal_burst(p_origin: Vector2, p_tile_size: float, p_range_tiles: float, p_enraged: bool, fb_frames: SpriteFrames, exp_frames: SpriteFrames) -> void:
+		mode = FireMode.INFERNAL_BURST
+		global_position = p_origin
+		tile_size = p_tile_size
+		range_tiles = p_range_tiles
+		enraged = p_enraged
+		duration = 0.56
+		z_index = 6
+
+		# Ledakan bola-bola api oranye beruntun di sepanjang 4 arah utama (Atas, Bawah, Kiri, Kanan) sejauh 4 tile
+		var dirs: Array[Vector2] = [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]
+		for d in dirs:
+			for step in range(1, int(range_tiles) + 1):
+				var cell_center := d * (float(step) * tile_size - tile_size * 0.35)
+				var exp_spr := AnimatedSprite2D.new()
+				exp_spr.sprite_frames = exp_frames if (step % 2 == 0) else fb_frames
+				exp_spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				exp_spr.scale = Vector2(2.8, 2.8)
+				exp_spr.position = cell_center
+				if step % 2 == 1:
+					exp_spr.rotation = d.angle() + PI * 0.5
+				if enraged:
+					exp_spr.modulate = Color(1.35, 1.12, 0.82, 1.0)
+				add_child(exp_spr)
+				exp_spr.play(&"default")
+				_fire_sprites.append(exp_spr)
+
+	func setup_fireball_rain_impact(p_origin: Vector2, p_radius: float, p_enraged: bool, exp_frames: SpriteFrames) -> void:
+		mode = FireMode.FIREBALL_RAIN_IMPACT
+		global_position = p_origin
+		end_radius = p_radius
+		enraged = p_enraged
+		duration = 0.48
+		z_index = 6
+
+		var exp_spr := AnimatedSprite2D.new()
+		exp_spr.sprite_frames = exp_frames
+		exp_spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		exp_spr.scale = Vector2(3.6, 3.6)
+		exp_spr.position = Vector2(0.0, -6.0)
+		if enraged:
+			exp_spr.modulate = Color(1.35, 1.12, 0.82, 1.0)
+		add_child(exp_spr)
+		exp_spr.play(&"default")
+		_fire_sprites.append(exp_spr)
+
+	func _process(delta: float) -> void:
+		elapsed += delta
+		if elapsed >= duration:
+			queue_free()
+			return
+
+		var t := clampf(elapsed / duration, 0.0, 1.0)
+		var alpha := clampf(1.0 - pow(t, 1.8), 0.0, 1.0)
+
+		if mode == FireMode.RING_OF_FIRE:
+			var cur_r := lerpf(start_radius, end_radius, clampf(t * 1.35, 0.0, 1.0))
+			for i in range(mini(_fire_sprites.size(), _ring_angles.size())):
+				var spr := _fire_sprites[i]
+				if is_instance_valid(spr):
+					var ang := _ring_angles[i] + t * 0.45
+					spr.position = Vector2.from_angle(ang) * cur_r
+					spr.modulate.a = alpha
+		elif mode == FireMode.FLAME_PILLAR:
+			if _fire_sprites.size() > 0 and is_instance_valid(_fire_sprites[0]):
+				_fire_sprites[0].position.y = lerpf(-18.0, -62.0, clampf(t * 1.5, 0.0, 1.0))
+				_fire_sprites[0].modulate.a = alpha
+			if _fire_sprites.size() > 1 and is_instance_valid(_fire_sprites[1]):
+				_fire_sprites[1].modulate.a = alpha
+		else:
+			for spr in _fire_sprites:
+				if is_instance_valid(spr):
+					spr.modulate.a = alpha
+
+		queue_redraw()
+
+	func _draw() -> void:
+		var t := clampf(elapsed / duration, 0.0, 1.0)
+		var alpha := clampf(1.0 - pow(t, 1.5), 0.0, 1.0)
+
+		var core_col := Color(1.0, 0.96, 0.72, alpha)
+		var flame_col := Color(1.0, 0.52, 0.10, alpha * 0.88) if not enraged else Color(1.0, 0.68, 0.16, alpha * 0.95)
+		var ember_col := Color(0.95, 0.22, 0.06, alpha * 0.65)
+
+		if mode == FireMode.RING_OF_FIRE:
+			var cur_r := lerpf(start_radius, end_radius, clampf(t * 1.35, 0.0, 1.0))
+			draw_arc(Vector2.ZERO, cur_r, 0.0, TAU, 56, ember_col, 24.0 * (1.0 - t * 0.35))
+			draw_arc(Vector2.ZERO, cur_r, 0.0, TAU, 56, flame_col, 13.0 * (1.0 - t * 0.3))
+			draw_arc(Vector2.ZERO, cur_r, 0.0, TAU, 56, core_col, 4.0)
+
+		elif mode == FireMode.FLAME_PILLAR:
+			var r := end_radius * (0.75 + 0.25 * clampf(t * 1.6, 0.0, 1.0))
+			draw_circle(Vector2.ZERO, r, Color(flame_col.r, flame_col.g, flame_col.b, alpha * 0.36))
+			draw_arc(Vector2.ZERO, r, 0.0, TAU, 40, flame_col, 7.0 * (1.0 - t * 0.4))
+			draw_arc(Vector2.ZERO, r * 0.65, 0.0, TAU, 32, core_col, 3.2)
+			# Lidah semburan pilar api menjulang ke atas
+			var pillar_h := lerpf(35.0, 135.0, clampf(t * 1.8, 0.0, 1.0)) * (1.0 - t * 0.25)
+			var half_base := end_radius * 0.55 * (1.0 - t * 0.35)
+			var flame_poly := PackedVector2Array([
+				Vector2(-half_base, 0.0),
+				Vector2(-half_base * 0.55, -pillar_h * 0.65),
+				Vector2(0.0, -pillar_h),
+				Vector2(half_base * 0.55, -pillar_h * 0.65),
+				Vector2(half_base, 0.0)
+			])
+			draw_colored_polygon(flame_poly, Color(flame_col.r, flame_col.g, flame_col.b, alpha * 0.68))
+
+		elif mode == FireMode.INFERNAL_BURST:
+			var dirs: Array[Vector2] = [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]
+			var max_len := tile_size * range_tiles
+			var cur_len := lerpf(tile_size * 0.8, max_len, clampf(t * 2.0, 0.0, 1.0))
+			var half_w := (tile_size * 0.42) * (1.0 - t * 0.35)
+			for d in dirs:
+				draw_set_transform(Vector2.ZERO, d.angle(), Vector2.ONE)
+				var beam_rect := Rect2(Vector2(0.0, -half_w), Vector2(cur_len, half_w * 2.0))
+				draw_rect(beam_rect, Color(ember_col.r, ember_col.g, ember_col.b, alpha * 0.45), true)
+				var inner_rect := Rect2(Vector2(0.0, -half_w * 0.55), Vector2(cur_len, half_w * 1.1))
+				draw_rect(inner_rect, flame_col, true)
+				draw_line(Vector2(0.0, 0.0), Vector2(cur_len, 0.0), core_col, 4.5)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+		elif mode == FireMode.FIREBALL_RAIN_IMPACT:
+			var r := end_radius * (0.55 + 0.45 * clampf(t * 1.8, 0.0, 1.0))
+			draw_circle(Vector2.ZERO, r, Color(flame_col.r, flame_col.g, flame_col.b, alpha * 0.38))
+			draw_arc(Vector2.ZERO, r, 0.0, TAU, 36, flame_col, 8.0 * (1.0 - t * 0.4))
+			draw_arc(Vector2.ZERO, r * 0.6, 0.0, TAU, 28, core_col, 3.0)
+
+
+# =========================================================
+# VISUAL NODE 6: AURA API ENRAGE SKELETON (AKTIF PADA HP <= 30%)
+# =========================================================
+class SkeletonFireAuraNode extends Node2D:
+	var time_passed: float = 0.0
+
+	func _process(delta: float) -> void:
+		time_passed += delta
+		queue_redraw()
+
+	func _draw() -> void:
+		var pulse := 0.5 + 0.5 * sin(time_passed * 9.0)
+		var r := 45.0 + pulse * 7.0
+		draw_circle(Vector2.ZERO, r, Color(1.0, 0.38, 0.08, 0.22 + pulse * 0.12))
+		draw_arc(Vector2.ZERO, r, 0.0, TAU, 36, Color(1.0, 0.72, 0.18, 0.75 + pulse * 0.22), 2.6)

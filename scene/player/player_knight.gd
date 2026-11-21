@@ -76,8 +76,8 @@ const SLASH_ACTIVE_DURATION: float = 0.20 # Window aktif sapuan tebasan pedang s
 # SPECIAL SKILL: SHIELD BLOCK (TOMBOL E)
 # =========================
 @export var skill_cooldown_max: float = 12.0  # Cooldown tombol E (12 detik)
-@export var shield_duration: float = 5.0      # Durasi aktifnya perisai (5 detik)
-@export var shield_points_max: int = 300      # Efek Skill: +300 Shield Point
+@export var shield_duration: float = 3.5      # Durasi aktifnya perisai (3.5 detik)
+@export var shield_points_max: int = 300      # Efek Skill: Kebal Damage selama durasi aktif
 var skill_cooldown_timer: float = 0.0
 var shield_timer: float = 0.0
 var shield_points: int = 0

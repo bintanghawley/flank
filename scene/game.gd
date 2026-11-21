@@ -661,6 +661,15 @@ var _alaric_timer_best_lbl: Label = null
 var _has_seen_alaric_intro_dialogue: bool = false
 const ALARIC_RECORD_SAVE_PATH: String = "user://alaric_best_record.cfg"
 
+const SKELETON_BOSS_POS: Vector2 = Vector2(6200.0, 8400.0)
+var skeleton_boss_node: CharacterBody2D = null
+var is_skeleton_boss_fight_in_progress: bool = false
+var _skeleton_match_elapsed_time: float = 0.0
+var _skeleton_best_time_sec: float = -1.0
+var _pending_skeleton_victory_popup: bool = false
+var _last_skeleton_clear_time: float = 0.0
+var _last_skeleton_new_record: bool = false
+
 
 # State Tempur Party ala Guardian Tales
 enum PartyCombatState { EXPLORING, COMBAT }
@@ -720,7 +729,16 @@ var arena_zones: Array[Dictionary] = [
 		"enemies": [] as Array[CharacterBody2D],
 		"is_cleared": false,
 		"respawn_timer": 0.0,
-		"worm_count": 4,
+	},
+	{
+		"id": 3,
+		"name": "Arena_3_SouthForest",
+		"center": Vector2(6200.0, 8400.0),
+		"trigger_bounds": Rect2(Vector2(5750.0, 8050.0), Vector2(900.0, 700.0)),
+		"bounds": Rect2(Vector2(5240.0, 7860.0), Vector2(1920.0, 1080.0)),
+		"enemies": [] as Array[CharacterBody2D],
+		"is_cleared": false,
+		"respawn_timer": 0.0,
 	}
 ]
 var active_arena_idx: int = -1
@@ -1217,8 +1235,12 @@ func setup_party_enemy_collision_exceptions() -> void:
 		if is_instance_valid(p) and p.is_inside_tree() and p is CollisionObject2D:
 			for e in enemies:
 				if is_instance_valid(e) and e is CollisionObject2D:
-					p.add_collision_exception_with(e)
-					e.add_collision_exception_with(p)
+					if ("is_skeleton_boss" in e and e.is_skeleton_boss) or ("is_alaric" in e and e.is_alaric):
+						p.remove_collision_exception_with(e)
+						e.remove_collision_exception_with(p)
+					else:
+						p.add_collision_exception_with(e)
+						e.add_collision_exception_with(p)
 
 
 func _input(event: InputEvent) -> void:
@@ -1340,6 +1362,9 @@ func _unhandled_input(event: InputEvent) -> void:
 							get_viewport().set_input_as_handled()
 						elif leader.global_position.distance_to(ALARIC_CAMP_POS) <= 120.0 and not is_alaric_sparring_in_progress:
 							_start_alaric_pre_fight_dialogue()
+							get_viewport().set_input_as_handled()
+						elif leader.global_position.distance_to(SKELETON_BOSS_POS) <= 140.0 and not is_skeleton_boss_fight_in_progress and arena_state != ArenaState.COMBAT:
+							_show_skeleton_boss_challenge_prompt()
 							get_viewport().set_input_as_handled()
 						elif _is_near_library_entrance(leader.global_position):
 							enter_secret_library()
@@ -2095,6 +2120,8 @@ func _process(delta: float) -> void:
 	if is_alaric_sparring_in_progress:
 		_update_alaric_top_timer_hud(delta)
 		check_alaric_sparring_status(delta)
+	elif is_skeleton_boss_fight_in_progress:
+		_update_skeleton_top_timer_hud(delta)
 
 
 func update_party_skill_cooldowns(delta: float) -> void:
@@ -2417,9 +2444,14 @@ func _init_arena_enemies() -> void:
 
 		# Fallback penempatan berdasarkan nama jika ada pergeseran posisi editor
 		if not assigned:
-			if "Archer" in e.name:
-				if not (arena_zones[0]["enemies"] as Array[CharacterBody2D]).has(e):
-					(arena_zones[0]["enemies"] as Array[CharacterBody2D]).append(e)
+			if ("Skeleton" in e.name or ("is_skeleton_boss" in e and e.is_skeleton_boss) or e.name == "Enemy_Knight_3") and arena_zones.size() >= 3:
+				(arena_zones[2]["enemies"] as Array[CharacterBody2D]).append(e)
+				if "wait_for_arena" in e:
+					e.wait_for_arena = true
+				if "can_respawn" in e:
+					e.can_respawn = false
+			elif "Archer" in e.name:
+				(arena_zones[0]["enemies"] as Array[CharacterBody2D]).append(e)
 				if "wait_for_arena" in e:
 					e.wait_for_arena = true
 				if "can_respawn" in e:
@@ -2431,6 +2463,12 @@ func _init_arena_enemies() -> void:
 					e.wait_for_arena = true
 				if "can_respawn" in e:
 					e.can_respawn = false
+
+		if "Skeleton" in e.name or ("is_skeleton_boss" in e and e.is_skeleton_boss):
+			skeleton_boss_node = e
+
+	if is_instance_valid(skeleton_boss_node) and not is_skeleton_boss_fight_in_progress:
+		_set_skeleton_boss_standby_mode()
 
 	print("[Arena] Inisialisasi Arena Zones:")
 	for zone in arena_zones:
@@ -2615,6 +2653,9 @@ func check_arena_trigger() -> void:
 		return
 	for i in range(arena_zones.size()):
 		var zone: Dictionary = arena_zones[i]
+		# Arena 3 (Boss Skeleton) dimulai melalui interaksi tombol "Mulai" seperti Alaric
+		if int(zone.get("id", 0)) == 3:
+			continue
 		if zone["is_cleared"]:
 			continue
 		var enemies_list: Array = zone.get("enemies", [])
@@ -2861,6 +2902,18 @@ func _start_party_combat_fade_out() -> void:
 		return
 	is_party_fading_out = true
 
+	# Jika pertarungan yang baru saja dimenangkan adalah Boss Skeleton, kunci waktu tempuh & rekor tercepat
+	if is_skeleton_boss_fight_in_progress:
+		is_skeleton_boss_fight_in_progress = false
+		_last_skeleton_clear_time = maxf(0.1, _skeleton_match_elapsed_time)
+		_last_skeleton_new_record = false
+		if _skeleton_best_time_sec <= 0.0 or _last_skeleton_clear_time < _skeleton_best_time_sec:
+			_skeleton_best_time_sec = _last_skeleton_clear_time
+			_last_skeleton_new_record = true
+			_save_skeleton_best_record(_skeleton_best_time_sec)
+		_hide_alaric_top_timer_hud()
+		_pending_skeleton_victory_popup = true
+
 	# Reset seketika seluruh skill aktif dan cooldown pada seluruh hero (termasuk Leader)
 	for member in party_members:
 		if is_instance_valid(member) and member.has_method("reset_combat_skills"):
@@ -2926,27 +2979,16 @@ func end_arena_battle() -> void:
 	if arena_state != ArenaState.COMBAT:
 		return
 
+	var was_skeleton_arena: bool = (active_arena_idx == 2) or _pending_skeleton_victory_popup
 	if active_arena_idx >= 0 and active_arena_idx < arena_zones.size():
-		arena_zones[active_arena_idx]["is_cleared"] = true
-		if selected_game_mode == "open_world":
-			arena_zones[active_arena_idx]["respawn_timer"] = ARENA_GROUP_RESPAWN_DELAY
-			print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Mode Jelajah: Seluruh musuh akan respawn serentak dalam ", ARENA_GROUP_RESPAWN_DELAY, " detik.")
+		if was_skeleton_arena:
+			# Boss Skeleton langsung kembali siaga agar bisa ditantang lagi kapan pun untuk mengejar rekor waktu
+			arena_zones[active_arena_idx]["is_cleared"] = false
+			arena_zones[active_arena_idx]["respawn_timer"] = 0.0
 		else:
-			# Mode Cerita: arena yang sudah dibersihkan tidak memunculkan musuh lagi.
-			arena_zones[active_arena_idx]["respawn_timer"] = -1.0
-			print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Mode Cerita: musuh mati permanen dan tidak akan respawn lagi.")
-
-	# Jika arena tebing hutan selesai dalam prolog, tandai pertarungan selesai
-	if active_arena_idx == 1 or (active_arena_idx >= 0 and arena_zones[active_arena_idx].get("name") == "Arena_2_Forest"):
-		if _is_prologue_fight_active and not _is_prologue_fight_done:
-			_is_prologue_fight_done = true
-			_on_prologue_monsters_cleared()
-
-	# Jika arena jalan setapak selesai dalam Scene 2, tandai pertarungan selesai
-	if active_arena_idx == 0 or (active_arena_idx >= 0 and arena_zones[active_arena_idx].get("name") == "Arena_1_Courtyard"):
-		if _is_scene2_fight_active and not _is_scene2_fight_done:
-			_is_scene2_fight_done = true
-			_on_scene2_monsters_cleared()
+			arena_zones[active_arena_idx]["is_cleared"] = true
+			arena_zones[active_arena_idx]["respawn_timer"] = ARENA_GROUP_RESPAWN_DELAY
+			print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Musuh akan spawn lagi dalam ", ARENA_GROUP_RESPAWN_DELAY, " detik.")
 
 	# Cek apakah seluruh zona arena cerita telah diselesaikan
 	var has_remaining_arena: bool = false
@@ -3007,6 +3049,30 @@ func end_arena_battle() -> void:
 
 	active_arena_idx = -1
 	print("Arena Battle Selesai! Kamera kembali ke Leader, party kembali ke mode eksplorasi.")
+
+	if was_skeleton_arena:
+		for member in party_members:
+			if is_instance_valid(member):
+				_restore_hero_full_for_alaric(member)
+		update_party_visibility()
+		_set_skeleton_boss_standby_mode()
+		if _pending_skeleton_victory_popup:
+			_pending_skeleton_victory_popup = false
+			_show_alaric_victory_time_popup(_last_skeleton_clear_time, _skeleton_best_time_sec, _last_skeleton_new_record, func():
+				set_party_movement_locked(false)
+				var lead := get_active_leader()
+				if is_instance_valid(lead):
+					_set_character_collision_active(lead, true)
+					lead.set_physics_process(true)
+					lead.set_process_unhandled_input(true)
+			, "Boss Skeleton Berhasil Dikalahkan!")
+		else:
+			set_party_movement_locked(false)
+			var lead := get_active_leader()
+			if is_instance_valid(lead):
+				_set_character_collision_active(lead, true)
+				lead.set_physics_process(true)
+				lead.set_process_unhandled_input(true)
 
 
 func handle_arena_group_respawn(delta: float) -> void:
@@ -3255,6 +3321,13 @@ func trigger_arena_defeat() -> void:
 	is_awaiting_defeat_rewind_input = false
 	defeat_anim_time = 0.0
 
+	if is_skeleton_boss_fight_in_progress:
+		is_skeleton_boss_fight_in_progress = false
+		_pending_skeleton_victory_popup = false
+		_hide_alaric_top_timer_hud()
+		if is_instance_valid(skeleton_boss_node) and skeleton_boss_node.has_method("_cleanup_skeleton_combat_effects"):
+			skeleton_boss_node._cleanup_skeleton_combat_effects()
+
 	# 1. Hentikan aksi seluruh musuh arena
 	for e in arena_enemies:
 		if is_instance_valid(e):
@@ -3340,14 +3413,20 @@ func execute_arena_rewind() -> void:
 	is_camera_locked_to_arena = false
 
 	# 3. Pulihkan dan hidupkan kembali seluruh musuh arena di posisi awal
+	var was_skeleton_arena_defeat: bool = (active_arena_idx == 2)
 	for e in arena_enemies:
 		if is_instance_valid(e):
+			if "is_skeleton_boss" in e and e.is_skeleton_boss:
+				continue
 			if "wait_for_arena" in e:
 				e.wait_for_arena = true
 			if "in_arena_combat" in e:
 				e.in_arena_combat = false
 			if e.has_method("respawn"):
 				e.respawn()
+
+	if was_skeleton_arena_defeat or is_instance_valid(skeleton_boss_node):
+		_set_skeleton_boss_standby_mode()
 
 	if active_arena_idx >= 0 and active_arena_idx < arena_zones.size():
 		arena_zones[active_arena_idx]["is_cleared"] = false
@@ -3467,11 +3546,23 @@ func execute_arena_rewind() -> void:
 			if defeat_canvas and is_instance_valid(defeat_canvas):
 				defeat_canvas.visible = false
 			is_arena_defeat_active = false
+			set_party_movement_locked(false)
+			var lead := get_active_leader()
+			if is_instance_valid(lead):
+				_set_character_collision_active(lead, true)
+				lead.set_physics_process(true)
+				lead.set_process_unhandled_input(true)
 			if gameplay_hud and is_instance_valid(gameplay_hud):
 				gameplay_hud.is_hud_input_blocked = false
 		)
 	else:
 		is_arena_defeat_active = false
+		set_party_movement_locked(false)
+		var lead := get_active_leader()
+		if is_instance_valid(lead):
+			_set_character_collision_active(lead, true)
+			lead.set_physics_process(true)
+			lead.set_process_unhandled_input(true)
 		if gameplay_hud and is_instance_valid(gameplay_hud):
 			gameplay_hud.is_hud_input_blocked = false
 
@@ -6441,11 +6532,20 @@ func _load_alaric_best_record() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(ALARIC_RECORD_SAVE_PATH) == OK:
 		_alaric_best_time_sec = float(cfg.get_value("alaric_duel", "best_time_sec", -1.0))
+		_skeleton_best_time_sec = float(cfg.get_value("skeleton_boss", "best_time_sec", -1.0))
 
 
 func _save_alaric_best_record(best_sec: float) -> void:
 	var cfg := ConfigFile.new()
+	cfg.load(ALARIC_RECORD_SAVE_PATH)
 	cfg.set_value("alaric_duel", "best_time_sec", best_sec)
+	cfg.save(ALARIC_RECORD_SAVE_PATH)
+
+
+func _save_skeleton_best_record(best_sec: float) -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(ALARIC_RECORD_SAVE_PATH)
+	cfg.set_value("skeleton_boss", "best_time_sec", best_sec)
 	cfg.save(ALARIC_RECORD_SAVE_PATH)
 
 
@@ -6453,13 +6553,13 @@ func _format_alaric_time(seconds: float) -> String:
 	if seconds <= 0.0:
 		return "--:--.--"
 	var total_cs: int = int(round(seconds * 100.0))
-	var mins: int = int(total_cs / 6000.0)
-	var secs: int = int(total_cs / 100.0) % 60
+	var mins: int = int(float(total_cs) / 6000.0)
+	var secs: int = int(float(total_cs) / 100.0) % 60
 	var cs: int = total_cs % 100
 	return "%02d:%02d.%02d" % [mins, secs, cs]
 
 
-func _show_alaric_top_timer_hud() -> void:
+func _show_alaric_top_timer_hud(custom_best_sec: float = -2.0) -> void:
 	_hide_alaric_top_timer_hud()
 
 	var cl := CanvasLayer.new()
@@ -6518,9 +6618,10 @@ func _show_alaric_top_timer_hud() -> void:
 	vbox.add_child(time_lbl)
 	_alaric_timer_value_lbl = time_lbl
 
+	var display_best_sec: float = custom_best_sec if custom_best_sec > -1.5 else _alaric_best_time_sec
 	var best_lbl := Label.new()
-	if _alaric_best_time_sec > 0.0:
-		best_lbl.text = "Rekor Tercepat: %s" % _format_alaric_time(_alaric_best_time_sec)
+	if display_best_sec > 0.0:
+		best_lbl.text = "Rekor Tercepat: %s" % _format_alaric_time(display_best_sec)
 	else:
 		best_lbl.text = "Rekor Tercepat: --:--.--"
 	best_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -6541,6 +6642,12 @@ func _update_alaric_top_timer_hud(delta: float) -> void:
 		_alaric_timer_value_lbl.text = "⏱ " + _format_alaric_time(_alaric_match_elapsed_time)
 
 
+func _update_skeleton_top_timer_hud(delta: float) -> void:
+	_skeleton_match_elapsed_time += delta
+	if is_instance_valid(_alaric_timer_value_lbl):
+		_alaric_timer_value_lbl.text = "⏱ " + _format_alaric_time(_skeleton_match_elapsed_time)
+
+
 func _hide_alaric_top_timer_hud() -> void:
 	if is_instance_valid(_alaric_timer_hud_layer):
 		_alaric_timer_hud_layer.queue_free()
@@ -6549,7 +6656,7 @@ func _hide_alaric_top_timer_hud() -> void:
 	_alaric_timer_best_lbl = null
 
 
-func _show_alaric_victory_time_popup(clear_time_sec: float, best_time_sec: float, is_new_record: bool, on_closed: Callable = Callable()) -> void:
+func _show_alaric_victory_time_popup(clear_time_sec: float, best_time_sec: float, is_new_record: bool, on_closed: Callable = Callable(), custom_subtitle: String = "") -> void:
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 		gameplay_hud.hide_interact_prompt(true)
 	if is_instance_valid(_alaric_boss_prompt_layer):
@@ -6629,7 +6736,7 @@ func _show_alaric_victory_time_popup(clear_time_sec: float, best_time_sec: float
 	title_lbl.anchor_right = 1.0
 	title_lbl.offset_top = 18.0
 	title_lbl.offset_bottom = 46.0
-	title_lbl.text = "Kemenangan Duel!"
+	title_lbl.text = "Kemenangan Boss!" if custom_subtitle != "" else "Kemenangan Duel!"
 	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_lbl.add_theme_font_size_override("font_size", 22)
@@ -6682,8 +6789,9 @@ func _show_alaric_victory_time_popup(clear_time_sec: float, best_time_sec: float
 	info_vbox.add_theme_constant_override("separation", 6)
 	dialog_box.add_child(info_vbox)
 
+	var default_subtitle: String = custom_subtitle if custom_subtitle != "" else "Pelatih Alaric Berhasil Dikalahkan!"
 	var badge_lbl := Label.new()
-	badge_lbl.text = "★ REKOR TERCEPAT BARU! ★" if is_new_record else "Pelatih Alaric Berhasil Dikalahkan!"
+	badge_lbl.text = "★ REKOR TERCEPAT BARU! ★" if is_new_record else default_subtitle
 	badge_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	badge_lbl.add_theme_font_size_override("font_size", 15)
 	badge_lbl.add_theme_color_override("font_color", Color(0.75, 0.34, 0.06, 1.0) if is_new_record else Color(0.38, 0.26, 0.26, 1.0))
@@ -6786,6 +6894,12 @@ func _show_alaric_victory_time_popup(clear_time_sec: float, best_time_sec: float
 		if is_instance_valid(_alaric_boss_prompt_layer):
 			_alaric_boss_prompt_layer.queue_free()
 			_alaric_boss_prompt_layer = null
+		set_party_movement_locked(false)
+		var lead := get_active_leader()
+		if is_instance_valid(lead):
+			_set_character_collision_active(lead, true)
+			lead.set_physics_process(true)
+			lead.set_process_unhandled_input(true)
 		if on_closed.is_valid():
 			on_closed.call()
 
@@ -6802,6 +6916,490 @@ func _show_alaric_victory_time_popup(clear_time_sec: float, best_time_sec: float
 			close_victory_popup.call()
 			return true
 		return true
+
+
+# =========================================================
+# SISTEM PERTARUNGAN BOSS SKELETON (TOMBOL MULAI, TIMESTAMP, & REKOR TERCEPAT)
+# =========================================================
+
+func _set_skeleton_boss_standby_mode() -> void:
+	is_skeleton_boss_fight_in_progress = false
+	if not is_instance_valid(skeleton_boss_node):
+		skeleton_boss_node = get_node_or_null("SkeletonBoss") as CharacterBody2D
+	if not is_instance_valid(skeleton_boss_node):
+		return
+
+	skeleton_boss_node.is_skeleton_boss = true
+	if skeleton_boss_node.has_method("reset_skeleton_boss_state"):
+		skeleton_boss_node.reset_skeleton_boss_state()
+	else:
+		skeleton_boss_node.max_health = 1500
+		skeleton_boss_node.current_health = 1500
+	skeleton_boss_node.global_position = SKELETON_BOSS_POS
+	skeleton_boss_node.velocity = Vector2.ZERO
+	skeleton_boss_node.is_dead = false
+	skeleton_boss_node.is_shooting = false
+	skeleton_boss_node.wait_for_arena = true
+	skeleton_boss_node.in_arena_combat = false
+	skeleton_boss_node.visible = true
+	skeleton_boss_node.modulate = Color.WHITE
+	var anim_spr := skeleton_boss_node.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if is_instance_valid(anim_spr):
+		anim_spr.modulate = Color.WHITE
+	skeleton_boss_node.last_direction = Vector2.DOWN
+	if skeleton_boss_node.has_method("play_idle_animation"):
+		skeleton_boss_node.play_idle_animation()
+	skeleton_boss_node.set_physics_process(false)
+	skeleton_boss_node.collision_layer = 1
+	skeleton_boss_node.collision_mask = 1
+	if "collision_shape" in skeleton_boss_node and is_instance_valid(skeleton_boss_node.collision_shape):
+		skeleton_boss_node.collision_shape.set_deferred("disabled", false)
+	if skeleton_boss_node.has_node("Hurtbox/CollisionShape2D"):
+		skeleton_boss_node.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", true)
+	if "health_bar" in skeleton_boss_node and is_instance_valid(skeleton_boss_node.health_bar):
+		skeleton_boss_node.health_bar.visible = false
+	if "damage_bar" in skeleton_boss_node and is_instance_valid(skeleton_boss_node.damage_bar):
+		skeleton_boss_node.damage_bar.visible = false
+	for p in party_members:
+		if is_instance_valid(p):
+			p.remove_collision_exception_with(skeleton_boss_node)
+			skeleton_boss_node.remove_collision_exception_with(p)
+
+
+func _show_skeleton_boss_challenge_prompt() -> void:
+	if is_skeleton_boss_fight_in_progress or is_transitioning or arena_state == ArenaState.COMBAT:
+		return
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
+	if is_instance_valid(_alaric_boss_prompt_layer):
+		_alaric_boss_prompt_layer.queue_free()
+		_alaric_boss_prompt_layer = null
+
+	set_party_movement_locked(true)
+	var leader := get_active_leader()
+	if is_instance_valid(skeleton_boss_node) and is_instance_valid(leader):
+		var dir: Vector2 = (leader.global_position - skeleton_boss_node.global_position).normalized()
+		if skeleton_boss_node.has_method("get_8_direction"):
+			skeleton_boss_node.last_direction = skeleton_boss_node.get_8_direction(dir)
+		if skeleton_boss_node.has_method("play_idle_animation"):
+			skeleton_boss_node.play_idle_animation()
+
+	var cl := CanvasLayer.new()
+	cl.layer = 122
+	cl.name = "SkeletonBossChallengePrompt"
+	_alaric_boss_prompt_layer = cl
+	add_child(cl)
+
+	var root := Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_PASS
+	cl.add_child(root)
+
+	var dimmer := ColorRect.new()
+	dimmer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dimmer.color = Color(0.0, 0.0, 0.0, 0.45)
+	dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(dimmer)
+
+	var center := Control.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(center)
+
+	var shadow := Panel.new()
+	shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shadow.anchor_left = 0.5
+	shadow.anchor_top = 0.5
+	shadow.anchor_right = 0.5
+	shadow.anchor_bottom = 0.5
+	shadow.offset_left = -242.0
+	shadow.offset_top = -124.0
+	shadow.offset_right = 242.0
+	shadow.offset_bottom = 130.0
+	var shadow_sb := StyleBoxFlat.new()
+	shadow_sb.bg_color = Color(0, 0, 0, 0)
+	shadow_sb.shadow_color = Color(0, 0, 0, 0.48)
+	shadow_sb.shadow_size = 14
+	shadow_sb.shadow_offset = Vector2(0, 6)
+	shadow_sb.set_corner_radius_all(6)
+	shadow.add_theme_stylebox_override("panel", shadow_sb)
+	center.add_child(shadow)
+
+	var ui_sheet: Texture2D = load("res://assets/ui/menus/common/ui_menu_sheet.png")
+	var arrow_tex: Texture2D = load("res://assets/ui/menus/common/ui_arrow_indicator.png")
+
+	var dialog_box := NinePatchRect.new()
+	dialog_box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	dialog_box.mouse_filter = Control.MOUSE_FILTER_STOP
+	dialog_box.anchor_left = 0.5
+	dialog_box.anchor_top = 0.5
+	dialog_box.anchor_right = 0.5
+	dialog_box.anchor_bottom = 0.5
+	dialog_box.offset_left = -240.0
+	dialog_box.offset_top = -126.0
+	dialog_box.offset_right = 240.0
+	dialog_box.offset_bottom = 126.0
+	dialog_box.patch_margin_left = 10
+	dialog_box.patch_margin_top = 10
+	dialog_box.patch_margin_right = 10
+	dialog_box.patch_margin_bottom = 10
+	if ui_sheet:
+		var frame_atlas := AtlasTexture.new()
+		frame_atlas.atlas = ui_sheet
+		frame_atlas.region = Rect2(0, 500, 32, 32)
+		dialog_box.texture = frame_atlas
+	center.add_child(dialog_box)
+
+	var title_lbl := Label.new()
+	title_lbl.anchor_left = 0.0
+	title_lbl.anchor_right = 1.0
+	title_lbl.offset_top = 18.0
+	title_lbl.offset_bottom = 46.0
+	title_lbl.text = "Tantangan Boss Skeleton!"
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_lbl.add_theme_font_size_override("font_size", 22)
+	title_lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+	if UI_FONT_BEHOLDEN:
+		title_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	dialog_box.add_child(title_lbl)
+
+	var div_row := HBoxContainer.new()
+	div_row.anchor_left = 0.0
+	div_row.anchor_right = 1.0
+	div_row.offset_top = 47.0
+	div_row.offset_bottom = 56.0
+	div_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	div_row.set("theme_override_constants/separation", 8)
+	div_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if ui_sheet:
+		var dots_atlas := AtlasTexture.new()
+		dots_atlas.atlas = ui_sheet
+		dots_atlas.region = Rect2(65, 263, 30, 3)
+
+		var dots_l := TextureRect.new()
+		dots_l.texture = dots_atlas
+		dots_l.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		dots_l.custom_minimum_size = Vector2(48, 9)
+		dots_l.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dots_l.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		dots_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		div_row.add_child(dots_l)
+
+		var dots_r := TextureRect.new()
+		dots_r.texture = dots_atlas
+		dots_r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		dots_r.custom_minimum_size = Vector2(48, 9)
+		dots_r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dots_r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		dots_r.flip_h = true
+		dots_r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		div_row.add_child(dots_r)
+	dialog_box.add_child(div_row)
+
+	var desc_lbl := Label.new()
+	desc_lbl.anchor_left = 0.0
+	desc_lbl.anchor_right = 1.0
+	desc_lbl.anchor_top = 0.5
+	desc_lbl.anchor_bottom = 0.5
+	desc_lbl.offset_left = 20.0
+	desc_lbl.offset_top = -54.0
+	desc_lbl.offset_right = -20.0
+	desc_lbl.offset_bottom = 14.0
+	var record_line: String = "\nRekor Tercepat: --:--.--"
+	if _skeleton_best_time_sec > 0.0:
+		record_line = "\nRekor Tercepat: %s" % _format_alaric_time(_skeleton_best_time_sec)
+	desc_lbl.text = "Boss Skeleton penguasa api neraka menjaga arena ini!\nTekan Mulai untuk menantangnya bersama seluruh anggota party." + record_line
+	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_lbl.add_theme_constant_override("line_spacing", 2)
+	desc_lbl.add_theme_font_size_override("font_size", 15)
+	desc_lbl.add_theme_color_override("font_color", Color(0.35, 0.25, 0.26, 1.0))
+	if UI_FONT_BEHOLDEN:
+		desc_lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+	dialog_box.add_child(desc_lbl)
+
+	var btn_row := HBoxContainer.new()
+	btn_row.anchor_left = 0.0
+	btn_row.anchor_right = 1.0
+	btn_row.anchor_top = 1.0
+	btn_row.anchor_bottom = 1.0
+	btn_row.offset_top = -64.0
+	btn_row.offset_bottom = -24.0
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_row.set("theme_override_constants/separation", 32)
+	dialog_box.add_child(btn_row)
+
+	var btn_normal_atlas: AtlasTexture = null
+	var btn_hover_atlas: AtlasTexture = null
+	if ui_sheet:
+		btn_normal_atlas = AtlasTexture.new()
+		btn_normal_atlas.atlas = ui_sheet
+		btn_normal_atlas.region = Rect2(145, 433, 62, 14)
+
+		btn_hover_atlas = AtlasTexture.new()
+		btn_hover_atlas.atlas = ui_sheet
+		btn_hover_atlas.region = Rect2(65, 449, 62, 14)
+
+	var create_modal_btn = func(text_label: String) -> Dictionary:
+		var btn_box := NinePatchRect.new()
+		btn_box.custom_minimum_size = Vector2(108, 38)
+		btn_box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		btn_box.texture = btn_normal_atlas
+		btn_box.patch_margin_left = 5
+		btn_box.patch_margin_top = 4
+		btn_box.patch_margin_right = 5
+		btn_box.patch_margin_bottom = 4
+
+		var lbl := Label.new()
+		lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		lbl.text = text_label
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl.add_theme_font_size_override("font_size", 16)
+		lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+		if UI_FONT_BEHOLDEN:
+			lbl.add_theme_font_override("font", UI_FONT_BEHOLDEN)
+		btn_box.add_child(lbl)
+
+		var arrow := TextureRect.new()
+		arrow.texture = arrow_tex
+		arrow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		arrow.position = Vector2(-18.0, 13.5)
+		arrow.size = Vector2(9.0, 11.0)
+		arrow.stretch_mode = TextureRect.STRETCH_KEEP
+		arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		arrow.visible = false
+		btn_box.add_child(arrow)
+
+		var click_btn := TextureButton.new()
+		click_btn.set_anchors_preset(Control.PRESET_FULL_RECT)
+		click_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		btn_box.add_child(click_btn)
+
+		return {
+			"box": btn_box,
+			"label": lbl,
+			"arrow": arrow,
+			"click": click_btn
+		}
+
+	var btn_start_data: Dictionary = create_modal_btn.call("Mulai")
+	var btn_cancel_data: Dictionary = create_modal_btn.call("Batal")
+
+	btn_row.add_child(btn_start_data["box"])
+	btn_row.add_child(btn_cancel_data["box"])
+
+	var buttons: Array = [btn_start_data, btn_cancel_data]
+	var selected_idx: Array = [0]
+
+	var update_btn_visuals = func():
+		for i in range(buttons.size()):
+			var b_data: Dictionary = buttons[i]
+			var is_sel: bool = (i == selected_idx[0])
+			var box: NinePatchRect = b_data["box"]
+			var lbl: Label = b_data["label"]
+			var arrow: TextureRect = b_data["arrow"]
+			if is_sel:
+				box.texture = btn_hover_atlas if btn_hover_atlas else btn_normal_atlas
+				box.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				lbl.add_theme_color_override("font_color", Color(0.24, 0.15, 0.16, 1.0))
+				arrow.visible = true
+			else:
+				box.texture = btn_normal_atlas
+				box.modulate = Color(0.85, 0.82, 0.78, 1.0)
+				lbl.add_theme_color_override("font_color", Color(0.48, 0.38, 0.38, 1.0))
+				arrow.visible = false
+
+	update_btn_visuals.call()
+
+	var sfx_hover: AudioStream = load("res://assets/audio/sfx/ui/ui_hover.wav")
+	var sfx_click: AudioStream = load("res://assets/audio/sfx/ui/ui_click.wav")
+	var sfx_book_select: AudioStream = load("res://assets/audio/sfx/ui/book_tab_select.wav")
+
+	var close_popup = func():
+		_alaric_boss_modal_input_cb = Callable()
+		if is_instance_valid(_alaric_boss_prompt_layer):
+			_alaric_boss_prompt_layer.queue_free()
+			_alaric_boss_prompt_layer = null
+		set_party_movement_locked(false)
+		var lead := get_active_leader()
+		if is_instance_valid(lead):
+			_set_character_collision_active(lead, true)
+			lead.set_physics_process(true)
+			lead.set_process_unhandled_input(true)
+
+	var confirm_action = func():
+		if sfx_click and has_method("play_sfx"):
+			play_sfx(sfx_click, -2.0)
+		close_popup.call()
+		_start_skeleton_boss_battle()
+
+	var cancel_action = func():
+		if sfx_book_select and has_method("play_sfx"):
+			play_sfx(sfx_book_select, -3.5)
+		elif sfx_click and has_method("play_sfx"):
+			play_sfx(sfx_click, -2.0)
+		close_popup.call()
+
+	(btn_start_data["click"] as TextureButton).pressed.connect(confirm_action)
+	(btn_cancel_data["click"] as TextureButton).pressed.connect(cancel_action)
+
+	(btn_start_data["click"] as TextureButton).mouse_entered.connect(func():
+		if selected_idx[0] != 0:
+			selected_idx[0] = 0
+			update_btn_visuals.call()
+			if sfx_hover and has_method("play_sfx"):
+				play_sfx(sfx_hover, -4.0)
+	)
+	(btn_cancel_data["click"] as TextureButton).mouse_entered.connect(func():
+		if selected_idx[0] != 1:
+			selected_idx[0] = 1
+			update_btn_visuals.call()
+			if sfx_hover and has_method("play_sfx"):
+				play_sfx(sfx_hover, -4.0)
+	)
+
+	dimmer.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+			var mb := event as InputEventMouseButton
+			if is_instance_valid(dialog_box) and not dialog_box.get_global_rect().has_point(mb.global_position):
+				cancel_action.call()
+	)
+
+	_alaric_boss_modal_input_cb = func(event: InputEvent) -> bool:
+		if not (event is InputEventKey):
+			return false
+		var ke := event as InputEventKey
+		if not ke.pressed or ke.echo:
+			return false
+		var kc: int = ke.keycode if ke.keycode != 0 else ke.physical_keycode
+		if kc == KEY_LEFT or kc == KEY_A:
+			if selected_idx[0] != 0:
+				selected_idx[0] = 0
+				update_btn_visuals.call()
+				if sfx_hover and has_method("play_sfx"):
+					play_sfx(sfx_hover, -4.0)
+			return true
+		elif kc == KEY_RIGHT or kc == KEY_D:
+			if selected_idx[0] != 1:
+				selected_idx[0] = 1
+				update_btn_visuals.call()
+				if sfx_hover and has_method("play_sfx"):
+					play_sfx(sfx_hover, -4.0)
+			return true
+		elif kc == KEY_ENTER or kc == KEY_KP_ENTER or kc == KEY_SPACE or kc == KEY_E:
+			if selected_idx[0] == 0:
+				confirm_action.call()
+			else:
+				cancel_action.call()
+			return true
+		elif kc == KEY_ESCAPE:
+			cancel_action.call()
+			return true
+		return true
+
+
+func _start_skeleton_boss_battle() -> void:
+	if is_skeleton_boss_fight_in_progress or arena_state == ArenaState.COMBAT:
+		return
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+		gameplay_hud.hide_interact_prompt(true)
+
+	# Pastikan seluruh 4 anggota party pulih penuh sebelum pertarungan Boss Skeleton dimulai
+	var all_hero_names: Array[String] = ["Knight_1", "Bandit_1", "Archer_1", "Mage_1"]
+	if selected_game_mode == "open_world":
+		for h_name in all_hero_names:
+			var hero: CharacterBody2D = all_heroes.get(h_name)
+			if is_instance_valid(hero) and hero not in party_members:
+				party_members.append(hero)
+
+	for member in party_members:
+		if is_instance_valid(member):
+			_restore_hero_full_for_alaric(member)
+
+	var leader := get_active_leader()
+	if is_instance_valid(leader):
+		var offset_from_boss: Vector2 = leader.global_position - SKELETON_BOSS_POS
+		var dist_from_boss: float = offset_from_boss.length()
+		if dist_from_boss < 110.0:
+			var push_dir: Vector2 = offset_from_boss.normalized() if dist_from_boss > 1.0 else Vector2.DOWN
+			leader.global_position = SKELETON_BOSS_POS + push_dir * 135.0
+		elif dist_from_boss > 260.0:
+			leader.global_position = SKELETON_BOSS_POS + Vector2(0.0, 165.0)
+		if "target_position" in leader:
+			leader.target_position = leader.global_position
+
+	if not is_instance_valid(skeleton_boss_node):
+		skeleton_boss_node = get_node_or_null("SkeletonBoss") as CharacterBody2D
+
+	if is_instance_valid(skeleton_boss_node):
+		skeleton_boss_node.is_skeleton_boss = true
+		if skeleton_boss_node.has_method("reset_skeleton_boss_state"):
+			skeleton_boss_node.reset_skeleton_boss_state()
+		else:
+			skeleton_boss_node.max_health = 1500
+			skeleton_boss_node.current_health = 1500
+		skeleton_boss_node.global_position = SKELETON_BOSS_POS
+		skeleton_boss_node.velocity = Vector2.ZERO
+		skeleton_boss_node.is_dead = false
+		skeleton_boss_node.is_shooting = false
+		skeleton_boss_node.wait_for_arena = false
+		skeleton_boss_node.in_arena_combat = true
+		skeleton_boss_node.visible = true
+		skeleton_boss_node.modulate = Color.WHITE
+		skeleton_boss_node.remove_from_group("npc")
+		if not skeleton_boss_node.is_in_group("enemy"):
+			skeleton_boss_node.add_to_group("enemy")
+		if "collision_shape" in skeleton_boss_node and is_instance_valid(skeleton_boss_node.collision_shape):
+			skeleton_boss_node.collision_shape.set_deferred("disabled", false)
+		if skeleton_boss_node.has_node("Hurtbox/CollisionShape2D"):
+			skeleton_boss_node.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", false)
+		if skeleton_boss_node.has_node("DetectionArea/CollisionShape2D"):
+			skeleton_boss_node.get_node("DetectionArea/CollisionShape2D").set_deferred("disabled", false)
+		skeleton_boss_node.set_physics_process(true)
+		if "health_bar" in skeleton_boss_node and is_instance_valid(skeleton_boss_node.health_bar):
+			skeleton_boss_node.health_bar.visible = true
+			skeleton_boss_node.health_bar.max_value = skeleton_boss_node.max_health
+			skeleton_boss_node.health_bar.value = skeleton_boss_node.current_health
+		if "damage_bar" in skeleton_boss_node and is_instance_valid(skeleton_boss_node.damage_bar):
+			skeleton_boss_node.damage_bar.visible = true
+			skeleton_boss_node.damage_bar.max_value = skeleton_boss_node.max_health
+			skeleton_boss_node.damage_bar.value = skeleton_boss_node.current_health
+		for p in party_members:
+			if is_instance_valid(p):
+				p.remove_collision_exception_with(skeleton_boss_node)
+				skeleton_boss_node.remove_collision_exception_with(p)
+
+	# Pastikan Arena 3 (index 2) siap dimulai dan memiliki referensi skeleton_boss_node
+	if arena_zones.size() >= 3:
+		arena_zones[2]["is_cleared"] = false
+		var z_enemies: Array[CharacterBody2D] = arena_zones[2]["enemies"]
+		if is_instance_valid(skeleton_boss_node) and skeleton_boss_node not in z_enemies:
+			z_enemies.clear()
+			z_enemies.append(skeleton_boss_node)
+
+	is_skeleton_boss_fight_in_progress = true
+	_skeleton_match_elapsed_time = 0.0
+	_pending_skeleton_victory_popup = false
+	_show_alaric_top_timer_hud(_skeleton_best_time_sec)
+
+	start_arena_battle(2)
+	set_party_movement_locked(false)
+	var active_lead := get_active_leader()
+	if is_instance_valid(active_lead):
+		_set_character_collision_active(active_lead, true)
+		active_lead.set_physics_process(true)
+		active_lead.set_process_unhandled_input(true)
+
+	if is_instance_valid(skeleton_boss_node):
+		for p in party_members:
+			if is_instance_valid(p):
+				p.remove_collision_exception_with(skeleton_boss_node)
+				skeleton_boss_node.remove_collision_exception_with(p)
+		if is_instance_valid(leader) and skeleton_boss_node.has_method("alert_to_combat"):
+			skeleton_boss_node.alert_to_combat(leader)
 
 
 func _on_alaric_post_fight_dialogue_finished() -> void:
@@ -7522,6 +8120,9 @@ func check_castle_interactions(delta: float) -> void:
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
 				var prompt_title := "Tantang Pelatih Alaric" if selected_game_mode == "open_world" else "Bicara dengan Pelatih Alaric"
 				gameplay_hud.show_interact_prompt(prompt_title, "E", "talk_alaric")
+		elif leader.global_position.distance_to(SKELETON_BOSS_POS) <= 135.0 and not is_skeleton_boss_fight_in_progress and arena_state != ArenaState.COMBAT:
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
+				gameplay_hud.show_interact_prompt("Tantang Boss Skeleton", "E", "talk_skeleton_boss")
 		elif _is_near_library_entrance(leader.global_position):
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("show_interact_prompt"):
 				gameplay_hud.show_interact_prompt("Masuk ke Perpustakaan", "E", "enter_library")
@@ -7623,12 +8224,8 @@ func _on_hud_interaction_pressed(action_type: String) -> void:
 			start_castle_meeting_cutscene()
 	elif action_type == "talk_alaric" or action_type == "Bicara dengan Pelatih Alaric":
 		_start_alaric_pre_fight_dialogue()
-	elif action_type == "talk_magnus" or action_type == "Bicara dengan Magnus":
-		if _is_waiting_prologue_return:
-			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
-				gameplay_hud.hide_interact_prompt(true)
-			_is_waiting_prologue_return = false
-			_start_prologue_crow_dialogue_sequence()
+	elif action_type == "talk_skeleton_boss" or action_type == "Tantang Boss Skeleton":
+		_show_skeleton_boss_challenge_prompt()
 	elif action_type == "go_library_floor2" or action_type == "Naik ke Lantai 2":
 		_go_to_library_floor_2()
 	elif action_type == "go_library_floor1" or action_type == "Turun ke Lantai 1":
