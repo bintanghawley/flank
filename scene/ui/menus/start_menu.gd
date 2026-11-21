@@ -48,6 +48,7 @@ var _bgm_player_b: AudioStreamPlayer = null
 var _active_bgm_player: AudioStreamPlayer = null
 var _next_bgm_player: AudioStreamPlayer = null
 var _bgm_tween: Tween = null
+var _bgm_loop_timer: Timer = null
 var _is_crossfading: bool = false
 const BGM_CROSSFADE_DURATION: float = 2.5
 const BGM_BASE_VOLUME_DB: float = -4.0 # Dikalibrasi seimbang saat volume UI 100%
@@ -90,9 +91,9 @@ var _btn_tweens: Dictionary = {}
 var _current_selected: Button = null
 
 func _ready() -> void:
-	# Mulai muat scene game utama di background thread sedini mungkin agar tidak ada freeze saat transisi
-	if ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH) != ResourceLoader.THREAD_LOAD_IN_PROGRESS and ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH) != ResourceLoader.THREAD_LOAD_LOADED:
-		ResourceLoader.load_threaded_request(GAME_SCENE_PATH)
+	# Catatan: request threaded load game scene DIPINDAH ke setelah frame pertama.
+	# Meminta threaded load sebelum HUD _ready menyebabkan deadlock dengan
+	# load("res://scene/game.gd") di gameplay_hud._check_initial_game_mode().
 
 	# Pastikan material circular mask terbuka penuh saat menu muncul
 	var mat: ShaderMaterial = iris_mask.material as ShaderMaterial
@@ -132,6 +133,11 @@ func _ready() -> void:
 
 	# Tunggu 1 frame agar ukuran container terkalkulasi sempurna
 	await get_tree().process_frame
+
+	# Mulai muat scene game utama di background thread setelah HUD selesai init
+	# agar tidak deadlock dengan load("res://scene/game.gd") di HUD.
+	if ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH) != ResourceLoader.THREAD_LOAD_IN_PROGRESS and ResourceLoader.load_threaded_get_status(GAME_SCENE_PATH) != ResourceLoader.THREAD_LOAD_LOADED:
+		ResourceLoader.load_threaded_request(GAME_SCENE_PATH)
 
 	_setup_sword_indicator()
 	
@@ -180,7 +186,6 @@ func _process(delta: float) -> void:
 		_cloud_speed = move_toward(_cloud_speed, 0.0, 40.0 * delta)
 	
 	_update_parallax_movement(delta)
-	_update_bgm_loop()
 
 func _update_parallax_movement(delta: float) -> void:
 	var w: float = size.x if size.x > 0.0 else 1152.0
@@ -675,10 +680,26 @@ func _ensure_music_bus() -> void:
 		AudioServer.set_bus_send(idx, &"Master")
 
 
+func _ensure_bgm_loop_timer() -> void:
+	if is_instance_valid(_bgm_loop_timer):
+		return
+	# Timer dengan PROCESS_MODE_ALWAYS agar crossfade loop tetap berjalan alami
+	# meskipun SceneTree sedang di-pause.
+	_bgm_loop_timer = Timer.new()
+	_bgm_loop_timer.name = "BgmLoopTimer"
+	_bgm_loop_timer.wait_time = 0.1
+	_bgm_loop_timer.one_shot = false
+	_bgm_loop_timer.autostart = true
+	_bgm_loop_timer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_bgm_loop_timer)
+	_bgm_loop_timer.timeout.connect(_update_bgm_loop)
+
+
 func _init_and_play_bgm(fade_in_at_start: bool = false) -> void:
 	if not BGM_START_MENU:
 		return
 	_ensure_music_bus()
+	_ensure_bgm_loop_timer()
 	
 	if not is_instance_valid(_bgm_player_a):
 		_bgm_player_a = AudioStreamPlayer.new()

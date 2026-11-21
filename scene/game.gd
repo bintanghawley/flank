@@ -585,6 +585,23 @@ var arena_center: Vector2 = Vector2(3980.0, 4700.0)
 var arena_enemies: Array[CharacterBody2D] = []
 var arena_barrier_body: StaticBody2D = null
 
+# =========================================================
+# MUSUH CACING UNTUK ARENA OUTDOOR (3 PER ARENA)
+# =========================================================
+const ENEMY_WORM_SCENE = preload("res://scene/enemy/enemy.tscn")
+const WORM_IDLE_TEXTURE = preload("res://assets/characters/animal/cacing/cacing_idle.png")
+const WORM_WALK_TEXTURE = preload("res://assets/characters/animal/cacing/cacing_walk.png")
+const WORM_ATTACK_TEXTURE = preload("res://assets/characters/animal/cacing/cacing_attack.png")
+const WORM_MAX_HEALTH: int = 320
+const WORM_CONTACT_DAMAGE: int = 10
+const WORM_MELEE_DAMAGE: int = 18
+const WORM_MELEE_RANGE: float = 90.0
+const WORM_CHASE_SPEED: float = 105.0
+const WORM_WANDER_SPEED: float = 45.0
+const WORM_ATTACK_COOLDOWN: float = 1.25
+const WORMS_PER_ARENA: int = 3
+var _worm_sprite_frames_cache: SpriteFrames = null
+
 var arena_zones: Array[Dictionary] = [
 	{
 		"id": 1,
@@ -652,11 +669,13 @@ var _is_party_initialized: bool = false
 # Sistem Musik Latar (BGM) Gameplay - Dual-Deck Equal-Power Seamless Crossfade
 const BGM_GAMEPLAY = preload("res://assets/audio/bgm/game.ogg")
 const BGM_GAME_OVER = preload("res://assets/audio/bgm/game_over.ogg")
+const BGM_ALARIC = preload("res://assets/audio/bgm/alaric.ogg")
 var _bgm_player_a: AudioStreamPlayer = null
 var _bgm_player_b: AudioStreamPlayer = null
 var _active_bgm_player: AudioStreamPlayer = null
 var _next_bgm_player: AudioStreamPlayer = null
 var _bgm_tween: Tween = null
+var _bgm_loop_timer: Timer = null
 var _is_crossfading: bool = false
 const BGM_CROSSFADE_DURATION: float = 2.5
 const BGM_BASE_VOLUME_DB: float = -4.0 # Dikalibrasi seimbang saat volume UI 100%
@@ -685,10 +704,26 @@ func _ensure_music_bus() -> void:
 		AudioServer.set_bus_send(idx, &"Master")
 
 
+func _ensure_bgm_loop_timer() -> void:
+	if is_instance_valid(_bgm_loop_timer):
+		return
+	# Timer dengan PROCESS_MODE_ALWAYS agar crossfade loop tetap berjalan alami
+	# meskipun SceneTree sedang di-pause (misalnya saat menu pause terbuka).
+	_bgm_loop_timer = Timer.new()
+	_bgm_loop_timer.name = "BgmLoopTimer"
+	_bgm_loop_timer.wait_time = 0.1
+	_bgm_loop_timer.one_shot = false
+	_bgm_loop_timer.autostart = true
+	_bgm_loop_timer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_bgm_loop_timer)
+	_bgm_loop_timer.timeout.connect(_update_bgm_loop)
+
+
 func _init_and_play_bgm(fade_in_at_start: bool = true) -> void:
 	if not BGM_GAMEPLAY:
 		return
 	_ensure_music_bus()
+	_ensure_bgm_loop_timer()
 	
 	if not is_instance_valid(_bgm_player_a):
 		_bgm_player_a = AudioStreamPlayer.new()
@@ -795,6 +830,7 @@ func _crossfade_to_bgm(stream: AudioStream, duration: float = BGM_CROSSFADE_DURA
 	if not stream:
 		return
 	_ensure_music_bus()
+	_ensure_bgm_loop_timer()
 
 	if not is_instance_valid(_bgm_player_a):
 		_bgm_player_a = AudioStreamPlayer.new()
@@ -1880,7 +1916,6 @@ func _process(delta: float) -> void:
 	update_camera_target(delta)
 	update_party_skill_cooldowns(delta)
 	check_training_arena()
-	_update_bgm_loop()
 	handle_arena_group_respawn(delta)
 	if arena_state == ArenaState.INACTIVE:
 		check_arena_trigger()
@@ -2195,6 +2230,9 @@ func _init_arena_enemies() -> void:
 	for zone in arena_zones:
 		(zone["enemies"] as Array[CharacterBody2D]).clear()
 
+	# Ganti seluruh musuh arena lama dengan 3 cacing di setiap arena.
+	_spawn_worm_arena_enemies()
+
 	var enemies := get_tree().get_nodes_in_group("enemy")
 	for e in enemies:
 		if not is_instance_valid(e) or not (e is CharacterBody2D):
@@ -2236,6 +2274,108 @@ func _init_arena_enemies() -> void:
 	print("[Arena] Inisialisasi Arena Zones:")
 	for zone in arena_zones:
 		print(" - ", zone["name"], " (ID: ", zone["id"], ") terdaftar ", (zone["enemies"] as Array).size(), " musuh.")
+
+
+func _is_position_in_any_arena(pos: Vector2) -> bool:
+	for zone in arena_zones:
+		var zone_bounds: Rect2 = zone["bounds"]
+		if zone_bounds.grow(150.0).has_point(pos):
+			return true
+	return false
+
+
+func _make_worm_atlas(tex: Texture2D, x: int, region_h: int) -> AtlasTexture:
+	var atlas := AtlasTexture.new()
+	atlas.atlas = tex
+	atlas.region = Rect2(float(x), 0.0, 16.0, float(region_h))
+	return atlas
+
+
+func _add_worm_animation(frames: SpriteFrames, anim_name: String, tex: Texture2D, xs: Array, region_h: int, fps: float, loop: bool) -> void:
+	frames.add_animation(anim_name)
+	frames.set_animation_speed(anim_name, fps)
+	frames.set_animation_loop(anim_name, loop)
+	for x in xs:
+		frames.add_frame(anim_name, _make_worm_atlas(tex, x, region_h))
+
+
+func _get_worm_sprite_frames() -> SpriteFrames:
+	if _worm_sprite_frames_cache != null:
+		return _worm_sprite_frames_cache
+
+	var frames := SpriteFrames.new()
+	# Posisi kolom sprite sheet sudah diselaraskan per frame (16 px) agar animasi stabil.
+	var idle_xs: Array = [0, 16, 32]
+	var walk_xs: Array = [0, 16, 32, 48, 64]
+	var attack_xs: Array = [0, 16, 32, 49, 65, 80, 95, 112]
+
+	for dir in ["n", "s", "e", "w"]:
+		_add_worm_animation(frames, "idle_" + dir, WORM_IDLE_TEXTURE, idle_xs, 16, 6.0, true)
+		_add_worm_animation(frames, "walk_" + dir, WORM_WALK_TEXTURE, walk_xs, 14, 10.0, true)
+		_add_worm_animation(frames, "atk_" + dir, WORM_ATTACK_TEXTURE, attack_xs, 14, 12.0, false)
+
+	_worm_sprite_frames_cache = frames
+	return _worm_sprite_frames_cache
+
+
+func _spawn_worm_arena_enemies() -> void:
+	# Hapus musuh lama yang berada di dalam area arena (termasuk 3 node musuh bawaan scene).
+	for e in get_tree().get_nodes_in_group("enemy"):
+		if not is_instance_valid(e) or not (e is CharacterBody2D):
+			continue
+		if "is_alaric" in e and e.is_alaric:
+			continue
+		if _is_position_in_any_arena(e.global_position):
+			e.remove_from_group("enemy")
+			if is_instance_valid(e.get_parent()):
+				e.get_parent().remove_child(e)
+			e.queue_free()
+
+	var worm_frames := _get_worm_sprite_frames()
+	var spawn_offsets: Array = [
+		Vector2(-150.0, 40.0),
+		Vector2(0.0, -90.0),
+		Vector2(150.0, 40.0),
+	]
+
+	for zone_idx in range(arena_zones.size()):
+		var zone: Dictionary = arena_zones[zone_idx]
+		var center: Vector2 = zone["center"]
+		for i in range(WORMS_PER_ARENA):
+			var worm := ENEMY_WORM_SCENE.instantiate() as CharacterBody2D
+			if not is_instance_valid(worm):
+				continue
+			worm.name = "Worm_Arena%d_%d" % [zone_idx + 1, i + 1]
+			worm.position = center + spawn_offsets[i % spawn_offsets.size()]
+			add_child(worm)
+
+			# Cacing bertarung jarak dekat seperti Knight (melee AI).
+			worm.enemy_type = 1
+			worm.max_health = WORM_MAX_HEALTH
+			worm.current_health = WORM_MAX_HEALTH
+			worm.contact_damage = WORM_CONTACT_DAMAGE
+			worm.melee_damage = WORM_MELEE_DAMAGE
+			worm.melee_attack_range = WORM_MELEE_RANGE
+			worm.chase_speed = WORM_CHASE_SPEED
+			worm.wander_speed = WORM_WANDER_SPEED
+			worm.attack_cooldown = WORM_ATTACK_COOLDOWN
+			worm.can_respawn = false
+			worm.wait_for_arena = true
+			worm.spawn_position = worm.global_position
+			if worm.has_method("setup_health_bar"):
+				worm.setup_health_bar()
+
+			var sprite := worm.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+			if is_instance_valid(sprite):
+				sprite.sprite_frames = worm_frames
+				sprite.modulate = Color.WHITE
+				sprite.offset = Vector2.ZERO
+				sprite.animation = &"idle_s"
+				sprite.frame = 0
+			if worm.has_method("play_idle_animation"):
+				worm.play_idle_animation()
+
+	print("[Arena] %d cacing ditempatkan pada masing-masing %d arena." % [WORMS_PER_ARENA, arena_zones.size()])
 
 
 func _init_training_dummy() -> void:
@@ -2610,8 +2750,13 @@ func end_arena_battle() -> void:
 
 	if active_arena_idx >= 0 and active_arena_idx < arena_zones.size():
 		arena_zones[active_arena_idx]["is_cleared"] = true
-		arena_zones[active_arena_idx]["respawn_timer"] = ARENA_GROUP_RESPAWN_DELAY
-		print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Musuh akan spawn lagi dalam ", ARENA_GROUP_RESPAWN_DELAY, " detik.")
+		if selected_game_mode == "open_world":
+			arena_zones[active_arena_idx]["respawn_timer"] = ARENA_GROUP_RESPAWN_DELAY
+			print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Musuh akan spawn lagi dalam ", ARENA_GROUP_RESPAWN_DELAY, " detik.")
+		else:
+			# Mode Cerita: arena yang sudah dibersihkan tidak memunculkan musuh lagi.
+			arena_zones[active_arena_idx]["respawn_timer"] = 0.0
+			print("[Arena] Zona selesai dibersihkan: ", arena_zones[active_arena_idx]["name"], ". Mode Cerita: musuh tidak akan respawn.")
 
 	# Cek apakah seluruh zona arena cerita telah diselesaikan
 	var has_remaining_arena: bool = false
@@ -2675,6 +2820,9 @@ func end_arena_battle() -> void:
 
 
 func handle_arena_group_respawn(delta: float) -> void:
+	# Mode Cerita tidak melakukan respawn musuh arena yang sudah dikalahkan.
+	if selected_game_mode != "open_world":
+		return
 	for zone in arena_zones:
 		if zone.get("is_cleared", false):
 			zone["respawn_timer"] -= delta
@@ -5253,6 +5401,8 @@ func _start_alaric_sparring_match() -> void:
 	is_alaric_sparring_in_progress = true
 	_alaric_match_elapsed_time = 0.0
 	_show_alaric_top_timer_hud()
+	# Ganti musik gameplay ke BGM pertarungan Alaric dengan crossfade yang sama
+	_crossfade_to_bgm(BGM_ALARIC)
 
 	if is_instance_valid(alaric_node):
 		alaric_node.is_alaric_boss = true
@@ -5323,6 +5473,8 @@ func check_alaric_sparring_status(_delta: float) -> void:
 
 func _end_alaric_sparring_match(player_won: bool = true) -> void:
 	is_alaric_sparring_in_progress = false
+	# Kembalikan musik gameplay dari BGM pertarungan Alaric
+	_crossfade_to_bgm(BGM_GAMEPLAY)
 	var was_already_completed: bool = is_alaric_sparring_completed
 	if player_won:
 		is_alaric_sparring_completed = true
@@ -5491,8 +5643,8 @@ func _format_alaric_time(seconds: float) -> String:
 	if seconds <= 0.0:
 		return "--:--.--"
 	var total_cs: int = int(round(seconds * 100.0))
-	var mins: int = total_cs / 6000
-	var secs: int = (total_cs / 100) % 60
+	var mins: int = int(total_cs / 6000.0)
+	var secs: int = int(total_cs / 100.0) % 60
 	var cs: int = total_cs % 100
 	return "%02d:%02d.%02d" % [mins, secs, cs]
 
