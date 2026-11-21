@@ -34,7 +34,7 @@ const CASTLE_MEETING_SIT_POS: Vector2 = Vector2(2457.0, -1385.0)
 const CASTLE_MEETING_TABLE_CENTER: Vector2 = Vector2(2533.0, -1490.0)
 const CASTLE_LIBRARY_POS: Vector2 = Vector2(2533.0, -1720.0) # deprecated, diganti konstanta library baru
 # === SECRET LIBRARY ===
-const LIBRARY_ENTRANCE_POS: Vector2 = Vector2(690.0, 1380.0)        # Pintu luar perpustakaan (toko ramuan sisi barat kota)
+const LIBRARY_ENTRANCE_POS: Vector2 = Vector2(1910.0, 1095.0)        # Pintu luar perpustakaan (gedung toko ramuan barat kastil sesuai gambar)
 const SECRET_LIBRARY_EXIT_L1_POS: Vector2 = Vector2(4300.0, -1140.0) # Pintu keluar Lantai 1 perpustakaan
 const SECRET_LIBRARY_WORLD_POS: Vector2 = Vector2(4300.0, -1500.0)
 const SECRET_LIBRARY_L1_SPAWN: Vector2 = Vector2(4300.0, -1340.0)   # tengah lantai 1 (spawn masuk)
@@ -46,9 +46,10 @@ var is_inside_secret_library: bool = false
 var is_on_library_floor_2: bool = false
 
 func _is_near_library_entrance(pos: Vector2) -> bool:
+	# Deteksi area di depan pintu perpustakaan
 	if pos.distance_to(LIBRARY_ENTRANCE_POS) <= 130.0:
 		return true
-	return pos.x >= 600.0 and pos.x <= 800.0 and pos.y >= 1340.0 and pos.y <= 1490.0
+	return pos.x >= 1830.0 and pos.x <= 2010.0 and pos.y >= 1060.0 and pos.y <= 1180.0
 
 # === GERBANG KOTA (collision: OutdoorObstacles/CollisionShape2D132 di outdoor_world.tscn) ===
 const CITY_GATE_POS: Vector2 = Vector2(2560.0, 3877.0)
@@ -1169,7 +1170,7 @@ func _ready() -> void:
 					marker.visible = true
 			elif tracked_quest_id == "main_03" and not is_inside_castle_hall:
 				if gameplay_hud.has_method("set_quest_navigation"):
-					gameplay_hud.set_quest_navigation(ALARIC_CAMP_POS, "Camp Latihan Istana")
+					gameplay_hud.set_quest_navigation(LIBRARY_ENTRANCE_POS, "Perpustakaan Istana")
 			elif tracked_quest_id == "main_04" and not is_inside_castle_hall:
 				if gameplay_hud.has_method("set_quest_navigation"):
 					gameplay_hud.set_quest_navigation(GRAVEYARD_POS, "Makam Ksatria Lancelot")
@@ -5208,6 +5209,15 @@ func start_story_scene_4() -> void:
 func _show_library_stair_prompt() -> void:
 	# Buka gerakan agar pemain bisa jalan ke tangga dan tekan [E]
 	set_party_movement_locked(false)
+	for q in quest_list:
+		if q.get("id") == "main_03":
+			q["target_position"] = SECRET_LIBRARY_STAIR_POS
+			q["objective"] = "Naik tangga ke Lantai 2 Perpustakaan [Tekan E]."
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("update_hud_quest_display"):
+				gameplay_hud.update_hud_quest_display(q)
+			break
+	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("set_quest_navigation"):
+		gameplay_hud.set_quest_navigation(SECRET_LIBRARY_STAIR_POS, "Tangga Lantai 2")
 	print("[Story] Scene 4: Silakan berjalan ke tangga kiri dan tekan [E].")
 
 
@@ -7766,8 +7776,15 @@ func exit_castle_hall() -> void:
 			if is_instance_valid(marker):
 				marker.visible = true
 		elif tracked_quest_id == "main_03":
+			for q in quest_list:
+				if q.get("id") == "main_03":
+					q["target_position"] = LIBRARY_ENTRANCE_POS
+					q["objective"] = "Pergi ke Perpustakaan Istana di barat kastil dan masuk [Tekan E]."
+					if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("update_hud_quest_display"):
+						gameplay_hud.update_hud_quest_display(q)
+					break
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("set_quest_navigation"):
-				gameplay_hud.set_quest_navigation(CASTLE_OUTSIDE_SPAWN_POS, "Perpustakaan Istana")
+				gameplay_hud.set_quest_navigation(LIBRARY_ENTRANCE_POS, "Perpustakaan Istana")
 		elif tracked_quest_id == "main_04":
 			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("set_quest_navigation"):
 				gameplay_hud.set_quest_navigation(GRAVEYARD_POS, "Makam Ksatria Lancelot")
