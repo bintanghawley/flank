@@ -16,6 +16,7 @@ enum EnemyType { ARCHER, KNIGHT }
 @export var wait_for_arena: bool = false
 @export var in_arena_combat: bool = false
 @export var is_training_dummy: bool = false
+@export var is_worm: bool = false
 @export var melee_attack_range: float = 120.0
 @export var melee_damage: int = 50
 
@@ -1033,6 +1034,18 @@ func get_8_direction(direction: Vector2) -> Vector2:
 # WALK ANIMATION (8 ARAH)
 # =========================================================
 
+# Cacing hanya punya satu set sprite (menghadap kanan), jadi arah hadapnya
+# ditentukan dengan flip horizontal mengikuti posisi target/karakter.
+func _apply_worm_facing() -> void:
+	if not is_worm or not animated_sprite:
+		return
+	var dx: float = last_direction.x
+	if player != null and is_instance_valid(player):
+		dx = player.global_position.x - global_position.x
+	if absf(dx) > 4.0:
+		animated_sprite.flip_h = dx < 0.0
+
+
 func play_walk_animation() -> void:
 	if not animated_sprite:
 		return
@@ -1060,6 +1073,8 @@ func play_walk_animation() -> void:
 	elif last_direction == Vector2(1, 1):
 		animated_sprite.play("walk_e")
 		animated_sprite.flip_h = false
+
+	_apply_worm_facing()
 
 
 # =========================================================
@@ -1093,6 +1108,8 @@ func play_idle_animation() -> void:
 	elif last_direction == Vector2(1, 1):
 		animated_sprite.play("idle_e")
 		animated_sprite.flip_h = false
+
+	_apply_worm_facing()
 
 
 # =========================================================
@@ -1139,6 +1156,8 @@ func play_attack_animation() -> void:
 	if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation(target_anim):
 		animated_sprite.stop()
 		animated_sprite.play(target_anim)
+
+	_apply_worm_facing()
 
 
 func play_skill_animation() -> void:
@@ -1374,13 +1393,31 @@ func die() -> void:
 	# Keluarkan dari grup enemy sementara agar tidak bisa ditembak saat mati
 	remove_from_group("enemy")
 
+	# Pengecekan Mode Permainan:
+	var game_node = get_tree().current_scene if is_inside_tree() else null
+	var is_open_world := false
+	if game_node and "selected_game_mode" in game_node:
+		is_open_world = (game_node.selected_game_mode == "open_world")
+
+	# 1. Di Mode Cerita (Story Mode), seluruh musuh yang mati TIDAK BOLEH respawn lagi!
+	if not is_open_world:
+		return
+
+	# 2. Di Mode Jelajah, musuh arena TIDAK respawn satu per satu saat pertarungan masih berlangsung.
+	# Respawn arena hanya terjadi serentak 5 detik setelah SEMUA musuh di arena tersebut mati (dikelola oleh game.gd).
+	var is_arena_enemy: bool = wait_for_arena or in_arena_combat or is_worm or ("Worm" in name)
+	if not is_arena_enemy and game_node and game_node.has_method("_is_position_in_any_arena"):
+		is_arena_enemy = game_node._is_position_in_any_arena(global_position)
+	if is_arena_enemy:
+		return
+
 	if not can_respawn:
 		return
 
 	if not is_inside_tree():
 		return
 
-	# Tunggu waktu respawn (5 detik)
+	# Tunggu waktu respawn (5 detik) untuk musuh non-arena di mode jelajah
 	await get_tree().create_timer(respawn_time).timeout
 
 	if not is_inside_tree():
@@ -1427,7 +1464,7 @@ func respawn() -> void:
 
 	# Reset warna normal
 	if animated_sprite:
-		var default_col: Color = Color.WHITE if ("Alaric" in name or is_in_group("npc")) else Color(1.3, 0.4, 0.4)
+		var default_col: Color = Color.WHITE if ("Alaric" in name or is_in_group("npc") or is_worm or ("Worm" in name)) else Color(1.3, 0.4, 0.4)
 		animated_sprite.modulate = default_col
 		play_idle_animation()
 

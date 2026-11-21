@@ -303,6 +303,7 @@ var hero_portraits: Dictionary = {}
 var is_start_menu_mode: bool = false
 var is_hud_input_blocked: bool = false
 var is_combat_hud_visible: bool = false
+var is_character_switch_unlocked: bool = true
 var _combat_hud_tween: Tween = null
 var _outside_pause_pressed: bool = false
 var _outside_modal_pressed: bool = false
@@ -2737,6 +2738,8 @@ func _connect_card_click(card: Control, hero_type: int) -> void:
 		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			var idx := get_member_index_by_hero_type(hero_type)
 			if idx != -1 and idx < party_members.size() and is_instance_valid(party_members[idx]):
+				if not is_character_switch_unlocked:
+					return
 				var hero = party_members[idx]
 				if "is_dead" in hero and hero.is_dead:
 					return
@@ -2795,7 +2798,7 @@ func set_combat_hud_visible(active: bool, animated: bool = true) -> void:
 		if is_instance_valid(action_q):
 			var lbl = action_q.get_node_or_null("Label") as Label
 			var ico = action_q.get_node_or_null("Icon") as TextureRect
-			if active and party_members.size() > 1:
+			if active and party_members.size() > 1 and is_character_switch_unlocked:
 				action_q.visible = true
 				if lbl:
 					lbl.text = "Ganti Karakter (1-4)"
@@ -5176,7 +5179,7 @@ func _sync_gameplay_hud_controls_prompts() -> void:
 	if is_instance_valid(controls_prompt):
 		var action_q = controls_prompt.get_node_or_null("ActionQ")
 		if is_instance_valid(action_q):
-			var can_switch: bool = is_combat_hud_visible and (party_members.size() > 1)
+			var can_switch: bool = is_combat_hud_visible and (party_members.size() > 1) and is_character_switch_unlocked
 			action_q.visible = can_switch
 			if can_switch:
 				var lbl = action_q.get_node_or_null("Label") as Label
@@ -6242,11 +6245,11 @@ func resolve_dialogue_portrait(key: String) -> Texture2D:
 		return PORTRAIT_ARTHUR
 	elif "magnus" in lower or "mage" in lower or "wizard" in lower or "penasehat" in lower:
 		return PORTRAIT_MAGNUS
-	elif "anastasya" in lower or "archer" in lower:
+	elif "anastasya" in lower or "archer" in lower or "carina" in lower:
 		return PORTRAIT_ANASTASYA
 	elif "hellene" in lower or "bandit" in lower or "assassin" in lower:
 		return PORTRAIT_HELLENE
-	elif "raja" in lower or "king" in lower:
+	elif "raja" in lower or "king" in lower or "petinggi" in lower:
 		if portrait_king == null:
 			var tex: Texture2D = load("res://assets/characters/npc/king/idle-s.png")
 			if tex:
@@ -6434,6 +6437,7 @@ func _setup_interact_prompt_ui() -> void:
 
 	var btn := Button.new()
 	btn.flat = true
+	btn.focus_mode = Control.FOCUS_NONE
 	btn.anchors_preset = Control.PRESET_FULL_RECT
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	btn.pressed.connect(func():

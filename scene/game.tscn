@@ -123,6 +123,7 @@ position = Vector2(2620, 1180)
 patrol_points = Array[Vector2]([Vector2(2620, 1180), Vector2(2620, 3290)])
 
 [node name="Guard_Patrol_04" parent="." unique_id=1290897885 instance=ExtResource("9_npc_guard")]
+visible = false
 position = Vector2(4400, 2250)
 patrol_points = Array[Vector2]([Vector2(4400, 2250), Vector2(3320, 2250), Vector2(3320, 3550), Vector2(4150, 3550), Vector2(3320, 3550), Vector2(3320, 2250)])
 

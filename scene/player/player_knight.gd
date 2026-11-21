@@ -13,6 +13,7 @@ extends CharacterBody2D
 # =========================
 var is_leader: bool = false
 var is_movement_locked: bool = false
+var is_cutscene_walking: bool = false
 var leader_node: CharacterBody2D = null
 var queue_slot_index: int = 0
 var in_party_combat: bool = false
@@ -222,9 +223,12 @@ func set_party_combat_mode(active: bool) -> void:
 
 
 func is_in_combat_mode() -> bool:
+	var game_node = get_tree().current_scene if is_inside_tree() else null
+	if game_node:
+		if "is_inside_castle_hall" in game_node and game_node.is_inside_castle_hall:
+			return false
 	if in_party_combat:
 		return true
-	var game_node = get_tree().current_scene if is_inside_tree() else null
 	if game_node:
 		if "current_combat_state" in game_node and "PartyCombatState" in game_node:
 			if game_node.current_combat_state == game_node.PartyCombatState.COMBAT:
@@ -254,8 +258,8 @@ func _physics_process(delta: float) -> void:
 
 	if is_movement_locked:
 		velocity = Vector2.ZERO
-		is_moving = false
-		if has_method("play_idle_animation"):
+		is_moving = is_cutscene_walking
+		if not is_cutscene_walking and has_method("play_idle_animation"):
 			play_idle_animation()
 		move_and_slide()
 		return
@@ -775,9 +779,15 @@ func _deploy_shield() -> void:
 	if not is_inside_tree():
 		grant_shield(shield_duration, shield_points_max)
 		return
-	# Aktifkan pelindung perisai ke seluruh anggota party (Knight, Mage, Archer, Bandit)
-	var party := get_tree().get_nodes_in_group("player")
-	for member in party:
+	# Aktifkan pelindung perisai HANYA ke anggota party aktif (saat solo, hanya Arthur)
+	var game_node = get_tree().current_scene if is_inside_tree() else null
+	var targets: Array = []
+	if game_node and "party_members" in game_node and game_node.party_members is Array and not game_node.party_members.is_empty():
+		targets = game_node.party_members
+	else:
+		targets = [self]
+
+	for member in targets:
 		if is_instance_valid(member) and not ("is_dead" in member and member.is_dead):
 			if member.has_method("grant_shield"):
 				member.grant_shield(shield_duration, shield_points_max)
@@ -789,6 +799,12 @@ func grant_shield(duration: float, points: int = 300) -> void:
 	is_shield_active = true
 	shield_timer = duration
 	shield_points = points
+
+	# Timer pengaman agar perisai selalu dinonaktifkan setelah durasi berakhir
+	get_tree().create_timer(duration).timeout.connect(func():
+		if is_instance_valid(self) and is_shield_active:
+			deactivate_shield()
+	)
 
 	if shield_sprite and is_inside_tree():
 		shield_sprite.visible = true
