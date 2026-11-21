@@ -502,7 +502,7 @@ const HERO_LORE: Dictionary = {
 		"title": "Ksatria Kerajaan",
 		"race": "Manusia",
 		"birthday": "31 Agustus",
-		"skill_desc": "+300 Shield Point (5 dtk)\nPerisai pelindung tim\nCD 12 detik"
+		"skill_desc": "Kebal Semua Damage (5 dtk)\nPerisai pelindung tim\nCD 12 detik"
 	},
 	1: {
 		"display_name": "Hellene",

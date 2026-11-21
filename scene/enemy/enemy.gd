@@ -19,6 +19,45 @@ enum EnemyType { ARCHER, KNIGHT }
 @export var melee_attack_range: float = 120.0
 @export var melee_damage: int = 50
 
+# =========================================================
+# ALARIC BOSS STATS, ENRAGE & ATTACK PATTERNS
+# =========================================================
+@export var is_alaric_boss: bool = false
+const ALARIC_MAX_HP: int = 600                      # Disesuaikan dengan Basic Attack Knight (40 dmg x 15 tebasan = 600 HP)
+const ALARIC_BASE_MOVE_SPEED: float = 220.0         # Seperti karakter lain (SPRINT_SPEED := 220.0)
+const ALARIC_ENRAGE_HP_RATIO: float = 0.35          # Enrage aktif pada HP 35% (<= 210 HP)
+const ALARIC_ENRAGE_SPEED_MULTIPLIER: float = 1.08  # Movement speed Enrage meningkat 8% (237.6 px/s)
+const ALARIC_TILE_SIZE: float = 85.0                # Ukuran 1 petak dunia (skala 5x)
+
+# 1. Basic Attack (3x1 [didepan sekaligus diagonal] karakter) - Tanpa Indikator Serangan
+const ALARIC_BASIC_DAMAGE: int = 160
+const ALARIC_BASIC_WINDUP: float = 0.45
+const ALARIC_BASIC_RECOVERY: float = 0.75
+const ALARIC_BASIC_COOLDOWN: float = 1.6
+
+# 2. Triple Advance (3 hit [1 petak di depan] karakter) - Dengan Indikator & Efek Tebasan
+const ALARIC_TRIPLE_DAMAGE_PER_HIT: int = 110
+const ALARIC_TRIPLE_HIT_COUNT: int = 3
+const ALARIC_TRIPLE_WINDUP: float = 0.45
+const ALARIC_TRIPLE_RECOVERY: float = 1.1
+const ALARIC_TRIPLE_COOLDOWN: float = 4.5
+const ALARIC_TRIPLE_HIT_INTERVAL: float = 0.16
+
+# 3. Ground Rupture (1 petak di keliling [setiap arah] karakter) - Dengan Indikator & Efek Tebasan
+const ALARIC_RUPTURE_DAMAGE: int = 220
+const ALARIC_RUPTURE_WINDUP: float = 0.9
+const ALARIC_RUPTURE_RECOVERY: float = 1.3
+const ALARIC_RUPTURE_COOLDOWN: float = 7.5
+
+var is_alaric_enraged: bool = false
+var alaric_basic_cd_timer: float = 0.0
+var alaric_triple_cd_timer: float = 0.0
+var alaric_rupture_cd_timer: float = 0.0
+var alaric_recovery_timer: float = 0.0
+var alaric_attack_token: int = 0
+var alaric_active_telegraph: Node2D = null
+var alaric_enrage_aura: Node2D = null
+
 # =========================
 # RANGED ATTACK / TEMBAKAN MUSUH
 # =========================
@@ -112,12 +151,21 @@ var damage_tween: Tween = null
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("enemy")
+	if "Alaric" in name:
+		is_alaric_boss = true
 	if is_training_dummy:
 		max_health = 2500
 		can_respawn = false
 		contact_damage = 0
 		melee_damage = 0
 		projectile_damage = 0
+	elif is_alaric_boss:
+		max_health = ALARIC_MAX_HP
+		can_respawn = false
+		contact_damage = 0
+		melee_damage = ALARIC_BASIC_DAMAGE
+		chase_speed = ALARIC_BASE_MOVE_SPEED
+		melee_attack_range = 115.0
 	else:
 		max_health = 1
 	current_health = max_health
@@ -329,14 +377,24 @@ func _physics_process(delta: float) -> void:
 		if dir == Vector2.ZERO:
 			dir = last_direction
 
-		# Hitung mundur cooldown tembak
+		# Hitung mundur cooldown tembak & cooldown skill Alaric Boss
 		shoot_timer -= delta
+		if is_alaric_boss:
+			if alaric_basic_cd_timer > 0.0:
+				alaric_basic_cd_timer = maxf(0.0, alaric_basic_cd_timer - delta)
+			if alaric_triple_cd_timer > 0.0:
+				alaric_triple_cd_timer = maxf(0.0, alaric_triple_cd_timer - delta)
+			if alaric_rupture_cd_timer > 0.0:
+				alaric_rupture_cd_timer = maxf(0.0, alaric_rupture_cd_timer - delta)
+			_check_and_update_alaric_enrage()
 
 		var has_los := has_clear_projectile_los_to(player, 12.0)
 		var dist_to_player: float = dist
 
-		# 1. Jarak serang & manuver AI Musuh (Melee Knight vs Ranged Archer)
-		if enemy_type == EnemyType.KNIGHT:
+		# 1. Jarak serang & manuver AI Musuh (Alaric Boss vs Melee Knight vs Ranged Archer)
+		if is_alaric_boss:
+			_process_alaric_boss_ai(delta, dir, dist_to_player, has_los)
+		elif enemy_type == EnemyType.KNIGHT:
 			if dist_to_player <= melee_attack_range and has_los:
 				is_flanking = false
 				velocity = Vector2.ZERO
@@ -475,19 +533,20 @@ func _physics_process(delta: float) -> void:
 	# 2. LOGIKA DAMAGE KONTAK SAAT MENYENTUH HERO
 	# ---------------------------------------------------------
 	damage_timer -= delta
-	var target_touching := update_touching_players_and_get_target()
-	if target_touching != null:
-		if current_state == State.IDLE_PATROL:
-			current_state = State.CHASE
-			player = target_touching
-			if alert_sfx_cooldown_timer <= 0.0:
-				play_sfx(SFX_ALERT, -2.0)
-				alert_sfx_cooldown_timer = 5.0
-		if damage_timer <= 0.0:
-			if target_touching.has_method("take_damage"):
-				target_touching.take_damage(contact_damage, global_position)
-			play_sfx(SFX_CONTACT_HIT, 0.0)
-			damage_timer = attack_cooldown
+	if not is_alaric_boss and contact_damage > 0:
+		var target_touching := update_touching_players_and_get_target()
+		if target_touching != null:
+			if current_state == State.IDLE_PATROL:
+				current_state = State.CHASE
+				player = target_touching
+				if alert_sfx_cooldown_timer <= 0.0:
+					play_sfx(SFX_ALERT, -2.0)
+					alert_sfx_cooldown_timer = 5.0
+			if damage_timer <= 0.0:
+				if target_touching.has_method("take_damage"):
+					target_touching.take_damage(contact_damage, global_position)
+				play_sfx(SFX_CONTACT_HIT, 0.0)
+				damage_timer = attack_cooldown
 
 
 func handle_idle_patrol(delta: float) -> void:
@@ -1080,10 +1139,13 @@ func take_damage(amount: int, attacker: CharacterBody2D = null) -> void:
 		return
 
 	wait_for_arena = false
-	if not is_training_dummy:
+	if not is_training_dummy and not is_alaric_boss:
 		amount = max(amount, current_health)
-	current_health -= amount
+	current_health = max(0, current_health - amount)
 	play_sfx(SFX_HURT, -2.0)
+
+	if is_alaric_boss:
+		_check_and_update_alaric_enrage()
 
 	# Kamera bergetar (camera shake) saat player mengenai musuh
 	var player_node = get_tree().get_first_node_in_group("player")
@@ -1111,7 +1173,9 @@ func take_damage(amount: int, attacker: CharacterBody2D = null) -> void:
 	if animated_sprite:
 		animated_sprite.modulate = Color(3.0, 3.0, 3.0)
 		var flash_tween := create_tween()
-		var default_col: Color = Color.WHITE if ("Alaric" in name or is_in_group("npc")) else Color(1.3, 0.4, 0.4)
+		var default_col: Color = Color.WHITE if ("Alaric" in name or is_alaric_boss or is_in_group("npc")) else Color(1.3, 0.4, 0.4)
+		if is_alaric_boss and is_alaric_enraged:
+			default_col = Color(1.22, 0.82, 0.78)
 		flash_tween.tween_property(animated_sprite, "modulate", default_col, 0.1)
 
 	# Multi-Target Aggro: Prioritaskan penyerang yang baru memberi damage
@@ -1155,6 +1219,14 @@ func take_damage(amount: int, attacker: CharacterBody2D = null) -> void:
 # =========================================================
 
 func die() -> void:
+	if is_alaric_boss:
+		_cleanup_alaric_combat_effects()
+		is_dead = true
+		is_shooting = false
+		velocity = Vector2.ZERO
+		knockback_velocity = Vector2.ZERO
+		play_idle_animation()
+		return
 	is_dead = true
 	play_sfx(SFX_DEATH, 0.0)
 	is_shooting = false
@@ -1351,7 +1423,7 @@ func update_touching_players_and_get_target(exited_body: Node2D = null) -> Chara
 
 
 func _on_hitbox_body_entered(body: Node2D) -> void:
-	if is_dead or is_training_dummy or body == null:
+	if is_dead or is_training_dummy or is_alaric_boss or contact_damage <= 0 or body == null:
 		return
 	if body is CharacterBody2D and body.is_in_group("player") and not ("is_dead" in body and body.is_dead):
 		if body not in touching_players:
@@ -1409,3 +1481,829 @@ func move_and_slide_with_separation() -> void:
 	if sep != Vector2.ZERO:
 		velocity += sep.limit_length(55.0) * 8.0
 	move_and_slide()
+
+
+# =========================================================
+# ALARIC BOSS COMBAT SYSTEM (ATRIBUT, ENRAGE 35%, 3 POLA SERANGAN, INDIKATOR & EFEK TEBASAN)
+# =========================================================
+
+func reset_alaric_boss_state() -> void:
+	is_alaric_boss = true
+	_cleanup_alaric_combat_effects()
+	max_health = ALARIC_MAX_HP
+	current_health = ALARIC_MAX_HP
+	is_dead = false
+	is_shooting = false
+	is_alaric_enraged = false
+	contact_damage = 0
+	melee_damage = ALARIC_BASIC_DAMAGE
+	melee_attack_range = 115.0
+	chase_speed = get_alaric_current_move_speed()
+	alaric_basic_cd_timer = 0.0
+	alaric_triple_cd_timer = 0.8 # Sedikit jeda pembuka agar variasi kombo mengalir natural
+	alaric_rupture_cd_timer = 1.6
+	alaric_recovery_timer = 0.0
+	velocity = Vector2.ZERO
+	knockback_velocity = Vector2.ZERO
+	if animated_sprite:
+		animated_sprite.modulate = Color.WHITE
+	if health_bar:
+		health_bar.max_value = max_health
+		health_bar.value = current_health
+		if _style_fill:
+			health_bar.add_theme_stylebox_override("fill", _style_fill)
+	if damage_bar:
+		damage_bar.max_value = max_health
+		damage_bar.value = current_health
+
+
+func _cleanup_alaric_combat_effects() -> void:
+	alaric_attack_token += 1
+	is_shooting = false
+	alaric_recovery_timer = 0.0
+	if is_instance_valid(alaric_active_telegraph):
+		alaric_active_telegraph.queue_free()
+	alaric_active_telegraph = null
+	if is_instance_valid(alaric_enrage_aura):
+		alaric_enrage_aura.queue_free()
+	alaric_enrage_aura = null
+
+
+func get_alaric_base_character_speed() -> float:
+	# Movement speed seperti karakter lain (SPRINT_SPEED := 220.0 pada player_knight / hero lainnya)
+	if is_inside_tree():
+		var party := get_tree().get_nodes_in_group("player")
+		for p in party:
+			if is_instance_valid(p) and "SPRINT_SPEED" in p:
+				return float(p.SPRINT_SPEED)
+	return ALARIC_BASE_MOVE_SPEED
+
+
+func get_alaric_current_move_speed() -> float:
+	var base_spd := get_alaric_base_character_speed()
+	if is_alaric_enraged:
+		return base_spd * ALARIC_ENRAGE_SPEED_MULTIPLIER # Meningkat 8% saat Enrage
+	return base_spd
+
+
+func get_alaric_ground_origin() -> Vector2:
+	return global_position + Vector2(0.0, 22.0)
+
+
+func get_target_ground_origin(target_node: Node2D) -> Vector2:
+	if not is_instance_valid(target_node):
+		return get_alaric_ground_origin()
+	return target_node.global_position + Vector2(0.0, 22.0)
+
+
+func _check_and_update_alaric_enrage() -> void:
+	if not is_alaric_boss or is_dead or current_health <= 0:
+		return
+	var enrage_threshold: int = int(float(max_health) * ALARIC_ENRAGE_HP_RATIO) # 35% dari 2600 = 910 HP
+	if not is_alaric_enraged and current_health <= enrage_threshold:
+		is_alaric_enraged = true
+		chase_speed = get_alaric_current_move_speed()
+		_trigger_alaric_enrage_visuals()
+	else:
+		chase_speed = get_alaric_current_move_speed()
+
+
+func _trigger_alaric_enrage_visuals() -> void:
+	play_sfx(SFX_ALERT, 1.5)
+	_apply_boss_camera_shake(9.0)
+
+	# Ubah warna bar HP menjadi merah-oranye membara saat Enrage
+	if health_bar:
+		var enrage_fill := StyleBoxFlat.new()
+		enrage_fill.bg_color = Color(1.0, 0.32, 0.12, 0.98)
+		enrage_fill.set_corner_radius_all(1)
+		health_bar.add_theme_stylebox_override("fill", enrage_fill)
+
+	if animated_sprite:
+		animated_sprite.modulate = Color(1.22, 0.82, 0.78)
+
+	# Pasang aura Enrage di bawah kaki Alaric
+	if not is_instance_valid(alaric_enrage_aura):
+		var aura := AlaricEnrageAuraNode.new()
+		aura.name = "AlaricEnrageAura"
+		aura.position = Vector2(0.0, 4.4) # Skala lokal 5x -> global +22px
+		aura.scale = Vector2(0.2, 0.2)    # Kompensasi scale parent (5x) agar ukuran pixel 1:1
+		aura.z_index = -1
+		add_child(aura)
+		alaric_enrage_aura = aura
+
+	# Tampilkan teks melayang "ENRAGE! (+8% SPD)"
+	if get_parent():
+		var popup := Node2D.new()
+		popup.global_position = global_position + Vector2(0.0, -75.0)
+		popup.z_index = 25
+		var lbl := Label.new()
+		lbl.text = "ENRAGE! (+8% SPEED)"
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.position = Vector2(-110.0, -14.0)
+		lbl.size = Vector2(220.0, 28.0)
+		lbl.add_theme_font_size_override("font_size", 15)
+		lbl.add_theme_color_override("font_color", Color(1.0, 0.35, 0.2, 1.0))
+		lbl.add_theme_color_override("font_outline_color", Color(0.08, 0.02, 0.02, 1.0))
+		lbl.add_theme_constant_override("outline_size", 4)
+		popup.add_child(lbl)
+		get_parent().add_child(popup)
+
+		var tw := popup.create_tween()
+		tw.tween_property(popup, "global_position:y", popup.global_position.y - 36.0, 1.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(popup, "modulate:a", 0.0, 1.25).set_delay(0.35)
+		tw.tween_callback(popup.queue_free)
+
+
+func _apply_boss_camera_shake(intensity: float = 8.0) -> void:
+	if not is_inside_tree():
+		return
+	var game_node = get_tree().current_scene
+	if game_node and game_node.has_method("apply_camera_shake"):
+		game_node.apply_camera_shake(intensity)
+
+
+func _process_alaric_boss_ai(delta: float, dir: Vector2, dist_to_player: float, has_los: bool) -> void:
+	chase_speed = get_alaric_current_move_speed()
+
+	# 1. Jika sedang dalam Wind-up atau eksekusi tebasan (is_shooting), diam di tempat
+	if is_shooting:
+		velocity = Vector2.ZERO
+		move_and_slide()
+		return
+
+	# 2. Jika sedang dalam fase Recovery pasca serangan, diam di tempat sampai recovery selesai
+	if alaric_recovery_timer > 0.0:
+		alaric_recovery_timer = maxf(0.0, alaric_recovery_timer - delta)
+		velocity = Vector2.ZERO
+		move_and_slide()
+		play_idle_animation()
+		return
+
+	# 3. Evaluasi jarak serang ke target
+	var my_origin := get_alaric_ground_origin()
+	var target_origin := get_target_ground_origin(player)
+	var ground_dist := my_origin.distance_to(target_origin)
+	var to_target_dir := (target_origin - my_origin).normalized()
+	if to_target_dir == Vector2.ZERO:
+		to_target_dir = dir
+
+	var engage_range: float = 115.0
+	if ground_dist <= engage_range and has_los:
+		is_flanking = false
+		velocity = Vector2.ZERO
+		move_and_slide_with_separation()
+
+		# Prioritas Pemilihan Pola Serangan Alaric sesuai ketersediaan Cooldown:
+		# 1) Ground Rupture (1 petak di keliling setiap arah karakter) - CD 7.5s
+		if alaric_rupture_cd_timer <= 0.0:
+			_execute_alaric_ground_rupture(to_target_dir)
+			return
+		# 2) Triple Advance (3 hit, 1 petak di depan karakter) - CD 4.5s
+		if alaric_triple_cd_timer <= 0.0:
+			_execute_alaric_triple_advance(to_target_dir)
+			return
+		# 3) Basic Attack (3x1 di depan sekaligus diagonal karakter) - CD 1.6s
+		if alaric_basic_cd_timer <= 0.0:
+			_execute_alaric_basic_attack(to_target_dir)
+			return
+
+		# Jika semua serangan sedang cooldown, hadap target dalam posisi siaga
+		last_direction = get_cardinal_direction(to_target_dir)
+		play_idle_animation()
+	elif has_los:
+		is_flanking = false
+		var move_dir: Vector2 = to_target_dir
+		velocity = move_dir * chase_speed
+		move_and_slide_with_separation()
+		apply_smoothed_facing(move_dir, delta)
+	else:
+		# Navigasi menghindar rintangan jika terhalang
+		flank_timeout -= delta
+		if not is_flanking or flank_timeout <= 0.0:
+			calculate_flank_waypoints(player)
+
+		var active_wp := flank_wp1
+		if flank_stage == 1:
+			if global_position.distance_to(flank_wp1) <= 28.0:
+				flank_stage = 2
+				active_wp = flank_wp2
+		else:
+			active_wp = flank_wp2
+			if global_position.distance_to(flank_wp2) <= 28.0:
+				is_flanking = false
+
+		var move_dir := global_position.direction_to(active_wp)
+		if move_dir == Vector2.ZERO:
+			move_dir = last_direction
+		velocity = move_dir * chase_speed
+		move_and_slide_with_separation()
+		apply_smoothed_facing(move_dir, delta)
+
+
+# ---------------------------------------------------------
+# POLA SERANGAN 1: BASIC ATTACK (3x1 [didepan sekaligus diagonal] karakter)
+# Damage: 160 | Wind-up: 0.45s | Recovery: 0.75s | Cooldown: 1.6s
+# Catatan: TIDAK menggunakan indikator area serangan, langsung visual efek tebasan 3x1
+# ---------------------------------------------------------
+func _execute_alaric_basic_attack(target_dir: Vector2) -> void:
+	if is_dead or is_shooting:
+		return
+	is_shooting = true
+	alaric_basic_cd_timer = ALARIC_BASIC_COOLDOWN
+	var my_token := alaric_attack_token
+
+	var cardinal_dir := get_cardinal_direction(target_dir)
+	last_direction = cardinal_dir
+
+	# Fase Wind-up / Charge (0.45 s) TANPA indikator area serangan
+	_play_alaric_windup_pose("atk", false)
+	await get_tree().create_timer(ALARIC_BASIC_WINDUP).timeout
+	if not is_instance_valid(self) or is_dead or my_token != alaric_attack_token:
+		return
+
+	# Eksekusi Tebasan Basic Attack (3x1 petak di depan sekaligus diagonal)
+	var origin := get_alaric_ground_origin()
+	play_attack_animation()
+	play_sfx(SFX_KNIGHT_SLASH, 0.5)
+
+	# Munculkan Visual Efek Tebasan Lebar 3x1 di area depan + diagonal
+	_spawn_alaric_slash_vfx(AlaricSlashEffectNode.SlashMode.BASIC_3X1, origin, cardinal_dir, 1)
+
+	# Evaluasi Hit Detection di area 3x1 (1 petak ke depan, 3 petak melebar kiri-tengah-kanan)
+	_apply_alaric_box_damage(origin, cardinal_dir, ALARIC_TILE_SIZE, ALARIC_TILE_SIZE * 3.0, ALARIC_BASIC_DAMAGE, false)
+
+	# Tunggu animasi ayunan pedang selesai (~0.25s), lalu masuk fase Recovery (0.75 s)
+	alaric_recovery_timer = ALARIC_BASIC_RECOVERY
+	await get_tree().create_timer(0.24).timeout
+	if not is_instance_valid(self) or is_dead or my_token != alaric_attack_token:
+		return
+
+	is_shooting = false
+	play_idle_animation()
+
+
+# ---------------------------------------------------------
+# POLA SERANGAN 2: TRIPLE ADVANCE (3 hit [1 petak di depan] karakter)
+# Damage: 110/hit (3 hit) | Wind-up: 0.45s | Recovery: 1.1s | Cooldown: 4.5s
+# Catatan: Menggunakan Indikator Area 1 petak di depan + 3x Visual Efek Tebasan beruntun
+# ---------------------------------------------------------
+func _execute_alaric_triple_advance(target_dir: Vector2) -> void:
+	if is_dead or is_shooting:
+		return
+	is_shooting = true
+	alaric_triple_cd_timer = ALARIC_TRIPLE_COOLDOWN
+	var my_token := alaric_attack_token
+
+	var cardinal_dir := get_cardinal_direction(target_dir)
+	last_direction = cardinal_dir
+	var origin := get_alaric_ground_origin()
+
+	# 1. Tampilkan Indikator Area Serangan (1 petak tepat di depan karakter) selama Wind-up (0.45 s)
+	_spawn_alaric_telegraph(AlaricTelegraphNode.TelegraphMode.TRIPLE_ADVANCE_1X1, origin, cardinal_dir, ALARIC_TRIPLE_WINDUP)
+	_play_alaric_windup_pose("atk", true)
+
+	await get_tree().create_timer(ALARIC_TRIPLE_WINDUP).timeout
+	if not is_instance_valid(self) or is_dead or my_token != alaric_attack_token:
+		return
+
+	# Hapus indikator saat wind-up selesai dan mulai 3 hit beruntun
+	if is_instance_valid(alaric_active_telegraph):
+		alaric_active_telegraph.queue_free()
+		alaric_active_telegraph = null
+
+	# 2. Eksekusi 3 Hit Beruntun (110 damage / hit) pada 1 petak di depan karakter
+	for hit_idx in range(1, ALARIC_TRIPLE_HIT_COUNT + 1):
+		if not is_instance_valid(self) or is_dead or my_token != alaric_attack_token:
+			return
+
+		var cur_origin := get_alaric_ground_origin()
+		_play_alaric_combo_swing_animation(hit_idx)
+		play_sfx(SFX_KNIGHT_SLASH, 1.0 + float(hit_idx) * 0.4)
+
+		# Visual efek tebasan untuk masing-masing hit di petak depan
+		_spawn_alaric_slash_vfx(AlaricSlashEffectNode.SlashMode.TRIPLE_1X1, cur_origin, cardinal_dir, hit_idx)
+
+		# Berikan 110 damage untuk hit ini jika player berada di 1 petak depan (bypass i-frame antar hit kombo)
+		_apply_alaric_box_damage(cur_origin, cardinal_dir, ALARIC_TILE_SIZE, ALARIC_TILE_SIZE, ALARIC_TRIPLE_DAMAGE_PER_HIT, true)
+
+		if hit_idx < ALARIC_TRIPLE_HIT_COUNT:
+			await get_tree().create_timer(ALARIC_TRIPLE_HIT_INTERVAL).timeout
+
+	if not is_instance_valid(self) or is_dead or my_token != alaric_attack_token:
+		return
+
+	# 3. Masuk fase Recovery (1.1 s)
+	alaric_recovery_timer = ALARIC_TRIPLE_RECOVERY
+	await get_tree().create_timer(0.22).timeout
+	if not is_instance_valid(self) or is_dead or my_token != alaric_attack_token:
+		return
+
+	is_shooting = false
+	play_idle_animation()
+
+
+# ---------------------------------------------------------
+# POLA SERANGAN 3: GROUND RUPTURE (1 petak di keliling [setiap arah] karakter)
+# Damage: 220 | Wind-up: 0.9s | Recovery: 1.3s | Cooldown: 7.5s
+# Catatan: Menggunakan Indikator Area 1 petak sekeliling (8 arah) + Visual Efek Tebasan Melingkar & Retakan
+# ---------------------------------------------------------
+func _execute_alaric_ground_rupture(target_dir: Vector2) -> void:
+	if is_dead or is_shooting:
+		return
+	is_shooting = true
+	alaric_rupture_cd_timer = ALARIC_RUPTURE_COOLDOWN
+	var my_token := alaric_attack_token
+
+	var cardinal_dir := get_cardinal_direction(target_dir)
+	last_direction = cardinal_dir
+	var origin := get_alaric_ground_origin()
+
+	# 1. Tampilkan Indikator Area Serangan (1 petak di keliling setiap arah karakter) selama Wind-up (0.9 s)
+	_spawn_alaric_telegraph(AlaricTelegraphNode.TelegraphMode.GROUND_RUPTURE_3X3, origin, cardinal_dir, ALARIC_RUPTURE_WINDUP)
+	_play_alaric_windup_pose("skill", true)
+
+	await get_tree().create_timer(ALARIC_RUPTURE_WINDUP).timeout
+	if not is_instance_valid(self) or is_dead or my_token != alaric_attack_token:
+		return
+
+	if is_instance_valid(alaric_active_telegraph):
+		alaric_active_telegraph.queue_free()
+		alaric_active_telegraph = null
+
+	# 2. Eksekusi Hantaman & Tebasan Ground Rupture ke seluruh 1 petak sekeliling (setiap arah)
+	var cur_origin := get_alaric_ground_origin()
+	play_skill_animation()
+	play_sfx(SFX_KNIGHT_SLASH, 2.5)
+	play_sfx(SFX_CONTACT_HIT, 1.5)
+	_apply_boss_camera_shake(11.5)
+
+	# Visual Efek Tebasan Melingkar & Hantaman Ground Rupture di 8 petak sekeliling
+	_spawn_alaric_slash_vfx(AlaricSlashEffectNode.SlashMode.GROUND_RUPTURE_3X3, cur_origin, cardinal_dir, 1)
+
+	# Evaluasi Hit Detection di area 1 petak sekeliling (setiap arah / 3x3 petak berpusat di Alaric)
+	_apply_alaric_surrounding_damage(cur_origin, ALARIC_TILE_SIZE * 1.5, ALARIC_RUPTURE_DAMAGE)
+
+	# 3. Masuk fase Recovery (1.3 s)
+	alaric_recovery_timer = ALARIC_RUPTURE_RECOVERY
+	await get_tree().create_timer(0.32).timeout
+	if not is_instance_valid(self) or is_dead or my_token != alaric_attack_token:
+		return
+
+	is_shooting = false
+	play_idle_animation()
+
+
+func _play_alaric_windup_pose(mode: String, with_glow: bool) -> void:
+	if not animated_sprite or not animated_sprite.sprite_frames:
+		return
+	animated_sprite.flip_h = false
+	var suffix := "s"
+	if last_direction == Vector2.UP:
+		suffix = "n"
+	elif last_direction == Vector2.LEFT:
+		suffix = "w"
+	elif last_direction == Vector2.RIGHT:
+		suffix = "e"
+
+	var anim_name := ("%s_%s" % [mode, suffix])
+	if not animated_sprite.sprite_frames.has_animation(anim_name):
+		anim_name = "atk_" + suffix
+	if animated_sprite.sprite_frames.has_animation(anim_name):
+		animated_sprite.play(anim_name)
+		animated_sprite.pause()
+		animated_sprite.frame = 1 if animated_sprite.sprite_frames.get_frame_count(anim_name) > 1 else 0
+
+	if with_glow:
+		var glow_col := Color(1.45, 0.72, 0.55) if is_alaric_enraged else Color(1.32, 0.92, 0.65)
+		animated_sprite.modulate = glow_col
+
+
+func _play_alaric_combo_swing_animation(hit_idx: int) -> void:
+	if not animated_sprite or not animated_sprite.sprite_frames:
+		return
+	var default_col := Color(1.22, 0.82, 0.78) if is_alaric_enraged else Color.WHITE
+	animated_sprite.modulate = default_col
+	animated_sprite.flip_h = false
+
+	var suffix := "s"
+	if last_direction == Vector2.UP:
+		suffix = "n"
+	elif last_direction == Vector2.LEFT:
+		suffix = "w"
+	elif last_direction == Vector2.RIGHT:
+		suffix = "e"
+
+	var anim_name := "atk_%s_1" % suffix
+	if hit_idx == 2:
+		anim_name = "atk_%s_2" % suffix
+	elif hit_idx == 3:
+		anim_name = "skill_%s" % suffix
+
+	if not animated_sprite.sprite_frames.has_animation(anim_name):
+		anim_name = "atk_%s" % suffix
+	if animated_sprite.sprite_frames.has_animation(anim_name):
+		animated_sprite.stop()
+		animated_sprite.play(anim_name)
+		if hit_idx < 3 and animated_sprite.sprite_frames.get_frame_count(anim_name) > 2:
+			animated_sprite.frame = 2
+
+
+func _apply_alaric_box_damage(origin: Vector2, forward_dir: Vector2, depth: float, width: float, dmg: int, bypass_iframe: bool) -> void:
+	if not is_inside_tree():
+		return
+	var f_dir := forward_dir.normalized()
+	if f_dir == Vector2.ZERO:
+		f_dir = Vector2.DOWN
+	var p_dir := Vector2(-f_dir.y, f_dir.x)
+
+	# Area petak di depan karakter dimulai dari tepi depan badan Alaric sejauh 1 petak (depth)
+	# Dengan pusat petak berada di origin + f_dir * (depth * 0.85)
+	var box_center := origin + f_dir * (depth * 0.85)
+	var half_depth := (depth * 0.5) + 22.0 # Toleransi radius hurtbox karakter pemain
+	var half_width := (width * 0.5) + 18.0
+
+	var players := get_tree().get_nodes_in_group("player")
+	var hit_any := false
+	for p in players:
+		if not is_instance_valid(p) or not (p is CharacterBody2D) or not p.visible or ("is_dead" in p and p.is_dead):
+			continue
+		var p_origin := get_target_ground_origin(p)
+		var rel := p_origin - box_center
+		var local_forward := absf(rel.dot(f_dir))
+		var local_lateral := absf(rel.dot(p_dir))
+
+		if local_forward <= half_depth and local_lateral <= half_width:
+			if bypass_iframe and "invulnerability_timer" in p:
+				p.invulnerability_timer = 0.0
+			if p.has_method("take_damage"):
+				p.take_damage(dmg, global_position)
+			hit_any = true
+
+	if hit_any:
+		play_sfx(SFX_KNIGHT_SLASH_HIT, 0.0)
+		_apply_boss_camera_shake(6.5)
+
+
+func _apply_alaric_surrounding_damage(origin: Vector2, half_extent: float, dmg: int) -> void:
+	if not is_inside_tree():
+		return
+	# 1 petak di keliling setiap arah karakter = kotak 3x3 petak berpusat di origin
+	var reach := half_extent + 18.0 # +18px toleransi radius hurtbox player
+	var players := get_tree().get_nodes_in_group("player")
+	var hit_any := false
+	for p in players:
+		if not is_instance_valid(p) or not (p is CharacterBody2D) or not p.visible or ("is_dead" in p and p.is_dead):
+			continue
+		var p_origin := get_target_ground_origin(p)
+		var diff := p_origin - origin
+		if absf(diff.x) <= reach and absf(diff.y) <= reach:
+			if p.has_method("take_damage"):
+				p.take_damage(dmg, global_position)
+			hit_any = true
+
+	if hit_any:
+		play_sfx(SFX_KNIGHT_SLASH_HIT, 1.5)
+
+
+func _spawn_alaric_telegraph(mode: int, origin: Vector2, forward_dir: Vector2, duration: float) -> void:
+	if is_instance_valid(alaric_active_telegraph):
+		alaric_active_telegraph.queue_free()
+		alaric_active_telegraph = null
+	if not get_parent():
+		return
+
+	var telegraph := AlaricTelegraphNode.new()
+	telegraph.setup(mode, origin, forward_dir, ALARIC_TILE_SIZE, duration, is_alaric_enraged)
+	get_parent().add_child(telegraph)
+	alaric_active_telegraph = telegraph
+
+
+func _spawn_alaric_slash_vfx(mode: int, origin: Vector2, forward_dir: Vector2, hit_idx: int = 1) -> void:
+	if not get_parent():
+		return
+	var vfx := AlaricSlashEffectNode.new()
+	vfx.setup(mode, origin, forward_dir, ALARIC_TILE_SIZE, hit_idx, is_alaric_enraged)
+	get_parent().add_child(vfx)
+
+
+# =========================================================
+# VISUAL NODE 1: INDIKATOR AREA SERANGAN ALARIC (TELEGRAPH)
+# Digunakan untuk Triple Advance (1 petak di depan) & Ground Rupture (1 petak sekeliling 8 arah)
+# =========================================================
+class AlaricTelegraphNode extends Node2D:
+	enum TelegraphMode { TRIPLE_ADVANCE_1X1, GROUND_RUPTURE_3X3 }
+
+	var mode: int = TelegraphMode.TRIPLE_ADVANCE_1X1
+	var forward_dir: Vector2 = Vector2.DOWN
+	var tile_size: float = 85.0
+	var total_duration: float = 0.45
+	var elapsed: float = 0.0
+	var enraged: bool = false
+
+	func setup(p_mode: int, p_origin: Vector2, p_dir: Vector2, p_tile_size: float, p_duration: float, p_enraged: bool) -> void:
+		mode = p_mode
+		global_position = p_origin
+		forward_dir = p_dir.normalized() if p_dir != Vector2.ZERO else Vector2.DOWN
+		tile_size = p_tile_size
+		total_duration = maxf(0.05, p_duration)
+		enraged = p_enraged
+		z_index = 2 # Di atas permukaan tanah, di bawah kaki karakter (z_index 4)
+
+	func _process(delta: float) -> void:
+		elapsed += delta
+		queue_redraw()
+		if elapsed >= total_duration + 0.15:
+			queue_free()
+
+	func _draw() -> void:
+		var prog := clampf(elapsed / total_duration, 0.0, 1.0)
+		var pulse := 0.5 + 0.5 * sin(elapsed * 22.0)
+
+		var base_fill := Color(0.85, 0.14, 0.12, 0.24) if not enraged else Color(0.95, 0.18, 0.08, 0.30)
+		var charge_fill := Color(1.0, 0.32, 0.16, 0.48 + 0.15 * prog) if not enraged else Color(1.0, 0.45, 0.12, 0.55 + 0.18 * prog)
+		var border_col := Color(1.0, 0.28, 0.18, 0.88).lerp(Color(1.0, 0.92, 0.45, 1.0), prog * 0.7 + pulse * 0.2)
+		var grid_col := Color(1.0, 0.55, 0.30, 0.42)
+
+		if mode == TelegraphMode.TRIPLE_ADVANCE_1X1:
+			# 1 petak tepat di depan karakter
+			var center_offset := forward_dir * (tile_size * 0.85)
+			var angle := forward_dir.angle()
+			draw_set_transform(center_offset, angle, Vector2.ONE)
+
+			var half := tile_size * 0.5
+			var full_rect := Rect2(Vector2(-half, -half), Vector2(tile_size, tile_size))
+
+			# 1. Latar area bahaya 1 petak
+			draw_rect(full_rect, base_fill, true)
+
+			# 2. Pengisian charge progresif dari sisi Alaric ke depan
+			var fill_w := tile_size * prog
+			var charge_rect := Rect2(Vector2(-half, -half), Vector2(fill_w, tile_size))
+			draw_rect(charge_rect, charge_fill, true)
+
+			# 3. Tiga panah chevron (>>>) penanda Triple Advance (3 hit)
+			var chevron_col := Color(1.0, 0.90, 0.55, 0.55 + 0.35 * prog)
+			for i in range(3):
+				var cx := -half * 0.48 + float(i) * (tile_size * 0.26)
+				var pts := PackedVector2Array([
+					Vector2(cx - 6.0, -14.0),
+					Vector2(cx + 7.0, 0.0),
+					Vector2(cx - 6.0, 14.0)
+				])
+				draw_polyline(pts, chevron_col, 2.2)
+
+			# 4. Garis tepi tegas & siku sudut indikator
+			draw_rect(full_rect, border_col, false, 2.4)
+			var inner_rect := full_rect.grow(-4.0)
+			draw_rect(inner_rect, Color(border_col.r, border_col.g, border_col.b, 0.35), false, 1.0)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+		elif mode == TelegraphMode.GROUND_RUPTURE_3X3:
+			# 1 petak di keliling setiap arah karakter (grid 3x3 petak di sekitar Alaric)
+			var half_total := tile_size * 1.5
+			var full_rect := Rect2(Vector2(-half_total, -half_total), Vector2(tile_size * 3.0, tile_size * 3.0))
+
+			# 1. Gambar 8 petak sekeliling + pusat
+			for gx in range(-1, 2):
+				for gy in range(-1, 2):
+					var cell_pos := Vector2(float(gx) * tile_size - tile_size * 0.5, float(gy) * tile_size - tile_size * 0.5)
+					var cell_rect := Rect2(cell_pos, Vector2(tile_size, tile_size))
+					if gx == 0 and gy == 0:
+						draw_rect(cell_rect, Color(base_fill.r, base_fill.g, base_fill.b, 0.14), true)
+					else:
+						draw_rect(cell_rect, base_fill, true)
+						draw_rect(cell_rect.grow(-2.0), grid_col, false, 1.0)
+
+			# 2. Pengisian charge membesar dari pusat ke batas luar 1 petak sekeliling
+			var cur_half := half_total * prog
+			var charge_rect := Rect2(Vector2(-cur_half, -cur_half), Vector2(cur_half * 2.0, cur_half * 2.0))
+			draw_rect(charge_rect, charge_fill, true)
+			draw_rect(charge_rect, Color(1.0, 0.85, 0.35, 0.75), false, 1.8)
+
+			# 3. Garis silang diagonal & kardinal penanda 8 arah ledakan
+			var line_col := Color(1.0, 0.78, 0.35, 0.38 + 0.35 * prog)
+			var dirs: Array[Vector2] = [
+				Vector2.RIGHT, Vector2.LEFT, Vector2.DOWN, Vector2.UP,
+				Vector2(1, 1).normalized(), Vector2(-1, 1).normalized(),
+				Vector2(1, -1).normalized(), Vector2(-1, -1).normalized()
+			]
+			for d in dirs:
+				draw_line(d * (tile_size * 0.35), d * (half_total * 0.92), line_col, 1.8)
+
+			# 4. Border luar utama 3x3 petak
+			draw_rect(full_rect, border_col, false, 2.8)
+
+
+# =========================================================
+# VISUAL NODE 2: EFEK TEBASAN PEDANG ALARIC (SLASH VFX)
+# Menampilkan visual tebasan sesuai bentuk area:
+# - BASIC_3X1: Sapuan tebasan sabit lebar 3x1 petak (depan + diagonal kiri & kanan)
+# - TRIPLE_1X1: Tebasan beruntun (Hit 1, Hit 2, Hit 3) di dalam 1 petak depan
+# - GROUND_RUPTURE_3X3: Gelombang tebasan memutar 360° & retakan energi di 8 petak sekeliling
+# =========================================================
+class AlaricSlashEffectNode extends Node2D:
+	enum SlashMode { BASIC_3X1, TRIPLE_1X1, GROUND_RUPTURE_3X3 }
+
+	var mode: int = SlashMode.BASIC_3X1
+	var forward_dir: Vector2 = Vector2.DOWN
+	var tile_size: float = 85.0
+	var hit_index: int = 1
+	var enraged: bool = false
+	var elapsed: float = 0.0
+	var duration: float = 0.28
+
+	func setup(p_mode: int, p_origin: Vector2, p_dir: Vector2, p_tile_size: float, p_hit_idx: int, p_enraged: bool) -> void:
+		mode = p_mode
+		global_position = p_origin
+		forward_dir = p_dir.normalized() if p_dir != Vector2.ZERO else Vector2.DOWN
+		tile_size = p_tile_size
+		hit_index = p_hit_idx
+		enraged = p_enraged
+		z_index = 6 # Di atas karakter agar kilatan tebasan pedang terlihat jelas
+		if mode == SlashMode.GROUND_RUPTURE_3X3:
+			duration = 0.42
+		elif mode == SlashMode.TRIPLE_1X1:
+			duration = 0.22
+		else:
+			duration = 0.28
+
+	func _process(delta: float) -> void:
+		elapsed += delta
+		if elapsed >= duration:
+			queue_free()
+			return
+		queue_redraw()
+
+	func _draw() -> void:
+		var t := clampf(elapsed / duration, 0.0, 1.0)
+		var alpha := clampf(1.0 - pow(t, 1.6), 0.0, 1.0)
+
+		var core_col := Color(1.0, 0.98, 0.90, alpha)
+		var glow_col := Color(1.0, 0.72, 0.22, alpha * 0.88) if not enraged else Color(1.0, 0.35, 0.12, alpha * 0.95)
+		var edge_col := Color(0.92, 0.26, 0.16, alpha * 0.65) if not enraged else Color(0.98, 0.12, 0.22, alpha * 0.82)
+
+		if mode == SlashMode.BASIC_3X1:
+			# Area 3x1 di depan sekaligus diagonal (kedalaman 1 petak, lebar 3 petak)
+			var center_offset := forward_dir * (tile_size * 0.85)
+			draw_set_transform(center_offset, forward_dir.angle(), Vector2.ONE)
+
+			var half_d := tile_size * 0.5
+			var half_w := tile_size * 1.5
+
+			# Flash tipis penanda area sapuan 3x1 saat tebasan melintas
+			var flash_rect := Rect2(Vector2(-half_d, -half_w), Vector2(tile_size, tile_size * 3.0))
+			draw_rect(flash_rect, Color(glow_col.r, glow_col.g, glow_col.b, alpha * 0.18), true)
+			draw_rect(flash_rect, Color(glow_col.r, glow_col.g, glow_col.b, alpha * 0.42), false, 1.5)
+
+			# Busur tebasan pedang sabit lebar menyapu sepanjang 3 petak (-half_w .. +half_w)
+			var outer_pts := PackedVector2Array()
+			var inner_pts := PackedVector2Array()
+			var steps := 20
+			var sweep_prog := clampf(t * 2.2, 0.25, 1.0)
+			for i in range(steps + 1):
+				var u := -1.0 + 2.0 * (float(i) / float(steps)) * sweep_prog
+				var y_pos := u * (half_w * 0.94)
+				var curve_x := (1.0 - u * u) * (half_d * 0.85) - half_d * 0.25
+				var thickness := (1.0 - u * u) * 22.0 * (1.0 - t * 0.4)
+				outer_pts.append(Vector2(curve_x + thickness * 0.5, y_pos))
+				inner_pts.append(Vector2(curve_x - thickness * 0.5, y_pos))
+
+			var crescent_poly := PackedVector2Array()
+			for pt in outer_pts:
+				crescent_poly.append(pt)
+			for i in range(inner_pts.size() - 1, -1, -1):
+				crescent_poly.append(inner_pts[i])
+
+			if crescent_poly.size() >= 3:
+				draw_colored_polygon(crescent_poly, glow_col)
+			draw_polyline(outer_pts, core_col, 3.8)
+			draw_polyline(inner_pts, edge_col, 2.0)
+
+			# 3 garis kilatan dampak di petak kiri-depan, tengah-depan, dan kanan-depan
+			for lane in [-1, 0, 1]:
+				var ly := float(lane) * tile_size
+				draw_line(Vector2(-half_d * 0.5, ly - 14.0), Vector2(half_d * 0.65, ly + 14.0), Color(core_col.r, core_col.g, core_col.b, alpha * 0.75), 2.2)
+
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+		elif mode == SlashMode.TRIPLE_1X1:
+			# Area 1 petak tepat di depan karakter (3 hit combo)
+			var center_offset := forward_dir * (tile_size * 0.85)
+			draw_set_transform(center_offset, forward_dir.angle(), Vector2.ONE)
+
+			var half := tile_size * 0.5
+			var box_rect := Rect2(Vector2(-half, -half), Vector2(tile_size, tile_size))
+			draw_rect(box_rect, Color(glow_col.r, glow_col.g, glow_col.b, alpha * 0.24), true)
+			draw_rect(box_rect, Color(core_col.r, core_col.g, core_col.b, alpha * 0.65), false, 2.0)
+
+			var reach := half * 0.86
+			if hit_index == 1:
+				# Hit 1: Tebasan diagonal tajam dari kanan-atas ke kiri-bawah
+				var p1 := Vector2(-reach * 0.7, -reach)
+				var p2 := Vector2(reach, reach)
+				var ctrl := Vector2(reach * 0.55, -reach * 0.35)
+				_draw_curved_blade_slash(p1, ctrl, p2, 16.0 * (1.0 - t * 0.3), core_col, glow_col, edge_col)
+			elif hit_index == 2:
+				# Hit 2: Tebasan diagonal balasan dari kiri-bawah ke kanan-atas
+				var p1 := Vector2(-reach * 0.7, reach)
+				var p2 := Vector2(reach, -reach)
+				var ctrl := Vector2(reach * 0.55, reach * 0.35)
+				_draw_curved_blade_slash(p1, ctrl, p2, 16.0 * (1.0 - t * 0.3), core_col, glow_col, edge_col)
+			else:
+				# Hit 3: Tebasan silang X + tusukan gelombang depan (Finisher Triple Advance)
+				var p1a := Vector2(-reach * 0.8, -reach * 0.85)
+				var p2a := Vector2(reach * 0.9, reach * 0.85)
+				var p1b := Vector2(-reach * 0.8, reach * 0.85)
+				var p2b := Vector2(reach * 0.9, -reach * 0.85)
+				_draw_curved_blade_slash(p1a, Vector2(reach * 0.25, 0.0), p2a, 14.0, core_col, glow_col, edge_col)
+				_draw_curved_blade_slash(p1b, Vector2(reach * 0.25, 0.0), p2b, 14.0, core_col, glow_col, edge_col)
+				draw_line(Vector2(-reach, 0.0), Vector2(reach * 1.05, 0.0), core_col, 4.0)
+
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+		elif mode == SlashMode.GROUND_RUPTURE_3X3:
+			# Area 1 petak di keliling setiap arah karakter (3x3 petak = 8 petak sekeliling)
+			var half_total := tile_size * 1.5
+			var full_rect := Rect2(Vector2(-half_total, -half_total), Vector2(tile_size * 3.0, tile_size * 3.0))
+
+			# 1. Kilatan petak-petak tanah yang retak di 8 arah sekeliling
+			for gx in range(-1, 2):
+				for gy in range(-1, 2):
+					if gx == 0 and gy == 0:
+						continue
+					var cell_pos := Vector2(float(gx) * tile_size - tile_size * 0.5, float(gy) * tile_size - tile_size * 0.5)
+					var cell_rect := Rect2(cell_pos, Vector2(tile_size, tile_size)).grow(-2.0)
+					draw_rect(cell_rect, Color(glow_col.r, glow_col.g, glow_col.b, alpha * 0.25), true)
+					draw_rect(cell_rect, Color(edge_col.r, edge_col.g, edge_col.b, alpha * 0.65), false, 1.6)
+
+			# 2. Cincin tebasan putar 360 derajat yang menyapu seluruh 8 petak sekeliling
+			var max_r := half_total * 0.98
+			var cur_r := lerpf(tile_size * 0.45, max_r, clampf(t * 1.5, 0.0, 1.0))
+			draw_arc(Vector2.ZERO, cur_r, 0.0, TAU, 40, glow_col, 14.0 * (1.0 - t * 0.4))
+			draw_arc(Vector2.ZERO, cur_r + 4.0, 0.0, TAU, 40, core_col, 3.6)
+
+			# 3. Delapan bilah tebasan & retakan tanah memancar ke setiap petak sekeliling (N, S, E, W, NE, NW, SE, SW)
+			var dirs: Array[Vector2] = [
+				Vector2.RIGHT, Vector2.LEFT, Vector2.DOWN, Vector2.UP,
+				Vector2(1, 1).normalized(), Vector2(-1, 1).normalized(),
+				Vector2(1, -1).normalized(), Vector2(-1, -1).normalized()
+			]
+			for d in dirs:
+				var perp := Vector2(-d.y, d.x)
+				var p_start := d * (tile_size * 0.35)
+				var p_tip := d * (half_total * (0.55 + 0.42 * clampf(t * 1.7, 0.0, 1.0)))
+				var p_mid := (p_start + p_tip) * 0.5
+				var spike_poly := PackedVector2Array([
+					p_start,
+					p_mid + perp * 11.0 * (1.0 - t * 0.3),
+					p_tip,
+					p_mid - perp * 11.0 * (1.0 - t * 0.3)
+				])
+				draw_colored_polygon(spike_poly, glow_col)
+				draw_line(p_start, p_tip, core_col, 2.8)
+
+			draw_rect(full_rect, Color(core_col.r, core_col.g, core_col.b, alpha * 0.55), false, 2.2)
+
+	func _draw_curved_blade_slash(p1: Vector2, ctrl: Vector2, p2: Vector2, max_thick: float, core_col: Color, glow_col: Color, edge_col: Color) -> void:
+		var outer := PackedVector2Array()
+		var inner := PackedVector2Array()
+		var steps := 12
+		var dir_norm := (p2 - p1).normalized()
+		var perp := Vector2(-dir_norm.y, dir_norm.x)
+		for i in range(steps + 1):
+			var s := float(i) / float(steps)
+			var q0 := p1.lerp(ctrl, s)
+			var q1 := ctrl.lerp(p2, s)
+			var pt := q0.lerp(q1, s)
+			var w := sin(s * PI) * max_thick
+			outer.append(pt + perp * (w * 0.55))
+			inner.append(pt - perp * (w * 0.45))
+
+		var poly := PackedVector2Array()
+		for pt in outer:
+			poly.append(pt)
+		for i in range(inner.size() - 1, -1, -1):
+			poly.append(inner[i])
+		if poly.size() >= 3:
+			draw_colored_polygon(poly, glow_col)
+		draw_polyline(outer, core_col, 3.0)
+		draw_polyline(inner, edge_col, 1.6)
+
+
+# =========================================================
+# VISUAL NODE 3: AURA ENRAGE ALARIC (AKTIF PADA HP <= 35%)
+# =========================================================
+class AlaricEnrageAuraNode extends Node2D:
+	var time_passed: float = 0.0
+
+	func _process(delta: float) -> void:
+		time_passed += delta
+		queue_redraw()
+
+	func _draw() -> void:
+		var pulse := 0.5 + 0.5 * sin(time_passed * 7.0)
+		var r := 42.0 + pulse * 6.0
+		draw_circle(Vector2.ZERO, r, Color(0.95, 0.22, 0.12, 0.18 + pulse * 0.10))
+		draw_arc(Vector2.ZERO, r, 0.0, TAU, 32, Color(1.0, 0.48, 0.18, 0.65 + pulse * 0.25), 2.2)
+
