@@ -1396,6 +1396,9 @@ func die() -> void:
 
 	# Pengecekan Mode Permainan:
 	var game_node = get_tree().current_scene if is_inside_tree() else null
+	if game_node and game_node.has_method("on_enemy_died"):
+		game_node.on_enemy_died(self)
+
 	var is_open_world := false
 	if game_node and "selected_game_mode" in game_node:
 		is_open_world = (game_node.selected_game_mode == "open_world")
