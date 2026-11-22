@@ -6144,6 +6144,7 @@ func show_dialogue(dialogue_id: String, entries: Array[Dictionary], on_complete:
 	_set_gameplay_hud_visible_for_dialogue(false)
 
 	if is_instance_valid(dialogue_container):
+		dialogue_container.mouse_filter = Control.MOUSE_FILTER_STOP
 		dialogue_container.modulate.a = 0.0
 		dialogue_container.visible = true
 		var fade_in := create_tween()
@@ -6330,6 +6331,7 @@ func close_dialogue() -> void:
 		_arrow_tween = null
 
 	if is_instance_valid(dialogue_container):
+		dialogue_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var fade_out := create_tween()
 		fade_out.tween_property(dialogue_container, "modulate:a", 0.0, 0.15)
 		fade_out.tween_callback(func():

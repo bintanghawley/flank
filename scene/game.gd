@@ -1,3 +1,4 @@
+
 extends Node2D
 
 # =========================================================
@@ -75,7 +76,7 @@ func use_city_gate() -> void:
 		return
 	if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
 		gameplay_hud.hide_interact_prompt(true)
-	if selected_game_mode != "open_world" and not _is_outside_city_gate(leader.global_position) and (is_scene_4_completed or tracked_quest_id == "main_08") and not is_scene_5_completed:
+	if selected_game_mode != "open_world" and not _is_outside_city_gate(leader.global_position) and (is_scene_4_completed or tracked_quest_id in ["main_05", "main_08"]) and not is_scene_5_completed:
 		start_story_scene_5()
 		return
 	if _is_outside_city_gate(leader.global_position):
@@ -1532,6 +1533,7 @@ func _ready() -> void:
 	_load_alaric_best_record()
 	_setup_alaric_npc.call_deferred()
 	_init_defeat_overlay.call_deferred()
+	_set_secret_library_floor(1)
 
 	# Jika masuk melalui menu 'Lanjutkan' di Start Menu, muat save slot tertunda
 	if pending_load_slot_id > 0:
@@ -2280,23 +2282,33 @@ func _init_starter_quests() -> void:
 			}
 		},
 		{
+			"id": "main_05",
+			"category": "main",
+			"title": "Serbuan Gerbang & Sekutu Assassin",
+			"location": "Gerbang Selatan Kota",
+			"objective": "Tahan serbuan monster di gerbang selatan kota bersama sekutu misterius.",
+			"description": "Lonceng darurat berbunyi keras di seluruh penjuru kota! Gerbang selatan diserbu kawanan monster. Seorang assassin bertopeng misterius melompat turun dari benteng membantu menumpas monster.",
+			"status": "completed" if is_scene_5_completed else ("active" if is_scene_4_completed else "inactive"),
+			"target_position": CITY_GATE_INSIDE_POS
+		},
+		{
 			"id": "scene_06_quest",
 			"category": "main",
 			"title": "Uji Kekompakan Tim",
 			"location": "Jalur Menuju Camp Latihan",
-			"objective": "Singkirkan monster liar di semak jalur camp pelatihan.",
-			"description": "Keempat hero berjalan menuju camp latihan. Di semak belukar pinggir jalan, sekelompok monster liar tampak berkeliaran mengancam jalur tentara.",
-			"status": "completed" if is_scene_6_completed else ("active" if is_scene_6_in_progress else "inactive"),
+			"objective": "Singkirkan monster liar di semak jalur camp pelatihan bersama 4 hero.",
+			"description": "Formasi 4 hero (Arthur, Magnus, Anastasya, Carina) bergerak menuju camp latihan luar kota untuk menguji kekompakan dan sinergi tim membersihkan monster liar di semak jalur perjalanan.",
+			"status": "completed" if is_scene_6_completed else ("active" if is_scene_5_completed or is_scene_6_in_progress else "inactive"),
 			"target_position": SCENE_6_BUSH_POS
 		},
 		{
 			"id": "scene_07_quest",
 			"category": "main",
 			"title": "Ujian Sang Pelatih",
-			"location": "Camp Latihan Istana",
+			"location": "Tempat Duel Kingdom",
 			"objective": "Buktikan ketangguhan beradu pedang 1 lawan 1 melawan Pelatih Alaric.",
-			"description": "Party tiba di Camp Latihan. Arthur harus membuktikan ketangguhannya dalam duel satu lawan satu melawan Pelatih Alaric demi mendapatkan izin mengambil pedang pusaka Ksatria Lancelot.",
-			"status": "completed" if is_alaric_sparring_completed else ("active" if is_scene_7_in_progress else "inactive"),
+			"description": "Pelatih Alaric menguji kesiapan Arthur dalam pertarungan duel 1 lawan 1 di tempat duel Kingdom sebelum mengizinkannya mengambil pedang pusaka Ksatria Lancelot.",
+			"status": "completed" if is_alaric_sparring_completed else ("active" if is_scene_6_completed or is_scene_7_in_progress else "inactive"),
 			"target_position": ALARIC_CAMP_POS,
 			"rewards": {
 				"items": [
@@ -2313,11 +2325,11 @@ func _init_starter_quests() -> void:
 		{
 			"id": "main_04",
 			"category": "main",
-			"title": "Pedang Sang Singa",
+			"title": "Pusaka Makam Lancelot",
 			"location": "Area Pemakaman Kerajaan",
-			"objective": "Temukan makam berlambang singa bersayap dan ambil pedang Lancelot [Tekan E].",
-			"description": "Temukan makam Ksatria Lancelot berlambang singa bersayap di Area Pemakaman Kerajaan dan ambil pedang pusaka legendarisnya.",
-			"status": "active" if is_alaric_sparring_completed else "inactive",
+			"objective": "Temukan makam berlambang singa bersayap dan ambil pedang pusaka Lancelot [Tekan E].",
+			"description": "Sesuai petunjuk Pelatih Alaric, Arthur bersama rekan-rekannya menuju Area Pemakaman Kerajaan untuk menggali makam Ksatria Lancelot dan membangkitkan pedang pusaka legendaris.",
+			"status": "completed" if is_scene_8_completed else ("active" if is_alaric_sparring_completed else "inactive"),
 			"target_position": GRAVEYARD_POS,
 			"rewards": {
 				"items": [
@@ -2332,54 +2344,24 @@ func _init_starter_quests() -> void:
 			}
 		},
 		{
-			"id": "main_05",
-			"category": "main",
-			"title": "Chapter 1.2: Penempaan Pedang & Panggilan Magnus",
-			"location": "Tempat Forge Istana",
-			"objective": "Tempa kembali pedang pusaka dan dengarkan permintaan bantuan Magnus.",
-			"description": "Arthur memperbaiki pedang pusaka di ruang tempa. Magnus kemudian menghampiri dan meminta bantuan mencari artefak kuno rahasia milik keluarganya di dalam perpustakaan.",
-			"status": "inactive",
-			"target_position": Vector2(2100, 1600)
-		},
-		{
-			"id": "main_06",
-			"category": "main",
-			"title": "Chapter 1.2: Rahasia Perpustakaan Kuno",
-			"location": "Perpustakaan Bawah Tanah",
-			"objective": "Pecahkan teka-teki buku dan kalahkan penjaga Archon - The Mindfulness.",
-			"description": "Arthur dan Magnus memasuki ruang rahasia perpustakaan melalui teka-teki susunan kata di rak buku, lalu menghadapi ujian pertempuran melawan entitas penjaga Archon.",
-			"status": "inactive",
-			"target_position": Vector2(1900, 800)
-		},
-		{
-			"id": "main_07",
-			"category": "main",
-			"title": "Chapter 1.3: Kekuatan Sihir Meteor",
-			"location": "Halaman Luar Istana",
-			"objective": "Serap ilmu sihir Buku Emas dan uji coba skill meteor di area terbuka.",
-			"description": "Setelah Archon dikalahkan, Buku Emas bersinar dan mentransmisikan sihir penghancur meteor ke dalam diri Magnus. Mereka bergegas ke luar istana untuk menguji kekuatan baru ini.",
-			"status": "inactive",
-			"target_position": Vector2(2800, 1800)
-		},
-		{
-			"id": "main_08",
-			"category": "main",
-			"title": "Chapter 1.3: Serbuan Gerbang Utama",
-			"location": "Gerbang Utama Kastil",
-			"objective": "Pertahankan istana dan tumpas gerombolan kroco iblis di gerbang utama.",
-			"description": "Gerbang utama istana dijebol oleh serbuan iblis! Pangeran Arthur, Magnus, dan segenap prajurit istana bertarung menahan dan membasmi kroco-kroco iblis.",
-			"status": "inactive",
-			"target_position": CASTLE_ENTRANCE_POS
-		},
-		{
 			"id": "main_09",
 			"category": "main",
-			"title": "Chapter 1.3: Raksasa Envy & Sekutu Assassin",
-			"location": "Luar Gerbang Istana",
-			"objective": "Tumbangkan Boss Raksasa Envy dan jalin aliansi bersama sang Assassin misterius.",
-			"description": "Boss Raksasa Envy memangsa pasukannya dan membesar. Seorang assassin misterius berkulit iblis datang membantu menerkam titik lemah sang boss. Bersama-sama, mereka menyelamatkan kerajaan dan membentuk aliansi penyelamatan dunia.",
-			"status": "inactive",
-			"target_position": Vector2(2533, 1300)
+			"title": "Klimaks: Sang Raksasa Tulang",
+			"location": "Pelataran Makam Kerajaan",
+			"objective": "Hancurkan Skeleton Boss bersama 4 hero lengkap!",
+			"description": "Penggalian makam memicu kebangkitan monster raksasa bertulang tebal! Satukan kekuatan 4 hero untuk menghancurkan Skeleton Boss demi kedamaian kerajaan.",
+			"status": "completed" if is_scene_9_completed else ("active" if is_scene_8_completed or is_scene_9_in_progress else "inactive"),
+			"target_position": SKELETON_BOSS_POS
+		},
+		{
+			"id": "scene_10_quest",
+			"category": "main",
+			"title": "Epilog: Fajar Pertempuran Baru",
+			"location": "Luar Pemakaman Kerajaan",
+			"objective": "Dengarkan rencana keberangkatan penyelamatan kerajaan tetangga.",
+			"description": "Skeleton Boss berhasil dihancurkan! Arthur, Magnus, Anastasya, dan Carina menyusun rencana keberangkatan esok fajar demi menyelamatkan kerajaan di seberang pegunungan.",
+			"status": "completed" if is_scene_10_completed else ("active" if is_scene_9_completed or is_scene_10_in_progress else "inactive"),
+			"target_position": SCENE_10_ARENA_POS
 		},
 		{
 			"id": "world_01",
@@ -2434,6 +2416,14 @@ func _get_quest_by_id(q_id: String) -> Dictionary:
 	for q in quest_list:
 		if q.get("id", "") == q_id:
 			return q
+	if q_id == "main_08":
+		for q in quest_list:
+			if q.get("id", "") == "main_05":
+				return q
+	elif q_id == "main_05":
+		for q in quest_list:
+			if q.get("id", "") == "main_08":
+				return q
 	return {}
 
 
@@ -3056,19 +3046,11 @@ func exit_training_arena() -> void:
 	is_in_training_arena = false
 	current_combat_state = PartyCombatState.EXPLORING
 
-	rearrange_dead_members_to_back()
+	restore_all_party_health_full()
+
 	if active_leader_index != 0 and party_members.size() > 0 and is_character_alive(party_members[0]):
 		set_active_leader(0)
 
-	for member in party_members:
-		if is_instance_valid(member):
-			if not ("is_dead" in member and member.is_dead):
-				member.modulate.a = 1.0
-			else:
-				member.modulate.a = 0.0
-				member.visible = false
-			if member.has_method("reset_combat_skills"):
-				member.reset_combat_skills()
 	notify_party_combat_state(false)
 	update_party_visibility()
 	breadcrumbs.clear()
@@ -3368,12 +3350,13 @@ func _start_party_combat_fade_out() -> void:
 			tw.kill()
 	_party_fade_tweens.clear()
 
-	# 1. Reorganisasi party roster saat pertarungan selesai:
-	# Hero yang gugur TIDAK dipulihkan dan dipindahkan ke posisi paling belakang.
-	# Karakter hidup berikutnya (misal Hellene / Karakter 2) otomatis maju menjadi Leader utama di Slot 0.
+	# 1. Reorganisasi party roster saat pertarungan selesai jika ada leader yang gugur:
 	rearrange_dead_members_to_back()
 	if active_leader_index != 0 and party_members.size() > 0 and is_character_alive(party_members[0]):
 		set_active_leader(0)
+
+	# Pulihkan seketika darah seluruh tim kembali full (Mode Cerita & Mode Jelajah)
+	restore_all_party_health_full()
 
 	# 2. Kembalikan kamera secara natural ke Leader utama (zoom explore dan smoothing glide)
 	is_camera_locked_to_arena = false
@@ -3452,19 +3435,14 @@ func end_arena_battle() -> void:
 	target_camera_zoom = CAMERA_ZOOM_EXPLORE
 	is_camera_locked_to_arena = false
 
-	# 3. Bersihkan seluruh tween fade dan kembalikan alpha seluruh member menjadi 1.0 (kecuali yang gugur)
+	# 3. Bersihkan seluruh tween fade
 	for tw in _party_fade_tweens:
 		if is_instance_valid(tw) and tw.is_valid():
 			tw.kill()
 	_party_fade_tweens.clear()
 
-	for member in party_members:
-		if is_instance_valid(member):
-			if not ("is_dead" in member and member.is_dead):
-				member.modulate.a = 1.0
-			else:
-				member.modulate.a = 0.0
-				member.visible = false
+	# Pulihkan darah seluruh tim (100% max health) & hidupkan kembali anggota yang gugur (Mode Cerita & Mode Jelajah)
+	restore_all_party_health_full()
 
 	# 4. Kembalikan party ke mode 1 karakter dan pastikan seluruh skill & cooldown ter-reset
 	if active_leader_index != 0 and party_members.size() > 0 and is_character_alive(party_members[0]):
@@ -3492,10 +3470,7 @@ func end_arena_battle() -> void:
 	print("Arena Battle Selesai! Kamera kembali ke Leader, party kembali ke mode eksplorasi.")
 
 	if was_skeleton_arena:
-		for member in party_members:
-			if is_instance_valid(member):
-				_restore_hero_full_for_alaric(member)
-		update_party_visibility()
+		restore_all_party_health_full()
 		_set_skeleton_boss_standby_mode()
 		if selected_game_mode != "open_world":
 			_pending_skeleton_victory_popup = false
@@ -3508,6 +3483,7 @@ func end_arena_battle() -> void:
 		elif _pending_skeleton_victory_popup:
 			_pending_skeleton_victory_popup = false
 			_show_alaric_victory_time_popup(_last_skeleton_clear_time, _skeleton_best_time_sec, _last_skeleton_new_record, func():
+				restore_all_party_health_full()
 				set_party_movement_locked(false)
 				var lead := get_active_leader()
 				if is_instance_valid(lead):
@@ -3516,6 +3492,7 @@ func end_arena_battle() -> void:
 					lead.set_process_unhandled_input(true)
 			, "Boss Skeleton Berhasil Dikalahkan!")
 		else:
+			restore_all_party_health_full()
 			set_party_movement_locked(false)
 			var lead := get_active_leader()
 			if is_instance_valid(lead):
@@ -4710,6 +4687,9 @@ func _on_prologue_monsters_cleared() -> void:
 		return
 	_is_waiting_prologue_return = true
 
+	# Pulihkan darah seluruh tim kembali full setelah menang melawan monster tebing
+	restore_all_party_health_full()
+
 	# Pastikan musuh tebing hutan di Arena 2 tidak respawn
 	if arena_zones.size() > 1:
 		arena_zones[1]["is_cleared"] = true
@@ -5092,6 +5072,9 @@ func _on_scene2_monsters_cleared() -> void:
 	_is_scene2_fight_active = false
 	_is_scene2_fight_done = true
 	_is_scene2_intro_triggered = false
+
+	# Pulihkan darah seluruh tim kembali full setelah menang melawan monster jalan setapak
+	restore_all_party_health_full()
 
 	# Pastikan monster jalan setapak di Arena 1 tidak respawn
 	if arena_zones.size() > 0:
@@ -5744,8 +5727,8 @@ func start_story_scene_4() -> void:
 	# 1. Konfigurasi 3 Hero: Arthur, Magnus, Anastasya
 	setup_party_for_scene_4()
 
-	# 2. Aktifkan Lantai 1 library, sembunyikan Lantai 2
-	_set_secret_library_floor(false)
+	# 2. Aktifkan Lantai 1 library, nonaktifkan Lantai 2 (collision & visual)
+	_set_secret_library_floor(1)
 
 	# 3. Update camera limits ke perpustakaan SEBELUM teleport
 	update_camera_limits_for_location("library")
@@ -5834,33 +5817,46 @@ func _pose_scene_4_heroes_looking_at_bookshelf() -> void:
 			hero.play_idle_animation()
 
 
-func _set_secret_library_floor(to_floor_2: bool) -> void:
+func _set_secret_library_floor(floor_target: Variant) -> void:
+	var to_floor_2: bool = (floor_target == true or floor_target == 2)
 	is_on_library_floor_2 = to_floor_2
 	var lib_node := get_node_or_null("SecretLibrary")
 	if not is_instance_valid(lib_node):
 		return
 	var floor1 := lib_node.get_node_or_null("LibraryFloor1")
 	var floor2 := lib_node.get_node_or_null("LibraryFloor2")
-	if floor1:
-		floor1.visible = not to_floor_2
-		floor1.process_mode = Node.PROCESS_MODE_DISABLED if to_floor_2 else Node.PROCESS_MODE_INHERIT
+
+	var f1_active: bool = not to_floor_2
+	if is_instance_valid(floor1):
+		floor1.visible = f1_active
+		floor1.process_mode = Node.PROCESS_MODE_INHERIT if f1_active else Node.PROCESS_MODE_DISABLED
 		var l1_coll = floor1.get_node_or_null("L1Collisions")
-		if l1_coll and l1_coll is CollisionObject2D:
-			l1_coll.collision_layer = 0 if to_floor_2 else 1
-			l1_coll.collision_mask = 0 if to_floor_2 else 1
+		if is_instance_valid(l1_coll) and l1_coll is CollisionObject2D:
+			l1_coll.collision_layer = 1 if f1_active else 0
+			l1_coll.collision_mask = 1 if f1_active else 0
 		var l1_struct = floor1.get_node_or_null("L1Structure")
-		if l1_struct and "enabled" in l1_struct:
-			l1_struct.enabled = not to_floor_2
-	if floor2:
-		floor2.visible = to_floor_2
-		floor2.process_mode = Node.PROCESS_MODE_INHERIT if to_floor_2 else Node.PROCESS_MODE_DISABLED
+		if is_instance_valid(l1_struct):
+			if "enabled" in l1_struct:
+				l1_struct.enabled = f1_active
+			l1_struct.visible = f1_active
+		var stair_zone = floor1.get_node_or_null("StairInteractZone")
+		if is_instance_valid(stair_zone) and stair_zone is Area2D:
+			stair_zone.monitoring = f1_active
+			stair_zone.monitorable = f1_active
+
+	var f2_active: bool = to_floor_2
+	if is_instance_valid(floor2):
+		floor2.visible = f2_active
+		floor2.process_mode = Node.PROCESS_MODE_INHERIT if f2_active else Node.PROCESS_MODE_DISABLED
 		var l2_coll = floor2.get_node_or_null("L2Collisions")
-		if l2_coll and l2_coll is CollisionObject2D:
-			l2_coll.collision_layer = 1 if to_floor_2 else 0
-			l2_coll.collision_mask = 1 if to_floor_2 else 0
+		if is_instance_valid(l2_coll) and l2_coll is CollisionObject2D:
+			l2_coll.collision_layer = 1 if f2_active else 0
+			l2_coll.collision_mask = 1 if f2_active else 0
 		var l2_struct = floor2.get_node_or_null("L2Structure")
-		if l2_struct and "enabled" in l2_struct:
-			l2_struct.enabled = to_floor_2
+		if is_instance_valid(l2_struct):
+			if "enabled" in l2_struct:
+				l2_struct.enabled = f2_active
+			l2_struct.visible = f2_active
 
 
 func _go_to_library_floor_2() -> void:
@@ -5872,8 +5868,10 @@ func _go_to_library_floor_2() -> void:
 		gameplay_hud.hide_interact_prompt(true)
 
 	var on_midpoint := func() -> void:
-		# Tukar lantai: sembunyikan L1, tampilkan L2
-		_set_secret_library_floor(true)
+		is_on_library_floor_2 = true
+
+		# Tukar lantai: aktifkan L2, nonaktifkan L1 (collision & visual)
+		_set_secret_library_floor(2)
 
 		if selected_game_mode == "open_world":
 			for i in range(party_members.size()):
@@ -5935,7 +5933,10 @@ func _go_to_library_floor_1() -> void:
 		gameplay_hud.hide_interact_prompt(true)
 
 	var on_midpoint := func() -> void:
-		_set_secret_library_floor(false)
+		is_on_library_floor_2 = false
+
+		# Tukar lantai: aktifkan L1, nonaktifkan L2 (collision & visual)
+		_set_secret_library_floor(1)
 
 		for i in range(party_members.size()):
 			var p = party_members[i]
@@ -6106,6 +6107,7 @@ func _complete_story_scene_4() -> void:
 		is_on_library_floor_2 = false
 		is_castle_meeting_completed = true
 		is_inside_castle_hall = false
+		_set_secret_library_floor(1)
 		var spawn_pos := LIBRARY_ENTRANCE_POS + Vector2(0.0, 30.0)
 		for i in range(party_members.size()):
 			var member = party_members[i]
@@ -6126,10 +6128,24 @@ func _complete_story_scene_4() -> void:
 
 	var on_completed := func() -> void:
 		set_party_movement_locked(false)
-		print("[Story] Scene 4: Perpustakaan Istana selesai! Lonceng berbunyi, bersiap menuju Scene 5 (Gerbang).")
-		tracked_quest_id = "main_08"
-		if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("set_quest_navigation"):
-			gameplay_hud.set_quest_navigation(CASTLE_ENTRANCE_POS, "Gerbang Depan Istana")
+		print("[Story] Scene 4 selesai! Lonceng bahaya berbunyi, bergegas ke Gerbang Selatan Kota (Scene 5).")
+		for q in quest_list:
+			if q.get("id") == "main_03":
+				q["status"] = "completed"
+			elif q.get("id") in ["main_05", "main_08"]:
+				q["status"] = "active"
+				q["target_position"] = CITY_GATE_INSIDE_POS
+		tracked_quest_id = "main_05"
+		if is_instance_valid(gameplay_hud):
+			if gameplay_hud.has_method("set_quests"):
+				gameplay_hud.set_quests(quest_list, tracked_quest_id)
+			var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
+			if not tracked_q.is_empty() and gameplay_hud.has_method("update_hud_quest_display"):
+				gameplay_hud.update_hud_quest_display(tracked_q)
+			if gameplay_hud.has_method("set_quest_navigation"):
+				gameplay_hud.set_quest_navigation(CITY_GATE_INSIDE_POS, "Gerbang Selatan Kota")
+			if gameplay_hud.has_method("show_quest_banner"):
+				gameplay_hud.show_quest_banner("GERBANG KOTA DISERANG!", "Segera menuju Gerbang Selatan Kota untuk menahan serbuan monster!")
 
 	play_black_fade_transition(on_midpoint, on_completed)
 
@@ -6460,14 +6476,12 @@ func _complete_story_scene_5() -> void:
 
 	update_party_visibility()
 
-	# Selesaikan Quest 5 (main_08) dan arahkan ke Camp Latihan Alaric (Scene 6/7) atau Makam Lancelot (Scene 8)
+	# Selesaikan Quest 5 (main_05 / main_08) dan langsung sambungkan ke Scene 6
 	for q in quest_list:
-		if q.get("id") == "main_08":
+		if q.get("id") in ["main_05", "main_08"]:
 			q["status"] = "completed"
-		elif q.get("id") == "main_04" and is_alaric_sparring_completed:
+		elif q.get("id") == "scene_06_quest":
 			q["status"] = "active"
-	if is_alaric_sparring_completed:
-		tracked_quest_id = "main_04"
 
 	if is_instance_valid(gameplay_hud):
 		if gameplay_hud.has_method("set_party_switch_locked"):
@@ -6480,21 +6494,13 @@ func _complete_story_scene_5() -> void:
 			gameplay_hud.update_leader_indicator()
 		if gameplay_hud.has_method("_sync_gameplay_hud_controls_prompts"):
 			gameplay_hud._sync_gameplay_hud_controls_prompts()
-		if gameplay_hud.has_method("set_quests"):
-			gameplay_hud.set_quests(quest_list, tracked_quest_id)
-		var tracked_q: Dictionary = _get_quest_by_id(tracked_quest_id)
-		if not tracked_q.is_empty() and gameplay_hud.has_method("update_hud_quest_display"):
-			gameplay_hud.update_hud_quest_display(tracked_q)
-		if gameplay_hud.has_method("set_quest_navigation"):
-			if is_alaric_sparring_completed:
-				gameplay_hud.set_quest_navigation(GRAVEYARD_POS, "Makam Ksatria Lancelot")
-			else:
-				gameplay_hud.set_quest_navigation(SCENE_6_BUSH_POS, "Semak Jalur Camp Latihan")
 		if gameplay_hud.has_method("show_location_banner"):
 			gameplay_hud.show_location_banner("Assassin resmi bergabung ke dalam Party! (Total 4 Hero Lengkap)")
 
 	set_party_movement_locked(false)
-	print("[Story] Scene 5 selesai! Assassin resmi bergabung ke dalam Party (Total 4 Hero Lengkap).")
+	restore_all_party_health_full()
+	print("[Story] Scene 5 selesai! Assassin resmi bergabung ke dalam Party (Total 4 Hero Lengkap). Menyambung ke Scene 6...")
+	start_story_scene_6(false)
 
 
 # =========================================================
@@ -6607,7 +6613,7 @@ func start_story_scene_6(teleport_to_path: bool = true) -> void:
 		var has_s6_quest := false
 		for q in quest_list:
 			var qid: String = str(q.get("id", ""))
-			if qid in ["main_01", "main_02", "main_03_meeting", "main_03"]:
+			if qid in ["main_01", "main_02", "main_03_meeting", "main_03", "main_05", "main_08"]:
 				q["status"] = "completed"
 			elif qid == "scene_06_quest":
 				has_s6_quest = true
@@ -6730,6 +6736,8 @@ func _send_companions_ahead_to_outdoor_camp() -> void:
 
 func _prepare_scene_6_outdoor_camp_alaric_step() -> void:
 	is_scene_6_waiting_outdoor_camp_alaric = true
+	# Pulihkan darah seluruh tim kembali full setelah pertarungan jalur camp selesai
+	restore_all_party_health_full()
 	if is_instance_valid(alaric_node):
 		alaric_node.global_position = SCENE_6_OUTDOOR_CAMP_POS
 		alaric_node.velocity = Vector2.ZERO
@@ -7276,6 +7284,25 @@ func _play_scene_10_chapter_clear_screen(on_done: Callable = Callable()) -> void
 		tw_out.tween_callback(func() -> void:
 			if is_instance_valid(canvas):
 				canvas.queue_free()
+			is_scene_10_completed = true
+			is_scene_10_in_progress = false
+			for q in quest_list:
+				if q.get("id") == "scene_10_quest":
+					q["status"] = "completed"
+			set_party_movement_locked(false)
+			var leader := get_active_leader()
+			if is_instance_valid(leader):
+				_set_character_collision_active(leader, true)
+				leader.set_physics_process(true)
+				leader.set_process_unhandled_input(true)
+			if is_instance_valid(gameplay_hud):
+				if gameplay_hud.has_method("set_quests"):
+					gameplay_hud.set_quests(quest_list, "")
+				if gameplay_hud.has_method("clear_quest_navigation"):
+					gameplay_hud.clear_quest_navigation()
+				if gameplay_hud.has_method("show_quest_banner"):
+					gameplay_hud.show_quest_banner("CHAPTER 1 SELESAI!", "Selamat! Seluruh misi Chapter 1 berhasil diselesaikan.")
+			save_game_to_slot(1)
 			if on_done.is_valid():
 				on_done.call()
 		)
@@ -7870,6 +7897,9 @@ func _complete_story_scene_9() -> void:
 	for q in quest_list:
 		if q.get("id") == "main_09":
 			q["status"] = "completed"
+		elif q.get("id") == "scene_10_quest":
+			q["status"] = "active"
+	tracked_quest_id = "scene_10_quest"
 
 	_play_scene_9_defeat_black_screen(func():
 		_heal_party_full_for_story_mode()
@@ -8594,36 +8624,67 @@ func _restore_hero_full_for_alaric(hero: CharacterBody2D) -> void:
 			hero.current_health = hero.max_health
 		hero.visible = true
 		hero.modulate = Color.WHITE
+		hero.modulate.a = 1.0
 		if "velocity" in hero:
 			hero.velocity = Vector2.ZERO
 		if "knockback_velocity" in hero:
 			hero.knockback_velocity = Vector2.ZERO
+		if "is_moving" in hero:
+			hero.is_moving = false
+		if "has_pending_click_move" in hero:
+			hero.has_pending_click_move = false
+		if "is_attacking" in hero:
+			hero.is_attacking = false
+		if "invulnerability_timer" in hero:
+			hero.invulnerability_timer = 0.0
 		if not hero.is_in_group("player"):
 			hero.add_to_group("player")
-		if hero.has_node("CollisionShape2D"):
+		if "collision_shape" in hero and is_instance_valid(hero.collision_shape):
+			hero.collision_shape.set_deferred("disabled", false)
+		elif hero.has_node("CollisionShape2D"):
 			hero.get_node("CollisionShape2D").set_deferred("disabled", false)
 		if hero.has_node("Hurtbox/CollisionShape2D"):
 			hero.get_node("Hurtbox/CollisionShape2D").set_deferred("disabled", false)
 		if hero.has_method("reset_combat_skills"):
 			hero.reset_combat_skills()
+		if hero.has_method("play_idle_animation"):
+			hero.play_idle_animation()
 
 
-func _heal_party_full_for_story_mode() -> void:
-	if selected_game_mode == "open_world":
-		return
+func restore_all_party_health_full() -> void:
 	for member in party_members:
 		if is_instance_valid(member):
 			_restore_hero_full_for_alaric(member)
 	for h_name in all_heroes.keys():
 		var h: CharacterBody2D = all_heroes[h_name]
 		if is_instance_valid(h):
-			h.is_dead = false
-			if "current_health" in h and "max_health" in h:
-				h.current_health = h.max_health
+			_restore_hero_full_for_alaric(h)
 	update_party_visibility()
 	if is_instance_valid(gameplay_hud):
+		if gameplay_hud.has_method("update_party_order"):
+			gameplay_hud.update_party_order(party_members, active_leader_index)
 		if gameplay_hud.has_method("update_party_hud"):
 			gameplay_hud.update_party_hud()
+		if gameplay_hud.has_method("update_leader_indicator"):
+			gameplay_hud.update_leader_indicator()
+
+
+func _heal_party_full_for_story_mode() -> void:
+	restore_all_party_health_full()
+
+
+func on_enemy_died(enemy: CharacterBody2D) -> void:
+	if arena_state != ArenaState.COMBAT and not is_in_training_arena and not is_in_arena_kamp and not is_alaric_sparring_in_progress:
+		var has_living_enemy_nearby := false
+		var lead := get_active_leader()
+		if is_instance_valid(lead):
+			for e in get_tree().get_nodes_in_group("enemy"):
+				if is_instance_valid(e) and e != enemy and not bool(e.get("is_dead")):
+					if lead.global_position.distance_to(e.global_position) <= 650.0:
+						has_living_enemy_nearby = true
+						break
+		if not has_living_enemy_nearby:
+			restore_all_party_health_full()
 
 
 func _teleport_to_arena_kamp_and_fight() -> void:
@@ -8949,8 +9010,10 @@ func _teleport_back_to_training_camp(player_won: bool = true, was_already_comple
 				resume_gameplay.call()
 				return
 
-			# Menang duel: tampilkan Popup Hasil Waktu Tempuh & Rekor Tercepat terlebih dahulu!
+			# Menang duel: pulihkan darah seluruh tim kembali full & tampilkan Popup Hasil Waktu Tempuh & Rekor Tercepat
+			restore_all_party_health_full()
 			_show_alaric_victory_time_popup(final_time, _alaric_best_time_sec, is_new_record, func():
+				restore_all_party_health_full()
 				if selected_game_mode == "open_world" or was_already_completed:
 					resume_gameplay.call()
 				else:
@@ -9880,7 +9943,7 @@ func _on_alaric_post_fight_dialogue_finished() -> void:
 			anim_spr.modulate = Color.WHITE
 
 	for q in quest_list:
-		if q.get("id") in ["main_03", "scene_06_quest", "scene_07_quest"]:
+		if q.get("id") in ["main_01", "main_02", "main_03_meeting", "main_03", "main_05", "main_08", "scene_06_quest", "scene_07_quest"]:
 			q["status"] = "completed"
 		elif q.get("id") == "main_04":
 			q["status"] = "active"
@@ -9895,6 +9958,8 @@ func _on_alaric_post_fight_dialogue_finished() -> void:
 			gameplay_hud.update_hud_quest_display(tracked_q)
 		if gameplay_hud.has_method("set_quest_navigation"):
 			gameplay_hud.set_quest_navigation(GRAVEYARD_POS, "Makam Ksatria Lancelot")
+		if gameplay_hud.has_method("show_quest_banner"):
+			gameplay_hud.show_quest_banner("MENUJU PEMAKAMAN", "Arthur diizinkan mengambil Pedang Pusaka Lancelot di Area Pemakaman Kerajaan!")
 
 	save_game_to_slot(1)
 	print("[Story] Scene 7 (Boss Fight 1 Pelatih Alaric) selesai!")
@@ -10090,8 +10155,42 @@ func set_party_movement_locked(locked: bool) -> void:
 			if should_lock:
 				if "velocity" in member:
 					member.velocity = Vector2.ZERO
+				if "is_moving" in member:
+					member.is_moving = false
+				if "has_pending_click_move" in member:
+					member.has_pending_click_move = false
+				if "click_move_stuck_timer" in member:
+					member.click_move_stuck_timer = 0.0
+				if "target_position" in member:
+					member.target_position = member.global_position
 				if member.has_method("play_idle_animation"):
 					member.play_idle_animation()
+			else:
+				var is_leader_char: bool = (i == active_leader_index)
+				member.set_physics_process(true)
+				member.set_process(true)
+				member.set_process_unhandled_input(is_leader_char)
+				_set_character_collision_active(member, true)
+				if "velocity" in member:
+					member.velocity = Vector2.ZERO
+				if "is_moving" in member:
+					member.is_moving = false
+				if "has_pending_click_move" in member:
+					member.has_pending_click_move = false
+				if "click_move_stuck_timer" in member:
+					member.click_move_stuck_timer = 0.0
+				if "target_position" in member:
+					member.target_position = member.global_position
+				if member.has_method("play_idle_animation"):
+					member.play_idle_animation()
+
+	if not locked:
+		is_transitioning = false
+		if is_instance_valid(gameplay_hud):
+			gameplay_hud.is_hud_input_blocked = false
+		if CursorManager.has_method("hide_ground_move_indicator"):
+			CursorManager.hide_ground_move_indicator()
+		update_party_visibility()
 
 
 func save_game_to_slot(slot_id: int) -> bool:
@@ -10589,6 +10688,12 @@ func check_castle_interactions(delta: float) -> void:
 					gameplay_hud.show_interact_prompt("Bicara dengan Magnus", "E", "talk_magnus")
 				return
 
+		# Trigger otomatis Scene 5 ketika pemain mendekati area Gerbang Kota setelah Scene 4 selesai
+		if selected_game_mode != "open_world" and is_scene_4_completed and not is_scene_5_completed and not is_scene_5_in_progress:
+			if _is_near_city_gate(leader.global_position):
+				start_story_scene_5()
+				return
+
 		# Trigger otomatis Scene 6 ketika pemain berjalan mendekati area semak jalur camp latihan
 		if selected_game_mode != "open_world" and is_scene_6_in_progress and not is_scene_6_bush_triggered:
 			var dist_bush := leader.global_position.distance_to(SCENE_6_BUSH_POS)
@@ -10732,6 +10837,12 @@ func _on_hud_interaction_pressed(action_type: String) -> void:
 	elif action_type == "join_meeting" or action_type == "Ikut Rapat":
 		if selected_game_mode != "open_world":
 			start_castle_meeting_cutscene()
+	elif action_type == "talk_magnus" or action_type == "Bicara dengan Magnus":
+		if _is_waiting_prologue_return:
+			if is_instance_valid(gameplay_hud) and gameplay_hud.has_method("hide_interact_prompt"):
+				gameplay_hud.hide_interact_prompt(true)
+			_is_waiting_prologue_return = false
+			_start_prologue_crow_dialogue_sequence()
 	elif action_type == "talk_alaric_outdoor_camp":
 		trigger_scene_6_outdoor_camp_alaric_dialogue()
 	elif action_type == "talk_alaric" or action_type == "Bicara dengan Pelatih Alaric":
@@ -10773,7 +10884,8 @@ func enter_secret_library() -> void:
 			is_inside_secret_library = true
 			is_castle_meeting_completed = true
 			is_inside_castle_hall = false
-			_set_secret_library_floor(false)
+			is_on_library_floor_2 = false
+			_set_secret_library_floor(1)
 			update_camera_limits_for_location("library")
 			for i in range(party_members.size()):
 				var p = party_members[i]
@@ -10814,6 +10926,7 @@ func exit_secret_library() -> void:
 		_set_secret_library_floor(false)
 		is_castle_meeting_completed = true
 		is_inside_castle_hall = false
+		_set_secret_library_floor(1)
 
 		var spawn_pos := LIBRARY_ENTRANCE_POS + Vector2(0.0, 30.0)
 		for i in range(party_members.size()):
@@ -10995,8 +11108,30 @@ func play_black_fade_transition(on_midpoint: Callable, on_completed: Callable = 
 	if is_instance_valid(gameplay_hud):
 		gameplay_hud.is_hud_input_blocked = false
 
+	for i in range(party_members.size()):
+		var p = party_members[i]
+		if is_instance_valid(p):
+			p.set_physics_process(true)
+			p.set_process(true)
+			var should_input: bool = (i == active_leader_index)
+			p.set_process_unhandled_input(should_input)
+			if "is_movement_locked" in p:
+				p.is_movement_locked = false
+			if "velocity" in p:
+				p.velocity = Vector2.ZERO
+			if "is_moving" in p:
+				p.is_moving = false
+			if "has_pending_click_move" in p:
+				p.has_pending_click_move = false
+			if "click_move_stuck_timer" in p:
+				p.click_move_stuck_timer = 0.0
+			if "target_position" in p:
+				p.target_position = p.global_position
+
 	if on_completed.is_valid():
 		on_completed.call()
+
+	update_party_visibility()
 
 
 func transition_to_location(target_pos: Vector2, new_location_name: String = "") -> void:
