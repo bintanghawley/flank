@@ -14,6 +14,7 @@
 [ext_resource type="Texture2D" uid="uid://dks64vtnlnofq" path="res://assets/characters/mage/walk/walk-w.png" id="ext_mage_walk"]
 [ext_resource type="Script" uid="uid://ckp1euf4sauox" path="res://scene/ui/menus/start_menu.gd" id="ext_script"]
 [ext_resource type="Texture2D" uid="uid://de4tvp0x6mi2c" path="res://assets/ui/menus/start_menu/sword_glint.png" id="ext_sword_glint"]
+[ext_resource type="Texture2D" path="res://assets/ui/menus/studio_logo.png" id="ext_studio_logo"]
 
 [sub_resource type="AtlasTexture" id="Atlas_ks_0"]
 atlas = ExtResource("ext_knight_skill")
@@ -873,3 +874,39 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 1)
+
+[node name="SplashScreen" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="SplashBg" type="ColorRect" parent="SplashScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="SplashScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="StudioLogo" type="TextureRect" parent="SplashScreen/CenterContainer"]
+custom_minimum_size = Vector2(520, 298)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("ext_studio_logo")
+expand_mode = 1
+stretch_mode = 5

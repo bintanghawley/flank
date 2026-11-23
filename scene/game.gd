@@ -5818,7 +5818,11 @@ func _pose_scene_4_heroes_looking_at_bookshelf() -> void:
 
 
 func _set_secret_library_floor(floor_target: Variant) -> void:
-	var to_floor_2: bool = (floor_target == true or floor_target == 2)
+	var to_floor_2: bool = false
+	if floor_target is bool:
+		to_floor_2 = floor_target
+	elif floor_target is int or floor_target is float:
+		to_floor_2 = (int(floor_target) == 2)
 	is_on_library_floor_2 = to_floor_2
 	var lib_node := get_node_or_null("SecretLibrary")
 	if not is_instance_valid(lib_node):

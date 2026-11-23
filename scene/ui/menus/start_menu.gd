@@ -31,6 +31,14 @@ extends Control
 @onready var btn_back: Button = get_node_or_null("ModeContainer/BtnBack")
 
 @onready var iris_mask: ColorRect = $IrisMask
+@onready var splash_screen: Control = get_node_or_null("SplashScreen")
+@onready var splash_bg: ColorRect = get_node_or_null("SplashScreen/SplashBg")
+@onready var studio_logo: TextureRect = get_node_or_null("SplashScreen/CenterContainer/StudioLogo")
+
+static var _splash_shown: bool = false
+var _is_splash_active: bool = false
+var _splash_can_skip: bool = false
+var _splash_tween: Tween = null
 
 const GAME_SCENE_PATH := "res://scene/game.tscn"
 const GAMEPLAY_HUD_SCENE := preload("res://scene/ui/gameplay/gameplay_hud.tscn")
@@ -99,7 +107,7 @@ func _ready() -> void:
 	var mat: ShaderMaterial = iris_mask.material as ShaderMaterial
 	if mat:
 		mat.set_shader_parameter("radius", 1.45)
-	
+
 	# Warmup sword_glint di GPU agar tidak stutter saat pertama kali dimainkan
 	if sword_glint:
 		sword_glint.modulate.a = 0.0
@@ -108,8 +116,18 @@ func _ready() -> void:
 		if not sword_glint.animation_finished.is_connected(_on_sword_glint_animation_finished):
 			sword_glint.animation_finished.connect(_on_sword_glint_animation_finished)
 
-	# Inisialisasi dan putar musik latar (BGM) Start Menu
-	_init_and_play_bgm()
+	# Inisialisasi intro splash studio atau musik latar (BGM) Start Menu
+	if not _splash_shown and is_instance_valid(splash_screen):
+		_splash_shown = true
+		_is_splash_active = true
+		splash_screen.visible = true
+		if is_instance_valid(studio_logo):
+			studio_logo.modulate.a = 0.0
+		_start_splash_sequence()
+	else:
+		if is_instance_valid(splash_screen):
+			splash_screen.queue_free()
+		_init_and_play_bgm()
 
 	# Warmup tekstur skill Knight agar tidak hitch saat animasi skill pertama kali dipanggil
 	if knight and knight.sprite_frames:
@@ -124,7 +142,7 @@ func _ready() -> void:
 			_settings_overlay_hud.connect("start_menu_settings_closed", _on_settings_closed)
 		if _settings_overlay_hud.has_signal("load_game_requested"):
 			_settings_overlay_hud.connect("load_game_requested", _on_load_game_requested)
-	
+
 	# Pastikan container mode terinisialisasi layout-nya di frame pertama (transparan)
 	if is_instance_valid(mode_container):
 		mode_container.visible = true
@@ -140,7 +158,7 @@ func _ready() -> void:
 		ResourceLoader.load_threaded_request(GAME_SCENE_PATH)
 
 	_setup_sword_indicator()
-	
+
 	for btn_name in BUTTON_TEXTS:
 		var btn: Button = get_node_or_null("MenuContainer/" + btn_name)
 		if not btn:
@@ -157,7 +175,7 @@ func _ready() -> void:
 
 	if is_instance_valid(mode_container):
 		mode_container.visible = false
-	
+
 	btn_start.pressed.connect(_on_start_pressed)
 	btn_continue.pressed.connect(_on_continue_pressed)
 	btn_settings.pressed.connect(_on_settings_pressed)
@@ -170,44 +188,46 @@ func _ready() -> void:
 		btn_open_world.pressed.connect(_on_mode_open_world_pressed)
 	if btn_back:
 		btn_back.pressed.connect(_on_mode_back_pressed)
-	
+
 	get_viewport().size_changed.connect(func():
 		if _current_selected and is_instance_valid(_current_selected) and not _is_settings_open and not _is_starting:
 			_update_sword_indicator(_current_selected, true)
 	)
-	
+
 	# Set pilihan awal ke tombol Mulai Permainan
 	_select_button(btn_start, true)
+	if _is_splash_active and _sword_indicator:
+		_sword_indicator.visible = false
 
 func _process(delta: float) -> void:
 	if _is_starting:
 		# Melambat hingga berhenti saat animasi transisi dimulai
 		_ground_speed = move_toward(_ground_speed, 0.0, 160.0 * delta)
 		_cloud_speed = move_toward(_cloud_speed, 0.0, 40.0 * delta)
-	
+
 	_update_parallax_movement(delta)
 
 func _update_parallax_movement(delta: float) -> void:
 	var w: float = size.x if size.x > 0.0 else 1152.0
 	var h: float = size.y if size.y > 0.0 else 648.0
-	
+
 	# Update pergerakan awan (lapisan latar belakang jauh)
 	if bg_sky_1 and bg_sky_2 and bg_sky_3:
 		bg_sky_1.size = Vector2(w, h)
 		bg_sky_2.size = Vector2(w, h)
 		bg_sky_3.size = Vector2(w, h)
-		
+
 		_cloud_offset = fposmod(_cloud_offset + _cloud_speed * delta, w)
 		bg_sky_1.position.x = _cloud_offset - w
 		bg_sky_2.position.x = _cloud_offset
 		bg_sky_3.position.x = _cloud_offset + w
-	
+
 	# Update pergerakan tanah / rumput (lapisan pijakan karakter)
 	if bg_grass_1 and bg_grass_2 and bg_grass_3:
 		bg_grass_1.size = Vector2(w, h)
 		bg_grass_2.size = Vector2(w, h)
 		bg_grass_3.size = Vector2(w, h)
-		
+
 		_ground_offset = fposmod(_ground_offset + _ground_speed * delta, w)
 		bg_grass_1.position.x = _ground_offset - w
 		bg_grass_2.position.x = _ground_offset
@@ -220,10 +240,10 @@ func _select_button(btn: Button, instant: bool = false) -> void:
 		if is_instance_valid(btn) and btn.get_theme_font_size("font_size") != SELECTED_FONT_SIZE:
 			_set_button_state(btn, true)
 		return
-	
+
 	if not instant and _current_selected != null and _current_selected != btn:
 		_play_sfx(SFX_HOVER, -6.0)
-	
+
 	# Pastikan seluruh tombol lain di container yang sama dinormalisasi ke ukuran normal
 	var parent_container := btn.get_parent()
 	if parent_container:
@@ -232,7 +252,7 @@ func _select_button(btn: Button, instant: bool = false) -> void:
 				_set_button_state(sibling, false)
 	elif _current_selected and is_instance_valid(_current_selected) and _current_selected != btn:
 		_set_button_state(_current_selected, false)
-	
+
 	_current_selected = btn
 	if _current_selected and is_instance_valid(_current_selected):
 		_set_button_state(_current_selected, true, instant)
@@ -240,7 +260,7 @@ func _select_button(btn: Button, instant: bool = false) -> void:
 			_current_selected.grab_focus()
 
 func _on_button_hovered(btn: Button) -> void:
-	if not _is_starting and not _is_settings_open:
+	if not _is_starting and not _is_settings_open and not _is_splash_active:
 		_select_button(btn)
 
 func _set_button_state(btn: Button, is_selected: bool, instant: bool = false) -> void:
@@ -248,21 +268,21 @@ func _set_button_state(btn: Button, is_selected: bool, instant: bool = false) ->
 		return
 
 	var base_text: String = BUTTON_TEXTS.get(btn.name, btn.text)
-	
+
 	if _btn_tweens.has(btn):
 		var old_t: Tween = _btn_tweens[btn]
 		if old_t and old_t.is_valid():
 			old_t.kill()
-	
+
 	btn.text = base_text
 	btn.scale = Vector2.ONE
-	
+
 	var target_font_size: int = SELECTED_FONT_SIZE if is_selected else BASE_FONT_SIZE
 	var target_modulate: Color = Color(1.0, 1.0, 1.0, 1.0) if is_selected else Color(1.0, 1.0, 1.0, 0.85)
 	var cur_font_size: int = btn.get_theme_font_size("font_size")
 	if cur_font_size <= 0:
 		cur_font_size = BASE_FONT_SIZE
-	
+
 	if instant:
 		btn.add_theme_font_size_override("font_size", target_font_size)
 		btn.modulate = target_modulate
@@ -311,17 +331,17 @@ func _get_sword_target_pos(btn: Button) -> Vector2:
 		font_size = BASE_FONT_SIZE
 	var base_text: String = BUTTON_TEXTS.get(btn.name, btn.text)
 	var tw: float = font.get_string_size(base_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
-	
+
 	var btn_center_x: float = btn.global_position.x + btn.size.x / 2.0
 	var btn_center_y: float = btn.global_position.y + btn.size.y / 2.0
-	
+
 	var text_left: float = btn_center_x - tw / 2.0
 	var sword_w: float = 24.0 * 2.0
 	var sword_h: float = 9.0 * 2.0
 	if _sword_indicator and _sword_indicator.texture:
 		sword_w = _sword_indicator.texture.get_width() * _sword_indicator.scale.x
 		sword_h = _sword_indicator.texture.get_height() * _sword_indicator.scale.y
-		
+
 	return Vector2(text_left - sword_w - 10.0, btn_center_y - sword_h / 2.0)
 
 
@@ -331,14 +351,14 @@ func _update_sword_indicator(btn: Button, instant: bool = false) -> void:
 	if _is_settings_open or _is_starting:
 		_sword_indicator.visible = false
 		return
-		
+
 	var target_pos := _get_sword_target_pos(btn)
 	_sword_indicator.visible = true
 	_sword_indicator.modulate.a = 1.0
-	
+
 	if _sword_indicator_tween and _sword_indicator_tween.is_valid():
 		_sword_indicator_tween.kill()
-		
+
 	if instant:
 		_sword_indicator.global_position = target_pos
 	else:
@@ -451,7 +471,64 @@ func _on_mode_back_pressed() -> void:
 	_close_mode_selection()
 
 
+func _start_splash_sequence() -> void:
+	_splash_can_skip = true
+	_splash_tween = create_tween()
+	# 1. Fade-in natural logo studio (0.6 detik) langsung dari awal tanpa jeda kosong
+	if is_instance_valid(studio_logo):
+		_splash_tween.tween_property(studio_logo, "modulate:a", 1.0, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	# 2. Tahan logo studio di layar dalam keheningan total (2.5 detik)
+	_splash_tween.tween_interval(2.5)
+	# 3. Fade-out lembut logo studio (0.25 detik)
+	if is_instance_valid(studio_logo):
+		_splash_tween.tween_property(studio_logo, "modulate:a", 0.0, 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	# 4. Tahan layar putih hening sejenak setelah logo memudar (0.65 detik)
+	_splash_tween.tween_interval(0.65)
+	# 5. Fade-out natural 1 layar putih penuh ke Start Menu (0.85 detik)
+	if is_instance_valid(splash_screen):
+		_splash_tween.tween_callback(func(): _init_and_play_bgm())
+		_splash_tween.tween_property(splash_screen, "modulate:a", 0.0, 0.85).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	else:
+		_splash_tween.tween_callback(func(): _init_and_play_bgm())
+	_splash_tween.finished.connect(_finish_splash_sequence)
+
+
+func _finish_splash_sequence() -> void:
+	_splash_can_skip = false
+	_is_splash_active = false
+	if is_instance_valid(splash_screen):
+		splash_screen.queue_free()
+	if _current_selected and is_instance_valid(_current_selected):
+		_update_sword_indicator(_current_selected, true)
+
+
+func _skip_splash_sequence() -> void:
+	if not _splash_can_skip:
+		return
+	_splash_can_skip = false
+	if _splash_tween and _splash_tween.is_valid():
+		_splash_tween.kill()
+
+	if is_instance_valid(studio_logo):
+		studio_logo.modulate.a = 0.0
+
+	if is_instance_valid(splash_screen):
+		var skip_tween: Tween = create_tween()
+		_init_and_play_bgm()
+		skip_tween.tween_property(splash_screen, "modulate:a", 0.0, 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		skip_tween.finished.connect(_finish_splash_sequence)
+	else:
+		_init_and_play_bgm()
+		_finish_splash_sequence()
+
+
 func _input(event: InputEvent) -> void:
+	if _splash_can_skip and is_instance_valid(splash_screen):
+		if (event is InputEventKey and event.is_pressed() and not event.is_echo()) or (event is InputEventMouseButton and event.is_pressed()):
+			_skip_splash_sequence()
+			get_viewport().set_input_as_handled()
+			return
+
 	# Nonaktifkan navigasi fokus menggunakan tombol Tab di Start Menu
 	if (event is InputEventKey and event.keycode == KEY_TAB) or event.is_action("ui_focus_next") or event.is_action("ui_focus_prev"):
 		get_viewport().set_input_as_handled()
@@ -700,7 +777,7 @@ func _init_and_play_bgm(fade_in_at_start: bool = false) -> void:
 		return
 	_ensure_music_bus()
 	_ensure_bgm_loop_timer()
-	
+
 	if not is_instance_valid(_bgm_player_a):
 		_bgm_player_a = AudioStreamPlayer.new()
 		_bgm_player_a.name = "BgmPlayerA"
@@ -708,7 +785,7 @@ func _init_and_play_bgm(fade_in_at_start: bool = false) -> void:
 		_bgm_player_a.bus = &"Music"
 		_bgm_player_a.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(_bgm_player_a)
-	
+
 	if not is_instance_valid(_bgm_player_b):
 		_bgm_player_b = AudioStreamPlayer.new()
 		_bgm_player_b.name = "BgmPlayerB"
@@ -716,21 +793,21 @@ func _init_and_play_bgm(fade_in_at_start: bool = false) -> void:
 		_bgm_player_b.bus = &"Music"
 		_bgm_player_b.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(_bgm_player_b)
-	
+
 	if _bgm_player_a.stream is AudioStreamOggVorbis:
 		(_bgm_player_a.stream as AudioStreamOggVorbis).loop = false
 	if _bgm_player_b.stream is AudioStreamOggVorbis:
 		(_bgm_player_b.stream as AudioStreamOggVorbis).loop = false
-	
+
 	_active_bgm_player = _bgm_player_a
 	_next_bgm_player = _bgm_player_b
 	_next_bgm_player.stop()
 	_next_bgm_player.volume_db = -80.0
 	_is_crossfading = false
-	
+
 	if _bgm_tween and _bgm_tween.is_valid():
 		_bgm_tween.kill()
-	
+
 	if fade_in_at_start:
 		_active_bgm_player.volume_db = -80.0
 		_active_bgm_player.play(0.0)
@@ -751,11 +828,11 @@ func _update_bgm_loop() -> void:
 		return
 	if not _active_bgm_player.stream:
 		return
-	
+
 	var total_len: float = _active_bgm_player.stream.get_length()
 	if total_len <= BGM_CROSSFADE_DURATION + 0.5:
 		return
-	
+
 	var pos: float = _active_bgm_player.get_playback_position()
 	# Hanya picu crossfade di paruh kedua lagu ketika tepat mendekati akhir lagu
 	if pos > total_len * 0.5:
@@ -768,19 +845,19 @@ func _start_bgm_crossfade(time_left: float) -> void:
 	if _is_crossfading or not is_instance_valid(_active_bgm_player) or not is_instance_valid(_next_bgm_player):
 		return
 	_is_crossfading = true
-	
+
 	var outgoing := _active_bgm_player
 	var incoming := _next_bgm_player
 	var fade_time := clampf(time_left, 1.0, BGM_CROSSFADE_DURATION)
 	var base_linear := db_to_linear(BGM_BASE_VOLUME_DB)
-	
+
 	incoming.volume_db = -80.0
 	incoming.play(0.0)
-	
+
 	if _bgm_tween and _bgm_tween.is_valid():
 		_bgm_tween.kill()
 	_bgm_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	
+
 	# Equal-power crossfade (cosinus/sinus) menjaga amplitudo perseptual tetap konstan (bebas dip/jeda)
 	_bgm_tween.tween_method(func(progress: float):
 		if is_instance_valid(outgoing) and outgoing.playing:
@@ -790,7 +867,7 @@ func _start_bgm_crossfade(time_left: float) -> void:
 			var in_factor: float = sin(progress * 0.5 * PI)
 			incoming.volume_db = linear_to_db(maxf(in_factor * base_linear, 0.0001)) if in_factor > 0.001 else -80.0
 	, 0.0, 1.0, fade_time)
-	
+
 	_bgm_tween.tween_callback(func():
 		if is_instance_valid(outgoing):
 			outgoing.stop()

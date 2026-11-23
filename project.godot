@@ -13,7 +13,9 @@ config_version=5
 config/name="Flank"
 run/main_scene="res://scene/ui/menus/start_menu.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
-config/icon="res://icon.svg"
+boot_splash/bg_color=Color(1, 1, 1, 1)
+boot_splash/show_image=false
+config/icon="res://assets/ui/icons/app_icon.png"
 
 [autoload]
 
