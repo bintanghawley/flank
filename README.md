@@ -105,6 +105,30 @@ Sebagian besar pintasan keyboard dapat disesuaikan kembali melalui **Menu Buku â
 
 ---
 
+## Download & Play
+
+Build Windows FLANK tersedia untuk diunduh dan dimainkan langsung tanpa perlu membuka project di Godot Editor.
+
+**[Download FLANK for Windows](https://drive.google.com/drive/folders/1zJ1DxqqwpGK0N28joNuseXCjSGJxb2h3)**
+
+| Info | Detail |
+| :--- | :--- |
+| **Rilis** | `FLANK_Chapter1_v1.0_Win64.zip` |
+| **Platform** | Windows 64-bit |
+
+### Cara Memulai
+
+1. Buka folder Google Drive melalui tautan di atas.
+2. Unduh `FLANK_Chapter1_v1.0_Win64.zip`.
+3. Ekstrak file ZIP ke folder pilihan.
+4. Buka folder hasil ekstraksi â€” pastikan seluruh file tetap berada dalam satu folder yang sama.
+5. Jalankan `FLANK_v1.0.exe` untuk memulai permainan.
+
+> [!NOTE]
+> Seluruh file dalam folder hasil ekstraksi (termasuk file `.pck` jika ada) harus tetap berada di lokasi yang sama dengan `FLANK_v1.0.exe` agar game dapat berjalan dengan benar.
+
+---
+
 ## Cara Menjalankan Proyek
 
 1. **Clone repositori:**
