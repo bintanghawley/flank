@@ -97,11 +97,38 @@ Sebagian besar pintasan keyboard dapat disesuaikan kembali melalui **Menu Buku â
 
 ---
 
-## Persyaratan
+## System Requirements
+
+### Persyaratan Engine & Proyek
 
 - **Engine:** Godot Engine 4 (konfigurasi [project.godot](project.godot) menggunakan feature tag `"4.7"` dan renderer `Forward Plus`, dengan format scene Godot 4 `format=3` dan `format=4`).
 - **Sistem Operasi:** Dikonfigurasi dengan driver rendering Windows Direct3D 12 (`rendering_device/driver.windows="d3d12"`).
 - **Addon / Dependency Eksternal:** Tidak memerlukan plugin, addon, atau pustaka eksternal tambahan.
+
+### Minimum Requirements
+
+| Komponen | Spesifikasi Minimum |
+| :--- | :--- |
+| **Operating System** | Windows 10 (64-bit) Version 1809 atau Windows 11 (64-bit) |
+| **Processor (CPU)** | Intel Core i3 generasi ke-6 atau setara AMD Ryzen 3 1200 |
+| **Memory (RAM)** | 4 GB RAM |
+| **Graphics (GPU)** | GPU dengan dukungan DirectX 12 (Feature Level 12_0) atau Vulkan 1.2. Contoh: Intel UHD Graphics 620, NVIDIA GeForce GT 1030, atau AMD Radeon RX 550 |
+| **Storage** | Minimal 250 MB ruang penyimpanan kosong untuk paket ZIP dan hasil ekstraksi executable |
+| **Input** | Mouse 2 tombol dan keyboard fisik |
+
+### Recommended Requirements
+
+| Komponen | Spesifikasi Rekomendasi |
+| :--- | :--- |
+| **Operating System** | Windows 11 (64-bit) versi terbaru |
+| **Processor (CPU)** | Intel Core i5 generasi ke-10 atau AMD Ryzen 5 3600 dan lebih tinggi |
+| **Memory (RAM)** | 8 GB RAM atau lebih |
+| **Graphics (GPU)** | NVIDIA GeForce GTX 1050 Ti, GTX 1650, atau AMD Radeon RX 570 dengan VRAM 4 GB |
+| **Storage** | 500 MB ruang penyimpanan pada media Solid State Drive (SSD) |
+| **Display** | Resolusi Full HD (1920 Ã— 1080), rasio aspek 16:9 |
+
+> [!NOTE]
+> Spesifikasi minimum dan rekomendasi di atas merupakan estimasi berdasarkan profil konsumsi memori serta kebutuhan API grafis Godot 4 Forward Plus / Direct3D 12. Spesifikasi ini belum ditetapkan melalui pengujian benchmark secara luas pada berbagai konfigurasi perangkat keras. Kompatibilitas pada perangkat dengan GPU terintegrasi generasi lama masih memerlukan pengujian lebih lanjut.
 
 ---
 

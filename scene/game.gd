@@ -1095,24 +1095,8 @@ var BGM_PERPUS: AudioStream = null
 func _get_bgm_perpus() -> AudioStream:
 	if is_instance_valid(BGM_PERPUS):
 		return BGM_PERPUS
-	if ResourceLoader.exists("res://assets/audio/bgm/perpus.ogg"):
-		var res = load("res://assets/audio/bgm/perpus.ogg")
-		if res is AudioStream:
-			BGM_PERPUS = res
-			return BGM_PERPUS
-	if FileAccess.file_exists("res://assets/audio/bgm/perpus.ogg"):
-		var stream = AudioStreamOggVorbis.load_from_file("res://assets/audio/bgm/perpus.ogg")
-		if stream:
-			BGM_PERPUS = stream
-			return BGM_PERPUS
-		var fa = FileAccess.open("res://assets/audio/bgm/perpus.ogg", FileAccess.READ)
-		if fa:
-			var bytes = fa.get_buffer(fa.get_length())
-			fa.close()
-			var ogg_stream = AudioStreamOggVorbis.load_from_buffer(bytes)
-			if ogg_stream:
-				BGM_PERPUS = ogg_stream
-				return BGM_PERPUS
+	# Deduplikasi audio: cutscene_rapat.ogg dan perpus.ogg identik 100% secara biner
+	BGM_PERPUS = BGM_CUTSCENE_RAPAT
 	return BGM_PERPUS
 var _bgm_player_a: AudioStreamPlayer = null
 var _bgm_player_b: AudioStreamPlayer = null
