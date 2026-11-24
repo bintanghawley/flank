@@ -198,9 +198,9 @@ flank/
 │   ├── world/                  # Peta dunia luar, kerajaan, aula rapat, dan perpustakaan 2 lantai
 │   ├── game.gd                 # Controller utama gameplay, cerita Chapter 1, arena, boss, dan save/load
 │   └── game.tscn               # Scene utama gameplay yang memuat dunia, party, musuh, dan HUD
-├── PROJECT_CONTEXT.md          # Catatan konteks teknis dan riwayat pengembangan
-├── README.md                   # Dokumentasi utama repositori
-└── project.godot               # Konfigurasi utama Godot Engine
+├── export_presets.cfg          # Konfigurasi preset ekspor resmi Windows Desktop
+├── project.godot               # Konfigurasi utama Godot Engine
+└── README.md                   # Dokumentasi utama repositori
 ```
 
 ---
